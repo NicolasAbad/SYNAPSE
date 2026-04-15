@@ -1,14 +1,17 @@
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { SYNAPSE_CONSTANTS } from '@/config/constants';
-import { t } from '@/config/strings';
 import { initAnalytics } from '@/analytics';
 import { unlockAudioContext } from '@/audio';
 import { useGameStore } from '@/store/gameStore';
+import { startRenderer } from '@/canvas/renderer';
+import { HUD } from '@/ui/HUD';
+import { TabNav, type TabId } from '@/ui/TabNav';
 
 export default function App() {
   const tick = useGameStore((s) => s.tick);
-  const thoughts = useGameStore((s) => s.thoughts);
-  const eps = useGameStore((s) => s.effectiveProductionPerSecond);
+  const tap = useGameStore((s) => s.tap);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [activeTab, setActiveTab] = useState<TabId>('mind');
 
   useEffect(() => {
     void initAnalytics();
@@ -21,26 +24,47 @@ export default function App() {
     };
   }, [tick]);
 
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const handle = startRenderer(canvas);
+    return () => {
+      handle.stop();
+    };
+  }, []);
+
+  const onTouchStart = (e: React.TouchEvent<HTMLCanvasElement>): void => {
+    e.preventDefault();
+    unlockAudioContext();
+    tap();
+  };
+
   return (
     <main
-      onPointerDown={unlockAudioContext}
       style={{
+        position: 'relative',
         background: '#03050C',
-        color: '#FFFFFF',
         minHeight: '100vh',
-        fontFamily: 'system-ui, sans-serif',
-        padding: '24px',
+        width: '100vw',
+        margin: 0,
+        padding: 0,
+        overflow: 'hidden',
       }}
     >
-      <h1>{t('app_name')}</h1>
-      <p>
-        {t('thoughts')}: {Math.floor(thoughts)}
-      </p>
-      <p>
-        {eps.toFixed(2)}
-        {t('per_second')}
-      </p>
-      <p style={{ opacity: 0.5, fontSize: '12px' }}>Sprint 1 scaffold — UI lands in Sprint 2.</p>
+      <canvas
+        ref={canvasRef}
+        onTouchStart={onTouchStart}
+        style={{
+          display: 'block',
+          width: '100vw',
+          height: '100vh',
+          touchAction: 'manipulation',
+          paddingTop: 'env(safe-area-inset-top)',
+          paddingBottom: 'env(safe-area-inset-bottom)',
+        }}
+      />
+      <HUD />
+      <TabNav active={activeTab} onSelect={setActiveTab} />
     </main>
   );
 }
