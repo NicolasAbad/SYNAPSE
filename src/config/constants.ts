@@ -177,6 +177,22 @@ export const SYNAPSE_CONSTANTS = {
   // SOFT CAP
   softCapKnee: 100,
   softCapExponent: 0.72,
+
+  // CANONICAL ALIASES (match GDD quick-reference names in CLAUDE.md)
+  costMult: 1.28,
+  cascadeMult: 2.5,
+  offlineEfficiency: 0.5,
+  insightMult: [3, 8, 18] as const,
+  insightDuration: [15, 12, 8] as const,
+  focusFillPerTap: 0.01,
+  dischargeBaseMult: 20,
+  spontaneousChance: 0.4,
+
+  // PIGGY BANK — REFILL
+  bankRefillPrice: 0.99,
+
+  // MONETIZATION — SPARK CAP
+  sparkCapMonthly: 1000,
 } as const;
 
 export type SynapseConstants = typeof SYNAPSE_CONSTANTS;

@@ -1,5 +1,5 @@
 import { calculateProduction } from './production';
-import { calculateConnectionMult } from './formulas';
+import { calculateConnectionMult, getThreshold } from './formulas';
 import type { GameState } from '@/types';
 
 const MS_PER_SECOND = 1000;
@@ -11,6 +11,7 @@ export interface TickPatch {
   baseProductionPerSecond: number;
   effectiveProductionPerSecond: number;
   connectionMult: number;
+  currentThreshold: number;
   insightActive: boolean;
   insightEndTime: number | null;
   lastActiveTimestamp: number;
@@ -36,6 +37,8 @@ export function gameTick(state: GameState, dtMs: number): TickPatch {
   const cycleGenerated = state.cycleGenerated + generated;
   const totalGenerated = state.totalGenerated + generated;
 
+  const currentThreshold = getThreshold(state.prestigeCount, state.transcendenceCount);
+
   return {
     thoughts,
     cycleGenerated,
@@ -43,6 +46,7 @@ export function gameTick(state: GameState, dtMs: number): TickPatch {
     baseProductionPerSecond: base,
     effectiveProductionPerSecond: effective,
     connectionMult,
+    currentThreshold,
     insightActive,
     insightEndTime,
     lastActiveTimestamp: now,

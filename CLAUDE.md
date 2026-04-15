@@ -462,7 +462,7 @@ Each sprint has two sections:
 - [ ] `npm run build` produces bundle < 2MB
 - [ ] GameState interface compiles (90+ fields, all typed, no `any`)
 - [ ] `SYNAPSE_CONSTANTS` exports every value from GDD
-- [ ] `softCap(100)=100`, `softCap(200)≈164.9`, `softCap(1000)≈547.4`
+- [ ] `softCap(100)=100`, `softCap(200)≈164.72`, `softCap(1000)≈524.81` (formula `100 * (x/100)^0.72`)
 - [ ] `calculateProduction()` returns `{ base, effective }` separately
 - [ ] Tick loop runs at 100ms with delta-time tracking
 - [ ] `t('key')` returns English strings for all keys

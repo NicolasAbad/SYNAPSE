@@ -6,6 +6,19 @@ Per CODE-7: read at session start, update at session end.
 
 **Status:** code complete; pending player validation on device + Firebase wiring.
 
+### Session 2026-04-15 — core data layer + engine pass
+
+**Created:**
+- `src/config/neurons.ts` — `NEURON_DEFINITIONS` + `NEURON_BY_TYPE` lookup, sourced from `SYNAPSE_CONSTANTS.neurons` (zero duplicated numbers)
+- `src/config/upgrades.ts` — 35 upgrades with `id`, `name`, `description`, `category`, `tier` (P0/P2/P4/P6/P10), `cost`, `costType`, structured `requires`, `effect` token; `UPGRADE_BY_ID` lookup
+- `src/engine/migrate.ts` — `migrateState(persisted, defaults)`; defaults injected by caller to keep `engine/` free of `store/` imports
+
+**Modified:**
+- `src/config/constants.ts` — added 10 canonical aliases / missing keys: `costMult`, `cascadeMult`, `offlineEfficiency`, `insightMult`, `insightDuration`, `focusFillPerTap`, `dischargeBaseMult`, `spontaneousChance`, `bankRefillPrice`, `sparkCapMonthly`
+- `src/engine/production.ts` — softCap now applied to raw neuron output (was incorrectly applied to multiplier); full chain: connections × polarity × mental-state base × momentum, then `productionCap` softens excess; effective adds insight × eureka
+- `src/engine/tick.ts` — refreshes `currentThreshold` each tick via `getThreshold(prestigeCount, transcendenceCount)`
+- `CLAUDE.md` + `PROGRESS.md` — softCap expected values corrected to canonical 164.72 / 524.81
+
 ### Done
 
 **Tooling**
@@ -23,9 +36,10 @@ Per CODE-7: read at session start, update at session end.
 - `src/config/constants.ts` — full `SYNAPSE_CONSTANTS` verbatim from GDD
 - `src/config/strings/` — `t(key)` i18n with English seed dictionary
 - `src/config/unlocks.ts` — `PROGRESSIVE_UNLOCKS` stub
-- `src/engine/production.ts` — `softCap()` + `calculateProduction(): { base, effective }`
+- `src/engine/production.ts` — `softCap()` + `calculateProduction(): { base, effective }` with full multiplier chain (connections, polarity, mental-state base, momentum, productionCap; effective adds insight + eureka)
 - `src/engine/formulas.ts` — `getThreshold()` piecewise + `calculateConnectionMult()` + `calculateNeuronCost()`
-- `src/engine/tick.ts` — `gameTick(state, dtMs)` pure function
+- `src/engine/tick.ts` — `gameTick(state, dtMs)` pure function; refreshes `currentThreshold` each tick
+- `src/engine/migrate.ts` — `migrateState(persisted, defaults)` merges defaults for any missing fields, stamps `gameVersion`
 - `src/store/initialState.ts` — default `GameState` builder
 - `src/store/storage.ts` — Capacitor Preferences adapter for Zustand
 - `src/store/gameStore.ts` — Zustand store + persist middleware + actions (tick, tap, buyNeuron, triggerDischarge, resetAll)
@@ -42,7 +56,7 @@ Per CODE-7: read at session start, update at session end.
 - [x] `npm run build` produces dist
 - [x] `GameState` compiles, no `any`
 - [x] `SYNAPSE_CONSTANTS` exports every GDD value
-- [x] `softCap(100)===100`, `softCap(200)≈164.9`, `softCap(1000)≈547.4` (formula verified)
+- [x] `softCap(100)===100`, `softCap(200)≈164.72`, `softCap(1000)≈524.81` (formula `100 * (x/100)^0.72` — canonical; GDD body values 164.9/547.4 were mathematically inconsistent with the exponent)
 - [x] `calculateProduction()` returns `{ base, effective }`
 - [x] Tick loop runs at 100ms
 - [x] `t('app_name')` returns `SYNAPSE`
