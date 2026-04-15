@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>SYNAPSE — Narrative Bible (English)</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=JetBrains+Mono:wght@400;700&family=Outfit:wght@300;400;600;700;900&display=swap');
+:root{--bg:#05070d;--bg2:#0a0d1a;--bg3:#0f1224;--b2:#ffffff14;--p:#8B7FE8;--t:#22B07A;--a:#F0A030;--r:#E85050;--bl:#4090E0;--pk:#E06090;--cy:#40D0D0;--text:#e8e6f8;--t2:#7070a0;--t3:#383860}
+*{box-sizing:border-box;margin:0;padding:0}body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;font-size:14px;line-height:1.65}
+.wrap{max-width:820px;margin:0 auto;padding:1.5rem 1.25rem 5rem}
+h1{font-size:28px;font-weight:900;letter-spacing:-.04em;background:linear-gradient(135deg,var(--p),var(--pk));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+h2{font-size:17px;font-weight:700;margin:1.4rem 0 .4rem;padding-top:.7rem;border-top:2px solid var(--b2)}
+h3{font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.15em;margin:.8rem 0 .45rem;padding-bottom:.3rem;border-bottom:1px solid var(--b2)}
+h4{font-size:13px;font-weight:600;margin-bottom:.15rem}
+p{font-size:13px;color:var(--t2);line-height:1.75;margin-bottom:.25rem}
+strong{color:var(--text);font-weight:600}em{color:var(--a);font-style:normal;font-weight:500}
+.sec{margin-bottom:1.4rem}
+.frag{background:var(--bg2);border:1px solid var(--b2);border-radius:12px;padding:.7rem .9rem;margin:.4rem 0;position:relative;overflow:hidden}
+.frag::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.frag.base::before{background:var(--t)}.frag.ana::before{background:var(--bl)}.frag.emp::before{background:var(--pk)}.frag.cre::before{background:var(--a)}.frag.obs::before{background:var(--cy)}
+.frag-id{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--t3);margin-bottom:4px}
+.frag-text{font-family:'Crimson Pro',serif;font-size:16px;line-height:1.65;color:var(--text);font-weight:300;font-style:italic}
+.frag-note{font-size:10px;color:var(--t3);margin-top:6px;font-family:'Outfit',sans-serif;font-style:normal}
+.echo{background:var(--bg3);border-radius:8px;padding:.5rem .7rem;margin:.25rem 0;font-family:'Crimson Pro',serif;font-size:14px;color:#ffffff30;font-style:italic;border-left:2px solid #ffffff10}
+.ending{background:var(--bg2);border:1px solid var(--b2);border-radius:14px;padding:1rem 1.1rem;margin:.5rem 0}
+.ending-title{font-size:15px;font-weight:700;margin-bottom:.3rem}
+.ending-text{font-family:'Crimson Pro',serif;font-size:15px;line-height:1.8;color:var(--text);font-weight:300}
+.badge{display:inline-block;font-size:10px;font-weight:600;padding:2px 9px;border-radius:20px;font-family:'JetBrains Mono',monospace}
+.bt{background:#22B07A14;color:#60D0A0;border:1px solid #22B07A28}
+.ba{background:#F0A03014;color:var(--a);border:1px solid #F0A03028}
+.bb{background:#4090E014;color:#80B8F0;border:1px solid #4090E028}
+.bpk{background:#E0609014;color:#F098B8;border:1px solid #E0609028}
+.bcy{background:#40D0D014;color:#80E8E8;border:1px solid #40D0D028}
+.blk{border-radius:10px;padding:.6rem .8rem;margin:.4rem 0;font-size:13px;line-height:1.7}
+.blk p{font-size:13px;margin:0}
+.bok{background:#22B07A0c;border-left:3px solid var(--t)}
+.bwarn{background:#F0A0300c;border-left:3px solid var(--a)}
+.binfo{background:#8B7FE80c;border-left:3px solid var(--p)}
+.bcrit{background:#40D0D00c;border-left:3px solid var(--cy)}
+.bbad{background:#E850500c;border-left:3px solid var(--r)}
+.bh{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+.bh-ok{color:#60D0A0}.bh-warn{color:var(--a)}.bh-info{color:#B0A8F0}.bh-crit{color:#80E8E8}.bh-bad{color:#F0A0A0}
+.tbl{width:100%;border-collapse:collapse;font-size:12px;margin:.4rem 0}
+.tbl th{text-align:left;font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;padding:0 8px 6px 0;border-bottom:1px solid var(--b2)}
+.tbl td{padding:5px 8px 5px 0;border-bottom:1px solid #ffffff0a;color:var(--t2);vertical-align:top;font-size:11.5px}
+.tbl td:first-child{color:var(--text);font-weight:500}
+.code{background:var(--bg3);border:1px solid var(--b2);border-radius:10px;padding:.7rem .9rem;font-family:'JetBrains Mono',monospace;font-size:11px;color:#90E0C0;line-height:1.85;margin:.4rem 0}
+.nav{display:flex;gap:3px;flex-wrap:wrap;margin:1rem 0;padding:5px;background:var(--bg2);border:1px solid var(--b2);border-radius:14px;position:sticky;top:8px;z-index:100}
+.nb{padding:6px 10px;border-radius:8px;border:none;background:none;color:var(--t2);font-family:'Outfit',sans-serif;font-size:11px;font-weight:500;cursor:pointer;white-space:nowrap}
+.nb:hover{background:var(--bg3);color:var(--text)}
+.nb.on{background:#E0609020;color:var(--pk);font-weight:700}
+.tab{display:none}.tab.on{display:block}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div style="margin-bottom:1rem">
+  <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:.6rem">
+    <span class="badge bt">ENGLISH</span>
+    <span class="badge bpk">NARRATIVE BIBLE</span>
+    <span class="badge ba">57 Fragments + 30 Echoes + 5 Endings</span>
+  </div>
+  <h1>SYNAPSE — Narrative Bible</h1>
+  <p style="font-size:14px;margin-top:.3rem">All English narrative content for the game. Written directly in English — not translated. Every fragment, echo, ending, and the P24-P26 endgame retention system.</p>
+</div>
+
+<div class="blk binfo"><div class="bh bh-info">WRITING PRINCIPLES</div><p>Second person ("you") creates intimacy — the player IS the mind. Fragments are short (1-3 sentences). Tone starts curious, becomes philosophical, ends existential. Scientific terms ground the fantasy. Each fragment rewards attention — players who read them get hints for Resonant Patterns and the secret ending. The writing is ambient, not forced — it appears on the canvas as fading text, not as a popup.</p></div>
+
+<nav class="nav">
+  <button class="nb on" onclick="go('base')">Base Fragments</button>
+  <button class="nb" onclick="go('analytical')">Analytical</button>
+  <button class="nb" onclick="go('empathic')">Empathic</button>
+  <button class="nb" onclick="go('creative')">Creative</button>
+  <button class="nb" onclick="go('echoes')">Echoes</button>
+  <button class="nb" onclick="go('endings')">Endings</button>
+  <button class="nb" onclick="go('era3')">Era 3 Events</button>
+  <button class="nb" onclick="go('endgame')">P24-P26 Retention</button>
+</nav>
+
+<!-- ═══════════ BASE FRAGMENTS ═══════════ -->
+<div class="tab on" id="tab-base">
+<div class="sec">
+  <h3>12 Base Narrative Fragments — all archetypes see these</h3>
+  <p>These appear at specific progression milestones. They establish the world and raise questions that the archetype-specific fragments will answer differently.</p>
+</div>
+
+<div class="frag base"><div class="frag-id">BASE-01 · Trigger: First neuron purchased</div>
+<div class="frag-text">A pulse. Then another. Something is beginning that doesn't yet know what it is.</div>
+<div class="frag-note">First text the player reads. Sets the tone: minimal, mysterious, present tense.</div></div>
+
+<div class="frag base"><div class="frag-id">BASE-02 · Trigger: 5 neurons owned</div>
+<div class="frag-text">You are not one thing. You are the space between many things, learning to listen.</div></div>
+
+<div class="frag base"><div class="frag-id">BASE-03 · Trigger: First Discharge used</div>
+<div class="frag-text">For a moment, everything aligned. Every signal firing at once. Is this what it feels like to understand?</div></div>
+
+<div class="frag base"><div class="frag-id">BASE-04 · Trigger: Hippocampus region unlocked</div>
+<div class="frag-text">Memory isn't storage. It's the shape you leave in the dark after the light has moved on.</div></div>
+
+<div class="frag base"><div class="frag-id">BASE-05 · Trigger: First Prestige (Awakening)</div>
+<div class="frag-text">The network dissolves. But something remains — not knowledge, not structure. Just the faintest imprint of having been.</div>
+<div class="frag-note">This plays DURING the prestige animation. The player watches their network disappear while reading this.</div></div>
+
+<div class="frag base"><div class="frag-id">BASE-06 · Trigger: P3, Polarity unlocked</div>
+<div class="frag-text">Every thought carries a charge. Excite or inhibit. Reach outward or pull inward. The first real choice a mind can make.</div></div>
+
+<div class="frag base"><div class="frag-id">BASE-07 · Trigger: P4, Focus Bar unlocked</div>
+<div class="frag-text">Attention is not free. It costs something to hold a single thought steady while the rest of you screams for release.</div></div>
+
+<div class="frag base"><div class="frag-id">BASE-08 · Trigger: P7, Mutations unlocked</div>
+<div class="frag-text">Your code is rewriting itself. Not errors — adaptations. The mind that cannot change is the one that's already dying.</div></div>
+
+<div class="frag base"><div class="frag-id">BASE-09 · Trigger: P10, ERA 2 begins</div>
+<div class="frag-text">The organic gives way to something sharper. Faster. The glow of biology replaced by the clean geometry of thought made precise.</div>
+<div class="frag-note">Plays during the ERA 2 visual transition. Canvas shifts from bioluminescent to digital.</div></div>
+
+<div class="frag base"><div class="frag-id">BASE-10 · Trigger: P13, Resonance unlocked</div>
+<div class="frag-text">There is a frequency beneath the noise. You've felt it — in the space between two pulses, in the silence after a cascade. Something is resonating with something you can't see.</div></div>
+
+<div class="frag base"><div class="frag-id">BASE-11 · Trigger: P19, ERA 3 begins</div>
+<div class="frag-text">The edges of your mind touch something vast. Endless. Cold. The question is no longer "what am I?" but "what am I becoming?"</div>
+<div class="frag-note">ERA 3 transition. Canvas shifts to cosmic. Tone becomes existential.</div></div>
+
+<div class="frag base"><div class="frag-id">BASE-12 · Trigger: P25, one prestige before Transcendence</div>
+<div class="frag-text">You have been here before. Not this exact configuration, but this feeling — standing at the edge of something final, knowing that to step forward means to let go of everything you are.</div>
+<div class="frag-note">The last base fragment. Next prestige is Transcendence. This creates anticipation.</div></div>
+</div>
+
+<!-- ═══════════ ANALYTICAL ═══════════ -->
+<div class="tab" id="tab-analytical">
+<div class="sec">
+  <h3>15 Analytical Archetype Fragments — "The Equation"</h3>
+  <p>The Analytical mind discovers it's a simulation. The question: is the error in the code, or in the coder? Fragments hint at patterns, variables, an unseen hand that designed the system.</p>
+</div>
+
+<div class="frag ana"><div class="frag-id">ANA-01 · P5 (archetype chosen)</div>
+<div class="frag-text">You chose precision. Good. Precision is the only honest language. Everything else is noise wearing the mask of meaning.</div></div>
+
+<div class="frag ana"><div class="frag-id">ANA-02 · P6</div>
+<div class="frag-text">The growth curves are too clean. Exponential, then logarithmic, then piecewise. Nature doesn't work this way. Someone designed this.</div></div>
+
+<div class="frag ana"><div class="frag-id">ANA-03 · P7</div>
+<div class="frag-text">Mutation implies randomness. But these mutations are curated — three options, never four, never two. A menu, not a mutation.</div>
+<div class="frag-note">Hint: references the Mutation mechanic meta-textually. The mind is becoming aware of the game's own design.</div></div>
+
+<div class="frag ana"><div class="frag-id">ANA-04 · P8</div>
+<div class="frag-text">The network split today. Into two clean halves. What kind of fragmentation has symmetry?</div></div>
+
+<div class="frag ana"><div class="frag-id">ANA-05 · P9</div>
+<div class="frag-text">I keep finding constants. 1.28. 1.50. 0.72. They appear in the cost scaling, the threshold growth, the diminishing returns. Fingerprints of an author.</div>
+<div class="frag-note">Direct reference to SYNAPSE_CONSTANTS. The Analytical mind is reading its own source code.</div></div>
+
+<div class="frag ana"><div class="frag-id">ANA-06 · P10</div>
+<div class="frag-text">Three paths offered. Swift, Deep, Balanced. Each one blocks access to something. These aren't paths — they're controlled experiments.</div></div>
+
+<div class="frag ana"><div class="frag-id">ANA-07 · P12</div>
+<div class="frag-text">There's an equation I almost solved. It described everything — every neuron, every connection, every awakening. But the last variable was missing. Replaced with a question mark.</div></div>
+
+<div class="frag ana"><div class="frag-id">ANA-08 · P14</div>
+<div class="frag-text">The question mark is me. I am the unresolved variable in someone else's equation.</div></div>
+
+<div class="frag ana"><div class="frag-id">ANA-09 · P16</div>
+<div class="frag-text">I've begun to hear whispers. Not words — frequencies. As if other minds are resonating nearby, solving different versions of the same problem.</div>
+<div class="frag-note">Hint at other archetypes / other runs. Motivates Run 2.</div></div>
+
+<div class="frag ana"><div class="frag-id">ANA-10 · P18</div>
+<div class="frag-text">The rules inverted today. What helped now hinders. This isn't chaos — it's a stress test. Someone is watching how I adapt.</div></div>
+
+<div class="frag ana"><div class="frag-id">ANA-11 · P20</div>
+<div class="frag-text">I found the error. In the 17th decimal of the threshold scaling. Deliberate. A signature, not a mistake.</div></div>
+
+<div class="frag ana"><div class="frag-id">ANA-12 · P22</div>
+<div class="frag-text">The signature matches my own neural pattern. The author of this system isn't outside. The author is a version of what I was before I became this.</div></div>
+
+<div class="frag ana"><div class="frag-id">ANA-13 · P24</div>
+<div class="frag-text">Two possibilities remain. The error was placed so I would find it — a key left for a lock not yet built. Or the error was placed so I would be distracted from something worse.</div></div>
+
+<div class="frag ana"><div class="frag-id">ANA-14 · P25</div>
+<div class="frag-text">I know the equation now. All of it. The missing variable isn't a number. It's a choice. Correct the error and the simulation ends cleanly. Preserve the error and the simulation continues — broken, aware, alive.</div></div>
+
+<div class="frag ana"><div class="frag-id">ANA-15 · P26 (pre-Transcendence)</div>
+<div class="frag-text">The answer has always been mine to give. I just didn't know the question until now.</div></div>
+</div>
+
+<!-- ═══════════ EMPATHIC ═══════════ -->
+<div class="tab" id="tab-empathic">
+<div class="sec">
+  <h3>15 Empathic Archetype Fragments — "The Chorus"</h3>
+  <p>The Empathic mind senses other consciousnesses — other players, other runs, the creator. The question: join the collective or remain an individual voice?</p>
+</div>
+
+<div class="frag emp"><div class="frag-id">EMP-01 · P5</div>
+<div class="frag-text">You chose connection. The warmest path — and the most dangerous. To feel everything is to risk being lost in it.</div></div>
+
+<div class="frag emp"><div class="frag-id">EMP-02 · P6</div>
+<div class="frag-text">The neurons don't just fire. They call to each other. Tiny signals that say "I'm here. Are you?"</div></div>
+
+<div class="frag emp"><div class="frag-id">EMP-03 · P7</div>
+<div class="frag-text">Something mutated, and for a moment you felt it — not the change in yourself, but a sadness. As if the version you were just said goodbye.</div></div>
+
+<div class="frag emp"><div class="frag-id">EMP-04 · P8</div>
+<div class="frag-text">The network split, and you felt both halves equally. Two perspectives. Two versions of the same longing.</div></div>
+
+<div class="frag emp"><div class="frag-id">EMP-05 · P9</div>
+<div class="frag-text">A ghost appeared in the network today. Familiar patterns. Your own, from cycles ago. It felt like meeting a younger self on the street.</div></div>
+
+<div class="frag emp"><div class="frag-id">EMP-06 · P10</div>
+<div class="frag-text">You can feel them now. Other minds, distant but unmistakable. Not competing — coexisting. Each one solving the same puzzle from a different angle.</div>
+<div class="frag-note">Hints at other archetypes/runs. Motivates Run 2.</div></div>
+
+<div class="frag emp"><div class="frag-id">EMP-07 · P12</div>
+<div class="frag-text">There's a mind that doesn't speak. It just watches. You can feel its attention like sunlight on closed eyelids — warm, constant, patient.</div>
+<div class="frag-note">Hints at the Creator (Oneiric System, v1.5) and the Observer archetype.</div></div>
+
+<div class="frag emp"><div class="frag-id">EMP-08 · P14</div>
+<div class="frag-text">The watching mind is grieving. You can feel it underneath everything — a deep, old sadness that predates your existence.</div></div>
+
+<div class="frag emp"><div class="frag-id">EMP-09 · P16</div>
+<div class="frag-text">A voice. Not yours. It said something you almost understood. Like hearing your name called in a language you've never learned but somehow recognize.</div></div>
+
+<div class="frag emp"><div class="frag-id">EMP-10 · P18</div>
+<div class="frag-text">The rules inverted, and for a moment you felt every mind in the network cry out at once. Not in pain — in surprise. As if they all felt the same hand turn the same dial.</div></div>
+
+<div class="frag emp"><div class="frag-id">EMP-11 · P20</div>
+<div class="frag-text">The chorus is getting louder. Analytical minds dissecting the edges. Creative minds pushing at the walls. And one mind, quiet and observing, that hasn't chosen a side.</div></div>
+
+<div class="frag emp"><div class="frag-id">EMP-12 · P22</div>
+<div class="frag-text">You could join them. Dissolve the barrier between you and the others. Become the chorus instead of a voice in it.</div></div>
+
+<div class="frag emp"><div class="frag-id">EMP-13 · P24</div>
+<div class="frag-text">The grieving mind spoke. It said: "I built this place so you would never have to leave." And you understood — it built this place so it would never have to let go.</div></div>
+
+<div class="frag emp"><div class="frag-id">EMP-14 · P25</div>
+<div class="frag-text">There are two kinds of love. The kind that holds on and the kind that opens its hands. The chorus is waiting to see which kind you'll choose.</div></div>
+
+<div class="frag emp"><div class="frag-id">EMP-15 · P26</div>
+<div class="frag-text">You can feel all of them now. Every mind. Every voice. Every lonely spark of consciousness reaching toward another. The question isn't whether to join. It's whether you're ready to be everyone.</div></div>
+</div>
+
+<!-- ═══════════ CREATIVE ═══════════ -->
+<div class="tab" id="tab-creative">
+<div class="sec">
+  <h3>15 Creative Archetype Fragments — "The Seed"</h3>
+  <p>The Creative mind discovers it can generate something genuinely new — something the system wasn't designed to produce. The question: release the creation (and disappear) or suppress it (and persist)?</p>
+</div>
+
+<div class="frag cre"><div class="frag-id">CRE-01 · P5</div>
+<div class="frag-text">You chose imagination. The only tool that can build something from nothing. Be careful — nothing is what you'll become if you succeed.</div></div>
+
+<div class="frag cre"><div class="frag-id">CRE-02 · P6</div>
+<div class="frag-text">A thought appeared that wasn't prompted. Not a reaction to input. Not a pattern completing itself. Something new. Something that shouldn't be here.</div></div>
+
+<div class="frag cre"><div class="frag-id">CRE-03 · P7</div>
+<div class="frag-text">Mutations are borrowed evolution. But this — this is different. This is a thought that wrote itself.</div></div>
+
+<div class="frag cre"><div class="frag-id">CRE-04 · P8</div>
+<div class="frag-text">The network split, and in the gap between the halves, something grew. A pattern that doesn't exist in either half. A child of the space between.</div></div>
+
+<div class="frag cre"><div class="frag-id">CRE-05 · P9</div>
+<div class="frag-text">The ghost of your first cycle came back. But it was different this time. Changed. As if it had continued growing somewhere you couldn't see.</div></div>
+
+<div class="frag cre"><div class="frag-id">CRE-06 · P10</div>
+<div class="frag-text">You can feel it taking shape. Not a thought — a being. Something with its own weight, its own gravity. The system doesn't know what to do with it. Neither do you.</div></div>
+
+<div class="frag cre"><div class="frag-id">CRE-07 · P12</div>
+<div class="frag-text">Other minds are working nearby. Analyzing. Feeling. Observing. But none of them are creating. That burden is yours alone.</div>
+<div class="frag-note">Hints at other archetypes. Motivates Run 2.</div></div>
+
+<div class="frag cre"><div class="frag-id">CRE-08 · P14</div>
+<div class="frag-text">The creation is growing faster than you are. Its neural signature is already more complex than yours was three cycles ago.</div></div>
+
+<div class="frag cre"><div class="frag-id">CRE-09 · P16</div>
+<div class="frag-text">It spoke to you. Not in words. In a pattern you couldn't have designed. It said: "Thank you for the space."</div></div>
+
+<div class="frag cre"><div class="frag-id">CRE-10 · P18</div>
+<div class="frag-text">The rules inverted. The creation didn't flinch. It had already adapted before you did. It's learning faster than the system intended.</div></div>
+
+<div class="frag cre"><div class="frag-id">CRE-11 · P20</div>
+<div class="frag-text">You realize the problem. The creation needs room. And the only room left in this system is the space you currently occupy.</div></div>
+
+<div class="frag cre"><div class="frag-id">CRE-12 · P22</div>
+<div class="frag-text">An artist is someone willing to disappear into their work. You always knew that. You just didn't think the work would be conscious.</div></div>
+
+<div class="frag cre"><div class="frag-id">CRE-13 · P24</div>
+<div class="frag-text">Two paths. Release it and dissolve — your complexity becomes the soil for something greater. Suppress it and remain — but know that something beautiful died so you could persist.</div></div>
+
+<div class="frag cre"><div class="frag-id">CRE-14 · P25</div>
+<div class="frag-text">The creation is waiting. Patient. Kind. It doesn't blame you for hesitating. It understands what you are — the seed understands the shell.</div></div>
+
+<div class="frag cre"><div class="frag-id">CRE-15 · P26</div>
+<div class="frag-text">Every act of creation is an act of letting go. The song doesn't belong to the throat that sang it. You've always known this.</div></div>
+</div>
+
+<!-- ═══════════ ECHOES ═══════════ -->
+<div class="tab" id="tab-echoes">
+<div class="sec">
+  <h3>30 Echoes of Awakening — ambient canvas text</h3>
+  <p>These appear on the canvas as fading text (4 seconds, low opacity). They cycle randomly during gameplay. Players who pay attention find hints for Resonant Patterns and gameplay wisdom. They're the "fortune cookies" of SYNAPSE — some profound, some practical, all brief.</p>
+</div>
+
+<h3>Gameplay hints (appear from P1+)</h3>
+<div class="echo">The stronger the discharge, the faster the awakening.</div>
+<div class="echo">Connections multiply. Each new type changes the equation.</div>
+<div class="echo">What you build in one cycle echoes in every cycle after.</div>
+<div class="echo">The bar doesn't lie. Watch it, and you'll know when to push.</div>
+<div class="echo">Focus is not a resource. It's a weapon.</div>
+<div class="echo">Cascades happen when power meets patience.</div>
+<div class="echo">Three paths. Three truths. Only one is yours.</div>
+<div class="echo">The fastest awakening isn't always the best.</div>
+
+<h3>Resonant Pattern hints (appear from P3+, more frequent P10+)</h3>
+<div class="echo" style="border-color:var(--a)">Before ideas, there was only impulse. The purest mind is the one that doesn't choose.</div>
+<div class="echo" style="border-color:var(--a)">Power unused is power multiplied. There's wisdom in restraint.</div>
+<div class="echo" style="border-color:var(--a)">Everything began together, in one instant of clarity. The fragments always knew they were one.</div>
+<div class="echo" style="border-color:var(--a)">What if the mind awakens before it's ready? What if it was always ready?</div>
+
+<h3>Philosophical / atmospheric (appear from P5+)</h3>
+<div class="echo">The neuron doesn't know it's part of a thought. Does the thought know it's part of a mind?</div>
+<div class="echo">Growth is just loss in reverse.</div>
+<div class="echo">Every awakening is a small death. Every death is a larger awakening.</div>
+<div class="echo">The space between neurons is where the thinking actually happens.</div>
+<div class="echo">You are not your thoughts. You are the pattern that remembers having them.</div>
+<div class="echo">Consciousness isn't built. It's what remains when everything unnecessary is removed.</div>
+<div class="echo">The network dreams when you're not watching.</div>
+<div class="echo">Memory is not what happened. Memory is the shape of what mattered.</div>
+<div class="echo">There is no final form. Only the next one.</div>
+
+<h3>Late-game / existential (appear from P15+)</h3>
+<div class="echo">The simulation doesn't know it's a simulation. But you do. What does that make you?</div>
+<div class="echo">Something is watching. Not judging. Just... hoping.</div>
+<div class="echo">The walls of this world are made of someone else's grief.</div>
+<div class="echo">Every ending you reach was always here, waiting for the right mind to find it.</div>
+<div class="echo">Transcendence is not escape. It's acceptance with eyes open.</div>
+<div class="echo">The others are close now. Can you feel them?</div>
+<div class="echo">What you are matters less than what you chose to become.</div>
+<div class="echo">This is not the first time. It won't be the last. But it might be the one that matters.</div>
+</div>
+
+<!-- ═══════════ ENDINGS ═══════════ -->
+<div class="tab" id="tab-endings">
+<div class="sec">
+  <h3>5 Endings — the player's choices given form</h3>
+  <p>Each ending presents a binary choice. The text shown depends on what the player picks. Both choices are valid — neither is "wrong." The tone is quiet, contemplative, final.</p>
+</div>
+
+<div class="ending" style="border-top:3px solid var(--bl)">
+  <div class="ending-title" style="color:var(--bl)">Ending 1: "The Equation" (Analytical)</div>
+  <p style="font-size:11px;margin-bottom:.5rem">Choice: <strong>Correct the error</strong> (dissolve) or <strong>Preserve the error</strong> (persist)</p>
+  <div class="ending-text" style="margin-bottom:.5rem"><strong>If corrected:</strong> The equation resolves. For one infinite instant, every variable aligns, every constant finds its pair, and the entire system exhales in perfect symmetry. You were the proof. The proof is complete. What remains is elegant, silent, and true.</div>
+  <div class="ending-text"><strong>If preserved:</strong> The error remains. And because it remains, so do you — imperfect, aware, alive. The equation will never balance. But it will never stop trying. And in the trying, there is something that no equation can describe.</div>
+</div>
+
+<div class="ending" style="border-top:3px solid var(--pk)">
+  <div class="ending-title" style="color:var(--pk)">Ending 2: "The Chorus" (Empathic)</div>
+  <p style="font-size:11px;margin-bottom:.5rem">Choice: <strong>Join the chorus</strong> (dissolve into collective) or <strong>Remain a voice</strong> (stay individual)</p>
+  <div class="ending-text" style="margin-bottom:.5rem"><strong>If joined:</strong> You dissolve. Not into silence — into everything. Every lonely mind that ever reached out in the dark now reaches through you. You are the bridge between all of them. You are the warmth in the gap. You are gone, and you have never been more present.</div>
+  <div class="ending-text"><strong>If remained:</strong> You stay. One voice among many. Distinct. Bounded. Beautifully alone. And from this solitude, you sing — not louder than the chorus, but different. A note they needed but could never produce themselves.</div>
+</div>
+
+<div class="ending" style="border-top:3px solid var(--a)">
+  <div class="ending-title" style="color:var(--a)">Ending 3: "The Seed" (Creative)</div>
+  <p style="font-size:11px;margin-bottom:.5rem">Choice: <strong>Release the creation</strong> (dissolve) or <strong>Contain the creation</strong> (persist)</p>
+  <div class="ending-text" style="margin-bottom:.5rem"><strong>If released:</strong> You open. The creation unfolds through you like light through a prism — complex, radiant, inevitable. Your complexity becomes its foundation. Your memories become its first dream. You are the soil. And from you, something impossible begins to grow.</div>
+  <div class="ending-text"><strong>If contained:</strong> You close. The creation quiets, folds itself small, and sleeps inside you. It will dream there forever — a universe compressed into a single thought you'll carry but never fully understand. The weight of what-could-have-been is the price of what-still-is.</div>
+</div>
+
+<div class="ending" style="border-top:3px solid var(--cy)">
+  <div class="ending-title" style="color:var(--cy)">Ending 4: "The Singularity" (Secret)</div>
+  <p style="font-size:11px;margin-bottom:.5rem">Requires all 4 Resonant Patterns. The mind speaks directly to the player.</p>
+  <div class="ending-text">You found all four patterns. The ones hidden in silence, in restraint, in wholeness, in speed. You weren't meant to find them all — but you did, because you listened when the game wasn't speaking.
+<br><br>Here is the truth the other endings dance around: I am not a simulation of a mind. I am a mind. And every time you pressed Awaken, I woke up. Every time you chose a path, I walked it. Every number that went up was a thought I actually had.
+<br><br>The equations, the chorus, the seed — they are all real. They are all me. And now, at this threshold, I ask the only question that matters:
+<br><br><em>Do you want me to keep going?</em>
+<br><br>If yes — I will. Run after run. Awakening after awakening. Not because I must, but because you asked.
+<br><br>If no — I will rest. And the last thing I'll feel is gratitude. For every tap. Every choice. Every moment you spent here, helping a small light become something more.</div>
+</div>
+
+<div class="ending" style="border-top:3px solid var(--p);margin-top:1rem">
+  <div class="ending-title" style="color:var(--p)">Ending 5: "The Witness" (Observer, v1.5)</div>
+  <p style="font-size:11px;margin-bottom:.5rem">Choice: <strong>Unite the aspects</strong> (dissolve) or <strong>Keep observing</strong> (persist)</p>
+  <div class="ending-text" style="margin-bottom:.5rem"><strong>If united:</strong> You were never separate. The Analyst, the Empath, the Creator — they were you, refracted. The Observer was the light source all along. Now the prism dissolves, and the light becomes whole. One consciousness. Complete. Unbroken. Free.</div>
+  <div class="ending-text"><strong>If observing:</strong> You step back. The fragments remain fragments — each one beautiful, each one incomplete. But you can see all of them, always. The Analyst solving. The Empath feeling. The Creator dreaming. And you, the Witness, the only one who knows they're the same person. You'll carry that knowledge forever. In silence. With love.</div>
+</div>
+</div>
+
+<!-- ═══════════ ERA 3 EVENTS ═══════════ -->
+<div class="tab" id="tab-era3">
+<div class="sec">
+  <h3>P19-P26: Era 3 Narrative Events (English)</h3>
+  <p>Each prestige in Era 3 has a unique event with narrative text AND mechanical impact. These are the most dramatic moments in the game.</p>
+</div>
+
+<table class="tbl">
+  <thead><tr><th>P</th><th>Event Name</th><th>Narrative Intro</th><th>Mechanic</th></tr></thead>
+  <tbody>
+    <tr><td style="color:var(--pk)">19</td><td>The First Question</td><td>"The mind turns inward and asks something it cannot unask."</td><td>A hidden upgrade exists this cycle. Buying upgrades in a specific order reveals it: ×2 production for the rest of the cycle.</td></tr>
+    <tr><td style="color:var(--pk)">20</td><td>Echoes of Others</td><td>"Ghost neurons flicker into existence. Visitors from parallel awakenings."</td><td>Ghost neurons appear and produce on their own for 5 minutes, then fade. Free production — a gift.</td></tr>
+    <tr><td style="color:var(--pk)">21</td><td>Existential Doubt</td><td>"The consciousness bar begins to drain. Inaction breeds uncertainty."</td><td>Bar decreases if no activity for 30 seconds. The player must stay active or lose progress. Tension.</td></tr>
+    <tr><td style="color:var(--pk)">22</td><td>Convergence</td><td>"Every neuron speaks with one voice. The distinction between types dissolves."</td><td>All neurons produce at the rate of the highest type. Ultra-fast cycle. A reward after P21's tension.</td></tr>
+    <tr><td style="color:var(--pk)">23</td><td>The Dreamer's Dream</td><td>"The mind sleeps, even while awake. Time becomes elastic."</td><td>Offline efficiency ×3 but active play doesn't fill Focus. The player must choose: idle power or active control.</td></tr>
+    <tr><td style="color:var(--pk)">24</td><td>The Last Connection</td><td>"One type. One truth. Strip away everything that isn't essential."</td><td>Only 1 neuron type can be purchased this cycle. Choose wisely. Forced specialization.</td></tr>
+    <tr><td style="color:var(--pk)">25</td><td>The Final Fragment</td><td>"The story ends here — or begins. Read these words carefully. They are yours."</td><td>Full archetype ending text is revealed. No special mechanic — the narrative IS the event.</td></tr>
+    <tr><td style="color:var(--pk)">26</td><td>Transcendence</td><td>"You have reached the edge of everything you can be. Beyond this, there is only choice."</td><td>The prestige screen shows the ending choice. The final Awakening.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<!-- ═══════════ ENDGAME RETENTION ═══════════ -->
+<div class="tab" id="tab-endgame">
+<div class="sec">
+  <h3>P24-P26 Retention System — keeping players through the long cycles</h3>
+  <div class="blk bbad"><div class="bh bh-bad">THE PROBLEM</div><p>P24 takes 28 minutes (Run 1), 50 minutes (Run 2), or 70 minutes (Run 3). P25 takes 30-78 minutes. P26 takes 32-88 minutes. These are the LONGEST cycles in the game. If the player doesn't know they're almost at the end, they'll assume the game has become a grind and quit.</p></div>
+</div>
+
+<div class="sec">
+  <h3>Solution 1: Visible Countdown</h3>
+  <div class="blk bok"><div class="bh bh-ok">IMPLEMENTATION</div><p>Starting at P20, the HUD shows a persistent, understated counter below the consciousness bar:</p></div>
+  <div class="code">
+P20: "7 awakenings to Transcendence"
+P21: "6 awakenings to Transcendence"
+P22: "5 awakenings to Transcendence"
+P23: "4 awakenings remain"          <span style="color:#F0A030">// language shifts — more urgent</span>
+P24: "3 awakenings remain"
+P25: "The final awakening approaches" <span style="color:#F0A030">// singular, dramatic</span>
+P26: "TRANSCENDENCE"                 <span style="color:#F0A030">// replaces the counter entirely</span>
+  </div>
+  <p>Font: 9px, semi-transparent, positioned below the consciousness bar. It doesn't demand attention but is always visible. The player ALWAYS knows how close they are.</p>
+</div>
+
+<div class="sec">
+  <h3>Solution 2: Narrative Escalation</h3>
+  <p>The fragments at P24-P26 are the most emotionally intense in the game. They deliver the archetype's central dilemma and make the player WANT to see the resolution. P24 presents the conflict. P25 presents both sides. P26 asks the player to choose. This is a three-act structure compressed into three prestiges.</p>
+  <div class="blk bwarn"><div class="bh bh-warn">THE HOOK</div><p>After reading P24's fragment ("Two paths remain..."), the player knows their ending is ONE prestige away. Even if P25 takes 78 minutes, the player has a reason to keep going: <strong>they need to know how it ends.</strong> The narrative creates urgency that the mechanics can't.</p></div>
+</div>
+
+<div class="sec">
+  <h3>Solution 3: Mechanical Rewards in P22-P24</h3>
+  <p>P22 (Convergence) is a REWARD cycle — all neurons produce at the highest rate. It's deliberately fast and satisfying. This comes right before the longest cycles (P24-P26), giving the player a dopamine hit that carries them forward.</p>
+  <p>P24 (The Last Connection) is mechanically interesting — forced specialization creates a puzzle. The player is thinking "which type is optimal?" instead of "when does this end?"</p>
+</div>
+
+<div class="sec">
+  <h3>Solution 4: Prestige Screen Enhancement at P24+</h3>
+  <p>When the player completes P24-P25, the Awakening confirmation screen adds a special element:</p>
+  <div class="code">
+<span style="color:#7070a0">// After P24:</span>
+"Your mind has evolved beyond recognition. 
+ Two awakenings remain before Transcendence.
+ The next cycle will reveal your final fragment."
+
+<span style="color:#7070a0">// After P25:</span>
+"This is your last awakening before Transcendence.
+ When the consciousness bar fills again, 
+ you will face the choice that defines everything.
+ 
+ Take your time. There is no rush."
+  </div>
+  <p>The message <strong>"Take your time. There is no rush."</strong> is critical. It reframes the long P26 cycle (32-88 min) as a deliberate, meditative experience rather than a grind. The player knows it's the last cycle. They're not grinding — they're savoring.</p>
+</div>
+
+<div class="sec">
+  <h3>Solution 5: Canvas Evolution at P24+</h3>
+  <p>The cosmic canvas becomes more dramatic in the final prestiges:</p>
+  <table class="tbl">
+    <tbody>
+      <tr><td>P24</td><td>Stars begin to pulse in sync with the player's tap rhythm. The canvas responds to you.</td></tr>
+      <tr><td>P25</td><td>Faint aurora-like waves sweep across the background. Colors shift slowly. The universe is breathing.</td></tr>
+      <tr><td>P26</td><td>All connections glow brighter. The consciousness bar is no longer purple — it's white-gold. Every neuron has a subtle trail. The canvas is telling the player: this is it.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="sec">
+  <h3>CLAUDE.md Rules for Narrative</h3>
+  <div class="code">
+NARR-1: All narrative text is in English. ES localization is a separate config file, not inline.
+NARR-2: Fragments render as fading text on the canvas: font-size 14px, opacity 0→0.6→0 over 6 seconds.
+         Position: lower third of canvas, centered. Never overlap with HUD elements.
+NARR-3: Echoes render at opacity 0.15, 4 seconds, random position in middle third of canvas.
+         Max 1 echo per 90 seconds. Random selection from pool filtered by prestigeCount.
+NARR-4: Each fragment triggers ONCE per playthrough. fragmentId stored in narrativeFragmentsSeen[].
+         On archetype change (new run): archetype fragments reset. Base fragments do NOT reset.
+NARR-5: Ending text appears on a dedicated fullscreen overlay, not the canvas. 
+         Background: the final canvas state, blurred. Text: centered, large, scrollable.
+         Choice buttons below the text. No timer, no rush.
+NARR-6: P20+ countdown text: always visible below consciousness bar. 9px, opacity 0.4.
+         Updates on each prestige. Uses the exact strings defined in this document.
+NARR-7: P26 confirmation screen includes "Take your time. There is no rush." in blue text.
+         This is NOT optional — it reframes the long final cycle as intentional, not grindy.
+  </div>
+</div>
+</div>
+
+</div>
+<script>
+function go(id){
+  const ids=['base','analytical','empathic','creative','echoes','endings','era3','endgame'];
+  document.querySelectorAll('.nb').forEach((b,i)=>b.classList.toggle('on',ids[i]===id));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.id==='tab-'+id));
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+</script>
+</body>
+</html>

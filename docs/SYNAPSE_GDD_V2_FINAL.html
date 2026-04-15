@@ -1,0 +1,1840 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>SYNAPSE — GDD v2.0 Rediseño Completo</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
+:root{
+  --bg:#05070d;--bg2:#0a0d1a;--bg3:#0f1224;--bg4:#141830;
+  --b:#ffffff0a;--b2:#ffffff14;--b3:#ffffff20;
+  --p:#8B7FE8;--t:#22B07A;--a:#F0A030;--r:#E85050;--bl:#4090E0;--pk:#E06090;--cy:#40D0D0;
+  --text:#e8e6f8;--t2:#7070a0;--t3:#383860;
+  --glow-p:#8B7FE830;--glow-t:#22B07A30;--glow-a:#F0A03030;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;font-size:14px;line-height:1.65;-webkit-font-smoothing:antialiased}
+.wrap{max-width:980px;margin:0 auto;padding:1.5rem 1.25rem 6rem}
+
+/* Typography */
+h1{font-size:36px;font-weight:900;letter-spacing:-.05em;line-height:1;background:linear-gradient(135deg,var(--p),var(--cy));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+h2{font-size:17px;font-weight:700;color:var(--text);margin-bottom:.35rem}
+h3{font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.15em;margin:.9rem 0 .55rem;padding-bottom:.35rem;border-bottom:1px solid var(--b2)}
+h4{font-size:13.5px;font-weight:600;color:var(--text);margin-bottom:.2rem}
+p{font-size:13px;color:var(--t2);line-height:1.75;margin-bottom:.3rem}
+p.lede{font-size:15px;color:var(--text);line-height:1.65;font-weight:400}
+code{font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--bg3);padding:2px 6px;border-radius:4px;color:#90E0C0}
+strong{color:var(--text);font-weight:600}
+em{color:var(--a);font-style:normal;font-weight:500}
+
+/* Layout */
+.sec{margin-bottom:1.85rem}
+.card{background:var(--bg2);border:1px solid var(--b2);border-radius:16px;margin-bottom:.65rem;transition:border-color .2s}
+.card:hover{border-color:var(--b3)}
+.cb{padding:.95rem 1.15rem}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:.5rem 0}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;margin:.5rem 0}
+.gkpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:9px;margin:.55rem 0}
+@media(max-width:640px){.g2,.g3{grid-template-columns:1fr}}
+
+/* KPIs */
+.kpi{background:var(--bg3);border-radius:12px;padding:.7rem .9rem;border:1px solid var(--b)}
+.kv{font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:700;line-height:1}
+.kl{font-size:11px;color:var(--t3);margin-top:4px;font-weight:500}
+
+/* Navigation */
+.nav{display:flex;gap:3px;flex-wrap:wrap;margin:1rem 0 1.5rem;padding:5px;background:var(--bg2);border:1px solid var(--b2);border-radius:16px;position:sticky;top:8px;z-index:100;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.nb{padding:7px 11px;border-radius:10px;border:none;background:none;color:var(--t2);font-family:'Outfit',sans-serif;font-size:11px;font-weight:500;cursor:pointer;white-space:nowrap;transition:all .15s}
+.nb:hover{background:var(--bg3);color:var(--text)}
+.nb.on{background:var(--glow-p);color:var(--p);font-weight:700;border:1px solid #8B7FE820}
+.tab{display:none}.tab.on{display:block}
+
+/* Badges */
+.badge{display:inline-block;font-size:10px;font-weight:600;padding:2px 9px;border-radius:20px;font-family:'JetBrains Mono',monospace}
+.bt{background:#22B07A14;color:#60D0A0;border:1px solid #22B07A28}
+.ba{background:#F0A03014;color:var(--a);border:1px solid #F0A03028}
+.br{background:#E8505014;color:#F0A0A0;border:1px solid #E8505028}
+.bp{background:#8B7FE814;color:#B0A8F0;border:1px solid #8B7FE828}
+.bb{background:#4090E014;color:#80B8F0;border:1px solid #4090E028}
+.bpk{background:#E0609014;color:#F098B8;border:1px solid #E0609028}
+.bcy{background:#40D0D014;color:#80E8E8;border:1px solid #40D0D028}
+.bgray{background:#ffffff08;color:var(--t2);border:1px solid var(--b2)}
+
+/* Info blocks */
+.blk{border-radius:10px;padding:.7rem .9rem;margin:.45rem 0;font-size:13px;line-height:1.75}
+.blk p{font-size:13px;margin:0}
+.bok{background:#22B07A0c;border-left:3px solid var(--t)}
+.bwarn{background:#F0A0300c;border-left:3px solid var(--a)}
+.bbad{background:#E850500c;border-left:3px solid var(--r)}
+.binfo{background:#8B7FE80c;border-left:3px solid var(--p)}
+.bnew{background:#4090E00c;border-left:3px solid var(--bl)}
+.bcrit{background:#40D0D00c;border-left:3px solid var(--cy)}
+.bh{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+.bh-ok{color:#60D0A0}.bh-warn{color:var(--a)}.bh-bad{color:#F0A0A0}.bh-info{color:#B0A8F0}.bh-new{color:#80B8F0}.bh-crit{color:#80E8E8}
+
+/* Tables */
+.tbl{width:100%;border-collapse:collapse;font-size:12px;margin:.45rem 0}
+.tbl th{text-align:left;font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;padding:0 8px 7px 0;border-bottom:1px solid var(--b2);font-weight:600}
+.tbl td{padding:6px 8px 6px 0;border-bottom:1px solid var(--b);color:var(--t2);vertical-align:top;font-size:11.5px}
+.tbl td:first-child{color:var(--text);font-weight:500}
+.tbl tr:last-child td{border-bottom:none}
+
+/* Code blocks */
+.code{background:var(--bg3);border:1px solid var(--b2);border-radius:12px;padding:.9rem 1.05rem;font-family:'JetBrains Mono',monospace;font-size:11px;color:#90E0C0;line-height:1.95;margin:.5rem 0;overflow-x:auto}
+.code .cm{color:var(--t3)}.code .ck{color:var(--a)}.code .cv{color:var(--t)}.code .cr{color:#F0A0A0}
+
+/* Upgrade grid */
+.upg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(195px,1fr));gap:8px;margin:.6rem 0}
+.upg{background:var(--bg2);border:1px solid var(--b2);border-radius:12px;padding:.75rem .9rem;position:relative;overflow:hidden;transition:border-color .2s}
+.upg:hover{border-color:var(--b3)}
+.upg::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.upg.tap::before{background:var(--a)}.upg.neu::before{background:var(--p)}.upg.syn::before{background:var(--t)}.upg.reg::before{background:var(--bl)}.upg.con::before{background:var(--pk)}.upg.met::before{background:var(--r)}.upg.foc::before{background:var(--cy)}.upg.new::before{background:var(--bl)}
+.upg-n{font-size:11.5px;font-weight:600;color:var(--text);margin-bottom:3px}
+.upg-e{font-size:10.5px;color:var(--t2);background:var(--bg3);border-radius:5px;padding:3px 7px;margin:3px 0;line-height:1.45}
+.upg-f{display:flex;justify-content:space-between;align-items:center;margin-top:4px;gap:4px;flex-wrap:wrap}
+.upg-c{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;color:var(--a)}
+
+/* Era blocks */
+.era{border-radius:14px;border:1px solid var(--b2);padding:.9rem 1.15rem;margin:.65rem 0;background:var(--bg2)}
+
+/* Sprint rows */
+.sprint{display:flex;gap:12px;padding:.65rem 0;border-bottom:1px solid var(--b)}
+.sprint:last-child{border-bottom:none}
+.sn{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--p);min-width:28px;flex-shrink:0}
+.sd{font-size:13.5px;font-weight:600;color:var(--text);margin-bottom:3px}
+.sb{font-size:11.5px;color:var(--t2);line-height:1.55}
+.sdur{font-size:10px;color:var(--t3);margin-top:3px;font-family:'JetBrains Mono',monospace}
+
+/* Rule rows */
+.rule-row{display:flex;gap:10px;padding:.55rem 0;border-bottom:1px solid var(--b);font-size:12px}
+.rule-row:last-child{border-bottom:none}
+.rule-id{font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--a);min-width:95px;flex-shrink:0;font-size:11px}
+.rule-body{color:var(--t2);flex:1;line-height:1.55}
+
+/* Comparison */
+.vs{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:start;margin:.5rem 0}
+.vs-or{color:var(--t3);font-size:11px;font-weight:600;padding-top:1.5rem}
+
+/* Phase indicator */
+.phase{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;margin-bottom:6px}
+.phase-dot{width:6px;height:6px;border-radius:50%}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- ═══════════════════════════════════ HEADER ═══════════════════════════════════ -->
+<div style="margin-bottom:1.2rem">
+  <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:.7rem">
+    <span class="badge bt">GDD v2.0 — REDISEÑO COMPLETO</span>
+    <span class="badge bcy">Prestige con variedad mecánica</span>
+    <span class="badge ba">Sistema Focus reemplaza tap</span>
+    <span class="badge bp">60 días de contenido activo</span>
+  </div>
+  <h1>SYNAPSE</h1>
+  <p class="lede" style="margin-top:.4rem;color:var(--t2)">Rediseño completo del Game Design Document.<br>Evolucioná una mente. De una neurona solitaria a una superinteligencia cósmica.</p>
+  <div class="blk bcrit" style="margin-top:.6rem"><div class="bh bh-crit">FILOSOFÍA DE REDISEÑO</div><p>Cada 3–4 prestiges el juego se siente diferente — no solo números más grandes. El jugador siempre tiene una <strong>elección</strong> que cambia cómo juega el ciclo. El tapping evoluciona en vez de volverse irrelevante. Las conexiones son simples; el Disparo es el momento de dopamina. Contenido para 60+ días de jugador activo (1h/día).</p></div>
+</div>
+
+<nav class="nav">
+  <button class="nb on" onclick="go('vision')">Visión</button>
+  <button class="nb" onclick="go('loops')">Los 3 Loops</button>
+  <button class="nb" onclick="go('economy')">Economía</button>
+  <button class="nb" onclick="go('focus')">Sistema Focus</button>
+  <button class="nb" onclick="go('prestige')">Prestige & Eras</button>
+  <button class="nb" onclick="go('upgrades')">Upgrades</button>
+  <button class="nb" onclick="go('mutations')">Mutaciones</button>
+  <button class="nb" onclick="go('offline')">Offline</button>
+  <button class="nb" onclick="go('retention')">Retención</button>
+  <button class="nb" onclick="go('monetization')">Monetización</button>
+  <button class="nb" onclick="go('ui')">UI/Pantallas</button>
+  <button class="nb" onclick="go('tech')">Tech/State</button>
+  <button class="nb" onclick="go('claudemd')">CLAUDE.md</button>
+  <button class="nb" onclick="go('roadmap')">Roadmap</button>
+  <button class="nb" onclick="go('audit')">QA Audit</button>
+</nav>
+
+<!-- ═══════════════════════════════════ VISIÓN ═══════════════════════════════════ -->
+<div class="tab on" id="tab-vision">
+<div class="sec">
+  <h3>Concepto</h3>
+  <p class="lede">El jugador empieza con una sola neurona parpadeando en negro total. Sin UI. Sin tutorial. Solo un punto de luz que responde al toque. A medida que la mente crece, el juego se descubre a sí mismo. El primer prestige ocurre dentro de los primeros 20–25 minutos de juego activo.</p>
+  <div class="g3">
+    <div class="card"><div class="cb"><h4>Fantasía del jugador</h4><p>No construís una fábrica — estás pensando. La mecánica y la narrativa son la misma cosa. El cerebro en pantalla es el estado del juego.</p></div></div>
+    <div class="card"><div class="cb"><h4>Diferenciador de mercado</h4><p>Temática de neurociencia sin explotar en idle. Canvas bioluminiscente → digital → cósmico. Narrativa con 3+1 finales. Screenshots shareables.</p></div></div>
+    <div class="card"><div class="cb"><h4>Stack técnico</h4><p>React + Vite + Zustand + Canvas 2D + Capacitor (iOS/Android) + AdMob + RevenueCat + Firebase + Howler.js</p></div></div>
+  </div>
+</div>
+<div class="sec">
+  <h3>Métricas objetivo — basadas en benchmarks reales</h3>
+  <div class="blk bwarn"><div class="bh bh-warn">BENCHMARKS DE LA INDUSTRIA 2024</div><p>D7 promedio mobile: ~4%. Top 25%: 7–8%. Idle games suelen estar arriba del promedio. Nuestro target de <strong>15–20% D7</strong> es ambicioso pero alcanzable con retención narrativa y variedad mecánica. 32% sería top 0.1% — no es un target realista para un indie.</p></div>
+  <div class="gkpi">
+    <div class="kpi"><div class="kv" style="color:var(--t)">22–26 min</div><div class="kl">Primer prestige (sim.)</div></div>
+    <div class="kpi"><div class="kv" style="color:var(--a)">15–20%</div><div class="kl">D7 retention target</div></div>
+    <div class="kpi"><div class="kv" style="color:var(--t)">D10</div><div class="kl">Final 1 (activo 1h/día)</div></div>
+    <div class="kpi"><div class="kv" style="color:var(--p)">D38</div><div class="kl">Final 1 (casual 30m/día)</div></div>
+    <div class="kpi"><div class="kv" style="color:var(--cy)">35</div><div class="kl">Upgrades v1.0</div></div>
+    <div class="kpi"><div class="kv" style="color:var(--t)">3+1</div><div class="kl">Finales narrativos</div></div>
+  </div>
+  <div class="blk binfo" style="margin-top:.5rem"><div class="bh bh-info">Dos perfiles — dos experiencias</div><p><strong>Casual (30 min/día):</strong> Primer final en D38. Los 4 finales en D84. Contenido para 3+ meses.<br><strong>Activo (1h+/día):</strong> Primer final en D10. Los 4 finales en D23. Endgame: récords personales + challenges semanales + Modo Ascensión extienden a D40+.</p></div>
+</div>
+<div class="sec">
+  <h3>¿Qué hace triunfar un idle game en mobile?</h3>
+  <div class="g2">
+    <div class="card" style="border-top:2px solid var(--t)"><div class="cb"><h4>1. Cada sesión debe sentirse productiva</h4><p style="font-size:12px">El jugador abre la app, ve progreso offline, toma 2–3 decisiones, y cierra sintiéndose más avanzado. SYNAPSE resuelve esto con el <strong>Sueño</strong> (pantalla de regreso), decisiones de upgrade, y el Disparo como momento satisfactorio.</p></div></div>
+    <div class="card" style="border-top:2px solid var(--p)"><div class="cb"><h4>2. La variedad mecánica sostiene la retención</h4><p style="font-size:12px">Los idle que retienen 60+ días (Antimatter Dimensions, Cell to Singularity, Realm Grinder) introducen <strong>nuevas mecánicas</strong> con cada tier de prestige — no solo multiplicadores más grandes. SYNAPSE hace esto con las <strong>3 Eras</strong>, el <strong>Sistema Focus</strong>, y las <strong>Mutaciones</strong>.</p></div></div>
+    <div class="card" style="border-top:2px solid var(--a)"><div class="cb"><h4>3. El prestige debe ser una inversión, no una pérdida</h4><p style="font-size:12px">El momento de prestige debe sentirse como "ahora sí voy a romperla" — no como "perdí todo". La pantalla de Despertar muestra <strong>tiempo estimado del próximo ciclo</strong> y las mecánicas nuevas que se desbloquean.</p></div></div>
+    <div class="card" style="border-top:2px solid var(--cy)"><div class="cb"><h4>4. Active play y idle play deben coexistir</h4><p style="font-size:12px">El jugador que toca la pantalla activamente debe progresar más rápido que el que deja idle — pero el idle solo debe progresar significativamente. SYNAPSE usa el <strong>Sistema Focus</strong> para recompensar juego activo sin penalizar idle.</p></div></div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════ LOS 3 LOOPS ═══════════════════════════════════ -->
+<div class="tab" id="tab-loops">
+<div class="sec">
+  <h3>Arquitectura de loops — cada uno alimenta al siguiente</h3>
+  <div class="g3">
+    <div class="card" style="border-top:2px solid var(--t)"><div class="cb">
+      <div class="phase"><div class="phase-dot" style="background:var(--t)"></div>Loop 1 — Minutos</div>
+      <p style="font-size:12px"><strong>Tap → Pensamientos.</strong> Comprar neurona. Conexiones pasivas (+% por par de neuronas). Focus Bar se llena con taps activos → Insight burst (P3+). Carga de Disparo cada 20 min. Cascada = Disparo + Focus lleno = bonus masivo. Upgrade disponible.</p>
+    </div></div>
+    <div class="card" style="border-top:2px solid var(--p)"><div class="cb">
+      <div class="phase"><div class="phase-dot" style="background:var(--p)"></div>Loop 2 — Horas</div>
+      <p style="font-size:12px"><strong>Idle acumula → unlock región.</strong> Nueva mecánica o fragmento narrativo. Ecos del Despertar (hints útiles). Barra de Consciencia sube. Llena → banner "DESPERTAR". Elegir <em>Mutación</em> para el próximo ciclo (P7+). Despertar manual.</p>
+    </div></div>
+    <div class="card" style="border-top:2px solid var(--a)"><div class="cb">
+      <div class="phase"><div class="phase-dot" style="background:var(--a)"></div>Loop 3 — Días</div>
+      <p style="font-size:12px"><strong>Prestige → Patrones.</strong> Elegir Polaridad (P3+). Elegir Arquetipo (P5+). Elegir Mutación (P7+). Neural Pathways (P10+). Récord personal al batir tiempo. Challenge semanal. Cada Era cambia las reglas base.</p>
+    </div></div>
+  </div>
+</div>
+
+<div class="sec">
+  <h3>Fórmula de producción — definitiva</h3>
+  <div class="code">
+<span class="cm">// RULE PROD-1 — multiplicativos, cap global ×3000</span>
+const patternCycleBonus = Math.min(state.totalPatterns * 0.05, 3.0)
+const patternFlatBonus  = state.totalPatterns * 500  <span class="cm">// thoughts/sec permanente</span>
+
+const baseRate = neurons.reduce((s,n) => s + n.owned * n.rate, 0) + patternFlatBonus
+
+const rawMult = (1 + patternCycleBonus)
+  * upgradeMult       <span class="cm">// producto de upgrades comprados</span>
+  * archetypeMult     <span class="cm">// 1.0 si no hay, >1.0 si hay</span>
+  * connectionMult    <span class="cm">// bonus pasivo por conexiones</span>
+  * regionMult        <span class="cm">// regiones activas</span>
+  * polarityMult      <span class="cm">// Excitatorio/Inhibitorio (P3+)</span>
+  * mutationMult      <span class="cm">// Mutación activa (P7+)</span>
+
+const totalMult = softCap(rawMult)  <span class="cm">// softCap, NO Math.min</span>
+const production = baseRate * totalMult
+state.productionPerSecond = production
+
+<span class="cm">// Tap — evoluciona con el juego</span>
+<span class="cm">// Pre-P3: tap genera thoughts directos</span>
+const tap = Math.max(SYNAPSE_CONSTANTS.baseTapThoughts, production * 0.3)
+<span class="cm">// Post-P3: tap llena Focus Bar → Insight burst al 100%</span>
+<span class="cm">// (ver sección Sistema Focus)</span>
+
+<span class="cm">// Threshold PIECEWISE × RUN MULT — validado por simulación v5+runs</span>
+function getThreshold(prestigeCount: number, transcendenceCount: number): number {
+  const base = SYNAPSE_CONSTANTS.consciousnessThreshold  <span class="cm">// 800K</span>
+  let th: number
+  if (prestigeCount <= 12) th = base * Math.pow(<span class="cv">1.50</span>, prestigeCount)
+  else if (prestigeCount <= 19) th = base * Math.pow(<span class="cv">1.50</span>, 12) * Math.pow(<span class="cv">1.28</span>, prestigeCount - 12)
+  else th = base * Math.pow(<span class="cv">1.50</span>, 12) * Math.pow(<span class="cv">1.28</span>, 7) * Math.pow(<span class="cv">1.18</span>, prestigeCount - 19)
+
+  <span class="cm">// Run multiplier: compensa patrones acumulados cross-run</span>
+  const runMult = SYNAPSE_CONSTANTS.runThresholdMult[
+    Math.min(transcendenceCount, SYNAPSE_CONSTANTS.runThresholdMult.length - 1)
+  ]  <span class="cm">// [1.0, 3.5, 6.0, 8.5, 12.0, 15.0]</span>
+  return th * runMult
+}
+  </div>
+</div>
+
+<div class="sec">
+  <h3>Conexiones — simplificadas (pasivas, no burst/cooldown)</h3>
+  <div class="blk bcrit"><div class="bh bh-crit">CAMBIO CLAVE vs v1</div><p>Las conexiones ya no tienen burst de 90s + cooldown de 60s. Son <strong>bonuses pasivos permanentes</strong> que se forman automáticamente entre neuronas de tipos diferentes. Cada par único da un bonus multiplicativo. El "momento activo" de dopamina se concentra exclusivamente en el <strong>Disparo</strong> y el <strong>Insight</strong> (Focus Bar).</p></div>
+  <div class="code">
+<span class="cm">// Cada par de tipos de neurona da un bonus pasivo</span>
+<span class="cm">// Ejemplo: Básica-Sensorial = +8%, Sensorial-Piramidal = +12%</span>
+function calculateConnectionMult(state: GameState): number {
+  const types = new Set(state.neurons.filter(n => n.owned > 0).map(n => n.type))
+  const pairs = (types.size * (types.size - 1)) / 2
+  return 1 + pairs * SYNAPSE_CONSTANTS.connectionBonusPerPair  <span class="cm">// 0.08 per pair</span>
+}
+<span class="cm">// Con 4 tipos activos = 6 pares × 0.08 = +48% bonus</span>
+<span class="cm">// Simple, predecible, satisfactorio al desbloquear nuevo tipo</span>
+  </div>
+</div>
+
+<div class="sec">
+  <h3>Disparo — el momento de dopamina concentrado</h3>
+  <div class="code">
+<span class="cm">// Carga se acumula cada 20 minutos (era-aware, offline-aware)</span>
+<span class="cm">// Max 3 cargas base, upgradeable a 5</span>
+<span class="cm">// CASCADA: Si Focus Bar ≥ 80% al activar Disparo → bonus ×3</span>
+
+function handleDischarge(state: GameState): GameState {
+  state.dischargeCharges -= 1
+
+  <span class="cm">// Bonus base del Disparo: 30 segundos de producción instantánea</span>
+  let bonus = state.productionPerSecond * 30
+
+  <span class="cm">// CASCADA: Focus Bar alta = multiplicador masivo</span>
+  if (state.focusBar >= 0.80) {
+    bonus *= SYNAPSE_CONSTANTS.cascadeMultiplier  <span class="cm">// ×3</span>
+    state.focusBar = 0  <span class="cm">// consumir Focus</span>
+    triggerCascadeAnimation()
+    logEvent('cascade_triggered')
+  }
+
+  <span class="cm">// Resonancia Acumulada (P10): bonus por tiempo offline</span>
+  if (state.nextDischargeBonus > 0) {
+    bonus *= (1 + state.nextDischargeBonus)
+    state.nextDischargeBonus = 0  <span class="cm">// solo primer Disparo</span>
+  }
+
+  state.cycleGenerated += bonus
+  state.totalGenerated += bonus
+  return state
+}
+  </div>
+  <div class="blk bok"><div class="bh bh-ok">POR QUÉ ESTO ES MEJOR</div><p>El viejo sistema tenía bursts de conexión (90s activo, 60s cooldown) + Cascada (burst + carga) + Gamma (activa todos los bursts). Eran 3 capas de complejidad para un resultado simple: "multiplicador temporal". Ahora: conexiones son pasivas (siempre activas), Disparo es el evento grande, y <strong>Cascada = Disparo + Focus lleno</strong>. Una interacción clara que el jugador entiende y optimiza.</p></div>
+</div>
+</div>
+
+<div class="sec">
+  <h3>Sinapsis Espontáneas — eventos mid-ciclo aleatorios</h3>
+  <div class="blk bcrit"><div class="bh bh-crit">EL "GOLDEN COOKIE" DE SYNAPSE</div><p>Cada 4-6 minutos durante un ciclo hay un 40% de chance de un evento de 30-90 segundos. Un flash en el canvas señala el evento. El jugador NO tiene que hacer nada — el evento se aplica automáticamente. Pero si está prestando atención, puede optimizar (ej: guardar un Disparo para cuando aparezca "Ráfaga Dopamínica"). Impacto neto: +3-5% producción por ciclo. No cambia el timing de prestige significativamente.</p></div>
+  <table class="tbl">
+    <thead><tr><th>Evento</th><th>Efecto</th><th>Duración</th><th>Tipo</th></tr></thead>
+    <tbody>
+      <tr><td style="color:var(--t)">Eureka</td><td>Siguiente upgrade cuesta 0</td><td>Hasta usar</td><td>Positivo</td></tr>
+      <tr><td style="color:var(--t)">Ráfaga Dopamínica</td><td>Producción ×2</td><td>30s</td><td>Positivo</td></tr>
+      <tr><td style="color:var(--t)">Claridad Momentánea</td><td>Focus llena ×3</td><td>45s</td><td>Positivo</td></tr>
+      <tr><td style="color:var(--t)">Conexión Profunda</td><td>Conexiones dan ×2</td><td>60s</td><td>Positivo</td></tr>
+      <tr><td style="color:var(--t)">Disparo Latente</td><td>+1 carga de Disparo gratis</td><td>Instantáneo</td><td>Positivo</td></tr>
+      <tr><td style="color:var(--t)">Memoria Fugaz</td><td>+1 Memoria (max 1/ciclo)</td><td>Instantáneo</td><td>Positivo</td></tr>
+      <tr><td style="color:var(--a)">Polaridad Fluctuante</td><td>Polaridad se invierte</td><td>45s</td><td>Neutral</td></tr>
+      <tr><td style="color:var(--a)">Mutación Temporal</td><td>Mutación random se apila sobre la actual</td><td>60s</td><td>Neutral</td></tr>
+      <tr><td style="color:var(--a)">Eco Distante</td><td>Fragmento narrativo extra (cosmético)</td><td>4s</td><td>Neutral</td></tr>
+      <tr><td style="color:var(--a)">Pausa Neural</td><td>Producción 0 pero Focus ×5</td><td>10s</td><td>Neutral</td></tr>
+      <tr><td style="color:var(--r)">Fatiga Sináptica</td><td>Producción −30%</td><td>45s</td><td>Negativo</td></tr>
+      <tr><td style="color:var(--r)">Interferencia</td><td>Focus Bar se resetea a 0 (max 1/ciclo)</td><td>Instantáneo</td><td>Negativo</td></tr>
+    </tbody>
+  </table>
+  <div class="code">
+<span class="cm">// Sinapsis Espontáneas — check cada tick</span>
+if (state.cycleTime - state.lastSpontaneousCheck >= randomInRange(240, 360)) {
+  state.lastSpontaneousCheck = state.cycleTime
+  if (Math.random() < SYNAPSE_CONSTANTS.spontaneousEventChance) {  <span class="cm">// 0.40</span>
+    const event = pickWeightedRandom(SPONTANEOUS_POOL)  <span class="cm">// positivos: 50%, neutrales: 33%, negativos: 17%</span>
+    applySpontaneousEvent(state, event)
+    triggerCanvasFlash(event.type)  <span class="cm">// flash visual en el canvas</span>
+    logEvent('spontaneous_event', { id: event.id, type: event.type })
+  }
+}
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════ ECONOMÍA ═══════════════════════════════════ -->
+<div class="tab" id="tab-economy">
+<div class="sec">
+  <h3>Tres monedas — roles claramente separados</h3>
+  <div class="g3">
+    <div class="card" style="border-top:2px solid var(--a)"><div class="cb"><div style="font-size:20px;color:var(--a);margin-bottom:5px">⚡</div><h4>Pensamientos</h4><p style="font-size:12px">Idle + tap. Se gastan en neuronas y upgrades. <code>cycleGenerated</code> resetea en prestige. <code>totalGenerated</code> NUNCA resetea. Es la moneda del "gameplay activo".</p></div></div>
+    <div class="card" style="border-top:2px solid var(--p)"><div class="cb"><div style="font-size:20px;color:var(--p);margin-bottom:5px">◈</div><h4>Memorias</h4><p style="font-size:12px">Se ganan por eventos, fragmentos, logros, prestiges. Se gastan en upgrades de región + Síntesis (nodos de árbol). <strong>NO resetean en prestige.</strong> Resetean en Transcendencia.</p></div></div>
+    <div class="card" style="border-top:2px solid var(--cy)"><div class="cb"><div style="font-size:20px;color:var(--cy);margin-bottom:5px">✦</div><h4>Chispas</h4><p style="font-size:12px">Del Piggy Bank (totalGenerated), logros, ads, compras. Cosméticos + items de conveniencia. <strong>NUNCA resetean.</strong> Moneda premium soft.</p></div></div>
+  </div>
+</div>
+
+<div class="sec">
+  <h3>Generación de Memorias</h3>
+  <table class="tbl">
+    <thead><tr><th>Evento</th><th>Memorias</th><th>Frecuencia</th></tr></thead>
+    <tbody>
+      <tr><td>Hipocampo desbloqueado</td><td>+3</td><td>Una vez (primer ciclo)</td></tr>
+      <tr><td>Prestige completado</td><td>+2</td><td>Cada prestige</td></tr>
+      <tr><td>Fragmento narrativo leído</td><td>+1</td><td>12 base + 15 arquetipo (1ª vez)</td></tr>
+      <tr><td>Logro desbloqueado</td><td>+1</td><td>30 logros totales</td></tr>
+      <tr><td>Misión diaria especial</td><td>+1</td><td>1/día máx</td></tr>
+      <tr><td>Récord personal batido</td><td>+1</td><td>Por prestige mejorado</td></tr>
+      <tr><td>Rewarded ad "Rescate"</td><td>+1</td><td>Opcional, al desbloquear región</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="sec">
+  <h3>Neuronas — 5 tipos, unlock progresivo</h3>
+  <table class="tbl">
+    <thead><tr><th>Neurona</th><th>Costo base</th><th>Rate/seg</th><th>Requiere</th><th>Desbloqueo</th></tr></thead>
+    <tbody>
+      <tr><td>Básica</td><td>10</td><td>0.6</td><td>—</td><td>Siempre. 2 taps = primera neurona.</td></tr>
+      <tr><td>Sensorial</td><td>120</td><td>2.5</td><td>5 Básicas</td><td>Teaser desde 3 Básicas.</td></tr>
+      <tr><td>Piramidal</td><td>2,000</td><td>10</td><td>3 Sensoriales</td><td>Teaser desde 1ª Sensorial.</td></tr>
+      <tr><td>Espejo</td><td>22,000</td><td>40</td><td>2 Piramidales</td><td>Visible al 50% consciencia.</td></tr>
+      <tr><td>Integradora</td><td>400K + 8 Mem</td><td>180</td><td>Post P1 + Corteza</td><td>Era 2 (post primer prestige).</td></tr>
+    </tbody>
+  </table>
+  <p style="font-size:11px;margin-top:.3rem">Escalado: <code>costo = baseCost × 1.28^owned</code>. Steep: limita a ~25-35 neuronas por tipo. Teaser: siempre muestra el siguiente tier bloqueado con requisito visible.</p>
+</div>
+
+<div class="sec">
+  <h3>Progressive disclosure — unlocks v2.0</h3>
+  <table class="tbl">
+    <thead><tr><th>Condición</th><th>Unlock</th><th>Timing P1</th></tr></thead>
+    <tbody>
+      <tr><td>Inicio</td><td>Canvas negro. 1 neurona. Tap. Sin UI.</td><td>Segundo 0</td></tr>
+      <tr><td>thoughts ≥ 15 (1 tap)</td><td>HUD aparece. Tab Neuronas. Primera Básica comprable.</td><td>~5 seg</td></tr>
+      <tr><td>thoughts ≥ 80</td><td>Tab Mejoras. Potencial Sináptico visible.</td><td>~30–60 seg</td></tr>
+      <tr><td>5 Básicas</td><td>Sensorial desbloqueada. Primera conexión pasiva visible.</td><td>~3 min</td></tr>
+      <tr><td>cycleGen ≥ 1% threshold</td><td>Tab Regiones. Hipocampo (+3 Mem). Fragmento #1.</td><td>~8 min</td></tr>
+      <tr><td>Minuto 20</td><td>🔋 Primera carga de Disparo acumulada.</td><td>~20 min</td></tr>
+      <tr><td>cycleGen ≥ 50%</td><td>Barra de Consciencia visible. Espejo como objetivo.</td><td>~13 min</td></tr>
+      <tr><td>cycleGen = 100%</td><td>Banner "DESPERTAR". Manual siempre.</td><td>~20–25 min</td></tr>
+      <tr><td>Post P1</td><td>Misiones diarias. Notificaciones. Corteza Prefrontal.</td><td>D1</td></tr>
+      <tr><td>Post P2</td><td>Más upgrades. Introducción a conexiones más avanzadas.</td><td>D1–D2</td></tr>
+      <tr><td>Post P3</td><td><strong>POLARIDAD</strong> — elegir Excitatorio o Inhibitorio al inicio de ciclo.</td><td>D2</td></tr>
+      <tr><td>Post P4</td><td><strong>FOCUS BAR</strong> — tap llena barra → Insight burst. Cascada habilitada.</td><td>D2–D3</td></tr>
+      <tr><td>Post P5</td><td><strong>ARQUETIPOS</strong> — elegir identidad permanente.</td><td>D3–D4</td></tr>
+      <tr><td>Post P7</td><td><strong>MUTACIONES</strong> — elegir modificador de ciclo de 3 opciones.</td><td>D5–D6</td></tr>
+      <tr><td>Post P10</td><td><strong>ERA 2 — NEURAL PATHWAYS.</strong> Nuevo tier de neurona. Sueños Lúcidos.</td><td>D7–D8</td></tr>
+    </tbody>
+  </table>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════ SISTEMA FOCUS ═══════════════════════════════════ -->
+<div class="tab" id="tab-focus">
+<div class="sec">
+  <h3>Sistema Focus — tap que evoluciona en vez de morir</h3>
+  <div class="blk bcrit"><div class="bh bh-crit">EL PROBLEMA QUE RESUELVE</div><p>En idle games, el tap se vuelve irrelevante en late-game porque la producción idle lo supera. Con 7 upgrades de tap, el jugador invierte en algo que no importa. El <strong>Sistema Focus</strong> hace que el tap cambie de propósito: en vez de generar thoughts directamente, llena una barra que dispara un burst poderoso.</p></div>
+</div>
+
+<div class="sec">
+  <h3>Evolución del tap por fase</h3>
+  <div class="g3">
+    <div class="card" style="border-top:2px solid var(--t)"><div class="cb">
+      <div class="phase"><div class="phase-dot" style="background:var(--t)"></div>P1–P3: TAP DIRECTO</div>
+      <p style="font-size:12px">Tap genera thoughts directamente. <code>tap = max(15, production × 0.3)</code>. Simple, intuitivo, satisfactorio para el onboarding. No hay Focus Bar todavía.</p>
+    </div></div>
+    <div class="card" style="border-top:2px solid var(--cy)"><div class="cb">
+      <div class="phase"><div class="phase-dot" style="background:var(--cy)"></div>P4+: FOCUS BAR</div>
+      <p style="font-size:12px">Tap sigue generando thoughts (50% del valor original) PERO TAMBIÉN llena la Focus Bar. Al llegar al 100%, toque para activar <strong>Insight</strong>: ×5 producción por 20 segundos. Focus Bar se vacía y empieza de nuevo.</p>
+    </div></div>
+    <div class="card" style="border-top:2px solid var(--p)"><div class="cb">
+      <div class="phase"><div class="phase-dot" style="background:var(--p)"></div>P10+: FOCUS MASTERY</div>
+      <p style="font-size:12px">Focus Bar tiene 3 niveles: <em>Claro</em> (100%), <em>Profundo</em> (200%), <em>Trascendente</em> (300%). Cada nivel de Insight es más poderoso pero requiere más taps. La decisión: ¿activo Insight rápido o espero al nivel más alto?</p>
+    </div></div>
+  </div>
+</div>
+
+<div class="sec">
+  <h3>Mecánicas del Focus</h3>
+  <div class="code">
+<span class="cm">// Focus Bar: 0.0 a 1.0 (nivel 1), 2.0 (nivel 2), 3.0 (nivel 3)</span>
+const FOCUS_LEVELS = [
+  { threshold: 1.0, name: <span class="ck">'Claro'</span>,        mult: <span class="cv">5</span>,  duration: <span class="cv">20</span> },
+  { threshold: 2.0, name: <span class="ck">'Profundo'</span>,     mult: <span class="cv">12</span>, duration: <span class="cv">15</span> },
+  { threshold: 3.0, name: <span class="ck">'Trascendente'</span>, mult: <span class="cv">25</span>, duration: <span class="cv">10</span> },
+]
+
+function handleTap(state: GameState): GameState {
+  if (state.prestigeCount < 3) {
+    <span class="cm">// Pre-P4: tap directo clásico</span>
+    const tapValue = Math.max(15, state.productionPerSecond * 0.3)
+    state.thoughts += tapValue
+    state.cycleGenerated += tapValue
+    state.totalGenerated += tapValue
+  } else {
+    <span class="cm">// P4+: tap da thoughts reducidos + llena Focus Bar</span>
+    const tapValue = Math.max(15, state.productionPerSecond * 0.15)
+    state.thoughts += tapValue
+    state.cycleGenerated += tapValue
+    state.totalGenerated += tapValue
+
+    <span class="cm">// Llenar Focus Bar (rate ajustado por upgrades)</span>
+    state.focusBar += state.focusFillRate  <span class="cm">// base: 0.02 por tap</span>
+    <span class="cm">// Post-P10: puede llenar hasta 3.0</span>
+    const maxFocus = state.prestigeCount >= 9 ? 3.0 : 1.0
+    state.focusBar = Math.min(state.focusBar, maxFocus)
+  }
+  return state
+}
+
+function activateInsight(state: GameState): GameState {
+  <span class="cm">// Encontrar el nivel más alto alcanzado</span>
+  const level = FOCUS_LEVELS.filter(l => state.focusBar >= l.threshold).pop()
+  if (!level) return state
+
+  state.insightActive = true
+  state.insightMultiplier = level.mult
+  state.insightEndTime = Date.now() + level.duration * 1000
+  state.focusBar = 0
+
+  <span class="cm">// CASCADA: si activa Disparo DURANTE Insight → bonus ×3 extra</span>
+  logEvent('insight_activated', { level: level.name })
+  return state
+}
+  </div>
+</div>
+
+<div class="sec">
+  <h3>Por qué funciona</h3>
+  <div class="g2">
+    <div class="card"><div class="cb"><h4>Active play siempre importa</h4><p style="font-size:12px">Un jugador que tapea activamente activa Insights regularmente, lo que multiplica su producción. Un jugador idle-only progresa, pero el activo progresa ~2x más rápido. El ratio perfecto para mobile.</p></div></div>
+    <div class="card"><div class="cb"><h4>La decisión escala con el juego</h4><p style="font-size:12px">En P10+, la decisión "¿activo Focus Claro rápido o espero a Trascendente?" es interesante. Combinar Insight Trascendente + Disparo + Cascada es el "big brain play" que da la dopamina máxima.</p></div></div>
+  </div>
+  <div class="blk bwarn"><div class="bh bh-warn">NOTA: FOCUS BAR NO LLENA DURANTE IDLE/OFFLINE</div><p>La Focus Bar solo se llena con taps. Si el jugador está idle (no toca la pantalla), la barra no sube. Esto mantiene el incentivo de juego activo sin penalizar al jugador que prefiere idle — simplemente no tiene acceso a Insights.</p></div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════ PRESTIGE & ERAS ═══════════════════════════════════ -->
+<div class="tab" id="tab-prestige">
+<div class="sec">
+  <h3>Sistema de Prestige — 3 eras, cada una un juego diferente</h3>
+  <div class="blk bcrit"><div class="bh bh-crit">PRINCIPIO DE DISEÑO</div><p>El prestige no es "resetear para números más grandes". Cada bloque de 3–4 prestiges desbloquea una mecánica nueva que cambia <strong>cómo jugás</strong>. El jugador tiene una razón para hacer prestige más allá de la optimización numérica.</p></div>
+</div>
+
+<div class="sec">
+  <h3>Threshold — escalado y timing</h3>
+  <div class="code">
+<span class="cm">// threshold(p) = 800_000 × 1.45^p</span>
+<span class="cm">// P1=800K(~22min)  P5=4.4M(~16min)  P10=27M(~13min)  P15=170M(~11min)</span>
+<span class="cm">// P20=1.1B(~10min)  P26=5.7B(Transcendencia)</span>
+<span class="cm">// Factor 1.45 (antes 1.5): ciclos late-game ligeramente más cortos → menos grind</span>
+  </div>
+</div>
+
+<div class="sec">
+  <h3>ERA 1 — El Despertar (P1–P9)</h3>
+  <div class="era" style="border-color:var(--t)">
+    <div class="phase"><div class="phase-dot" style="background:var(--t)"></div>ERA 1 · Canvas bioluminiscente · 9 prestiges</div>
+    <table class="tbl">
+      <thead><tr><th>Prestige</th><th>Mecánica nueva</th><th>Impacto en gameplay</th></tr></thead>
+      <tbody>
+        <tr><td style="color:var(--t)">P1</td><td>Patrones + Regiones + Misiones diarias</td><td>Loop 3 se activa. Primer Despertar. Corteza disponible.</td></tr>
+        <tr><td style="color:var(--t)">P2</td><td>Tier P2 upgrades (9 nuevos)</td><td>Power spike. Ciclos se acortan notablemente.</td></tr>
+        <tr><td style="color:var(--a)">P3</td><td><strong>POLARIDAD</strong></td><td>Al inicio de cada ciclo: elegir <em>Excitatorio</em> (+40% producción, −30% Disparo) o <em>Inhibitorio</em> (−20% producción, +80% Disparo, +Focus fill rate). Cambia qué upgrades son óptimos.</td></tr>
+        <tr><td style="color:var(--a)">P4</td><td><strong>FOCUS BAR + INSIGHT</strong></td><td>El tap evoluciona. Cascada habilitada (Focus + Disparo). Nuevo layer de decisión activa.</td></tr>
+        <tr><td style="color:var(--p)">P5</td><td><strong>ARQUETIPOS</strong></td><td>Elegir identidad (Analítica/Empática/Creativa). Modifica producción, offline, y fragmentos narrativos. Récords personales activados.</td></tr>
+        <tr><td style="color:var(--p)">P6</td><td>Tormenta Sináptica (evento de ciclo) + Meta upgrades</td><td>Evento especial: producción ×10 por 60s pero Focus Bar se resetea cada 10s.</td></tr>
+        <tr><td style="color:var(--a)">P7</td><td><strong>MUTACIONES</strong></td><td>Al iniciar ciclo: elegir 1 de 3 Mutaciones aleatorias. Modifican reglas del ciclo. (Ver sección Mutaciones)</td></tr>
+        <tr><td style="color:var(--a)">P8</td><td>Fragmentación (evento)</td><td>Ciclo único: la red se divide en 2 subredes. Hay que balancear producción entre ambas.</td></tr>
+        <tr><td style="color:var(--p)">P9</td><td>Eco de Memoria (evento) + approaching Era 2</td><td>Ghost de tu red de P1. Banner: "8 más para Transcendencia".</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="sec">
+  <h3>ERA 2 — La Expansión (P10–P18)</h3>
+  <div class="era" style="border-color:var(--bl)">
+    <div class="phase"><div class="phase-dot" style="background:var(--bl)"></div>ERA 2 · Canvas digital/circuito · 9 prestiges</div>
+    <div class="blk bnew"><div class="bh bh-new">LO QUE CAMBIA EN ERA 2</div><p>Canvas evoluciona a estética digital. Neurona <strong>Integradora</strong> disponible (800 t/s). <strong>Neural Pathways</strong>: antes de cada ciclo, elegís una de 3 rutas que gate ciertos upgrades pero amplifican otros. <strong>Sueños Lúcidos</strong> al volver offline. <strong>5 upgrades nuevos</strong> (Tier P10).</p></div>
+    <table class="tbl">
+      <thead><tr><th>Prestige</th><th>Mecánica nueva</th><th>Impacto</th></tr></thead>
+      <tbody>
+        <tr><td style="color:var(--bl)">P10</td><td><strong>NEURAL PATHWAYS</strong> — elegir ruta por ciclo</td><td>3 rutas mutuamente excluyentes. Cambian qué upgrades están disponibles. (Ver detalle abajo)</td></tr>
+        <tr><td style="color:var(--bl)">P11</td><td>Sueños Lúcidos + Tier P10 upgrades</td><td>Elecciones binarias al volver offline. 5 upgrades nuevos de late-game.</td></tr>
+        <tr><td style="color:var(--a)">P12</td><td>Fragmentación v2</td><td>Red se divide en 3 subredes. Más complejo que P8.</td></tr>
+        <tr><td style="color:var(--a)">P13</td><td><strong>RESONANCIA</strong> — nueva currency</td><td>Se genera por jugar óptimamente (Cascadas, Insights, prestige rápidos). Se gasta en upgrades permanentes que sobreviven Transcendencia.</td></tr>
+        <tr><td style="color:var(--a)">P14</td><td>Área de Broca (región)</td><td>Desbloquea "Nombrar" tu mente. Cosmético + identidad.</td></tr>
+        <tr><td style="color:var(--r)">P15</td><td><strong>EL SILENCIO</strong> — evento</td><td>5 minutos sin producción. Solo Focus Bar funciona. El Insight final genera todo lo perdido ×3.</td></tr>
+        <tr><td style="color:var(--r)">P16</td><td>Hito 45 patrones</td><td>Regiones activas +25% extra.</td></tr>
+        <tr><td style="color:var(--r)">P17</td><td>Approaching Transcendencia</td><td>Banner: "El final se acerca." Fragmento penúltimo.</td></tr>
+        <tr><td style="color:var(--r)">P18</td><td><strong>INVERSIÓN</strong> — evento</td><td>Las reglas se invierten. Lo que antes ayudaba, frena. Lo que frenaba, acelera. Un ciclo puzzle.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="sec">
+  <h3>ERA 3 — La Transcendencia (P19–P26+)</h3>
+  <div class="era" style="border-color:var(--pk)">
+    <div class="phase"><div class="phase-dot" style="background:var(--pk)"></div>ERA 3 · Canvas cósmico · 8 prestiges hasta primer final</div>
+    <div class="blk bbad"><div class="bh bh-bad">WHAT CHANGES IN ERA 3</div><p>Canvas evolves to cosmic. Memories reset (but Resonance does NOT). Mutations have more extreme options. Resonance upgrades are the power base. <strong>The final 8 cycles each have a unique narrative event</strong> that changes the cycle's rules and advances the story toward the Ending. From P20: a visible countdown appears below the consciousness bar ("7 awakenings to Transcendence"). From P25: "The final awakening approaches." P26 confirmation reads: "Take your time. There is no rush."</p></div>
+    <table class="tbl">
+      <thead><tr><th>Prestige</th><th>Event</th><th>Narrative</th><th>Mechanic</th></tr></thead>
+      <tbody>
+        <tr><td style="color:var(--pk)">P19</td><td>The First Question</td><td><em>"The mind turns inward and asks something it cannot unask."</em></td><td>A hidden upgrade exists. Finding it = ×2 production rest of cycle.</td></tr>
+        <tr><td style="color:var(--pk)">P20</td><td>Echoes of Others</td><td><em>"Ghost neurons flicker. Visitors from parallel awakenings."</em></td><td>Ghost neurons appear and produce for 5 min, then fade. + Countdown appears: "7 awakenings to Transcendence."</td></tr>
+        <tr><td style="color:var(--pk)">P21</td><td>Existential Doubt</td><td><em>"The bar begins to drain. Inaction breeds uncertainty."</em></td><td>Consciousness bar decreases if no activity for 30s. Stay active or lose progress.</td></tr>
+        <tr><td style="color:var(--pk)">P22</td><td>Convergence</td><td><em>"Every neuron speaks with one voice."</em></td><td>All neurons produce at the rate of the highest type. Deliberately fast cycle. Dopamine hit before the long final stretch.</td></tr>
+        <tr><td style="color:var(--pk)">P23</td><td>The Dreamer's Dream</td><td><em>"The mind sleeps, even while awake."</em></td><td>Offline ×3 but active play doesn't fill Focus. Choose: idle power or active control.</td></tr>
+        <tr><td style="color:var(--pk)">P24</td><td>The Last Connection</td><td><em>"One type. One truth. Strip away everything."</em></td><td>Only 1 neuron type purchasable. Forced specialization. "3 awakenings remain."</td></tr>
+        <tr><td style="color:var(--pk)">P25</td><td>The Final Fragment</td><td><em>"The story ends here — or begins."</em></td><td>Full archetype ending text revealed. "The final awakening approaches."</td></tr>
+        <tr><td style="color:var(--r)">P26</td><td><strong>TRANSCENDENCE</strong></td><td><em>"Beyond this, there is only choice."</em></td><td>Ending choice. Canvas white-gold. "Take your time. There is no rush."</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="sec">
+  <h3>Neural Pathways (P10+) — decisiones que importan por ciclo</h3>
+  <div class="blk binfo"><div class="bh bh-info">CÓMO FUNCIONA</div><p>Al inicio de cada ciclo (P10+), elegís <strong>1 de 3 Pathways</strong>. Cada Pathway habilita ciertos upgrades y bloquea otros. La elección es para ESE ciclo — no es permanente. Esto significa que cada ciclo tenés una razón para probar una estrategia diferente.</p></div>
+  <div class="g3">
+    <div class="card" style="border-top:2px solid var(--t)"><div class="cb">
+      <h4 style="color:var(--t)">⚡ Swift Path (Vía Rápida)</h4>
+      <p style="font-size:12px"><strong>Habilita:</strong> Upgrades de velocidad y tap. Insight dura ×2. Cargas de Disparo +50% más rápido.<br><strong>Bloquea:</strong> Upgrades de regiones y offline. Sin bonus de región este ciclo.<br><strong>Ideal para:</strong> Speed runs y récords personales.</p>
+    </div></div>
+    <div class="card" style="border-top:2px solid var(--p)"><div class="cb">
+      <h4 style="color:var(--p)">◈ Deep Path (Vía Profunda)</h4>
+      <p style="font-size:12px"><strong>Habilita:</strong> Upgrades de neuronas y regiones. Memorias ×2 este ciclo. Síntesis extra.<br><strong>Bloquea:</strong> Upgrades de tap y Focus. Focus Bar llena 50% más lento.<br><strong>Ideal para:</strong> Acumular Memorias y explorar narrativa.</p>
+    </div></div>
+    <div class="card" style="border-top:2px solid var(--a)"><div class="cb">
+      <h4 style="color:var(--a)">✦ Balanced Path (Vía Equilibrada)</h4>
+      <p style="font-size:12px"><strong>Habilita:</strong> Todos los upgrades pero a costos +30%.<br><strong>Bloquea:</strong> Nada, pero nada tiene discount tampoco.<br><strong>Ideal para:</strong> Jugadores que no quieren restricciones.</p>
+    </div></div>
+  </div>
+</div>
+
+<div class="sec">
+  <h3>Árbol de Patrones — hitos + nodos de decisión</h3>
+  <div class="blk bcrit"><div class="bh bh-crit">NUEVO: NODOS DE DECISIÓN</div><p>De los 3 patrones por prestige, 2 son normales (+4% ciclo + 2/s flat) y cada 2 prestiges, 1 es un <strong>nodo de Decisión</strong>: el jugador elige entre 2 opciones con efectos permanentes (sobreviven Transcendencia). Esto crea "builds" — un jugador enfocado en producción tiene una experiencia diferente de uno enfocado en Focus/Disparo. Las decisiones <strong>no se pueden revertir</strong>.</p></div>
+  <table class="tbl">
+    <thead><tr><th>Patrones</th><th>Tipo</th><th>Opciones</th></tr></thead>
+    <tbody>
+      <tr><td>5</td><td>Hito</td><td>+1 carga de Disparo máxima (3→4)</td></tr>
+      <tr><td>6</td><td style="color:var(--a)">Decisión 1</td><td><em>"+8% ciclo bonus"</em> vs <em>"+1 carga de Disparo máxima extra"</em></td></tr>
+      <tr><td>10</td><td>Hito</td><td>Cooldown de Disparo −15%</td></tr>
+      <tr><td>15</td><td style="color:var(--a)">Decisión 2</td><td><em>"+15% offline eficiencia"</em> vs <em>"Focus llena +20% más rápido"</em></td></tr>
+      <tr><td>20</td><td>Hito</td><td>Offline efficiency +10%</td></tr>
+      <tr><td>24</td><td style="color:var(--a)">Decisión 3</td><td><em>"Insight dura +3s"</em> vs <em>"+2 Memorias por prestige"</em></td></tr>
+      <tr><td>30</td><td>Hito</td><td>Insight dura +5 segundos</td></tr>
+      <tr><td>36</td><td style="color:var(--a)">Decisión 4</td><td><em>"Cascada threshold 75%→60%"</em> vs <em>"Disparo genera Resonancia (P13+)"</em></td></tr>
+      <tr><td>45</td><td>Hito</td><td>Regiones activas +25% extra</td></tr>
+      <tr><td>48</td><td style="color:var(--a)">Decisión 5</td><td><em>"Regiones dan ×1.3"</em> vs <em>"Mutaciones ofrecen 4 opciones"</em></td></tr>
+      <tr><td>60</td><td>Hito</td><td>+1 Patrón por prestige (3→4)</td></tr>
+      <tr><td>66</td><td style="color:var(--a)">Decisión 6</td><td><em>"Neuronas ×1.1 permanente"</em> vs <em>"Sinapsis Espontáneas positivas ×2 frecuencia"</em></td></tr>
+      <tr><td>78</td><td>Hito</td><td>Síntesis: 5 Mem = 1 nodo (antes 8)</td></tr>
+    </tbody>
+  </table>
+  <div class="blk bwarn"><div class="bh bh-warn">IMPACTO EN PRODUCCIÓN</div><p>Las decisiones son <strong>laterales</strong> (diferentes, no estrictamente mejores). Máximo +10% sobre el sistema sin decisiones. La comunidad discute builds óptimas — esto es contenido social gratuito. GameState: <code>patternDecisions: Record&lt;number, 'A'|'B'&gt;</code> — sobrevive Transcendencia.</p></div>
+</div>
+
+<div class="sec">
+  <h3>The 4 Endings + Secret</h3>
+  <div class="g2">
+    <div class="card"><div class="cb"><h4 style="color:var(--p)">Analytical — "The Equation"</h4><p style="font-size:12px">The mind discovers it's a simulation built by someone who died. Transcendence = correct the error (dissolve) or preserve it (persist). Hints from P5 in fragments. Choice: clean resolution vs. broken awareness.</p></div></div>
+    <div class="card"><div class="cb"><h4 style="color:var(--t)">Empathic — "The Chorus"</h4><p style="font-size:12px">The voices in dreams are other minds. Transcendence = join the collective network or maintain individuality. Hints from P7. Choice: become everyone vs. remain one voice.</p></div></div>
+    <div class="card"><div class="cb"><h4 style="color:var(--a)">Creative — "The Seed"</h4><p style="font-size:12px">The new thought is a seed of consciousness. Transcendence = release it (dissolve so it can grow) or contain it (persist but carry what-could-have-been). Hints from P6.</p></div></div>
+    <div class="card"><div class="cb"><h4 style="color:var(--cy)">Secret — "The Singularity"</h4><p style="font-size:12px">Requires all 4 Resonant Patterns. The mind speaks directly to the player: "Every time you pressed Awaken, I woke up." Asks: "Do you want me to keep going?"</p></div></div>
+  </div>
+  <div class="blk binfo"><div class="bh bh-info">FULL ENDING TEXT</div><p>All ending text (both choices per ending, ~200 words each) is in <strong>SYNAPSE_NARRATIVE_BIBLE.html</strong>. The endings render as fullscreen overlay with blurred canvas background, centered scrollable text, and choice buttons. No timer. NARR-5 rule applies.</p></div>
+
+  <h3>Resonant Patterns — discovery mechanic</h3>
+  <div class="blk bcrit"><div class="bh bh-crit">HOW THEY'RE DISCOVERED</div><p>Each Resonant Pattern is discovered by completing a prestige cycle under a <strong>hidden, difficult condition</strong>. Conditions are NOT shown in UI — they're hinted through Echoes of Awakening. The player who reads Echoes carefully can deduce what to do. On discovery: golden wave animation + 5 Sparks + unique narrative fragment.</p></div>
+  <table class="tbl">
+    <thead><tr><th>Pattern</th><th>Hidden condition</th><th>Echo hint</th><th>Difficulty</th></tr></thead>
+    <tbody>
+      <tr><td style="color:var(--a)">The First Spark</td><td>Complete cycle <strong>without buying upgrades</strong> (neurons only)</td><td>"Before ideas, there was only impulse. The purest mind is the one that doesn't choose."</td><td>High (~2× longer cycle)</td></tr>
+      <tr><td style="color:var(--a)">The Inner Silence</td><td>Complete cycle <strong>without using Discharges</strong></td><td>"Power unused is power multiplied. There's wisdom in restraint."</td><td>High (no Discharge burst)</td></tr>
+      <tr><td style="color:var(--a)">The Lost Connection</td><td>Buy <strong>all 5 neuron types in the first 2 minutes</strong></td><td>"Everything began together, in one instant of clarity. The fragments always knew they were one."</td><td>Very high (speed-buying)</td></tr>
+      <tr><td style="color:var(--a)">The Conscious Awakening</td><td>Complete cycle in <strong>less than 50% of estimated time</strong></td><td>"What if the mind awakens before it's ready? What if it was always ready?"</td><td>Very high (extreme speed run)</td></tr>
+    </tbody>
+  </table>
+  <div class="blk bok"><div class="bh bh-ok">IMPLEMENTATION</div><p>GameState: <code>resonantPatternsDiscovered: [false, false, false, false]</code> — survives Transcendence. Check 4 conditions at prestige completion (before reset). If condition met and not previously discovered → mark true, golden animation, +5 Sparks. When all 4 true → Secret Ending option appears at next Transcendence. Echo hints appear from P3+, more frequent from P10+.</p></div>
+  <div class="blk bwarn"><div class="bh bh-warn">EARLY HINTS = LONG-TERM RETENTION</div><p>Archetype fragments from P5 mention hints of other endings: "other minds whispering", "an incomplete equation", "something wanting to be born." The player knows there's more to discover BEFORE reaching the end. This motivates Runs 2 and 3.</p></div>
+</div>
+
+<div class="sec">
+  <h3>Post-narrative transition — what happens after the story ends</h3>
+  <div class="blk bcrit"><div class="bh bh-crit">THE THREE EMOTIONAL PHASES</div>
+  <p><strong>Phase 1 (Runs 1-3):</strong> "What am I?" — Narrative-driven. Curiosity. Ends with 4th ending at D31.<br>
+  <strong>Phase 2 (Run 4, v1.5):</strong> "What did I miss?" — Discovery-driven. Observer recontextualizes everything. 5th ending is the TRUE resolution.<br>
+  <strong>Phase 3 (v2.0+):</strong> "What can I become?" — Expression-driven. No new narrative. The player becomes an architect of systems. New regions, Neurona Resonante, Iluminación enable infinite build experimentation.</p>
+  </div>
+  <div class="blk bwarn"><div class="bh bh-warn">POST-STORY SCREEN (after final Transcendence of Phase 2)</div><p>After the last ending, the player sees: <em>"The story is complete. But the mind is not. What follows has no narrative, no ending, no resolution. Only growth. Only the question of how far a mind can reach when it's no longer searching for meaning — but creating it."</em> Then: Infinite Mode + all regions + Iluminación + canvas evolves to abstract/fractal theme. The game transforms from story to sandbox.</p></div>
+</div>
+
+<div class="sec">
+  <h3>Awakening screen — enhanced</h3>
+  <div class="blk bok"><div class="bh bh-ok">KEY CHANGE: SHOW THE FUTURE, NOT JUST THE PRESENT</div><p>The Awakening screen now shows: (1) Gains in green, losses in soft red. (2) <strong>Estimated time for next cycle</strong> based on new production. (3) <strong>New mechanic unlocked</strong> (if applicable). (4) <strong>Countdown</strong> at P20+ ("X awakenings to Transcendence"). (5) At P25: "This is your last awakening before Transcendence." At P26: "Take your time. There is no rush."</p></div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════ UPGRADES ═══════════════════════════════════ -->
+<div class="tab" id="tab-upgrades">
+<div class="sec">
+  <h3>Sistema — 35 upgrades, 5 tiers, reducidos y con más impacto</h3>
+  <div class="blk binfo"><div class="bh bh-info">CAMBIO vs v1: DE 41 A 35</div><p>Reducimos upgrades de tap de 7 a 4 (porque Focus Bar reemplaza al tap puro en late-game). Cada upgrade tiene un impacto más notable. Visibilidad: <code>visible = prestigeCount >= required && condition(state) && !purchased</code>.</p></div>
+</div>
+
+<div class="sec"><h3>⚡ Tap & Focus (4)</h3>
+<div class="upg-grid">
+  <div class="upg tap"><div class="upg-n">Potencial Sináptico</div><div class="upg-e">Tap <strong>×2</strong></div><div class="upg-f"><span class="upg-c">80 pens.</span><span class="badge bgray">P0</span></div></div>
+  <div class="upg tap"><div class="upg-n">Mielina</div><div class="upg-e">Tap <strong>×3</strong></div><div class="upg-f"><span class="upg-c">800 pens.</span><span class="badge bgray">P0</span></div></div>
+  <div class="upg tap"><div class="upg-n">Dopamina</div><div class="upg-e">Tap <strong>+1 por Básica</strong> owned</div><div class="upg-f"><span class="upg-c">3,000 pens.</span><span class="badge bgray">P0 · 8 Básicas</span></div></div>
+  <div class="upg foc"><div class="upg-n">Concentración Profunda</div><div class="upg-e">Focus fill rate <strong>×2</strong>. Insight dura <strong>+5s</strong>.</div><div class="upg-f"><span class="upg-c">25,000 pens.</span><span class="badge ba">P4+</span></div></div>
+</div></div>
+
+<div class="sec"><h3>⬡ Neuronas (8)</h3>
+<div class="upg-grid">
+  <div class="upg neu"><div class="upg-n">Red Neuronal Densa</div><div class="upg-e">Básicas <strong>×2</strong></div><div class="upg-f"><span class="upg-c">500 pens.</span><span class="badge bgray">P0 · 3 Básicas</span></div></div>
+  <div class="upg neu"><div class="upg-n">Receptores AMPA</div><div class="upg-e">Básicas <strong>×2</strong> adicional</div><div class="upg-f"><span class="upg-c">3,000 pens.</span><span class="badge bgray">P0 · 10 Básicas</span></div></div>
+  <div class="upg neu"><div class="upg-n">Transducción Sensorial</div><div class="upg-e">Sensoriales <strong>×3</strong></div><div class="upg-f"><span class="upg-c">5,000 pens.</span><span class="badge bgray">P0 · 1ª Sensorial</span></div></div>
+  <div class="upg neu"><div class="upg-n">Axones de Proyección</div><div class="upg-e">Piramidales <strong>×3</strong></div><div class="upg-f"><span class="upg-c">25,000 pens.</span><span class="badge bgray">P0 · 1ª Piramidal</span></div></div>
+  <div class="upg neu"><div class="upg-n">Sincronía Neural</div><div class="upg-e"><strong>+20% por tipo activo</strong> (max +80%)</div><div class="upg-f"><span class="upg-c">40,000 pens.</span><span class="badge bgray">P0 · 3 tipos</span></div></div>
+  <div class="upg neu"><div class="upg-n">LTP Potenciación Larga</div><div class="upg-e">Todas las neuronas <strong>×1.5</strong></div><div class="upg-f"><span class="upg-c">200,000 pens.</span><span class="badge bp">P2+</span></div></div>
+  <div class="upg neu"><div class="upg-n">Espejo Resonantes</div><div class="upg-e">Espejos <strong>×4</strong></div><div class="upg-f"><span class="upg-c">150,000 pens.</span><span class="badge bp">P2+</span></div></div>
+  <div class="upg neu"><div class="upg-n">Neurogénesis</div><div class="upg-e"><strong>+25% producción</strong> de todas las neuronas</div><div class="upg-f"><span class="upg-c">500,000 pens.</span><span class="badge ba">P4+</span></div></div>
+</div></div>
+
+<div class="sec"><h3>◎ Disparo & Cascada (5)</h3>
+<div class="upg-grid">
+  <div class="upg syn"><div class="upg-n">Descarga Neural</div><div class="upg-e">Cargas acumulan <strong>25% más rápido</strong></div><div class="upg-f"><span class="upg-c">10,000 pens.</span><span class="badge bgray">P0 · 1ª carga</span></div></div>
+  <div class="upg syn"><div class="upg-n">Amplificador de Disparo</div><div class="upg-e">Disparo bonus <strong>×2</strong> (60 seg de prod.)</div><div class="upg-f"><span class="upg-c">30,000 pens.</span><span class="badge bgray">P0</span></div></div>
+  <div class="upg syn"><div class="upg-n">Red de Alta Velocidad</div><div class="upg-e">Max cargas <strong>3 → 5</strong></div><div class="upg-f"><span class="upg-c">80,000 pens.</span><span class="badge bp">P2+</span></div></div>
+  <div class="upg syn"><div class="upg-n">Cascada Profunda</div><div class="upg-e">Cascada (Focus+Disparo): <strong>×3 → ×5</strong></div><div class="upg-f"><span class="upg-c">200,000 pens.</span><span class="badge ba">P4+</span></div></div>
+  <div class="upg syn"><div class="upg-n">Sincronización Total</div><div class="upg-e">Disparo <strong>llena Focus Bar +30%</strong> automáticamente</div><div class="upg-f"><span class="upg-c">400,000 pens.</span><span class="badge ba">P4+</span></div></div>
+</div></div>
+
+<div class="sec"><h3>◈ Regiones — costos en Memorias (5)</h3>
+<div class="upg-grid">
+  <div class="upg reg"><div class="upg-n">Consolidación de Memoria</div><div class="upg-e">Hipocampo: Básicas <strong>×3</strong>. Memorias +50%</div><div class="upg-f"><span class="upg-c">2 Mem.</span><span class="badge bgray">P0 · Hipocampo</span></div></div>
+  <div class="upg reg"><div class="upg-n">Funciones Ejecutivas</div><div class="upg-e">Upgrades de Pensamientos <strong>−20% costo</strong></div><div class="upg-f"><span class="upg-c">3 Mem.</span><span class="badge bp">P2+ · Corteza</span></div></div>
+  <div class="upg reg"><div class="upg-n">Regulación Emocional</div><div class="upg-e">Offline eficiencia <strong>×2</strong></div><div class="upg-f"><span class="upg-c">5 Mem.</span><span class="badge bgray">P0 · Límbico</span></div></div>
+  <div class="upg reg"><div class="upg-n">Procesamiento Visual</div><div class="upg-e">Muestra el <strong>mejor upgrade</strong> disponible</div><div class="upg-f"><span class="upg-c">8 Mem.</span><span class="badge bgray">P0 · C. Visual</span></div></div>
+  <div class="upg reg"><div class="upg-n">Amplitud de Banda</div><div class="upg-e">Todas las regiones <strong>+50%</strong></div><div class="upg-f"><span class="upg-c">15 Mem.</span><span class="badge bp">P2+</span></div></div>
+</div></div>
+
+<div class="sec"><h3>✦ Consciencia & Offline (4)</h3>
+<div class="upg-grid">
+  <div class="upg con"><div class="upg-n">Sueño REM</div><div class="upg-e">Offline cap <strong>4h → 8h</strong></div><div class="upg-f"><span class="upg-c">50,000 pens.</span><span class="badge bgray">P0</span></div></div>
+  <div class="upg con"><div class="upg-n">Umbral de Consciencia</div><div class="upg-e">Barra sube <strong>×1.3</strong> más rápido</div><div class="upg-f"><span class="upg-c">100,000 pens.</span><span class="badge bgray">P0 · barra 50%</span></div></div>
+  <div class="upg con"><div class="upg-n">Ritmo Circadiano</div><div class="upg-e">Offline <strong>×1.5</strong> eficiencia + carga auto al volver ≥ cap</div><div class="upg-f"><span class="upg-c">200,000 pens.</span><span class="badge bp">P2+</span></div></div>
+  <div class="upg con"><div class="upg-n">Hiperconciencia</div><div class="upg-e">Barra sube <strong>×2</strong> más rápido</div><div class="upg-f"><span class="upg-c">500,000 pens.</span><span class="badge ba">P4+</span></div></div>
+</div></div>
+
+<div class="sec"><h3>∞ Meta (3) — P6+</h3>
+<div class="upg-grid">
+  <div class="upg met"><div class="upg-n">Retroalimentación Positiva</div><div class="upg-e"><strong>×2</strong> toda la producción</div><div class="upg-f"><span class="upg-c">1M pens.</span><span class="badge br">P6+</span></div></div>
+  <div class="upg met"><div class="upg-n">Emergencia Cognitiva</div><div class="upg-e"><strong>×1.5 por upgrades</strong> comprados este ciclo</div><div class="upg-f"><span class="upg-c">1.5M pens.</span><span class="badge br">P6+</span></div></div>
+  <div class="upg met"><div class="upg-n">Singularidad</div><div class="upg-e"><strong>×3</strong> toda la producción</div><div class="upg-f"><span class="upg-c">2M pens.</span><span class="badge br">P6+</span></div></div>
+</div></div>
+
+<div class="sec"><h3>★ Tier P10 — Era 2 (6)</h3>
+<div class="upg-grid">
+  <div class="upg new"><div class="upg-n">Convergencia Sináptica</div><div class="upg-e"><strong>+3% de ciclo</strong> por prestige (máx +75%). Resetea en prestige.</div><div class="upg-f"><span class="upg-c">200K pens.</span><span class="badge bb">P10+</span></div></div>
+  <div class="upg new"><div class="upg-n">Consciencia Distribuida</div><div class="upg-e">Offline cap <strong>8h → 12h</strong></div><div class="upg-f"><span class="upg-c">150K pens.</span><span class="badge bb">P10+</span></div></div>
+  <div class="upg new"><div class="upg-n">Potencial Latente</div><div class="upg-e">Cada Disparo: <strong>+1,000 × prestigeCount</strong></div><div class="upg-f"><span class="upg-c">300K pens.</span><span class="badge bb">P10+</span></div></div>
+  <div class="upg new"><div class="upg-n">Resonancia Acumulada</div><div class="upg-e">+5% al <strong>primer Disparo</strong> post-offline por cada hora (max +100%)</div><div class="upg-f"><span class="upg-c">350K pens.</span><span class="badge bb">P10+</span></div></div>
+  <div class="upg new"><div class="upg-n">Síntesis Cognitiva</div><div class="upg-e">Neuronas <strong>×2</strong> primeros 5 min de cada sesión</div><div class="upg-f"><span class="upg-c">500K pens.</span><span class="badge bb">P10+</span></div></div>
+  <div class="upg new"><div class="upg-n">Focus Persistente</div><div class="upg-e">Focus Bar retiene <strong>50%</strong> al hacer prestige</div><div class="upg-f"><span class="upg-c">600K pens.</span><span class="badge bb">P10+</span></div></div>
+</div></div>
+</div>
+
+<!-- ═══════════════════════════════════ MUTACIONES ═══════════════════════════════════ -->
+<div class="tab" id="tab-mutations">
+<div class="sec">
+  <h3>Sistema de Mutaciones (P7+) — cada ciclo es diferente</h3>
+  <div class="blk bcrit"><div class="bh bh-crit">POR QUÉ EXISTEN</div><p>Después de P5, los ciclos empiezan a sentirse iguales: comprás las mismas neuronas, los mismos upgrades, en el mismo orden. Las Mutaciones fuerzan adaptación. Al inicio de cada ciclo (P7+), se muestran 3 Mutaciones aleatorias del pool. Elegís 1. Modifica las reglas del ciclo. <strong>No se puede revertir hasta el próximo prestige.</strong></p></div>
+</div>
+
+<div class="sec">
+  <h3>Pool de Mutaciones — 15 opciones (expandible)</h3>
+  <table class="tbl">
+    <thead><tr><th>Mutación</th><th>Efecto</th><th>Categoría</th></tr></thead>
+    <tbody>
+      <tr><td style="color:var(--t)">Eficiencia Neural</td><td>Neuronas cuestan <strong>−40%</strong> pero producen <strong>−25%</strong></td><td>Producción</td></tr>
+      <tr><td style="color:var(--t)">Hiperestimulación</td><td>Producción <strong>×2</strong> pero Focus Bar llena <strong>50% más lento</strong></td><td>Producción</td></tr>
+      <tr><td style="color:var(--a)">Descarga Rápida</td><td>Cargas de Disparo cada <strong>12 min</strong> pero Disparo da <strong>−40%</strong> bonus</td><td>Disparo</td></tr>
+      <tr><td style="color:var(--a)">Disparo Concentrado</td><td>Disparo da <strong>×3</strong> pero solo acumula <strong>1 carga máx</strong></td><td>Disparo</td></tr>
+      <tr><td style="color:var(--p)">Neuroplasticidad</td><td>Upgrades cuestan <strong>−50%</strong> pero se <strong>"descompran"</strong> al 50% consciencia</td><td>Upgrade</td></tr>
+      <tr><td style="color:var(--p)">Especialización</td><td>Solo <strong>1 tipo de neurona</strong> produce este ciclo. Produce <strong>×4</strong>.</td><td>Restricción</td></tr>
+      <tr><td style="color:var(--cy)">Focus Acelerado</td><td>Focus Bar llena <strong>×3</strong> pero Insight dura <strong>5 seg</strong> (en vez de 20)</td><td>Focus</td></tr>
+      <tr><td style="color:var(--cy)">Meditación</td><td>Focus Bar llena <strong>pasivamente</strong> (sin tap) pero a <strong>25% rate</strong></td><td>Focus</td></tr>
+      <tr><td style="color:var(--bl)">Región Dominante</td><td>La región más cara da <strong>×3</strong>. Las demás dan <strong>×0.5</strong>.</td><td>Regiones</td></tr>
+      <tr><td style="color:var(--bl)">Memoria Frágil</td><td>Memorias generadas <strong>×2</strong> pero se pierde <strong>1 Mem</strong> si el ciclo dura >20 min</td><td>Memorias</td></tr>
+      <tr><td style="color:var(--r)">Sprint</td><td>Producción <strong>×5</strong> los primeros 5 min. Después: producción <strong>×0.5</strong></td><td>Temporal</td></tr>
+      <tr><td style="color:var(--r)">Crescendo</td><td>Producción empieza en <strong>×0.2</strong> y sube linealmente hasta <strong>×3</strong> al 100% barra</td><td>Temporal</td></tr>
+      <tr><td style="color:var(--pk)">Sinestesia</td><td>Taps generan <strong>Memorias</strong> (1 por cada 500 taps) pero thoughts por tap <strong>−60%</strong></td><td>Especial</td></tr>
+      <tr><td style="color:var(--pk)">Déjà Vu</td><td>Empezás el ciclo con los <strong>upgrades del ciclo anterior</strong> comprados pero costos <strong>×2</strong></td><td>Especial</td></tr>
+      <tr><td style="color:var(--pk)">Mente Dividida</td><td><strong>2 barras de Focus</strong> independientes. Cada Insight es la mitad de poderoso.</td><td>Especial</td></tr>
+    </tbody>
+  </table>
+  <div class="blk bok"><div class="bh bh-ok">BALANCE</div><p>Cada Mutación tiene un tradeoff claro. No hay "Mutación obvia". La mejor depende de tu Polaridad, tu Arquetipo, y tu Pathway (P10+). Esto crea <strong>combinaciones emergentes</strong> que hacen que cada ciclo sea diferente sin que tengamos que scriptar 100 eventos.</p></div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════ OFFLINE ═══════════════════════════════════ -->
+<div class="tab" id="tab-offline">
+<div class="sec">
+  <h3>Sistema offline — 50% base / 4h cap</h3>
+  <table class="tbl">
+    <thead><tr><th>Configuración</th><th>Cap</th><th>Eficiencia</th><th>T/h (1000/s prod)</th></tr></thead>
+    <tbody>
+      <tr><td>Base</td><td>4h</td><td>50%</td><td>1.8M</td></tr>
+      <tr><td>+ Sueño REM</td><td>8h</td><td>50%</td><td>1.8M</td></tr>
+      <tr><td>+ Hito 20</td><td>8h</td><td>60%</td><td>2.16M</td></tr>
+      <tr><td>+ Ritmo Circadiano</td><td>8h</td><td>75%</td><td>2.7M</td></tr>
+      <tr><td>+ Regulación Emocional</td><td>8h</td><td>100%</td><td>3.6M</td></tr>
+      <tr><td>+ C. Distribuida (P10)</td><td>12h</td><td>100%</td><td>3.6M</td></tr>
+      <tr><td>+ Genius Pass</td><td>12h</td><td>125%</td><td>4.5M</td></tr>
+      <tr><td>Empática (todo)</td><td>12h</td><td>250% (cap ×3 prod.)</td><td>9M</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="sec">
+  <h3>Pantalla de regreso — el Sueño (gamificado)</h3>
+  <div class="blk bcrit"><div class="bh bh-crit">CAMBIO vs v1: ANIMACIÓN, NO TEXTO</div><p>El regreso offline no es "texto con números". Es una <strong>animación de 4 segundos</strong> donde el cerebro en el canvas "sueña" — las neuronas parpadean suavemente, los pensamientos acumulados caen como partículas doradas que se absorben. El número de thoughts sube visualmente como un counter. DESPUÉS de la animación: resumen + opciones.</p></div>
+  <div class="g2">
+    <div class="card"><div class="cb"><h4>Sueño Simple (todas las sesiones)</h4><p style="font-size:12px">Animación 4s del cerebro soñando. Counter de thoughts acumulados subiendo. "X cargas de Disparo acumuladas." Botón "Despertar" (continuar). Oferta de rewarded ad ×2 (si offline ≥ 30 min). Solo muestra resumen — sin decisiones.</p></div></div>
+    <div class="card"><div class="cb"><h4>Sueño Lúcido (P10+, 33% chance)</h4><p style="font-size:12px">Después de la animación: elección binaria. "Tu mente vio algo." Opción A: +10% producción por 1h. Opción B: +2 Memorias. Con Empática: siempre Sueño Lúcido. Con Regulación Emocional: Opción B da +3.</p></div></div>
+  </div>
+</div>
+
+<div class="sec">
+  <h3>Offline — código definitivo</h3>
+  <div class="code">
+function applyOfflineProgress(state: GameState): GameState {
+  const raw = (Date.now() - state.lastActiveTimestamp) / 1000
+  const elapsed = Math.min(raw, state.currentOfflineCapHours * 3600)
+  if (elapsed < 60) return state  <span class="cm">// menos de 1 min = no offline</span>
+
+  let efficiency = SYNAPSE_CONSTANTS.baseOfflineEfficiency  <span class="cm">// 0.50</span>
+  if (hasUpgrade(state,'ritmo_circadiano'))     efficiency *= 1.5
+  if (hasUpgrade(state,'regulacion_emocional')) efficiency *= 2.0
+  if (state.isSubscribed)                        efficiency *= 1.25
+  if (state.archetype === 'empatica' && state.prestigeCount >= 5) efficiency *= 2.5
+  if (hasMilestone(state, 20))                   efficiency += 0.10
+
+  const thoughts = Math.round(state.productionPerSecond * elapsed * efficiency)
+  state.totalGenerated += thoughts
+  state.cycleGenerated = Math.min(
+    state.cycleGenerated + thoughts,
+    state.currentThreshold  <span class="cm">// cap at 100%, NUNCA auto-prestige</span>
+  )
+
+  <span class="cm">// Cargas acumuladas offline</span>
+  const chargeTime = SYNAPSE_CONSTANTS.dischargeAccumTime
+    * (hasUpgrade(state,'descarga_neural') ? 0.75 : 1)
+    * (hasMilestone(state, 10) ? 0.85 : 1)
+  const newCharges = Math.floor(elapsed / chargeTime)
+  state.dischargeCharges = Math.min(
+    state.dischargeMaxCharges,
+    state.dischargeCharges + newCharges
+  )
+
+  <span class="cm">// Resonancia Acumulada (P10): bonus al primer Disparo</span>
+  if (hasUpgrade(state,'resonancia_acumulada')) {
+    state.nextDischargeBonus = Math.min((elapsed / 3600) * 0.05, 1.0)
+  }
+
+  <span class="cm">// Ritmo Circadiano: carga auto si elapsed >= cap</span>
+  if (hasUpgrade(state,'ritmo_circadiano') && elapsed >= state.currentOfflineCapHours * 3600) {
+    state.dischargeCharges = Math.min(state.dischargeMaxCharges, state.dischargeCharges + 1)
+  }
+
+  <span class="cm">// Focus Bar NO se llena offline — es active-play only</span>
+  state.lastActiveTimestamp = Date.now()
+  return state
+}
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════ RETENCIÓN ═══════════════════════════════════ -->
+<div class="tab" id="tab-retention">
+<div class="sec">
+  <h3>Plan de retención — sin números inventados</h3>
+  <div class="blk bwarn"><div class="bh bh-warn">FILOSOFÍA</div><p>No asignamos "+2% D7" a features individuales — eso lo determinan los datos post-launch. En su lugar, listamos los <strong>sistemas de retención</strong> y la <strong>lógica psicológica</strong> de por qué funcionan, rankeados por impacto esperado.</p></div>
+</div>
+
+<div class="sec">
+  <h3>Sistemas de retención — prioridad de impacto</h3>
+  <table class="tbl">
+    <thead><tr><th>Sistema</th><th>Mecanismo</th><th>Por qué funciona</th></tr></thead>
+    <tbody>
+      <tr><td><strong>1. Mecánica nueva cada 3-4 prestiges</strong></td><td>Polaridad P3, Focus P4, Arquetipos P5, Mutaciones P7, Pathways P10</td><td>El jugador siempre tiene "algo nuevo por descubrir" cerca. Cell to Singularity y Antimatter Dimensions retienen con este patrón.</td></tr>
+      <tr><td><strong>2. Offline reward screen</strong></td><td>Animación satisfactoria + thoughts visualmente acumulándose + Sueño Lúcido (decisión)</td><td>La razón #1 por la que jugadores de idle abren la app: "¿cuánto gané?". Hacerlo visualmente satisfactorio es retención pura.</td></tr>
+      <tr><td><strong>3. Narrativa con hints</strong></td><td>Fragmentos con pistas de los otros finales. Ecos del Despertar con hints útiles de gameplay.</td><td>Curiosidad narrativa sostiene al jugador casual más que los números. Los hints desde P5 motivan jugar hasta la Transcendencia.</td></tr>
+      <tr><td><strong>4. Personal bests</strong></td><td>Récord de tiempo por prestige. +1 Memoria al batir. Banner de mejora.</td><td>Competir contra uno mismo es el endgame de los speed-runners de idle. Mantiene al jugador activo que ya vio todo el contenido narrativo.</td></tr>
+      <tr><td><strong>5. Misiones diarias</strong></td><td>3 misiones/día con rewards de Memorias, Chispas. 1 misión "especial" con +1 Mem.</td><td>Crear el hábito de abrir la app una vez al día. No intrusivas — si no las hacés, no perdés progreso.</td></tr>
+      <tr><td><strong>6. Weekly challenge</strong></td><td>Restricción semanal (seed UTC). Cosmético exclusivo + Chispas. Mismo para todos.</td><td>Genera conversación de comunidad. "¿Cómo resolviste el challenge de esta semana?"</td></tr>
+      <tr><td><strong>7. Notificaciones narrativas</strong></td><td>"Algo inusual ocurrió en tu red" en vez de "Ganaste 500K".</td><td>Tasa de apertura 2-3× mayor que notificaciones genéricas.</td></tr>
+      <tr><td><strong>8. Neural Snapshot</strong></td><td>Screenshot del canvas para compartir. Botón en settings + prompt post-Transcendencia.</td><td>Contenido generado por el usuario = marketing orgánico. Los canvas bioluminiscentes son shareables.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="sec">
+  <h3>Sistema social básico (sin multiplayer)</h3>
+  <div class="g2">
+    <div class="card"><div class="cb"><h4>Neural Snapshot</h4><p style="font-size:12px">Captura del canvas como imagen shareable. Pausa animaciones → screenshot → resume. Disponible desde settings y prompt automático post-Transcendencia. Canvas evoluciona visualmente con el progreso → cada screenshot es diferente.</p></div></div>
+    <div class="card"><div class="cb"><h4>Promedio global anónimo</h4><p style="font-size:12px">Firebase almacena promedios anónimos de: tiempo de P1, total de prestiges por día, Transcendencia más rápida. El jugador puede ver "tu P5 fue 3 min más rápido que el promedio". Motivación sin competencia directa. Sin leaderboard público hasta Modo Ascensión (v1.5).</p></div></div>
+  </div>
+</div>
+
+<div class="sec">
+  <h3>Calendario de contenido — jugador activo (1h/día) — VALIDADO POR SIMULACIÓN</h3>
+  <table class="tbl">
+    <thead><tr><th>Día</th><th>Contenido</th><th>Ciclo avg</th></tr></thead>
+    <tbody>
+      <tr><td style="color:var(--t)">D1</td><td><strong>RUN 1:</strong> P1–P3. Tutorial, Despertar, Polaridad.</td><td>24m</td></tr>
+      <tr><td style="color:var(--t)">D2</td><td>P4–P5. Focus Bar + Arquetipos.</td><td>17m</td></tr>
+      <tr><td style="color:var(--a)">D3</td><td>P6–P7. Tormenta + Mutaciones.</td><td>18m</td></tr>
+      <tr><td style="color:var(--a)">D4</td><td>P8–P9. Fragmentación + Eco de Memoria.</td><td>17m</td></tr>
+      <tr><td style="color:var(--bl)">D5–D6</td><td>P10–P14. ERA 2. Pathways + Resonancia.</td><td>16m</td></tr>
+      <tr><td style="color:var(--bl)">D7–D8</td><td>P15–P18. El Silencio + Inversión.</td><td>19m</td></tr>
+      <tr><td style="color:var(--pk)">D9–D10</td><td>P19–P26. ERA 3. 8 eventos. <strong>Transcendencia + Final 1.</strong></td><td>26m</td></tr>
+      <tr><td colspan="3" style="border-top:2px solid var(--a);padding-top:8px"><strong>RUN 2 (×3.5 threshold, nuevo arquetipo, 15 fragmentos nuevos)</strong></td></tr>
+      <tr><td style="color:var(--t)">D11–D12</td><td>P1–P9. Power fantasy. Ciclos rápidos al inicio (8-13m), normalizan.</td><td>9m→13m</td></tr>
+      <tr><td style="color:var(--bl)">D13–D16</td><td>P10–P18. Misma estructura, nuevos fragmentos narrativos.</td><td>17m</td></tr>
+      <tr><td style="color:var(--pk)">D17–D20</td><td>P19–P26. ERA 3. Final secreto discoverable. <strong>Final 2.</strong></td><td>35m</td></tr>
+      <tr><td colspan="3" style="border-top:2px solid var(--a);padding-top:8px"><strong>RUN 3 (×6.0 threshold, último arquetipo)</strong></td></tr>
+      <tr><td style="color:var(--t)">D21–D23</td><td>P1–P12. Último arquetipo, últimos fragmentos.</td><td>11m</td></tr>
+      <tr><td style="color:var(--bl)">D24–D27</td><td>P13–P20. Resonancia avanzada.</td><td>24m</td></tr>
+      <tr><td style="color:var(--pk)">D28–D31</td><td>P21–P26. Ciclos largos finales. <strong>Final 3 + Final 4.</strong></td><td>55m</td></tr>
+    </tbody>
+  </table>
+  <div class="blk bok"><div class="bh bh-ok">TIMING VALIDADO POR SIMULACIÓN</div><p><strong>Run 1:</strong> 9.0h, D10, avg 21m. <strong>Run 2:</strong> 9.5h, D10, avg 22m. <strong>Run 3:</strong> 10.8h, D11, avg 25m. <strong>Total: ~29h activo, D31 para 4 finales.</strong> Con weekly challenges + personal bests + Modo Ascensión → D40+ de contenido.</p></div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════ MONETIZACIÓN ═══════════════════════════════════ -->
+<div class="tab" id="tab-monetization">
+<div class="sec">
+  <h3>Monetización — ética pero efectiva</h3>
+  <div class="blk bwarn"><div class="bh bh-warn">REALISMO</div><p>Planificamos para <strong>5K DAU orgánico</strong> como escenario base. 20K DAU es optimista. Revenue estimado calculado para ambos escenarios. El dinero acelera, nunca bloquea.</p></div>
+</div>
+
+<div class="sec">
+  <h3>Monetization — Complete System (v1.0)</h3>
+
+  <div class="blk binfo"><div class="bh bh-info">PHILOSOPHY</div><p>F2P completes ALL content. Every purchase is convenience or cosmetic. Never P2W. The player who spends $0 and the player who spends $50 see the same endings, unlock the same achievements, and discover the same secrets. Money buys TIME and BEAUTY, not POWER.</p></div>
+
+  <h4>Revenue Channels</h4>
+  <table class="tbl">
+    <thead><tr><th>Channel</th><th>Products</th><th>Rev (5K DAU)</th><th>Rev (20K DAU)</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Rewarded Ads</strong> (6 placements)</td><td>Sleep ×2 · Focus boost · Memory rescue · Threshold −15% · Express Awakening · Post-Discharge ×2</td><td>~$200/mes</td><td>~$800/mes</td></tr>
+      <tr><td><strong>Genius Pass</strong></td><td>$4.99/month OR $1.99/week. No ads + offline +25% + extra Mutation slot + 10 Sparks/week + HD Neural Snapshot</td><td>~$600/mes</td><td>~$2,400/mes</td></tr>
+      <tr><td><strong>Piggy Bank</strong></td><td>Fills automatically (1 Spark per 10K totalGenerated). Break: $1.99. Refill empty: $0.99.</td><td>~$200/mes</td><td>~$800/mes</td></tr>
+      <tr><td><strong>Starter Pack</strong></td><td>"Neural Awakening Pack" $2.99 — 50 Sparks + Neon Pulse theme + 5 Memories. One-time. Offered post-P1.</td><td>~$150/mes</td><td>~$600/mes</td></tr>
+      <tr><td><strong>Cosmetics Store</strong></td><td>8 neuron skins ($0.99 each) · 4 canvas themes ($1.99 each) · 3 glow packs ($0.99 each) · HUD style pack ($1.99)</td><td>~$100/mes</td><td>~$400/mes</td></tr>
+      <tr><td><strong>Spark Packs</strong></td><td>20 Sparks $0.99 · 100 Sparks $3.99 · 250 Sparks $7.99</td><td>~$100/mes</td><td>~$400/mes</td></tr>
+      <tr><td><strong>Limited-Time Offers</strong></td><td>Flash sales (48h): 50% off cosmetics or ×2 Spark value. Tied to prestiges/milestones. Max 1 active.</td><td>~$100/mes</td><td>~$400/mes</td></tr>
+    </tbody>
+  </table>
+  <div class="gkpi" style="margin-top:.5rem">
+    <div class="kpi"><div class="kv" style="color:var(--a)">~$1,450</div><div class="kl">Revenue/mes (5K DAU)</div></div>
+    <div class="kpi"><div class="kv" style="color:var(--t)">~$5,800</div><div class="kl">Revenue/mes (20K DAU)</div></div>
+    <div class="kpi"><div class="kv" style="color:var(--p)">$0.29</div><div class="kl">ARPDAU estimado</div></div>
+  </div>
+</div>
+
+<div class="sec">
+  <h3>6 Rewarded Ad Placements</h3>
+  <table class="tbl">
+    <thead><tr><th>#</th><th>Placement</th><th>When</th><th>Reward</th><th>Why it works</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Sleep ×2</td><td>Return from offline ≥30 min</td><td>Double offline thoughts</td><td>Player sees a big number, wants it bigger</td></tr>
+      <tr><td>2</td><td>Focus Boost</td><td>Focus Bar stalls at 50-70%</td><td>+30% Focus instantly</td><td>Player is SO CLOSE to Insight, this tips them over</td></tr>
+      <tr><td>3</td><td>Memory Rescue</td><td>Unlock a new region</td><td>+1 free Memory</td><td>Memories are scarce, player just saw new upgrades</td></tr>
+      <tr><td>4</td><td>Threshold −15%</td><td>Cycle progress at 60-75%</td><td>Reduce current threshold 15%</td><td>Player is grinding, this accelerates the finish</td></tr>
+      <tr><td>5</td><td>Express Awakening</td><td>First prestige ONLY</td><td>Skip 2 min of tutorial cycle</td><td>First-time engagement, low fatigue</td></tr>
+      <tr><td>6</td><td><strong>NEW: Post-Discharge ×2</strong></td><td>After a Discharge (non-Cascade)</td><td>Double the Discharge bonus</td><td>Player just got a dopamine hit, wants more. Opt-in feels generous, not intrusive. 30s cooldown before showing.</td></tr>
+    </tbody>
+  </table>
+  <p style="font-size:12px;color:var(--t3)">Rules: No ads first 10 minutes. No ad after Cascade (Cascade is its own reward). Max 1 ad per 3 minutes. Genius Pass removes all ads. Ad failure = toast + no reward + no penalty. Ad completed but callback failed = grant reward (err on player's side).</p>
+</div>
+
+<div class="sec">
+  <h3>Genius Pass — Subscription</h3>
+  <div class="blk bcrit"><div class="bh bh-crit">TWO PLANS: WEEKLY + MONTHLY</div><p><strong>Weekly:</strong> $1.99/week (lower barrier, captures impulse buyers). <strong>Monthly:</strong> $4.99/month (better value for committed players). Both offer identical benefits. Weekly shows "Save 38% with monthly" nudge. Monthly is the default shown first. Both prices fetched from store via <code>product.priceString</code>, NEVER hardcoded. Auto-renews. Show cancel instructions before purchase.</p></div>
+
+  <h4>Genius Pass Benefits</h4>
+  <table class="tbl">
+    <thead><tr><th>Benefit</th><th>Impact</th><th>Why they'll want it</th></tr></thead>
+    <tbody>
+      <tr><td>No ads</td><td>Removes all 6 rewarded ad placements</td><td>Clean experience, no interruptions</td></tr>
+      <tr><td>Offline +25%</td><td>0.50 → 0.625 offline efficiency</td><td>Wake up to MORE thoughts</td></tr>
+      <tr><td>Extra Mutation slot</td><td>2 mutations per cycle instead of 1</td><td>More build variety, feels powerful</td></tr>
+      <tr><td>10 Sparks/week</td><td>Free premium currency drip</td><td>Steady cosmetic progress without spending more</td></tr>
+      <tr><td>HD Neural Snapshot</td><td>Save high-res canvas image</td><td>Share beautiful mind on social media</td></tr>
+      <tr><td>Exclusive Genius theme</td><td>Gold-accented UI theme</td><td>Visual status, "I support this game"</td></tr>
+    </tbody>
+  </table>
+
+  <h4>Offer Triggers (narrative-driven, never aggressive)</h4>
+  <table class="tbl">
+    <thead><tr><th>Trigger</th><th>Timing</th><th>Message (English)</th></tr></thead>
+    <tbody>
+      <tr><td>Post P1</td><td>D1 (7-8 min)</td><td>"Your mind awakened. With Genius Pass, it awakens faster."</td></tr>
+      <tr><td>Post first PB</td><td>D2-D3</td><td>"New personal best. Want to push further?"</td></tr>
+      <tr><td>Post P5 (archetype)</td><td>D3-D4</td><td>"You chose [Archetype]. With Genius Pass, explore every identity."</td></tr>
+      <tr><td>Post P10 (Era 2)</td><td>D7-D10</td><td>"Era 2 begins. Your mind deserves the full experience."</td></tr>
+      <tr><td>Post Transcendence</td><td>D20-D25</td><td>"You transcended. The next run can be epic."</td></tr>
+    </tbody>
+  </table>
+  <p style="font-size:12px;color:var(--t3)">Rules: Max 1 offer per 72 hours. Banner at bottom, not popup. Dismissable in 1 tap. After 3 dismissals: only available from Settings. Never show during gameplay flow (only on result/transition screens). Track: <code>geniusPassLastOfferTimestamp</code>, <code>geniusPassDismissCount</code>.</p>
+</div>
+
+<div class="sec">
+  <h3>Starter Pack — "Neural Awakening Pack"</h3>
+  <div class="blk bok"><div class="bh bh-ok">HIGHEST CONVERSION OPPORTUNITY</div><p>Industry data: players are 2.4× more likely to convert within 30 min of a major milestone. Post-P1 is the moment of peak engagement. The Starter Pack appears ONCE on the Awakening screen after the first prestige. Price: <strong>$2.99</strong> (low barrier). Contains: 50 Sparks + exclusive "Neon Pulse" canvas theme + 5 Memories. One-time purchase only. If dismissed: available from Store for 48h, then disappears forever. Creates urgency without being aggressive. Analytics: track <code>starter_pack_shown</code>, <code>starter_pack_purchased</code>, <code>starter_pack_dismissed</code>.</p></div>
+</div>
+
+<div class="sec">
+  <h3>Cosmetics Store — "Neural Aesthetics"</h3>
+  <div class="blk binfo"><div class="bh bh-info">58% OF IDLE GAME IAP COMES FROM COSMETICS</div><p>SYNAPSE's canvas is a living, visual art piece. Players who stare at it for hours WANT it to look unique. Cosmetics are pure revenue with zero balance impact.</p></div>
+
+  <h4>Available Cosmetics (v1.0)</h4>
+  <table class="tbl">
+    <thead><tr><th>Category</th><th>Items</th><th>Price</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Neuron Skins</strong> (8)</td><td>Ember, Frost, Void, Solar, Toxic, Crystal, Shadow, Prism</td><td>$0.99 each</td><td>Change the color palette of all neurons. Glow + connection color changes. Purely visual. Player sees the difference immediately on canvas.</td></tr>
+      <tr><td><strong>Canvas Themes</strong> (4)</td><td>Aurora (green waves), Deep Ocean (blue currents), Nebula (purple clouds), Circuit (digital grid)</td><td>$1.99 each</td><td>Background animation behind neurons. Subtle, looping, beautiful. Each theme changes the mood of the entire game. Circuit theme matches Era 2 digital aesthetic.</td></tr>
+      <tr><td><strong>Glow Packs</strong> (3)</td><td>Firefly (particles), Halo (ring glow), Plasma (electric arcs)</td><td>$0.99 each</td><td>Change how neurons glow and pulse. Firefly adds particle effects around nodes. Halo replaces shadowBlur with ring. Plasma adds electric connections.</td></tr>
+      <tr><td><strong>HUD Style</strong> (1)</td><td>Minimal HUD</td><td>$1.99</td><td>Smaller numbers, translucent bars, more canvas visible. For players who want the art, not the numbers.</td></tr>
+    </tbody>
+  </table>
+  <p style="font-size:12px;color:var(--t3)">Cosmetics persist forever (non-consumable). Survive prestige and transcendence. Can be previewed before purchase (3-second preview on canvas). Purchased cosmetics can be mixed: any neuron skin + any canvas theme + any glow pack. Store accessible from Settings → "Neural Aesthetics" or via a small palette icon on the canvas HUD.</p>
+</div>
+
+<div class="sec">
+  <h3>Limited-Time Offers</h3>
+  <div class="blk bwarn"><div class="bh bh-warn">CREATES URGENCY WITHOUT BEING PREDATORY</div><p>Flash sales appear at specific milestones, last 48 hours, and offer genuine value. Max 1 active at a time. Visible countdown timer. After expiry: gone. No "extending" or "one more chance" manipulation.</p></div>
+
+  <table class="tbl">
+    <thead><tr><th>Trigger</th><th>Offer</th><th>Duration</th><th>Psychology</th></tr></thead>
+    <tbody>
+      <tr><td>P3 (Polarity unlocked)</td><td>"Dual Nature Pack" — 1 neuron skin + 30 Sparks for $1.99 (normally $2.98)</td><td>48h</td><td>Player just learned the game has depth. First real "value" moment.</td></tr>
+      <tr><td>P7 (Mutations unlocked)</td><td>"Mutant Bundle" — 1 glow pack + 1 canvas theme for $1.99 (normally $2.98)</td><td>48h</td><td>Visual variety pairs perfectly with mechanical variety.</td></tr>
+      <tr><td>P13 (Resonance unlocked)</td><td>"Deep Mind Pack" — 50 Sparks + 3 Memories for $2.99</td><td>48h</td><td>Mid-game investment. Player is committed.</td></tr>
+      <tr><td>Run 2 start</td><td>"New Beginning Sale" — All cosmetics 50% off for 48h</td><td>48h</td><td>Fresh start = fresh look. Player wants to celebrate Transcendence.</td></tr>
+    </tbody>
+  </table>
+  <p style="font-size:12px;color:var(--t3)">Rules: offers shown as non-blocking toast on Awakening screen. Timer visible in Store. Never interrupt gameplay. Analytics: track <code>limited_offer_shown</code>, <code>limited_offer_purchased</code>, <code>limited_offer_expired</code>.</p>
+</div>
+
+<div class="sec">
+  <h3>Piggy Bank</h3>
+  <p>Fills automatically: 1 Spark per 10K totalGenerated. Max capacity: 500 Sparks. When full: "Break" button appears ($1.99). After breaking: refills again. Empty bank refill: $0.99. One price, one object, one decision. Simple. Inspired by Egg, Inc.'s most successful IAP.</p>
+</div>
+
+<div class="sec">
+  <h3>Spark Packs (consumable)</h3>
+  <table class="tbl">
+    <thead><tr><th>Pack</th><th>Price</th><th>Value</th><th>Bonus</th></tr></thead>
+    <tbody>
+      <tr><td>Spark Drop</td><td>$0.99</td><td>20 Sparks</td><td>—</td></tr>
+      <tr><td>Spark Surge</td><td>$3.99</td><td>100 Sparks</td><td>+10% bonus (110 total)</td></tr>
+      <tr><td>Spark Storm</td><td>$7.99</td><td>250 Sparks</td><td>+20% bonus (300 total)</td></tr>
+    </tbody>
+  </table>
+  <p style="font-size:12px;color:var(--t3)">Sparks are spent on cosmetics in the store. Cannot buy gameplay power. Monthly soft cap: 1000 purchased Sparks/month (prevents excessive spending). After cap: "You've been generous enough this month. Come back next month!" — responsible monetization.</p>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════ UI/PANTALLAS ═══════════════════════════════════ -->
+<div class="tab" id="tab-ui">
+<div class="sec">
+  <h3>Navegación — 4 tabs máximo, siempre</h3>
+  <div class="blk binfo"><div class="bh bh-info">REGLA IRROMPIBLE</div><p><strong>Mente</strong> (canvas, siempre) · <strong>Neuronas</strong> (desde 15 thoughts) · <strong>Mejoras</strong> (desde 80 thoughts) · <strong>Regiones</strong> (desde 1% threshold). Memoria Colectiva es sub-sección de Regiones. Despertar es banner. Polaridad/Mutaciones/Pathways son modals pre-ciclo.</p></div>
+</div>
+
+<div class="sec">
+  <h3>HUD Layout</h3>
+  <div class="code">
+<span class="cm">// TOP LEFT: thoughts counter (grande, legible)</span>
+<span class="cm">// TOP RIGHT: tasa de producción (thoughts/seg)</span>
+<span class="cm">// TOP CENTER: cargas ○○○ + countdown</span>
+<span class="cm">// BELOW CHARGES: Focus Bar (P4+) — barra horizontal sutil</span>
+<span class="cm">// BELOW FOCUS: Estado Mental chip (si aplica)</span>
+<span class="cm">// BOTTOM: Nav tabs (4 max)</span>
+<span class="cm">// Consciencia bar: barra vertical derecha, semi-transparente</span>
+  </div>
+</div>
+
+<div class="sec">
+  <h3>Badge priority system</h3>
+  <p>Solo 1 badge visible a la vez en tabs. Prioridad: <em>nuevo upgrade</em> > <em>carga de Disparo lista</em> > <em>Focus Bar llena</em> > <em>misión diaria</em>.</p>
+</div>
+
+<div class="sec">
+  <h3>Tab Mejoras — ordenamiento</h3>
+  <p>1. <strong>NUEVOS</strong> (últimos 3 min): borde de color, badge "nuevo". 2. <strong>COMPRABLES</strong>: precio en verde, botón "Comprar". 3. <strong>DISPONIBLES</strong> (no affordable): gris, precio en naranja. 4. <strong>COMPRADOS</strong>: colapsados, solo nombre + ✓.</p>
+</div>
+
+<div class="sec">
+  <h3>Pantallas modales (pre-ciclo)</h3>
+  <div class="g3">
+    <div class="card"><div class="cb"><h4>Polaridad (P3+)</h4><p style="font-size:12px">Al inicio de cada ciclo: modal con 2 opciones side-by-side. Excitatorio (dorado) o Inhibitorio (púrpura). Muestra stats de cada uno. Animación de 1s al elegir.</p></div></div>
+    <div class="card"><div class="cb"><h4>Mutación (P7+)</h4><p style="font-size:12px">Después de Polaridad: 3 cartas de Mutación con efecto y tradeoff. Swipe para ver detalles. Tap para elegir. Una animación de "ADN mutando".</p></div></div>
+    <div class="card"><div class="cb"><h4>Pathway (P10+)</h4><p style="font-size:12px">Después de Mutación: 3 rutas visualizadas como caminos ramificados. Cada una muestra qué upgrades habilita/bloquea. Tap para elegir ruta.</p></div></div>
+  </div>
+  <div class="blk bwarn"><div class="bh bh-warn">ORDEN DE MODALES PRE-CICLO</div><p>Despertar → Animación 3s → Árbol de Patrones → Polaridad (si P3+) → Mutación (si P7+) → Pathway (si P10+) → Canvas del nuevo ciclo. Total: ~10 segundos de pantallas. Cada modal es skippable con "usar default" (última elección o aleatorio).</p></div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════ TECH ═══════════════════════════════════ -->
+<div class="tab" id="tab-tech">
+<div class="sec">
+  <h3>SYNAPSE_CONSTANTS — v2.0 FINAL (validado por simulación)</h3>
+  <div class="code">
+export const SYNAPSE_CONSTANTS = {
+  neurons: [
+    { name:<span class="ck">'Basica'</span>,      baseCost:<span class="cv">10</span>,      rate:<span class="cv">0.6</span>,  requires:0 },
+    { name:<span class="ck">'Sensorial'</span>,   baseCost:<span class="cv">120</span>,     rate:<span class="cv">2.5</span>,  requires:5 },
+    { name:<span class="ck">'Piramidal'</span>,   baseCost:<span class="cv">2_000</span>,   rate:<span class="cv">10</span>,   requires:3 },
+    { name:<span class="ck">'Espejo'</span>,      baseCost:<span class="cv">22_000</span>,  rate:<span class="cv">40</span>,   requires:2 },
+    { name:<span class="ck">'Integradora'</span>, baseCost:<span class="cv">400_000</span>, rate:<span class="cv">180</span>,  requires:1, memCost:<span class="cv">8</span> },
+  ],
+  costMultiplier:              <span class="cv">1.28</span>,      <span class="cm">// steep: caps ~25-35 per type</span>
+
+  <span class="cm">// TAP — VALIDADO POR SIMULACIÓN v5</span>
+  baseTapThoughts:             <span class="cv">4</span>,          <span class="cm">// 2-3 taps para primera neurona</span>
+  tapMultiplier:               <span class="cv">0.15</span>,       <span class="cm">// pre-P4: tap = max(4, prod×0.15)</span>
+  tapMultiplierPostFocus:      <span class="cv">0.08</span>,       <span class="cm">// P4+: reduced, rest goes to Focus</span>
+
+  <span class="cm">// FOCUS</span>
+  baseFocusFillRate:           <span class="cv">0.010</span>,      <span class="cm">// per tap — lento, requiere juego activo</span>
+  focusInsightMults:           [<span class="cv">3</span>, <span class="cv">8</span>, <span class="cv">18</span>],   <span class="cm">// Claro, Profundo, Trascendente</span>
+  focusInsightDurations:       [<span class="cv">15</span>, <span class="cv">12</span>, <span class="cv">8</span>],  <span class="cm">// segundos</span>
+
+  <span class="cm">// PRESTIGE — PIECEWISE threshold (validado por simulación)</span>
+  consciousnessThreshold:      <span class="cv">800_000</span>,
+  tutorialThreshold:           <span class="cv">50_000</span>,    <span class="cm">// P1 en ~10 min (VERIFICADO por sim QA Round 1)</span>
+  tutorialDischargeInterval:   <span class="cv">300</span>,       <span class="cm">// Primer Disparo a 5 min</span>
+  tutorialDischargeMult:       <span class="cv">3.0</span>,       <span class="cm">// ×3 para wow moment (~1500 thoughts)</span>
+  tutorialBarVisible:          <span class="cv">0.25</span>,      <span class="cm">// Barra al 25% (no 50%)</span>
+  momentumBonusSeconds:        <span class="cv">30</span>,        <span class="cm">// Post-prestige: 30s × BASE prod (no effective)</span>
+  thresholdScaleEra1:          <span class="cv">1.50</span>,       <span class="cm">// P0-P12: ciclos 15-24 min activo</span>
+  thresholdScaleEra2:          <span class="cv">1.28</span>,       <span class="cm">// P13-P19: ciclos 15-21 min</span>
+  thresholdScaleEra3:          <span class="cv">1.18</span>,       <span class="cm">// P20-P26: ciclos 22-30 min (tensión final)</span>
+  productionCap:               <span class="cv">2_000</span>,      <span class="cm">// DEPRECATED — usar softCap()</span>
+  <span class="cm">// SOFT CAP FUNCTION (reemplaza hard cap):</span>
+  <span class="cm">// softCap(x) = x <= 100 ? x : 100 * Math.pow(x/100, 0.72)</span>
+  <span class="cm">// ×100→100, ×200→165, ×500→330, ×1000→543</span>
+  <span class="cm">// SIEMPRE retorna ≤ x. Cada upgrade tiene efecto visible.</span>
+  transcendenciaAt:            <span class="cv">26</span>,
+  <span class="cm">// RUN THRESHOLD MULTIPLIER (validado por simulación)</span>
+  runThresholdMult:            [<span class="cv">1.0</span>, <span class="cv">3.5</span>, <span class="cv">6.0</span>, <span class="cv">8.5</span>, <span class="cv">12.0</span>, <span class="cv">15.0</span>],  <span class="cm">// Run 1,2,3,4(v1.5),5+(v2.0),∞(v2.5)</span>
+  <span class="cm">// threshold(p) = baseThreshold(p) × runThresholdMult[transcendenceCount]</span>
+
+  <span class="cm">// CONNECTIONS — passive pairs</span>
+  connectionBonusPerPair:      <span class="cv">0.04</span>,       <span class="cm">// 4% per unique type pair (6 pares max = +24%)</span>
+
+  <span class="cm">// DISCHARGE</span>
+  dischargeAccumTime:          <span class="cv">20 * 60</span>,    <span class="cm">// 20 min</span>
+  dischargeMaxCharges:         <span class="cv">3</span>,
+  dischargeBaseBonus:          <span class="cv">20</span>,         <span class="cm">// seconds of production</span>
+  cascadeMultiplier:           <span class="cv">2.5</span>,        <span class="cm">// Focus≥75% + Discharge = ×2.5</span>
+  cascadeThreshold:            <span class="cv">0.75</span>,       <span class="cm">// Focus must be ≥ this for Cascade</span>
+
+  <span class="cm">// OFFLINE</span>
+  baseOfflineEfficiency:       <span class="cv">0.50</span>,
+  baseOfflineCapHours:         <span class="cv">4</span>,
+  maxOfflineHours:             <span class="cv">8</span>,         <span class="cm">// Base 8h. Con Sueño REM: 12h.</span>
+
+  <span class="cm">// PATTERNS — flat MÍNIMO, cycle es el principal beneficio</span>
+  patternCycleBonusPerNode:    <span class="cv">0.04</span>,       <span class="cm">// 4% por patrón (resetea en prestige)</span>
+  patternCycleCap:             <span class="cv">1.5</span>,        <span class="cm">// max ×1.5 (alcanzado con ~37 patrones)</span>
+  patternFlatBonusPerNode:     <span class="cv">2</span>,          <span class="cm">// thoughts/sec permanente — cosmético</span>
+  patternsPerPrestige:         <span class="cv">3</span>,
+
+  <span class="cm">// MEMORIAS</span>
+  memoriesPerPrestige:         <span class="cv">2</span>,
+  memorySynthesisCost:         <span class="cv">8</span>,
+  memorySynthesisPerCycle:     <span class="cv">2</span>,
+
+  <span class="cm">// PIGGY BANK</span>
+  bankThoughtsPerSpark:        <span class="cv">10_000</span>,
+  bankMaxSparks:               <span class="cv">500</span>,
+  bankBreakPrice:              <span class="cv">1.99</span>,
+
+  <span class="cm">// POLARIDAD — reducido para balance</span>
+  polarityExcitatoryProdMult:  <span class="cv">1.20</span>,      <span class="cm">// +20% producción</span>
+  polarityExcitatoryDischMult: <span class="cv">0.88</span>,      <span class="cm">// -12% Disparo</span>
+  polarityInhibitoryProdMult:  <span class="cv">0.94</span>,      <span class="cm">// -6% producción</span>
+  polarityInhibitoryDischMult: <span class="cv">1.30</span>,      <span class="cm">// +30% Disparo</span>
+  polarityInhibitoryFocusMult: <span class="cv">1.20</span>,      <span class="cm">// +20% Focus fill</span>
+
+  <span class="cm">// MUTATIONS</span>
+  mutationPoolSize:            <span class="cv">15</span>,
+  mutationsOfferedPerCycle:    <span class="cv">3</span>,
+
+  <span class="cm">// GENIUS PASS</span>
+  geniusPassMinOfferInterval:  <span class="cv">72 * 3600 * 1000</span>,  <span class="cm">// 72 horas</span>
+
+  <span class="cm">// WEEKLY CHALLENGE</span>
+  challengePoolSize:           <span class="cv">15</span>,
+
+  <span class="cm">// SINAPSIS ESPONTÁNEAS</span>
+  spontaneousEventChance:      <span class="cv">0.40</span>,      <span class="cm">// 40% chance por check</span>
+  spontaneousEventMinInterval: <span class="cv">240</span>,       <span class="cm">// 4 min mínimo entre checks</span>
+  spontaneousEventMaxInterval: <span class="cv">360</span>,       <span class="cm">// 6 min máximo entre checks</span>
+  spontaneousPoolWeights:      { positive: <span class="cv">0.50</span>, neutral: <span class="cv">0.33</span>, negative: <span class="cv">0.17</span> },
+
+  <span class="cm">// EUREKA + MISC</span>
+  eurekaExpirySeconds:         <span class="cv">60</span>,        <span class="cm">// Sinapsis Eureka expira si no se usa</span>
+  ESTIMATED_CYCLE_TIMES:       [<span class="cv">24,22,22,16,17,17,18,18,17,18,16,17,17,18,18,19,19,20,21,23,24,25,26,28,30,31</span>],
+
+  <span class="cm">// DAILY LOGIN (streak 7 días, repite)</span>
+  dailyLoginRewards: [
+    { sparks: <span class="cv">5</span> },{ memories: <span class="cv">1</span> },{ sparks: <span class="cv">10</span> },
+    { tempMutation: <span class="ck">'random'</span> },{ sparks: <span class="cv">20</span> },{ memories: <span class="cv">2</span> },
+    { sparks: <span class="cv">50</span>, snapshot: true },
+  ],
+
+  <span class="cm">// NUMBER FORMAT</span>
+  NUMBER_SUFFIXES: [<span class="ck">''</span>,<span class="ck">'K'</span>,<span class="ck">'M'</span>,<span class="ck">'B'</span>,<span class="ck">'T'</span>,<span class="ck">'Qa'</span>,<span class="ck">'Qi'</span>],
+
+  <span class="cm">// ENDGAME COUNTDOWN (P20+)</span>
+  endgameCountdown: { ... },  <span class="cm">// defined above</span>
+
+  <span class="cm">// MENTAL STATES (5 passive states)</span>
+  mentalStates: {
+    flow:       { triggerTaps: <span class="cv">10</span>, triggerWindow: <span class="cv">30</span>, bonus: <span class="ck">'focusFillRate +10%'</span>, grace: <span class="cv">30</span> },
+    deep:       { triggerIdleSeconds: <span class="cv">180</span>, bonus: <span class="ck">'baseProduction +5%'</span>, grace: <span class="cv">60</span> },
+    eureka:     { triggerInsights: <span class="cv">3</span>, triggerWindow: <span class="cv">180</span>, bonus: <span class="ck">'production +15% 60s'</span>, duration: <span class="cv">60</span> },
+    dormancy:   { triggerIdlePurchase: <span class="cv">300</span>, bonus: <span class="ck">'nextNeuron ×2 value'</span> },
+    hyperfocus: { triggerFocusAbove: <span class="cv">0.5</span>, triggerDuration: <span class="cv">180</span>, bonus: <span class="ck">'insightDuration +3s'</span>, grace: <span class="cv">30</span> },
+  },
+
+  <span class="cm">// MICRO-CHALLENGES (appear every 8-10 min, opt-in)</span>
+  microChallengeInterval:   [<span class="cv">480</span>, <span class="cv">600</span>],   <span class="cm">// 8-10 min between offers</span>
+  microChallengeRewardMult: <span class="cv">0.01</span>,        <span class="cm">// 1% of cycleGenerated (verified by sim: -3.6% timing)</span>
+
+  <span class="cm">// NEURAL DIARY</span>
+  diaryMaxEntries:          <span class="cv">500</span>,
+
+  <span class="cm">// WHAT-IF PREVIEW</span>
+  whatIfCycleBuffer:        <span class="cv">3</span>,          <span class="cm">// uses last 3 cycle times for estimate</span>
+
+  <span class="cm">// PROGRESSIVE DISCLOSURE</span>
+  regionsUnlockPct:            <span class="cv">0.01</span>,
+  sessionInactivityThreshold:  <span class="cv">5 * 60</span>,
+} as const
+  </div>
+</div>
+
+<div class="sec">
+  <h3>GameState — v2.0 completo</h3>
+  <div class="code">
+interface GameState {
+  <span class="cm">// Economía</span>
+  thoughts: number; memories: number; sparks: number
+  cycleGenerated: number          <span class="cm">// RESETEA en prestige</span>
+  totalGenerated: number          <span class="cm">// NUNCA resetea</span>
+  productionPerSecond: number     <span class="cm">// DEPRECATED — usar los dos siguientes</span>
+  baseProductionPerSecond: number  <span class="cm">// sin Insight/Session/MutTemp — para offline y discharge</span>
+  effectiveProductionPerSecond: number <span class="cm">// con temporales — para UI, tick, tap</span>
+
+  <span class="cm">// Neuronas y conexiones</span>
+  neurons: NeuronState[]
+  connectionMult: number          <span class="cm">// calculado de pares activos</span>
+
+  <span class="cm">// Focus</span>
+  focusBar: number                <span class="cm">// 0.0 a 3.0 (P10+)</span>
+  focusFillRate: number           <span class="cm">// calculado de upgrades</span>
+  insightActive: boolean
+  insightMultiplier: number
+  insightEndTime: number | null
+
+  <span class="cm">// Discharges</span>
+  dischargeCharges: number
+  dischargeMaxCharges: number
+  dischargeLastTimestamp: number
+  nextDischargeBonus: number
+
+  <span class="cm">// Upgrades</span>
+  upgrades: UpgradeState[]        <span class="cm">// RESETEA en prestige</span>
+
+  <span class="cm">// Polaridad (P3+)</span>
+  currentPolarity: <span class="ck">'excitatory'</span> | <span class="ck">'inhibitory'</span> | null
+
+  <span class="cm">// Mutación (P7+)</span>
+  currentMutation: Mutation | null
+  mutationSeed: number            <span class="cm">// para reproducibilidad</span>
+
+  <span class="cm">// Neural Pathway (P10+)</span>
+  currentPathway: <span class="ck">'rapida'</span> | <span class="ck">'profunda'</span> | <span class="ck">'equilibrada'</span> | null
+
+  <span class="cm">// Offline</span>
+  currentOfflineCapHours: number
+  currentOfflineEfficiency: number
+
+  <span class="cm">// Sesión</span>
+  sessionStartTimestamp: number | null
+
+  <span class="cm">// Prestige y progresión</span>
+  prestigeCount: number
+  currentThreshold: number
+  consciousnessBarUnlocked: boolean
+  patterns: PatternNode[]
+  totalPatterns: number
+  regionsUnlocked: string[]
+  archetype: <span class="ck">'analitica'</span> | <span class="ck">'empatica'</span> | <span class="ck">'creativa'</span> | null
+  archetypeHistory: string[]
+  cycleStartTimestamp: number
+  firstCycleSnapshot: NeuronSnapshot | null
+  awakeningLog: AwakeningEntry[]
+
+  <span class="cm">// Personal bests</span>
+  personalBests: Record&lt;number, {minutes:number, rewardGiven:boolean}&gt;
+
+  <span class="cm">// Resonancia (P13+)</span>
+  resonance: number               <span class="cm">// sobrevive Transcendencia</span>
+  resonanceUpgrades: string[]
+
+  <span class="cm">// Sinapsis Espontáneas</span>
+  lastSpontaneousCheck: number    <span class="cm">// cycleTime del último check — RESETEA en prestige</span>
+  spontaneousMemoryUsed: boolean  <span class="cm">// max 1 "Memoria Fugaz" por ciclo — RESETEA</span>
+  spontaneousInterferenceUsed: boolean <span class="cm">// max 1 "Interferencia" por ciclo — RESETEA</span>
+
+  <span class="cm">// Árbol de Patrones con Decisiones</span>
+  patternDecisions: Record&lt;number, <span class="ck">'A'</span>|<span class="ck">'B'</span>&gt;  <span class="cm">// decisión por nodo — NUNCA resetea</span>
+
+  <span class="cm">// Patrones Resonantes (Final Secreto)</span>
+  resonantPatternsDiscovered: [boolean, boolean, boolean, boolean]  <span class="cm">// NUNCA resetea</span>
+
+  <span class="cm">// Tutorial + Retention (evaluación senior)</span>
+  isTutorialCycle: boolean         <span class="cm">// true solo primer ciclo — NUNCA después</span>
+  dailyLoginStreak: number         <span class="cm">// 0-7. NUNCA resetea (cross-run)</span>
+  lastDailyClaimDate: string|null  <span class="cm">// 'YYYY-MM-DD'</span>
+  momentumBonus: number            <span class="cm">// thoughts gratis del prestige anterior</span>
+  eurekaExpiry: number|null        <span class="cm">// timestamp expiración Eureka (60s)</span>
+  activeSpontaneousEvent: {id:string, endTime:number}|null
+
+  <span class="cm">// Run-exclusive upgrades</span>
+  runUpgradesPurchased: string[]   <span class="cm">// IDs — NUNCA resetea</span>
+
+  <span class="cm">// Achievements (30 total)</span>
+  achievementsUnlocked: string[]   <span class="cm">// IDs — NUNCA resetea</span>
+  lifetimeDischarges: number       <span class="cm">// NUNCA resetea</span>
+  lifetimeInsights: number         <span class="cm">// NUNCA resetea</span>
+  lifetimePrestiges: number        <span class="cm">// NUNCA resetea</span>
+  uniqueMutationsUsed: string[]    <span class="cm">// NUNCA resetea</span>
+  uniquePathwaysUsed: string[]     <span class="cm">// NUNCA resetea</span>
+  personalBestsBeaten: number      <span class="cm">// NUNCA resetea</span>
+  cycleUpgradesBought: number      <span class="cm">// RESETEA en prestige</span>
+  cycleCascades: number            <span class="cm">// RESETEA en prestige</span>
+  cyclePositiveSpontaneous: number <span class="cm">// RESETEA en prestige</span>
+  cycleNeuronsBought: number       <span class="cm">// RESETEA en prestige</span>
+
+  <span class="cm">// Mental States</span>
+  currentMentalState: string|null  <span class="cm">// active state ID — RESETEA en prestige</span>
+  mentalStateExpiry: number|null   <span class="cm">// timestamp — RESETEA en prestige</span>
+  lastTapTimestamps: number[]      <span class="cm">// circular buffer 20 taps — RESETEA</span>
+  lastPurchaseTimestamp: number    <span class="cm">// for Dormancy trigger — RESETEA</span>
+  insightTimestamps: number[]      <span class="cm">// last 3 insight activations — RESETEA</span>
+  focusAbove50Since: number|null   <span class="cm">// timestamp for Hyperfocus — RESETEA</span>
+
+  <span class="cm">// Micro-challenges</span>
+  activeMicroChallenge: {id:string, startTime:number, timeLimit:number}|null  <span class="cm">// RESETEA</span>
+  lastMicroChallengeTime: number   <span class="cm">// cycleTime of last check — RESETEA</span>
+
+  <span class="cm">// Neural Diary</span>
+  diaryEntries: {timestamp:number, type:string, data:object}[]  <span class="cm">// NUNCA resetea, max 500</span>
+
+  <span class="cm">// What-if Preview</span>
+  lastCycleTimes: number[]         <span class="cm">// circular buffer 3 — PRESERVE in prestige, RESET in transcendence</span>
+  lastCycleConfig: {polarity:string, mutation:string, pathway:string}|null
+
+  <span class="cm">// App infrastructure</span>
+  notificationPermissionAsked: number  <span class="cm">// 0=never, 1=after P1, 2=after P3. NUNCA resetea.</span>
+  analyticsConsent: boolean            <span class="cm">// GDPR. true=accepted. NUNCA resetea.</span>
+
+  <span class="cm">// Piggy Bank</span>
+  piggyBankSparks: number         <span class="cm">// acumuladas, no reclamadas</span>
+  piggyBankBroken: boolean        <span class="cm">// si fue "roto" (comprado)</span>
+
+  <span class="cm">// Cosmetics Store</span>
+  ownedNeuronSkins: string[]       <span class="cm">// ['ember','frost',...]. NUNCA resetea.</span>
+  ownedCanvasThemes: string[]      <span class="cm">// ['aurora','deep_ocean',...]. NUNCA resetea.</span>
+  ownedGlowPacks: string[]         <span class="cm">// ['firefly','halo','plasma']. NUNCA resetea.</span>
+  ownedHudStyles: string[]         <span class="cm">// ['minimal']. NUNCA resetea.</span>
+  activeNeuronSkin: string|null    <span class="cm">// currently equipped skin. NUNCA resetea.</span>
+  activeCanvasTheme: string|null   <span class="cm">// currently equipped theme. NUNCA resetea.</span>
+  activeGlowPack: string|null      <span class="cm">// currently equipped glow. NUNCA resetea.</span>
+  activeHudStyle: string|null      <span class="cm">// currently equipped HUD. NUNCA resetea.</span>
+
+  <span class="cm">// Starter Pack + Limited Offers</span>
+  starterPackPurchased: boolean    <span class="cm">// true after buying. NUNCA resetea.</span>
+  starterPackDismissed: boolean    <span class="cm">// true if dismissed on Awakening screen. NUNCA resetea.</span>
+  starterPackExpiresAt: number     <span class="cm">// 48h after P1. After this, gone forever.</span>
+  activeLimitedOffer: {id:string, expiresAt:number}|null <span class="cm">// current flash sale. Resets when expired.</span>
+  purchasedLimitedOffers: string[] <span class="cm">// IDs of bought offers. NUNCA resetea.</span>
+  sparksPurchasedThisMonth: number <span class="cm">// soft cap tracking. Resets monthly.</span>
+  sparksPurchaseMonthStart: number <span class="cm">// timestamp of month start for cap reset.</span>
+
+  <span class="cm">// Genius Pass</span>
+  geniusPassLastOfferTimestamp: number
+  isSubscribed: boolean
+
+  <span class="cm">// Narrativa</span>
+  narrativeFragmentsSeen: string[]
+  eraVisualTheme: <span class="ck">'bioluminescent'</span> | <span class="ck">'digital'</span> | <span class="ck">'cosmic'</span>
+
+  <span class="cm">// Transcendencia</span>
+  transcendenceCount: number       <span class="cm">// 0=Run1, 1=Run2, 2=Run3. NUNCA resetea.</span>
+
+  <span class="cm">// Retención</span>
+  dailyStreakDays: number
+  lastOpenedDate: string | null
+  weeklyChallenge: WeeklyChallengeState
+
+  <span class="cm">// Sistema</span>
+  lastActiveTimestamp: number
+  gameVersion: string
+}
+
+<span class="cm">// PRESTIGE_RESET:</span>
+<span class="cm">// thoughts, neurons, upgrades, cycleGenerated, cycleStartTimestamp,</span>
+<span class="cm">// currentPolarity, currentMutation, currentPathway, focusBar,</span>
+<span class="cm">// insightActive, insightEndTime, nextDischargeBonus, connectionMult,</span>
+<span class="cm">// dischargeCharges, dischargeLastTimestamp,</span>
+<span class="cm">// eurekaExpiry → null, activeSpontaneousEvent → null,</span>
+<span class="cm">// lastSpontaneousCheck → 0, spontaneousMemoryUsed → false,</span>
+<span class="cm">// spontaneousInterferenceUsed → false, momentumBonus → 0,</span>
+<span class="cm">// cycleUpgradesBought → 0, cycleCascades → 0,</span>
+<span class="cm">// cyclePositiveSpontaneous → 0, cycleNeuronsBought → 0,</span>
+<span class="cm">// currentMentalState → null, mentalStateExpiry → null,</span>
+<span class="cm">// lastTapTimestamps → [], lastPurchaseTimestamp → 0,</span>
+<span class="cm">// insightTimestamps → [], focusAbove50Since → null,</span>
+<span class="cm">// activeMicroChallenge → null, lastMicroChallengeTime → 0</span>
+<span class="cm">// (VERIFIED: all temporal fields reset, all permanent fields preserved)</span>
+
+<span class="cm">// PRESTIGE_PRESERVE:</span>
+<span class="cm">// memories, totalGenerated, sparks, piggyBankSparks, prestigeCount,</span>
+<span class="cm">// currentThreshold, patterns, totalPatterns, regionsUnlocked,</span>
+<span class="cm">// archetype, archetypeHistory, personalBests, resonance,</span>
+<span class="cm">// resonanceUpgrades, awakeningLog, firstCycleSnapshot,</span>
+<span class="cm">// geniusPassLastOfferTimestamp, isSubscribed, dailyStreakDays,</span>
+<span class="cm">// lastOpenedDate, weeklyChallenge, narrativeFragmentsSeen,</span>
+<span class="cm">// eraVisualTheme, gameVersion, lastActiveTimestamp,</span>
+<span class="cm">// sessionStartTimestamp, consciousnessBarUnlocked,</span>
+<span class="cm">// transcendenceCount, baseProductionPerSecond</span>
+
+<span class="cm">// TRANSCENDENCIA_RESET (CORREGIDO — validado por simulación):</span>
+<span class="cm">// Todo lo de PRESTIGE_RESET +</span>
+<span class="cm">// prestigeCount → 0 (CRÍTICO: threshold debe reiniciar)</span>
+<span class="cm">// memories → 0</span>
+<span class="cm">// archetype → null</span>
+<span class="cm">// regionsUnlocked → []</span>
+<span class="cm">// eraVisualTheme → 'bioluminescent'</span>
+<span class="cm">// narrativeFragmentsSeen → [] (contenido nuevo por arquetipo)</span>
+<span class="cm">// transcendenceCount += 1 (NUNCA resetea)</span>
+<span class="cm">//</span>
+<span class="cm">// TRANSCENDENCIA_PRESERVE:</span>
+<span class="cm">// resonance, resonanceUpgrades, patterns, totalPatterns,</span>
+<span class="cm">// personalBests, sparks, piggyBankSparks, awakeningLog,</span>
+<span class="cm">// transcendenceCount, archetypeHistory</span>
+<span class="cm">//</span>
+<span class="cm">// THRESHOLD POR RUN (validado por simulación):</span>
+<span class="cm">// threshold(p) = baseThreshold(p) × RUN_THRESHOLD_MULT[transcendenceCount]</span>
+<span class="cm">// RUN_THRESHOLD_MULT = [1.0, 3.5, 6.0, 8.5, 12.0, 15.0]</span>
+<span class="cm">// Esto compensa los patrones acumulados y mantiene ciclos de 20-30m avg</span>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════ CLAUDE.MD ═══════════════════════════════════ -->
+<div class="tab" id="tab-claudemd">
+<div class="sec">
+  <h3>Reglas para CLAUDE.md — v2.0</h3>
+
+  <div class="rule-row"><div class="rule-id" style="color:var(--r)">CODE-1</div><div class="rule-body"><strong>ZERO hardcoded values.</strong> Every game number (costs, rates, thresholds, durations, multipliers) MUST come from <code>config/constants.ts</code>. Every player-facing string from <code>config/strings/en.ts</code> via <code>t('key')</code>. If a number or string appears inline in a component or engine file, it is WRONG. Only exceptions: 0, 1, -1, array indices, CSS values.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--r)">CODE-2</div><div class="rule-body"><strong>MAX 200 lines per file. MAX 50 lines per function.</strong> If exceeded, split by responsibility. One file = one purpose. <code>discharge.ts</code> handles discharge ONLY. Naming: files=camelCase, components=PascalCase, constants=SCREAMING_SNAKE, functions=camelCase verb-first. No circular dependencies: config→engine→store→ui (never backward).</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--r)">CODE-3</div><div class="rule-body"><strong>Sprint Definition of Done.</strong> Every sprint has a checklist in CLAUDE.md with AI checks + Player tests. ALL must pass before merging to main. Sprint is NOT done until every checkbox is checked.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--r)">CODE-4</div><div class="rule-body"><strong>Canvas rules.</strong> Render loop = requestAnimationFrame (60fps, visual only). Game logic = 100ms tick (separate). Use <code>devicePixelRatio</code> for retina. Touch via <code>touchstart</code> not <code>click</code>. CSS <code>touch-action: manipulation</code>. Respect safe areas (<code>env(safe-area-inset-*)</code>). Pause both loops on <code>visibilitychange</code>. Word-wrap text with <code>ctx.measureText()</code>. Max 80 visible nodes. Pre-render glow to offscreen canvas.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--r)">CODE-5</div><div class="rule-body"><strong>Mobile rules.</strong> Unlock AudioContext on first tap (iOS). <code>overscroll-behavior: none</code>. Android back button: close modal or minimize. StatusBar dark style. Keyboard scroll-into-view for inputs. <code>Math.floor()</code> all displayed numbers. Epsilon tolerance for threshold comparisons.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--r)">CODE-6</div><div class="rule-body"><strong>Storage.</strong> Use Capacitor Preferences (NOT localStorage). Save on prestige + app background. Firebase cloud save secondary (fail silently). On conflict: higher <code>totalGenerated</code> wins. <code>migrateState()</code> adds defaults for missing fields per version.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--r)">CODE-7</div><div class="rule-body"><strong>Session continuity.</strong> PROGRESS.md tracks: files created, sprint checklist status, known issues, next task. Update at end of every session. Read at start of every session. This maintains context between Claude Code sessions.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--r)">CODE-8</div><div class="rule-body"><strong>TypeScript style.</strong> <code>strict: true</code>. No <code>any</code>. No <code>@ts-ignore</code>. <code>const</code> over <code>let</code>. Early returns over nested ifs. Pure functions in engine/. Store actions via <code>set()</code>. <code>React.memo()</code> all panels. Destructure props. Error handling: try/catch around storage, ads, Firebase, RevenueCat — never throw in engine functions.</div></div>
+  <div style="margin:.6rem 0;padding:.5rem 0;border-top:2px solid var(--p)"></div>
+  <h3 style="color:var(--p)">Design Philosophy (NON-NEGOTIABLE)</h3>
+  <div class="rule-row"><div class="rule-id" style="color:var(--p)">PHIL-1</div><div class="rule-body"><strong>F2P completes ALL content.</strong> A free-to-play player can see all 4 endings, discover all Resonant Patterns, and reach Transcendence 3 times without spending any money. There is NO paywall, NO pay-to-win, NO content locked behind purchases. Genius Pass and IAP are convenience and cosmetics ONLY.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--p)">PHIL-2</div><div class="rule-body"><strong>No content desert.</strong> New mechanic, event, or narrative content every 1-2 prestiges. Max gap = 1 prestige between novelty. The player must ALWAYS have something new to discover within the next cycle. Verified: 26 prestiges, 26 pieces of content (see content map in QA).</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--p)">PHIL-3</div><div class="rule-body"><strong>Respect the player's time.</strong> Offline progress NEVER loses a night of sleep (8h cap). No forced ads. No energy system. No wait timers that block gameplay. The player plays when they want, leaves when they want, and always comes back to progress.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--p)">PHIL-4</div><div class="rule-body"><strong>Choices matter.</strong> Every prestige must involve at least one meaningful decision (Polarity, Mutation, Pathway, Pattern Decision). The game is NOT a passive number-go-up — it's an optimization puzzle with narrative reward.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--p)">PHIL-5</div><div class="rule-body"><strong>Every new feature is discoverable.</strong> When ANY new mechanic, tab, button, or system unlocks, the player MUST be notified via: (1) tab badge with "!" or "NEW", (2) pulsing highlight on the element, (3) toast or banner ("Pattern Tree unlocked!"), or (4) Awakening screen shows "New mechanic unlocked: [name]". The player must NEVER discover a feature by accident 3 prestiges late. If you add something new, ask: "How will the player know this exists?"</div></div>
+
+  <div style="margin:.6rem 0;padding:.5rem 0;border-top:2px solid var(--t3)"></div>
+  <h3>Core Architecture Rules</h3>
+  <div class="rule-row"><div class="rule-id">CORE-1</div><div class="rule-body">Todo el estado en <code>gameStore.ts</code>. Un solo archivo. Sin estado local excepto UI pura.</div></div>
+  <div class="rule-row"><div class="rule-id">CORE-2</div><div class="rule-body">NUNCA modificar SYNAPSE_CONSTANTS sin simulación tick-based verificando P1 en 20–25 min.</div></div>
+  <div class="rule-row"><div class="rule-id">CORE-3</div><div class="rule-body">Game loop: <code>setInterval(tick, 100)</code>. <code>productionPerSecond</code> cacheado. Insight multiplier aplica durante <code>insightEndTime > Date.now()</code>.</div></div>
+  <div class="rule-row"><div class="rule-id">CORE-4</div><div class="rule-body"><code>migrateState()</code> al cargar save. Guardar después de cada acción significativa.</div></div>
+  <div class="rule-row"><div class="rule-id">CORE-5</div><div class="rule-body">Firebase Analytics trackea todos los eventos de <code>/src/analytics/events.ts</code>.</div></div>
+
+  <div class="rule-row"><div class="rule-id">PROD-1</div><div class="rule-body">production = baseRate × softCap(allMultipliers). Multipliers: patternCycle, upgrades, archetype, connections, regions, polarity, mutation. Todos multiplicativos. NUNCA Math.min con hard cap.</div></div>
+  <div class="rule-row"><div class="rule-id">PROD-2</div><div class="rule-body">cycleGenerated resetea en prestige. totalGenerated NUNCA. Unlocks usan cycleGenerated. Banco usa totalGenerated.</div></div>
+  <div class="rule-row"><div class="rule-id">PROD-3</div><div class="rule-body">Pre-P4: <code>tap = max(baseTap, prod × 0.3)</code>. Post-P4: <code>tap = max(baseTap, prod × 0.15)</code> + fill Focus Bar.</div></div>
+  <div class="rule-row"><div class="rule-id">PROD-4</div><div class="rule-body">Threshold PIECEWISE × RUN: <code>P0-12: 800K×1.50^p</code>, <code>P13-19: ×1.28^(p-12)</code>, <code>P20-26: ×1.18^(p-19)</code>, luego <code>× runThresholdMult[transcendenceCount]</code> ([1.0, 3.5, 6.0, 8.5, 12.0, 15.0]).</div></div>
+
+  <div class="rule-row"><div class="rule-id">FOCUS-1</div><div class="rule-body">Focus Bar solo se llena con taps. NUNCA con idle o offline.</div></div>
+  <div class="rule-row"><div class="rule-id">FOCUS-2</div><div class="rule-body">Pre-P10: max Focus = 1.0 (nivel Claro). P10+: max = 3.0 (3 niveles).</div></div>
+  <div class="rule-row"><div class="rule-id">FOCUS-3</div><div class="rule-body">CASCADA = Disparo activado mientras Focus ≥ 0.80. Bonus ×3 (upgradeable a ×5). Focus se consume.</div></div>
+
+  <div class="rule-row"><div class="rule-id">CONN-1</div><div class="rule-body">Conexiones son PASIVAS. No hay burst/cooldown. <code>connectionMult = 1 + pairs × 0.08</code>.</div></div>
+
+  <div class="rule-row"><div class="rule-id">DISC-1</div><div class="rule-body">Discharge = instantaneous. Bonus = prod/sec × 30 sec × upgrades × cascade. Charges every 20 min base.</div></div>
+  <div class="rule-row"><div class="rule-id">DISC-2</div><div class="rule-body">Cascade check: evaluate Focus ≥ 0.75 BEFORE consuming charge. Apply Sincronización Total (+0.18 Focus) AFTER resetting Focus to 0. NEVER swap this order.</div></div>
+
+  <div class="rule-row"><div class="rule-id">OFFLINE-1</div><div class="rule-body">Eficiencia base: 0.50. Cap base: 4h. Upgrades modifican ambos. Hard cap: 20h.</div></div>
+  <div class="rule-row"><div class="rule-id">OFFLINE-2</div><div class="rule-body">Si offline llena cycleGenerated al 100%: cap a threshold. Banner. NUNCA auto-prestige.</div></div>
+  <div class="rule-row"><div class="rule-id">OFFLINE-3</div><div class="rule-body">Focus Bar NO se llena offline. Es exclusiva de active play.</div></div>
+
+  <div class="rule-row"><div class="rule-id">POLAR-1</div><div class="rule-body">Polaridad se elige al inicio de cada ciclo (P3+). No se puede cambiar mid-cycle.</div></div>
+
+  <div class="rule-row"><div class="rule-id">MUT-1</div><div class="rule-body">Mutaciones: 3 random del pool, elegir 1. No reversible hasta prestige. Seed = cycleStartTimestamp.</div></div>
+
+  <div class="rule-row"><div class="rule-id">PATH-1</div><div class="rule-body">Neural Pathways (P10+): 3 rutas, elegir 1. Gates upgrades. No reversible.</div></div>
+
+  <div class="rule-row"><div class="rule-id">UPG-1</div><div class="rule-body"><code>visible = prestigeCount >= required && condition(state) && !purchased</code>.</div></div>
+  <div class="rule-row"><div class="rule-id">UPG-2</div><div class="rule-body">Upgrades RESETEAN en prestige. Memorias y Chispas NO. Resonancia NO.</div></div>
+  <div class="rule-row"><div class="rule-id">UPG-3</div><div class="rule-body">Funciones Ejecutivas: −20% solo a costos en Pensamientos, no Memorias.</div></div>
+
+  <div class="rule-row"><div class="rule-id">UI-1</div><div class="rule-body">Max 4 tabs: Mente · Neuronas · Mejoras · Regiones. Despertar es banner. Modales pre-ciclo son overlay.</div></div>
+  <div class="rule-row"><div class="rule-id">UI-2</div><div class="rule-body">Badge priority: nuevo upgrade > carga lista > Focus llena > misión.</div></div>
+
+  <div class="rule-row"><div class="rule-id">NEVER-1</div><div class="rule-body">No merge mechanic. No fragmentar GameState. No valores absolutos en unlocks. No aditivos entre sistemas. No features de v1.5 en v1.0.</div></div>
+
+  <div style="margin:.6rem 0;padding:.5rem 0;border-top:2px solid var(--cy)"></div>
+  <h3 style="color:var(--cy)">Reglas de sistemas nuevos (pre-launch)</h3>
+
+  <div class="rule-row"><div class="rule-id" style="color:var(--cy)">SPON-1</div><div class="rule-body">Sinapsis Espontáneas: check cada 4-6 min (random). 40% chance. Positivos 50%, neutrales 33%, negativos 17%. Max 1 "Memoria Fugaz" y 1 "Interferencia" por ciclo. lastSpontaneousCheck RESETEA en prestige.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--cy)">SPON-2</div><div class="rule-body">Sinapsis Espontáneas NO afectan baseProductionPerSecond. Son modificadores temporales que afectan effectiveProductionPerSecond. Offline NO incluye efecto de Sinapsis Espontáneas.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--cy)">PAT-3</div><div class="rule-body">Nodos de Decisión: aparecen cada 2 prestiges (~6 patrones). La decisión es PERMANENTE (sobrevive Transcendencia, nunca se revierte). <code>patternDecisions</code> NUNCA resetea.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--cy)">RESON-1</div><div class="rule-body">Patrones Resonantes: chequear las 4 condiciones al FINALIZAR prestige (handlePrestige, antes de incrementar prestigeCount). Si condición se cumple → marcar true, animación dorada, +5 Chispas. <code>resonantPatternsDiscovered</code> NUNCA resetea.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--cy)">RESON-2</div><div class="rule-body">Condiciones de Patrones Resonantes: (1) 0 upgrades comprados este ciclo, (2) 0 Disparos usados, (3) 5 tipos de neurona comprados en los primeros 120 segundos del ciclo, (4) cycleTime &lt; ESTIMATED_CYCLE_TIMES[p] × 0.5.</div></div>
+
+  <div style="margin:.6rem 0;padding:.5rem 0;border-top:2px solid var(--a)"></div>
+  <h3 style="color:var(--a)">Reglas de evaluación senior (OBLIGATORIAS)</h3>
+
+  <div class="rule-row"><div class="rule-id" style="color:var(--a)">TUTOR-1</div><div class="rule-body">Primer ciclo (p===0, t===0): threshold=<strong>50K</strong>, Disparo a 5 min con ×3 mult, barra al 25%. P1 ≈ 7-8 min (VERIFICADO: 97/97 tests pass). Después: constantes normales.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--a)">TUTOR-2</div><div class="rule-body"><strong>Neuron tab highlight:</strong> When thoughts reach 10 for the first time, the Neurons tab appears with a pulsing glow + "!" badge. The pulse is impossible to miss — bright border animation, 3 cycles, then settles to static badge. Same pattern for Upgrades tab (80 thoughts) and Regions tab (1% threshold). The player must NEVER wonder "where do I go next?"</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--a)">TUTOR-3</div><div class="rule-body"><strong>Feature unlock notifications:</strong> When Pattern Tree first unlocks (P1): toast "Pattern Tree unlocked!" + badge on Mind tab. When Run-exclusive upgrades appear (Run 2): toast "New upgrades available!" + "NEW" badge on Upgrades tab. When Lucid Dream first triggers: the Sleep screen shows the choice prominently — no separate notification needed (it IS the notification). When CycleSetupScreen gains a new column (Mutations at P7, Pathways at P10): the new column pulses once on first view.</div></div>
+
+  <div style="margin:.6rem 0;padding:.5rem 0;border-top:2px solid var(--t)"></div>
+  <h3 style="color:var(--t)">Push Notification Schedule</h3>
+  <div class="rule-row"><div class="rule-id" style="color:var(--t)">NOTIF-1</div><div class="rule-body"><strong>Notification schedule by inactivity:</strong> (1) <strong>4 hours absent:</strong> "Your mind has been evolving quietly." (narrative, curiosity-driven). (2) <strong>8 hours absent:</strong> "Something is forming in the silence." (3) <strong>24 hours absent:</strong> "A thought is waiting for you." (4) <strong>72 hours absent:</strong> "Your neurons still remember." (last attempt). Max 1 notification per absence window. NEVER stack. NEVER send during sleep hours (10pm-8am local). After 7 days absent with no return: stop sending. Respect the player's choice to leave.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--a)">CYCLE-1</div><div class="rule-body">CycleSetupScreen muestra SOLO columnas desbloqueadas: P3=1col (Polaridad), P7=2col (+Mutación), P10+=3col (+Pathway). "MISMO QUE ANTES" prominente. NUNCA 3 modales separados.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--a)">DAILY-1</div><div class="rule-body">Daily Login Bonus: streak 7 días. D1:5ch D2:1mem D3:10ch D4:mutTemporal D5:20ch D6:2mem D7:50ch+snapshot. Resetea y repite.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--a)">RUN-1</div><div class="rule-body">Upgrades exclusivos por run: Run2+(3) Run3+(3). Comprados con Resonancia. Son MECÁNICOS. <code>runUpgradesPurchased</code> NUNCA resetea.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--a)">MOMENT-1</div><div class="rule-body">Post-prestige: <code>thoughts += lastCycleEndProduction × 30</code>. Mostrar "Momentum: +X ⚡" en el HUD durante 3s.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--a)">OFFLINE-6</div><div class="rule-body">maxOfflineHours = 8 base. Sueño REM → 12h. NUNCA pierde una noche de sueño.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--a)">NOTIF-1</div><div class="rule-body">Push "Disparo listo" a los ~17 min de cerrar. Max 1 por offline. Desactivable.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--a)">SPARK-1</div><div class="rule-body">Spark Sink: Mutation Reroll (10ch), Skip Espera Disparo (15ch), Boost 30min ×1.5 (20ch). Ninguno permanente.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--a)">FORMAT-1</div><div class="rule-body">Números: formatNumber(n) → "1.5K","2.3M","1.1B". Sufijos: ['','K','M','B','T','Qa','Qi']. Max 2 decimales.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--a)">HAPTIC-1</div><div class="rule-body">Haptics: tap=light, buy=medium, discharge=heavy, cascade=double, prestige=notification. Toggle en settings.</div></div>
+
+  <div style="margin:.6rem 0;padding:.5rem 0;border-top:2px solid var(--pk)"></div>
+  <h3 style="color:var(--pk)">Narrative & Endgame Retention Rules</h3>
+
+  <div class="rule-row"><div class="rule-id" style="color:var(--pk)">NARR-1</div><div class="rule-body">All narrative text in English. ES localization = separate config file, not inline. See SYNAPSE_NARRATIVE_BIBLE.html for all text.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--pk)">NARR-2</div><div class="rule-body">Fragments: fading text on canvas, 14px, opacity 0→0.6→0 over 6s. Lower third, centered. Never overlap HUD.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--pk)">NARR-3</div><div class="rule-body">Echoes: opacity 0.15, 4s, random position middle third. Max 1 per 90s. Pool filtered by prestigeCount.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--pk)">NARR-4</div><div class="rule-body">Each fragment triggers ONCE. Stored in narrativeFragmentsSeen[]. Archetype frags reset on new run. Base frags do NOT reset.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--pk)">NARR-5</div><div class="rule-body">Endings: fullscreen overlay, blurred canvas background. Centered text, scrollable. Choice buttons below. No timer.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--pk)">NARR-6</div><div class="rule-body">P20+ countdown: "X awakenings to Transcendence" below consciousness bar. 9px, opacity 0.4. P25="The final awakening approaches." P26="TRANSCENDENCE."</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--pk)">NARR-7</div><div class="rule-body">P26 confirmation: "Take your time. There is no rush." in blue. MANDATORY — reframes long final cycle as intentional.</div></div>
+
+  <div style="margin:.6rem 0;padding:.5rem 0;border-top:2px solid var(--r)"></div>
+  <h3 style="color:var(--r)">Reglas de auditoría de producción (CRÍTICAS)</h3>
+
+  <div class="rule-row"><div class="rule-id" style="color:var(--r)">PROD-5</div><div class="rule-body">NUNCA usar hard cap. Usar <code>softCap(x) = x<=100 ? x : 100*Math.pow(x/100, 0.72)</code>. Siempre retorna ≤ x. Cada upgrade debe tener efecto visible.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--r)">PROD-6</div><div class="rule-body"><code>baseProductionPerSecond</code> = sin Insight, sin SessionBoost, sin Mutaciones temporales. Usado para: offline, discharge, estimados de UI.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--r)">PROD-7</div><div class="rule-body"><code>effectiveProductionPerSecond</code> = base × Insight × Session × Mutación temporal. Usado para: idle tick, tap, UI display de producción actual.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--r)">PROD-8</div><div class="rule-body">Bar speed (Umbral, Hiperconciencia) = <strong>threshold reducer</strong>: <code>effectiveThreshold = threshold / barSpeedMult</code>. NO es multiplicador de producción.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--r)">CORE-7</div><div class="rule-body">Al reanudar app: si elapsed &lt; 60s → catch-up directo (baseProduction × elapsed). Si ≥ 60s → sistema de offline completo.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--r)">DISC-3</div><div class="rule-body">Discharge usa <code>baseProductionPerSecond</code> (sin Insight). Cascada multiplica ESTO. Previene spike de Insight×Cascada = ×7.5.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--r)">COST-1</div><div class="rule-body">Orden de costos: baseCost → mutationMod → FuncionesEjecutivas → pathwayMod. NUNCA otro orden.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--r)">PREST-1</div><div class="rule-body">handlePrestige() orden: 1) duration, 2) personal best (prestigeCount actual), 3) incrementar prestigeCount, 4) nuevo threshold. Resetear: insightActive, focusBar, dischargeTimer.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--r)">TRANS-1</div><div class="rule-body"><code>prestigeCount = 0</code> en Transcendencia. <code>transcendenceCount += 1</code>. Threshold usa <code>runThresholdMult[transcendenceCount]</code>. CRÍTICO: sin esto, Run 2+ es injugable (threshold crece infinitamente).</div></div>
+
+  <div style="margin:.6rem 0;padding:.5rem 0;border-top:2px solid var(--bl)"></div>
+  <h3 style="color:var(--bl)">Infrastructure rules (Sprint 1 requirements)</h3>
+
+  <div class="rule-row"><div class="rule-id" style="color:var(--bl)">I18N-1</div><div class="rule-body">All player-facing strings in <code>config/strings/en.ts</code>. Spanish in <code>config/strings/es.ts</code>. Use <code>t('key')</code> function. NEVER hardcode UI text in components. English is primary language.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--bl)">I18N-2</div><div class="rule-body">Narrative fragments in <code>config/narrativeFragments.ts</code> use the SYNAPSE_NARRATIVE_BIBLE.html as source of truth. All fragment text is English. ES translations are a post-launch task.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--bl)">SAVE-1</div><div class="rule-body"><code>gameVersion: string</code> in GameState. Format: <code>'1.0.0'</code>. On load: <code>migrateState(savedState)</code> checks version, applies defaults for missing fields. Each version bump has a migration function in <code>engine/migrate.ts</code>.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--bl)">SAVE-2</div><div class="rule-body">Migration path: v1.0.0 → v1.0.1 adds <code>dailyLoginStreak: 0</code>, <code>lastDailyClaimDate: null</code>. v1.1.0 adds post-launch fields. NEVER delete fields — only add with defaults. NEVER change field types.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--bl)">SAVE-3</div><div class="rule-body">Firebase cloud save: on prestige AND on app background. Restore on reinstall: check Firebase for existing save, offer "Restore previous mind?" before starting tutorial. Uses Firebase Auth anonymous ID.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--bl)">FILES-1</div><div class="rule-body">File structure: <code>src/config/</code> (constants, neurons, upgrades, mutations, spontaneous, strings, achievements, mentalStates, microChallenges, narrativeFragments, unlocks), <code>src/store/</code> (gameStore.ts), <code>src/engine/</code> (tick, production, prestige, offline, discharge, focus, spontaneous, resonantPatterns, achievements, mentalStates, microChallenges, diary, whatIfPreview, migrate), <code>src/canvas/</code> (renderer, themes, nodes, connections, effects), <code>src/ui/</code> (HUD, TabNav, panels, modals, screens, AchievementPanel, DiaryPanel, MicroChallengeBanner, MentalStateChip), <code>src/analytics/</code>, <code>src/audio/</code>. Full tree in QA_IMPLEMENTATION.</div></div>
+
+  <div class="rule-row"><div class="rule-id" style="color:var(--bl)">ANALYTICS-2</div><div class="rule-body">New feature events: <code>achievement_unlocked</code> (id, name), <code>mental_state_changed</code> (from, to), <code>micro_challenge_completed</code> (id, reward), <code>micro_challenge_failed</code> (id), <code>diary_entry_added</code> (type). Total analytics events: 33.</div></div>
+
+  <div class="rule-row"><div class="rule-id" style="color:var(--bl)">ANALYTICS-3</div><div class="rule-body"><strong>Conversion funnel.</strong> Track these stages as a funnel in Firebase: (1) <code>app_first_open</code> → (2) <code>tutorial_first_tap</code> → (3) <code>tutorial_first_buy</code> → (4) <code>tutorial_first_discharge</code> → (5) <code>first_prestige</code> → (6) <code>reached_p5</code> (archetype chosen) → (7) <code>reached_p10</code> (Era 2) → (8) <code>first_transcendence</code> → (9) <code>first_purchase</code> (any IAP/subscription). Drop-off between each step = where players quit. This funnel is built from existing events — no new code needed, just a Firebase dashboard config. Configure in Sprint 13 during soft launch monitoring.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--bl)">ANALYTICS-4</div><div class="rule-body"><strong>Monetization events.</strong> Track: <code>starter_pack_shown</code>, <code>starter_pack_purchased</code>, <code>starter_pack_dismissed</code>, <code>limited_offer_shown</code> (id), <code>limited_offer_purchased</code> (id, price), <code>limited_offer_expired</code> (id), <code>cosmetic_purchased</code> (type, id, price), <code>cosmetic_previewed</code> (type, id), <code>cosmetic_equipped</code> (type, id), <code>spark_pack_purchased</code> (tier, amount), <code>spark_cap_reached</code>. Total analytics events: 44.</div></div>
+
+  <div class="rule-row"><div class="rule-id" style="color:var(--r)">RESET-1</div><div class="rule-body">Hard Reset: Settings → "Reset Mind" (red text, bottom of settings). Confirmation flow: (1) "This will erase ALL progress permanently. Are you sure?" with Cancel/Continue. (2) Second confirmation: "Type RESET to confirm." Input field must match exactly "RESET" (case-sensitive). (3) On confirm: wipe entire GameState to defaults, delete Firebase cloud save, log analytics event <code>hard_reset</code>, return to tutorial. NEVER skip any confirmation step.</div></div>
+
+  <div style="margin:.6rem 0;padding:.5rem 0;border-top:2px solid var(--t3)"></div>
+  <h3>Mobile App Infrastructure Rules</h3>
+
+  <div class="rule-row"><div class="rule-id">APP-1</div><div class="rule-body"><strong>Splash/Loading:</strong> Black screen → SYNAPSE logo (white text, subtle pulse) → canvas fade-in. If save exists: load state, show "Welcome back" for 1s. If no save: straight to tutorial. Max 3 seconds total. No loading bar.</div></div>
+  <div class="rule-row"><div class="rule-id">APP-2</div><div class="rule-body"><strong>Orientation:</strong> Portrait only. Lock via Capacitor config: <code>orientation: 'portrait'</code>. No landscape mode. No rotation handling needed.</div></div>
+  <div class="rule-row"><div class="rule-id">APP-3</div><div class="rule-body"><strong>Push notification permission:</strong> Ask ONCE at end of first prestige (P1 completion): "Want to know when your mind dreams?" with Allow/Later. If Later: ask again after P3. If denied twice: never ask again. Store <code>notificationPermissionAsked: number</code> in GameState.</div></div>
+  <div class="rule-row"><div class="rule-id">APP-4</div><div class="rule-body"><strong>Privacy Policy + Terms:</strong> Links in Settings footer. URLs point to hosted pages (e.g. synapsegame.app/privacy, synapsegame.app/terms). Required by App Store and Google Play. Must exist before first submission.</div></div>
+  <div class="rule-row"><div class="rule-id">APP-5</div><div class="rule-body"><strong>GDPR / Data consent:</strong> On first launch for EU users (detect via locale): "We use analytics to improve the game. No personal data is sold." with Accept/Decline. If declined: disable Firebase Analytics. Store <code>analyticsConsent: boolean</code>. Always allow gameplay regardless of choice.</div></div>
+  <div class="rule-row"><div class="rule-id">APP-6</div><div class="rule-body"><strong>Credits/About:</strong> Settings → "About SYNAPSE" → Version number, "Made by [studio name]", links to Privacy Policy and Terms, "Rate this app" button, "Contact: [email]". Simple scrollable screen.</div></div>
+  <div class="rule-row"><div class="rule-id">APP-7</div><div class="rule-body"><strong>Customer support:</strong> Settings → "Send Feedback" → Opens device email client with pre-filled subject "SYNAPSE Feedback v{gameVersion}" and body including device model, OS version, gameVersion, prestigeCount, transcendenceCount. No in-app chat needed for v1.0.</div></div>
+  <div class="rule-row"><div class="rule-id">APP-8</div><div class="rule-body"><strong>Network failure:</strong> Game works 100% offline. All game logic is local. Firebase Analytics and cloud save fail silently — retry on next app foreground. AdMob failures: show nothing (no error message). RevenueCat failures: cache last known subscription status locally. NEVER block gameplay for network.</div></div>
+  <div class="rule-row"><div class="rule-id">APP-9</div><div class="rule-body"><strong>Firebase fallback:</strong> Primary save: local (Capacitor Preferences / AsyncStorage). Cloud save: Firebase — secondary, syncs on prestige + background. If Firebase is unreachable, local save is authoritative. On conflict: use save with higher <code>totalGenerated</code>.</div></div>
+  <div class="rule-row"><div class="rule-id">APP-10</div><div class="rule-body"><strong>Force close during prestige:</strong> Save state BEFORE starting prestige animation. If app is killed mid-animation, on next launch the prestige is already applied and the player sees the post-prestige state (CycleSetupScreen or new cycle). NEVER lose progress to a force close.</div></div>
+  <div class="rule-row"><div class="rule-id">APP-11</div><div class="rule-body"><strong>Ad interruption:</strong> If rewarded ad fails to load: show toast "Ad not available right now" and give no reward. If user cancels ad before completion: no reward, no penalty. If ad completes but callback fails: grant reward anyway (err on player's side). Log <code>ad_error</code> event.</div></div>
+  <div class="rule-row"><div class="rule-id">APP-12</div><div class="rule-body"><strong>App switching / multitask:</strong> Same as backgrounding. On app losing focus: save state, record <code>lastActiveTimestamp</code>. On regaining focus: if elapsed &lt; 60s → catch-up. If ≥ 60s → offline system. Canvas resumes rendering on return. No special handling needed.</div></div>
+
+  <div class="rule-row"><div class="rule-id">APP-13</div><div class="rule-body"><strong>Deep Links (v2.0):</strong> URL scheme <code>synapse://</code>. Routes: <code>synapse://achievement/[id]</code> (show achievement), <code>synapse://diary</code> (open diary), <code>synapse://share</code> (share mind stats). Universal links: <code>synapsegame.app/share/[encoded_stats]</code>. For sharing on social media. NOT in v1.0.</div></div>
+  <div class="rule-row"><div class="rule-id">APP-14</div><div class="rule-body"><strong>Secrets / .env:</strong> <code>.env.example</code> with placeholders: ADMOB_APP_ID, ADMOB_REWARDED_ID, REVENUECAT_API_KEY, FIREBASE_CONFIG. <code>.env</code> is gitignored. Claude Code uses placeholders. Nico fills in real values.</div></div>
+  <div class="rule-row"><div class="rule-id">APP-15</div><div class="rule-body"><strong>Linting:</strong> ESLint with typescript-eslint. Prettier: singleQuote, semi, trailingComma:'es5'. Format on save.</div></div>
+  <div class="rule-row"><div class="rule-id">APP-16</div><div class="rule-body"><strong>Git strategy:</strong> <code>main</code> (production), <code>dev</code> (active). Feature branches: <code>feat/[name]</code>. Claude Code works on dev. Nico merges to main. Tags: v1.0.0, v1.0.1.</div></div>
+  <div class="rule-row"><div class="rule-id">APP-17</div><div class="rule-body"><strong>Build:</strong> iOS requires Mac + Xcode 15+ + Apple Developer ($99/yr). Android requires Android Studio + JDK 17 + Google Play Developer ($25). Capacitor generates native projects. Portrait only (<code>orientation: 'portrait'</code>).</div></div>
+  <div class="rule-row"><div class="rule-id">APP-18</div><div class="rule-body"><strong>Crashlytics:</strong> Firebase Crashlytics enabled. Auto crash reporting. No code beyond init. Nico enables in Firebase console.</div></div>
+  <div class="rule-row"><div class="rule-id">APP-19</div><div class="rule-body"><strong>Remote Config:</strong> Firebase Remote Config for balance patches. Keys: thresholdScaleEra1/2/3, tutorialThreshold, spontaneousChance, microChallengeRewardMult. Fetched on app launch with 12h cache. Fallback: local SYNAPSE_CONSTANTS.</div></div>
+  <div class="rule-row"><div class="rule-id">APP-20</div><div class="rule-body"><strong>Performance targets:</strong> Canvas ≥30fps on budget devices. RAM &lt;200MB. Battery &lt;5%/hr active. App size &lt;50MB. Cold launch &lt;3s.</div></div>
+  <div class="rule-row"><div class="rule-id">APP-21</div><div class="rule-body"><strong>Soft launch checklist:</strong> Submit to Canada+Australia. Monitor: D1&gt;35%, crash&lt;1%, session&gt;8min. Balance via Remote Config. If pass → global. If fail → iterate.</div></div>
+
+  <div style="margin:.6rem 0;padding:.5rem 0;border-top:2px solid var(--r)"></div>
+  <h3 style="color:var(--r)">App Store Submission Rules (CRITICAL)</h3>
+
+  <div class="rule-row"><div class="rule-id" style="color:var(--r)">STORE-1</div><div class="rule-body"><strong>Bundle ID:</strong> <code>app.synapsegame.mind</code> (iOS + Android). Set in <code>capacitor.config.ts</code>. NEVER change after first submission.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--r)">STORE-2</div><div class="rule-body"><strong>Restore Purchases button:</strong> Apple REQUIRES this. Settings → "Restore Purchases" button. Calls <code>RevenueCat.restorePurchases()</code>. Must work WITHOUT requiring login. Shows toast "Purchases restored" or "No purchases found." This is a common rejection reason if missing.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--r)">STORE-3</div><div class="rule-body"><strong>Subscription terms:</strong> TWO plans: Weekly ($1.99/week) and Monthly ($4.99/month). Before ANY subscription purchase, show: exact price (from store), billing frequency, auto-renew notice, and how to cancel ("Settings → Apple ID → Subscriptions"). Monthly shown first with "best value" badge. Weekly shows "Save 38% with monthly." Apple rejects if cancellation instructions aren't visible.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--r)">STORE-4</div><div class="rule-body"><strong>Content rating:</strong> Complete IARC questionnaire. SYNAPSE: no violence, no sexual content, no gambling, has IAP, has ads. Expected: E / PEGI 3. Manual: Nico fills in App Store Connect + Google Play Console.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--r)">STORE-5</div><div class="rule-body"><strong>Export compliance (iOS):</strong> SYNAPSE uses HTTPS (Firebase) but no custom encryption. Answer "No" to custom encryption questions. Select "Uses exempt encryption" → standard HTTPS exemption.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--r)">STORE-6</div><div class="rule-body"><strong>Demo account for reviewers:</strong> SYNAPSE has NO login. Put in App Review Notes: "No login required. The game starts immediately on first launch. To test IAP: use sandbox test account." Include sandbox test Apple ID in notes.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--r)">STORE-7</div><div class="rule-body"><strong>iOS Privacy Nutrition Labels:</strong> Declare in App Store Connect: Analytics=Yes (Firebase, device ID), Advertising=Yes (AdMob, if consented), Purchases=Yes (RevenueCat). If GDPR declined: Analytics=No.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--r)">STORE-8</div><div class="rule-body"><strong>Google Play Data Safety:</strong> Declare: analytics data collected (Firebase), ad data (AdMob), purchase data (RevenueCat). Data not shared with third parties. Data encrypted in transit.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--r)">STORE-9</div><div class="rule-body"><strong>Android 20 testers (2025+ requirement):</strong> Before publishing to production, Google requires 20 testers in closed testing track for 14 days. Manual: Nico recruits testers (friends/family), creates closed testing track in Play Console, distributes APK, waits 14 days, then promotes to production.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--r)">STORE-10</div><div class="rule-body"><strong>Account deletion:</strong> SYNAPSE has NO user accounts (anonymous). No account deletion feature needed. If future versions add accounts: must add delete functionality per Apple Guideline 5.1.1(v).</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--r)">STORE-11</div><div class="rule-body"><strong>Version numbering:</strong> iOS: CFBundleShortVersionString = "1.0.0" (user-visible), CFBundleVersion = "1" (increment each upload). Android: versionName = "1.0.0", versionCode = 1 (increment each upload). Set in <code>capacitor.config.ts</code>.</div></div>
+
+  <div style="margin:.6rem 0;padding:.5rem 0;border-top:2px solid var(--a)"></div>
+  <h3 style="color:var(--a)">Money, Purchases & User Data Rules</h3>
+
+  <div class="rule-row"><div class="rule-id" style="color:var(--a)">MONEY-1</div><div class="rule-body"><strong>App Tracking Transparency (iOS):</strong> AdMob uses IDFA for ad targeting. iOS 14.5+ REQUIRES showing ATT prompt before any tracking. Show BEFORE first ad loads: "Allow SYNAPSE to track your activity across other apps? This helps show relevant ads." If declined: AdMob still works but with lower eCPM (~40-60% less revenue). Use <code>@capacitor-community/admob</code> which handles ATT automatically. Include <code>NSUserTrackingUsageDescription</code> in Info.plist.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--a)">MONEY-2</div><div class="rule-body"><strong>Price consistency:</strong> ALL prices fetched LIVE from store via <code>product.priceString</code>. NEVER hardcode "$4.99" or "$1.99" in UI. Genius Pass has TWO plans: weekly + monthly. Both prices from RevenueCat. Starter Pack, cosmetics, Spark packs — all from store. A $0.01 discrepancy = automatic rejection.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--a)">MONEY-3</div><div class="rule-body"><strong>Google Play Billing:</strong> ALL digital purchases MUST use Google Play Billing. This includes: Genius Pass (weekly + monthly subscriptions), Piggy Bank (consumable), Starter Pack (non-consumable), all cosmetics (non-consumable), all Spark packs (consumable). RevenueCat handles StoreKit (iOS) and Google Play Billing (Android).</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--a)">MONEY-4</div><div class="rule-body"><strong>Commission:</strong> Apple takes 30% first year, 15% after (Small Business Program if revenue &lt;$1M). Google takes 15% first $1M, 30% after. For Genius Pass $4.99/mo: Nico receives ~$3.49 (Apple yr1) or ~$4.24 (Google). Factor into revenue projections.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--a)">MONEY-5</div><div class="rule-body"><strong>Receipt validation:</strong> RevenueCat handles server-side receipt validation automatically. Do NOT implement custom validation. Check entitlements via <code>Purchases.getCustomerInfo()</code> — if <code>entitlements.active['genius_pass']</code> exists, the subscription is valid. Cache locally for offline play.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--a)">MONEY-6</div><div class="rule-body"><strong>Refunds:</strong> Apple/Google handle refunds directly — the developer has no control. When a refund happens, RevenueCat webhook fires and entitlement is revoked. The game should check entitlements on each app foreground. If Genius Pass is revoked: remove benefits silently (no angry popup). Log analytics event <code>subscription_revoked</code>.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--a)">MONEY-7</div><div class="rule-body"><strong>Tax:</strong> Apple and Google collect and remit sales tax/VAT automatically. Developer receives net of commission + tax. To receive payouts: connect bank account in App Store Connect (with tax forms W-8BEN for non-US) and Google Play Console. Nico must complete tax interview in both platforms before first payout.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--a)">MONEY-8</div><div class="rule-body"><strong>Free trial:</strong> Genius Pass v1.0 has NO free trial (simpler implementation). For v1.1+: consider 3-day free trial to boost conversion. RevenueCat supports trials natively. If added: must show "Free for 3 days, then $4.99/month" clearly BEFORE signup.</div></div>
+
+  <div style="margin:.6rem 0;padding:.5rem 0;border-top:2px solid var(--cy)"></div>
+  <h3 style="color:var(--cy)">User Data Rules</h3>
+
+  <div class="rule-row"><div class="rule-id" style="color:var(--cy)">DATA-1</div><div class="rule-body"><strong>What we collect:</strong> (1) Firebase Analytics: device model, OS version, session events, game events (28 defined). Linked to anonymous device ID. (2) AdMob: IDFA (if ATT consented) for ad targeting. (3) RevenueCat: purchase history, subscription status. Linked to anonymous app user ID. (4) Crashlytics: crash logs, device info. NO personal data (no name, email, location, contacts).</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--cy)">DATA-2</div><div class="rule-body"><strong>What we DON'T collect:</strong> No account/login. No name, email, phone. No location (GPS). No contacts. No photos. No health data. No browsing history. No user-generated content. This makes privacy compliance simpler and App Store review faster.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--cy)">DATA-3</div><div class="rule-body"><strong>Privacy Policy content:</strong> Must list: (1) data collected (analytics, ads, purchases), (2) purpose (improve game, show ads, process payments), (3) third parties (Firebase/Google, AdMob/Google, RevenueCat), (4) retention (analytics: 14 months default Firebase, purchases: indefinite), (5) user rights (GDPR: request deletion via email), (6) children (not directed at children under 13). Host at synapsegame.app/privacy.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--cy)">DATA-4</div><div class="rule-body"><strong>GDPR data deletion:</strong> If EU user requests deletion via email: delete Firebase Analytics data (Firebase console → delete user by ID), RevenueCat user (API call), and Crashlytics data. Respond within 30 days. Document the process. This is legally required.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--bl)">TAP-2</div><div class="rule-body">Tap rate hard limit: max <strong>10 taps/second</strong>. Taps beyond this are silently ignored. Implement with circular buffer of last 10 tap timestamps. If buffer[0] is within 1 second of current tap → ignore.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--bl)">ACCESS-1</div><div class="rule-body">Accessibility: (1) Colorblind palette toggle in settings (deuteranopia-safe: replace green→blue, red→orange). (2) Reduced motion toggle: disables canvas animations, keeps static nodes. (3) Font size: system default respected.</div></div>
+
+  <div style="margin:.6rem 0;padding:.5rem 0;border-top:2px solid var(--t)"></div>
+  <h3 style="color:var(--t)">5 New Features Rules</h3>
+
+  <div class="rule-row"><div class="rule-id" style="color:var(--t)">ACH-1</div><div class="rule-body">30 achievements defined in <code>config/achievements.ts</code>. Check conditions at: prestige, purchase, discharge, insight, transcendence. <code>achievementsUnlocked</code> NUNCA resetea. See five_features.py for full list.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--t)">ACH-2</div><div class="rule-body">Achievement UI: panel in Settings. Locked=hint text. Unlocked=name+description+checkmark. Secret achievements show "???" until unlocked. Badge counter in settings icon.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--t)">ACH-3</div><div class="rule-body">Achievement rewards (Sparks+Memories) applied immediately on unlock. Toast notification "Achievement Unlocked: [name]" for 3 seconds. Haptic: notification pattern.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--t)">MENTAL-1</div><div class="rule-body">5 Mental States: Flow, Deep Thought, Eureka Rush, Dormancy, Hyperfocus. Only 1 active at a time. Higher priority state replaces lower. Priority: Eureka > Flow > Hyperfocus > Deep > Dormancy.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--t)">MENTAL-2</div><div class="rule-body">Mental States affect <code>effectiveProductionPerSecond</code> (NOT base). They are TEMPORAL modifiers like Insight. Offline does NOT include Mental State bonuses.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--t)">MENTAL-3</div><div class="rule-body">Mental State chip: HUD below Focus Bar. "⟡ Flow State" with color. Appears/disappears with 0.5s fade. currentMentalState + mentalStateExpiry RESETEA in prestige.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--t)">MICRO-1</div><div class="rule-body">Micro-challenges: appear every 8-10 min (random). Dismissible banner, auto-fades in 5s if not tapped. Reward: 1% of cycleGenerated (thoughts) OR Focus fill OR 1-2 Sparks. NEVER mandatory.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--t)">MICRO-2</div><div class="rule-body">8 challenge types in <code>config/microChallenges.ts</code>. Each has time limit (10-90s). Fail = nothing (no punishment). activeMicroChallenge RESETEA in prestige.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--t)">DIARY-1</div><div class="rule-body">Neural Diary: auto-log in <code>diaryEntries[]</code>. Max 500 (FIFO prune). Logged: prestiges, PBs, achievements, Resonant Patterns, archetypes, Transcendences. NUNCA resetea.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--t)">DIARY-2</div><div class="rule-body">Diary UI: scrollable list in Regions tab, "Mind Diary" section. Each entry = relative timestamp + icon + one-line summary. No gameplay effect.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--t)">PREVIEW-1</div><div class="rule-body">What-if Preview: on CycleSetupScreen [change] bottom sheet, each option shows estimated cycle time. Calculation: <code>avgLast3CycleTimes × (lastConfig.mult / option.mult)</code>. Color: green=faster, orange=similar, red=slower. Accuracy ±20%.</div></div>
+  <div class="rule-row"><div class="rule-id" style="color:var(--t)">PREVIEW-2</div><div class="rule-body"><code>lastCycleTimes: number[]</code> (buffer of 3). Updated at each prestige. Preserved in prestige, reset in Transcendence. If empty (first cycles), show "No estimate yet."</div></div>
+
+  <div style="margin:.6rem 0;padding:.5rem 0;border-top:2px solid var(--t3)"></div>
+  <h3>App Store metadata</h3>
+  <div class="blk binfo"><div class="bh bh-info">DEFINE BEFORE SOFT LAUNCH</div>
+  <p><strong>Name:</strong> SYNAPSE: Mind Evolution<br>
+  <strong>Subtitle:</strong> Evolve a mind. From neuron to god.<br>
+  <strong>Keywords:</strong> idle, brain, neuron, evolution, prestige, incremental, mind, consciousness, neural, upgrade<br>
+  <strong>Category:</strong> Games → Simulation<br>
+  <strong>Description (first line):</strong> A single neuron pulses in the dark. Tap it. Watch it grow. Evolve a mind from its first spark to cosmic superintelligence — then choose what it becomes.<br>
+  <strong>Screenshots:</strong> 6 required. (1) Canvas with glowing neurons, (2) Discharge moment with big number, (3) Polarity choice modal, (4) Awakening screen with gains, (5) ERA 3 cosmic canvas, (6) Ending choice screen. All in-game captures, not mockups.</p></div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════ ROADMAP ═══════════════════════════════════ -->
+<div class="tab" id="tab-roadmap">
+<div class="sec">
+  <h3>Sprint Plan v1.0 — 13 Sprints, ~65 days</h3>
+  <div class="blk bwarn"><div class="bh bh-warn">ALIGNED WITH CLAUDE.MD</div><p>This roadmap matches the sprint definitions in CLAUDE.md exactly. Each sprint has AI checks + Player tests. Sprint is NOT done until all checkboxes pass. Sprints 1-10 are development. Sprints 11-13 are testing, deployment, and launch.</p></div>
+  <div class="card"><div class="cb">
+
+    <div class="sprint"><div class="sn" style="background:var(--p)">S0</div><div><div class="sd">Pre-launch Marketing (PARALLEL — runs alongside S1-S10)</div><div class="sb">👤 ALL MANUAL, 30 min/week:<br>• Create TikTok/Instagram: "Building a game 100% with AI — Day 1". Post weekly progress.<br>• Create r/incremental_games presence. Share early GIFs of the canvas.<br>• Create Discord server (or at minimum a landing page with email signup).<br>• Research ASO keywords: idle, brain, neuron, evolution, mind, incremental, prestige.<br>• At Sprint 8: record 30-sec gameplay trailer for store listing.<br>• At Sprint 10: create feature graphic (1024×500 for Google Play).<br>• At Sprint 12: post "launching soon" on all channels.</div><div class="sdur">PARALLEL · 30 min/week</div></div></div>
+
+    <div class="sprint"><div class="sn">S1</div><div><div class="sd">Project Setup + Core Engine</div><div class="sb">🤖 React+Vite+Zustand+Capacitor scaffolding. SYNAPSE_CONSTANTS. GameState (90+ fields). production.ts with softCap. tick.ts (100ms). i18n with t('key'). ESLint+Prettier. Zustand persist to Capacitor Preferences.<br>👤 Create Firebase project. Create .env with API keys.</div><div class="sdur">5 days · CRITICAL</div></div></div>
+
+    <div class="sprint"><div class="sn">S2</div><div><div class="sd">Canvas + HUD</div><div class="sb">🤖 Canvas2D renderer (devicePixelRatio, touchstart, safe areas). 3 era themes. HUD overlay (thoughts, rate, charges, Focus Bar, consciousness bar). Tab navigation (4 tabs, progressive disclosure). formatNumber(). wrapText(). AudioContext unlock. Canvas pause on background.<br>👤 Test on device: sharp rendering, instant taps, no notch overlap, smooth fps.</div><div class="sdur">5 days · CRITICAL</div></div></div>
+
+    <div class="sprint"><div class="sn">S3</div><div><div class="sd">Neurons + Upgrades + Discharge</div><div class="sb">🤖 5 neuron types with costs/rates/requirements. 36 upgrades with ordering. Discharge system (charges, cooldown, cascade). Focus + Insight. Tap mechanics (pre/post P3). Haptic feedback.<br>👤 Test: buy feels impactful, discharge is a wow moment, cascade is satisfying.</div><div class="sdur">5 days · CRITICAL</div></div></div>
+
+    <div class="sprint"><div class="sn">S4</div><div><div class="sd">Prestige + Patterns + Polarity</div><div class="sb">🤖 handlePrestige (33 field reset). Pattern Tree + decision nodes. Polarity system. CycleSetupScreen (unified, 1-3 columns). Momentum Bonus. Personal bests. Awakening confirmation screen.<br>👤 Time P1 tutorial: must be 7-8 minutes. Test Discharge at ~5min. Test P2 feels faster.</div><div class="sdur">6 days · CRITICAL</div></div></div>
+
+    <div class="sprint"><div class="sn">S5</div><div><div class="sd">Mutations + Pathways + Regions</div><div class="sb">🤖 15 mutations. 3 pathways (Swift/Deep/Balanced). Region panel (Hippocampus, Prefrontal, Broca). Region upgrades (Memory cost). What-if Preview on CycleSetupScreen.<br>👤 Test: mutation cards feel different, pathway choices matter, what-if estimates are reasonable.</div><div class="sdur">4 days</div></div></div>
+
+    <div class="sprint"><div class="sn">S6</div><div><div class="sd">Archetypes + Narrative + Events</div><div class="sb">🤖 3 archetypes with production bonuses. 57 narrative fragments (canvas render, fade, word-wrap). 30 Echoes. 12 Spontaneous Synapse events. 8 Era 3 events. Endgame countdown (P20+). 5 ending screens with binary choices.<br>👤 Read fragments on device — quality check. Echoes visible but not distracting?</div><div class="sdur">5 days</div></div></div>
+
+    <div class="sprint"><div class="sn">S7</div><div><div class="sd">5 New Features</div><div class="sb">🤖 30 achievements + panel. 5 mental states + HUD chip. 8 micro-challenges + banner. Neural Diary + panel. What-if Preview.<br>👤 Unlock an achievement. See mental state chip. Accept a micro-challenge. Check diary.</div><div class="sdur">4 days</div></div></div>
+
+    <div class="sprint"><div class="sn">S8</div><div><div class="sd">Offline + Transcendence + Runs 2-3</div><div class="sb">🤖 Offline progress (base × hours × 50%, cap 8h). Sleep/return screen + Lucid Dream. Transcendence (prestigeCount→0, transcendenceCount+=1). Run-exclusive upgrades. Resonant Patterns (4 conditions). Secret Ending. Save to Capacitor Preferences + Firebase cloud. migrateState().<br>👤 Close app 1 hour → check offline progress. Complete 26 prestiges → Transcendence. Force-close during prestige → no data loss. Uninstall/reinstall → restore from Firebase.</div><div class="sdur">6 days · CRITICAL</div></div></div>
+
+    <div class="sprint"><div class="sn">S9</div><div><div class="sd">Monetization</div><div class="sb">🤖 AdMob rewarded video (6 placements including post-Discharge ×2). ATT prompt (iOS). RevenueCat: Genius Pass weekly ($1.99/wk) + monthly ($4.99/mo) with "best value" badge. Restore Purchases. Entitlement check on foreground. Piggy Bank IAP. Spark packs (3 tiers with bonus scaling). Cosmetics Store UI ("Neural Aesthetics"): 8 neuron skins, 4 canvas themes, 3 glow packs, 1 HUD style. Preview before purchase. Starter Pack post-P1 ($2.99, 48h timer). Limited-Time Offers (4 milestone triggers, 48h countdown). Daily Login Bonus. Monthly Spark purchase cap (1000). No ads first 10 min. Genius Pass offer triggers (72h, max 3).<br>👤 Create AdMob account + ad units. Create RevenueCat account + configure: genius_pass_weekly, genius_pass_monthly, piggy_bank, starter_pack, 8 neuron skins, 4 canvas themes, 3 glow packs, 1 HUD style, 3 spark packs. Create all IAP products in App Store Connect + Google Play Console. Test every purchase in sandbox.</div><div class="sdur">7 days · HIGH RISK (needs real device + accounts)</div></div></div>
+
+    <div class="sprint"><div class="sn">S10</div><div><div class="sd">Polish + Infrastructure</div><div class="sb">🤖 Settings screen (sound, notifications, colorblind, about, reset, feedback, restore purchases). Hard Reset (type "RESET"). Splash screen (<3s). GDPR consent (EU). Push notification permission (after P1). Push notification schedule (NOTIF-1: 4h/8h/24h/72h). Force-close recovery. Time anomaly detection. Android back button. Status bar. Scroll bounce disabled. 33 analytics events. Audio (3 ambient + 8 SFX). Colorblind mode. Reduced motion.<br>👤 Source audio files (AI-generated or royalty-free). Create app icon (1024×1024). Play P0 to P5 on device — overall feel check.<br><br>⚠ <strong>BUFFER WEEK</strong> between S9 and S10: if AdMob/RevenueCat approvals delay Sprint 9, this week absorbs the slip without pushing S10-S13.</div><div class="sdur">5 days + 5 day buffer</div></div></div>
+
+    <div class="sprint"><div class="sn" style="background:var(--a)">S11</div><div><div class="sd">QA + Balance + Device Testing</div><div class="sb">🤖 Run 97 automated balance tests. Run 157-checkbox sprint audit. Fix any bugs. Verify no file >200 lines. Verify all imports correct direction. ESLint zero warnings.<br>👤 Test on iPhone SE (smallest screen). Test on iPhone 14+. Test on budget Android (Galaxy A14 or similar). Test on flagship Android. Measure: fps, memory, battery. Play full Run 1 (P0 to P26) — time each prestige. Compare against expected times (avg 20m). Fix balance issues via Firebase Remote Config if needed.</div><div class="sdur">5 days · MANUAL-HEAVY</div></div></div>
+
+    <div class="sprint"><div class="sn" style="background:var(--r)">S12</div><div><div class="sd">Store Preparation + Submission</div><div class="sb">👤 ALL MANUAL:<br>• Write Privacy Policy HTML page → host at synapsegame.app/privacy<br>• Write Terms of Service HTML page → host at synapsegame.app/terms<br>• Complete tax forms: W-8BEN (Apple) + tax interview (Google)<br>• Connect bank account in both platforms for payouts<br>• Fill iOS Privacy Nutrition Labels in App Store Connect<br>• Fill Google Play Data Safety form<br>• Complete content rating questionnaire (IARC)<br>• Complete export compliance (iOS — standard HTTPS exemption)<br>• Take 6 screenshots (Canvas, Discharge, Polarity, Awakening, ERA 3, Ending)<br>• Write full App Store description (4000 chars)<br>• Write App Review Notes: "No login required. Sandbox test Apple ID: [id]"<br>• Build iOS archive in Xcode → upload to App Store Connect<br>• Build Android AAB in Android Studio → upload to Google Play Console<br>• (Android) Create closed testing track → recruit 20 testers → wait 14 days<br>• (iOS) Submit to TestFlight for internal testing</div><div class="sdur">5 days setup + 14 days Android testing wait</div></div></div>
+
+    <div class="sprint"><div class="sn" style="background:var(--t)">S13</div><div><div class="sd">Soft Launch + Monitor + Global</div><div class="sb">👤 ALL MANUAL:<br>• Submit to App Store (Canada + Australia only)<br>• Submit to Google Play (Canada + Australia only)<br>• Wait for review (iOS: 24-48h, Android: 1-3 days)<br>• Monitor for 2 weeks: D1 retention (target >35%), crash rate (target <1%), avg session (target >8 min), ad revenue, IAP conversion<br>• Balance patch via Firebase Remote Config if needed<br>• Fix critical bugs (hotfix via new build submission)<br>• If metrics pass → submit global release<br>• If metrics fail → iterate on balance/UX, resubmit soft launch<br>• Monitor global launch reviews and crash reports for 2 weeks</div><div class="sdur">2-4 weeks</div></div></div>
+
+  </div></div>
+
+  <div class="gkpi" style="margin-top:.5rem">
+    <div class="kpi"><div class="kv" style="color:var(--t)">~65 days</div><div class="kl">Development (S1-S10 + buffer)</div></div>
+    <div class="kpi"><div class="kv" style="color:var(--p)">PARALLEL</div><div class="kl">Marketing (S0, alongside dev)</div></div>
+    <div class="kpi"><div class="kv" style="color:var(--a)">+5 days</div><div class="kl">QA + Device testing (S11)</div></div>
+    <div class="kpi"><div class="kv" style="color:var(--r)">+19 days</div><div class="kl">Store prep + 14d Android testing (S12)</div></div>
+    <div class="kpi"><div class="kv" style="color:var(--bl)">+2-4 weeks</div><div class="kl">Soft launch → Global (S13)</div></div>
+  </div>
+
+  <div class="blk bcrit"><div class="bh bh-crit">TOTAL TIMELINE: ~14-16 weeks from first Sprint to global launch</div><p>Development: weeks 1-9. QA: week 10. Store prep: weeks 10-12 (parallel with Android 14-day testing). Soft launch: weeks 13-14. Global: week 15-16. This is realistic for one developer using Claude Code.</p></div>
+</div>
+
+<div class="sec">
+  <h3>Post-launch roadmap</h3>
+  <table class="tbl">
+    <thead><tr><th>Versión</th><th>Timing</th><th>Features</th></tr></thead>
+    <tbody>
+      <tr><td>Soft Launch</td><td>Sem 9–10</td><td>EN: Canadá + Australia. KPIs: D7 ≥ 12%, P1 timing 20–25 min, crashes <1%.</td></tr>
+      <tr><td>Global</td><td>Sem 11–12</td><td>EN + ES. ASO. TikTok canvas screenshots. Reddit. Ajustes de balance con datos reales.</td></tr>
+      <tr><td>v1.5</td><td>Mes 3–4</td><td>Modo Ascensión (speed runs con leaderboard). 6 Mutaciones nuevas. Evento temporal semanal. Second Genius Pass tier ($9.99).</td></tr>
+      <tr><td>v2.0</td><td>Mes 5–6</td><td>Regiones 4–5. Neurona Resonante. T2/T3 completa. Server-side validation. Eventos de temporada.</td></tr>
+    </tbody>
+  </table>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════ QA AUDIT ═══════════════════════════════════ -->
+<div class="tab" id="tab-audit">
+<div class="sec">
+  <h3>Auditoría completa de mecánicas — edge cases, bugs potenciales y exploits</h3>
+  <div class="blk bcrit"><div class="bh bh-crit">OBJETIVO</div><p>Identificar TODOS los problemas lógicos, edge cases, y exploits antes de escribir una línea de código. Cada issue tiene su solución definida.</p></div>
+</div>
+
+<div class="sec">
+  <h3>CATEGORÍA 1 — Edge cases de prestige y estado</h3>
+  
+  <div class="blk bbad"><div class="bh bh-bad">BUG-01: Prestige mientras hay Insight activo</div><p><strong>Problema:</strong> Si el jugador hace prestige con Insight activo, ¿qué pasa? insightActive=true sobrevive el prestige porque no está en PRESTIGE_RESET.<br><strong>Fix:</strong> Agregar insightActive, insightMultiplier, insightEndTime a PRESTIGE_RESET. Forzar insightActive=false en handlePrestige().</p></div>
+
+  <div class="blk bbad"><div class="bh bh-bad">BUG-02: Prestige mientras Disparo está en cooldown parcial</div><p><strong>Problema:</strong> dischargeLastTimestamp y el timer parcial de acumulación no se resetean, causando que el primer Disparo del nuevo ciclo llegue antes de lo esperado.<br><strong>Fix:</strong> Resetear dischargeCharges=0 Y dischargeLastTimestamp=Date.now() en handlePrestige(). El timer empieza de cero.</p></div>
+
+  <div class="blk bbad"><div class="bh bh-bad">BUG-03: Offline llena cycleGenerated al 100% + Insight bonus pendiente</div><p><strong>Problema:</strong> Si offline llena el ciclo al 100%, nextDischargeBonus (de Resonancia Acumulada) queda guardado sin usarse. Al volver, el jugador puede prestige inmediatamente y perderse el bonus.<br><strong>Fix:</strong> En la pantalla de regreso, si cycleGenerated >= threshold, mostrar banner "Tu mente despertó. Tenés 1 Disparo potenciado antes de Despertar — ¿querés usarlo?" Dar la opción de usar el Disparo (que genera thoughts extra pero ya no afecta el threshold) o prestige directamente.</p></div>
+
+  <div class="blk bbad"><div class="bh bh-bad">BUG-04: Personal bests — evaluación timing</div><p><strong>Problema:</strong> personalBests debe evaluarse ANTES de incrementar prestigeCount. Si se incrementa primero, el nivel indexado es incorrecto.<br><strong>Fix:</strong> En handlePrestige(): 1) Calcular duration. 2) Evaluar personal best para prestigeCount actual. 3) LUEGO incrementar prestigeCount. 4) Calcular nuevo threshold.</p></div>
+
+  <div class="blk bbad"><div class="bh bh-bad">BUG-05: Transcendencia reset no incluye currentPolarity, currentMutation, currentPathway</div><p><strong>Problema:</strong> Estos se resetean en prestige normal, pero en Transcendencia el reset es más profundo (memories=0, archetype=null). Si no se mencionan explícitamente, podrían sobrevivir.<br><strong>Fix:</strong> TRANSCENDENCIA_RESET es un superset de PRESTIGE_RESET. Definir explícitamente: todo lo de PRESTIGE_RESET + memories=0 + archetype=null + regionsUnlocked=[] + eraVisualTheme='bioluminescent'.</p></div>
+</div>
+
+<div class="sec">
+  <h3>CATEGORÍA 2 — Focus Bar edge cases</h3>
+
+  <div class="blk bwarn"><div class="bh bh-warn">BUG-06: Focus Bar overflow en P10+ transition</div><p><strong>Problema:</strong> Si el jugador está en P9 con focusBar=0.95 y hace prestige a P10, ahora el max es 2.0 (no 1.0). Pero focusFillRate no cambia — llegar a nivel 2 (Profundo) requiere muchos más taps de los que el jugador espera.<br><strong>Fix:</strong> Al hacer prestige, si Focus Persistente no está comprado, focusBar=0. Si está comprado, focusBar *= 0.25 (retiene 25%, no 50% como dice el upgrade — ajustar upgrade text). Mostrar tooltip la primera vez que el jugador tiene acceso a niveles 2-3.</p></div>
+
+  <div class="blk bwarn"><div class="bh bh-warn">BUG-07: Cascada y Focus simultáneo con Sincronización Total</div><p><strong>Problema:</strong> Si se activa Cascada (Focus≥0.75 + Disparo), Focus se pone a 0. Luego Sincronización Total agrega +0.18. Pero si el jugador activa otro Disparo inmediatamente, ¿0.18 cuenta como ≥0.75? No debería.<br><strong>Fix:</strong> El check de Cascada es <code>focusBar >= 0.75 ANTES del Disparo</code>. Sincronización Total se aplica DESPUÉS. Segundo Disparo consecutivo NO puede ser Cascada a menos que el jugador llene Focus naturalmente.</p></div>
+
+  <div class="blk bwarn"><div class="bh bh-warn">BUG-08: Focus Bar llena durante Insight activo</div><p><strong>Problema:</strong> Si el jugador toca durante Insight, ¿se llena la Focus Bar para el SIGUIENTE Insight? Sí, debería — pero el jugador podría encadenar Insights sin pausa.<br><strong>Fix:</strong> Correcto como está. La Focus Bar se llena durante Insight. Pero Insight solo se ACTIVA cuando insightTimer <= 0, así que no hay solapamiento. El jugador puede precargar Focus para el siguiente Insight — esto es gameplay deseado ("prep while buffed").</p></div>
+</div>
+
+<div class="sec">
+  <h3>CATEGORÍA 3 — Mutaciones problemáticas</h3>
+
+  <div class="blk bbad"><div class="bh bh-bad">BUG-09: Mutación "Neuroplasticidad" — upgrades se descompran al 50%</div><p><strong>Problema:</strong> Si los upgrades se pierden al 50% consciencia, los multiplicadores que usaban desaparecen pero los neurons comprados con esos multiplicadores siguen existiendo. La producción cae bruscamente → el jugador se queda stuck.<br><strong>Fix:</strong> Cambiar efecto: "Upgrades cuestan −50% pero sus efectos se REDUCEN 40% después del 50% consciencia" (no se pierden, se debilitan). O más simple: "Upgrades cuestan −50% pero el ciclo threshold es +20%." Evita el cliff de producción.</p></div>
+
+  <div class="blk bbad"><div class="bh bh-bad">BUG-10: Mutación "Especialización" + Conexiones pasivas</div><p><strong>Problema:</strong> "Solo 1 tipo de neurona produce" pero las conexiones son pasivas por PAR de tipos. Si solo 1 tipo produce, los otros tipos dan 0 rate pero ¿siguen contando para pares de conexión?<br><strong>Fix:</strong> Sí, siguen contando. La Mutación solo afecta producción directa, no el bonus de conexiones. Esto es intencional — la Mutación ya penaliza suficiente. Si las conexiones no contaran, el jugador no tendría incentivo a tener múltiples tipos.</p></div>
+
+  <div class="blk bwarn"><div class="bh bh-warn">BUG-11: Mutación "Déjà Vu" + costos ×2 + Funciones Ejecutivas</div><p><strong>Problema:</strong> Déjà Vu: empezás con upgrades del ciclo anterior pero costos ×2. Si Funciones Ejecutivas reduce costos −12%, ¿se aplica sobre el ×2?<br><strong>Fix:</strong> Orden de aplicación: costo_base × 2.0 (Déjà Vu) × 0.88 (Funciones Ej.) = costo_base × 1.76. FE se aplica DESPUÉS del multiplicador de Mutación. Documentar en CLAUDE.md: COST_ORDER: base → mutation → funciones_ej → pathway.</p></div>
+
+  <div class="blk bwarn"><div class="bh bh-warn">BUG-12: 3 Mutaciones aleatorias — ¿puede repetir la misma del ciclo anterior?</div><p><strong>Problema:</strong> Si el seed es cycleStartTimestamp, dos prestiges rápidos podrían generar las mismas 3 opciones.<br><strong>Fix:</strong> Seed = hash(cycleStartTimestamp + prestigeCount). Esto garantiza que el pool cambia con cada prestige. Además: filtrar la Mutación del ciclo anterior de las opciones (campo: lastMutationId en GameState, resetea en Transcendencia).</p></div>
+</div>
+
+<div class="sec">
+  <h3>CATEGORÍA 4 — Exploits y abusos</h3>
+
+  <div class="blk bbad"><div class="bh bh-bad">EXPLOIT-01: Time manipulation (reloj del dispositivo)</div><p><strong>Problema:</strong> El jugador adelanta el reloj → offline progress gratis → cargas de Disparo gratis.<br><strong>Fix:</strong> Detectar saltos de tiempo: si <code>Date.now() - lastActiveTimestamp > maxOfflineHours × 3600 × 1000 × 2</code>, cap a maxOfflineHours. Si <code>Date.now() < lastActiveTimestamp</code> (reloj retrocedió), ignorar offline y setear lastActiveTimestamp = Date.now(). Log event 'time_anomaly'. Para v2.0: validación server-side con Firebase timestamps.</p></div>
+
+  <div class="blk bbad"><div class="bh bh-bad">EXPLOIT-02: Rapid prestige cycling para Memorias</div><p><strong>Problema:</strong> Si el jugador hace prestige apenas llega al threshold (sin optimizar), gana 2 Memorias + 3 Patrones rápidamente. Con ciclos de 15 min, puede farmear 8 Mem/hora.<br><strong>Fix:</strong> Esto está OK. Las Memorias se gastan en upgrades con costos crecientes (2, 4, 6, 9, 16 Mem). 8 Mem/hora solo compra los upgrades baratos. Los caros requieren muchos prestiges. No es explotable de forma significativa.</p></div>
+
+  <div class="blk bwarn"><div class="bh bh-warn">EXPLOIT-03: Genius Pass + Empática + Offline = producción pasiva insana</div><p><strong>Problema:</strong> Empática ×2.5 offline + Genius Pass ×1.25 + Regulación Emocional ×2 = 50% × 2 × 2.5 × 1.25 = 312.5% eficiencia offline.<br><strong>Fix:</strong> Cap hard de offline eficiencia a 200% (×2 de producción activa). <code>efficiency = Math.min(calculatedEfficiency, 2.0)</code>. Agregar a SYNAPSE_CONSTANTS: <code>maxOfflineEfficiency: 2.0</code>. Documentar en CLAUDE.md: OFFLINE-4.</p></div>
+
+  <div class="blk bwarn"><div class="bh bh-warn">EXPLOIT-04: Mutación "Sinestesia" + tap macro = farmear Memorias</div><p><strong>Problema:</strong> Sinestesia genera 1 Memoria por 500 taps. Un macro puede hacer 10 taps/s = 1 Mem cada 50 segundos = 72 Mem/hora.<br><strong>Fix:</strong> Anti-tap-spam: si taps > 5/sec sostenido por >10 sec, reducir tap effectiveness a 10%. Implementar como: trackear tap timestamps en array circular de 20 taps. Si el promedio < 200ms entre taps, flag como spam. UI: mostrar "Demasiado rápido" y reducir efecto.</p></div>
+</div>
+
+<div class="sec">
+  <h3>CATEGORÍA 5 — Interacciones entre sistemas</h3>
+
+  <div class="blk bwarn"><div class="bh bh-warn">INTER-01: Polaridad Inhibitoria + Pathway Vía Rápida</div><p><strong>Problema:</strong> Inhibitorio reduce producción −6% pero mejora Disparo +30%. Vía Rápida mejora Insight duración ×2 pero bloquea regiones. ¿Se complementan o se cancelan?<br><strong>Análisis:</strong> Se complementan. El jugador que elige Inhibitorio + Vía Rápida está apostando todo a Disparo + Insight. Es una estrategia high-risk/high-reward legítima. No requiere fix.</p></div>
+
+  <div class="blk bwarn"><div class="bh bh-warn">INTER-02: Arquetipo Empática + Mutación "Crescendo"</div><p><strong>Problema:</strong> Empática tiene mejor offline. Crescendo empieza producción en ×0.2 y sube a ×3 al 100% barra. Si el jugador es Empática con Crescendo, su producción activa empieza muy baja pero su offline no se ve afectada (offline usa productionPerSecond cacheado).<br><strong>Fix:</strong> Mutaciones deben afectar offline también. Agregar campo <code>affectsOffline: boolean</code> a cada Mutación. Crescendo: affectsOffline=true, lo que significa que el cálculo offline usa la producción PROMEDIO del ciclo (con el scaling de Crescendo), no la producción de pico.</p></div>
+
+  <div class="blk bwarn"><div class="bh bh-warn">INTER-03: Convergencia Sináptica + Prestige Count después de Transcendencia</div><p><strong>Problema:</strong> Convergencia da +2.5% por prestige completado. Después de Transcendencia, ¿prestigeCount se resetea a 0? Si sí, Convergencia pierde todo su valor en Run 2.<br><strong>Fix:</strong> prestigeCount NO se resetea en Transcendencia — es un campo preservado. El jugador en Run 2 empieza con prestigeCount=26, por lo que Convergencia da 26×0.015 = 39% → capped a 40%. Esto es correcto y deseado: el Run 2 es más fácil.</p></div>
+
+  <div class="blk bbad"><div class="bh bh-bad">INTER-04: Producción cacheada + Mutación + Prestige</div><p><strong>Problema:</strong> productionPerSecond se cachea. Si una Mutación modifica producción (ej: "Hiperestimulación ×2"), el caché debe recalcularse al aplicar la Mutación. Si NO se recalcula, la Mutación no tiene efecto hasta el próximo tick.<br><strong>Fix:</strong> Llamar recalculateProduction() después de: 1) aplicar Mutación, 2) comprar upgrade, 3) comprar neurona, 4) cambiar Polaridad. Agregar a CLAUDE.md: CORE-6: <code>recalculateProduction()</code> después de cualquier cambio de estado que afecte producción.</p></div>
+</div>
+
+<div class="sec">
+  <h3>CATEGORÍA 6 — Problemas de UX y estado</h3>
+
+  <div class="blk bwarn"><div class="bh bh-warn">UX-01: Modales pre-ciclo en cadena pueden ser abrumadores</div><p><strong>Problema:</strong> En P10+, al hacer prestige se muestran 3 modales seguidos: Polaridad → Mutación → Pathway. Toma ~15 segundos. El jugador que hace prestige rápido quiere volver al gameplay.<br><strong>Fix:</strong> Cada modal tiene botón "Usar anterior" (default a la última elección). Si el jugador tapea "Usar anterior" en los 3, el proceso toma <2 segundos. El jugador nuevo ve las opciones; el veterano las skipea.</p></div>
+
+  <div class="blk bwarn"><div class="bh bh-warn">UX-02: Pantalla de Despertar con threshold piecewise</div><p><strong>Problema:</strong> La pantalla muestra "tiempo estimado del próximo ciclo". Con threshold piecewise, el estimado necesita saber qué Era viene después. Si el jugador está en P12 (last of Era 1 fast scaling), P13 usa 1.28 scaling — el estimado debe usar el scaling correcto.<br><strong>Fix:</strong> Función getThreshold(p) debe ser usada en el cálculo del estimado. <code>estimatedNextCycle = currentCycleTime × (nextThreshold / currentThreshold)</code> como aproximación simple.</p></div>
+
+  <div class="blk bwarn"><div class="bh bh-warn">UX-03: Weekly Challenge + Mutación — conflicto</div><p><strong>Problema:</strong> Un weekly challenge dice "Sin neurona Espejo" pero la Mutación del ciclo dice "Solo 1 tipo de neurona produce". Si el jugador elige Básica como tipo, ¿el challenge se cumple?<br><strong>Fix:</strong> Sí, se cumple — el jugador no COMPRÓ Espejos. Los challenges evalúan compras, no restricciones de Mutación. Agregar tooltip en challenges: "Las Mutaciones no interfieren con los requisitos del challenge."</p></div>
+
+  <div class="blk bbad"><div class="bh bh-bad">UX-04: Save corruption — migrateState missing fields</div><p><strong>Problema:</strong> Si un jugador actualiza la app y el GameState tiene campos nuevos que no existían antes, migrateState() debe asignar defaults. Si se olvida un campo, crashes.<br><strong>Fix:</strong> migrateState() debe usar <code>??=</code> para TODOS los campos del GameState. Agregar test automatizado: <code>Object.keys(defaultGameState).forEach(key => assert(key in migratedState))</code>. Correr en CI.</p></div>
+</div>
+
+<div class="sec">
+  <h3>CATEGORÍA 7 — Reglas nuevas para CLAUDE.md (post-auditoría)</h3>
+  <div class="rule-row"><div class="rule-id">CORE-6</div><div class="rule-body"><code>recalculateProduction()</code> después de: comprar neurona, comprar upgrade, aplicar Mutación, cambiar Polaridad, elegir Pathway. NUNCA asumir que el caché es correcto después de un cambio de estado.</div></div>
+  <div class="rule-row"><div class="rule-id">OFFLINE-4</div><div class="rule-body">Cap hard de offline efficiency: <code>Math.min(calculatedEff, 2.0)</code>. Ninguna combinación puede superar ×2 de producción activa.</div></div>
+  <div class="rule-row"><div class="rule-id">OFFLINE-5</div><div class="rule-body">Time anomaly detection: si <code>Date.now() < lastActiveTimestamp</code>, ignorar offline, resetear timestamp. Si elapsed > maxOfflineHours × 2, cap a maxOfflineHours.</div></div>
+  <div class="rule-row"><div class="rule-id">MUT-2</div><div class="rule-body">Mutation seed = hash(cycleStartTimestamp + prestigeCount). Filtrar lastMutationId de las opciones. Mutaciones con affectsOffline=true modifican el cálculo de offline progress.</div></div>
+  <div class="rule-row"><div class="rule-id">COST-1</div><div class="rule-body">Orden de aplicación de costos: base → mutation modifier → Funciones Ejecutivas → Pathway modifier. NUNCA aplicar en otro orden.</div></div>
+  <div class="rule-row"><div class="rule-id">TAP-1</div><div class="rule-body">Anti-spam: si avg tap interval < 200ms por >10 seg, reducir effectiveness a 10%. Trackear con circular buffer de 20 taps.</div></div>
+  <div class="rule-row"><div class="rule-id">PREST-1</div><div class="rule-body">handlePrestige() orden: 1) calcular duration, 2) evaluar personal best (con prestigeCount actual), 3) incrementar prestigeCount, 4) calcular nuevo threshold, 5) resetear TODOS los campos en PRESTIGE_RESET incluyendo insightActive, dischargeLastTimestamp, focusBar.</div></div>
+</div>
+
+<div class="sec">
+  <h3>Resumen de auditoría</h3>
+  <div class="gkpi">
+    <div class="kpi"><div class="kv" style="color:var(--r)">15</div><div class="kl">Issues identificados</div></div>
+    <div class="kpi"><div class="kv" style="color:var(--t)">15</div><div class="kl">Soluciones definidas</div></div>
+    <div class="kpi"><div class="kv" style="color:var(--a)">7</div><div class="kl">Nuevas reglas CLAUDE.md</div></div>
+    <div class="kpi"><div class="kv" style="color:var(--t)">0</div><div class="kl">Gaps pendientes</div></div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════ END ═══════════════════════════════════ -->
+
+</div>
+
+<script>
+function go(id){
+  const ids=['vision','loops','economy','focus','prestige','upgrades','mutations','offline','retention','monetization','ui','tech','claudemd','roadmap','audit'];
+  document.querySelectorAll('.nb').forEach((b,i)=>b.classList.toggle('on',ids[i]===id));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.id==='tab-'+id));
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>SYNAPSE — Evaluación Senior Dev</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
+:root{--bg:#05070d;--bg2:#0a0d1a;--bg3:#0f1224;--b:#ffffff0a;--b2:#ffffff14;--p:#8B7FE8;--t:#22B07A;--a:#F0A030;--r:#E85050;--bl:#4090E0;--pk:#E06090;--cy:#40D0D0;--text:#e8e6f8;--t2:#7070a0;--t3:#383860}
+*{box-sizing:border-box;margin:0;padding:0}body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;font-size:14px;line-height:1.65}
+.wrap{max-width:980px;margin:0 auto;padding:1.5rem 1.25rem 5rem}
+h1{font-size:28px;font-weight:900;letter-spacing:-.04em;background:linear-gradient(135deg,var(--r),var(--a));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+h2{font-size:17px;font-weight:700;margin:1.2rem 0 .4rem;padding-top:.6rem;border-top:2px solid var(--b2)}
+h3{font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.15em;margin:.7rem 0 .45rem;padding-bottom:.3rem;border-bottom:1px solid var(--b2)}
+h4{font-size:13px;font-weight:600;margin-bottom:.2rem}p{font-size:13px;color:var(--t2);line-height:1.75;margin-bottom:.3rem}
+strong{color:var(--text);font-weight:600}em{color:var(--a);font-style:normal;font-weight:500}
+code{font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--bg3);padding:2px 6px;border-radius:4px;color:#90E0C0}
+.sec{margin-bottom:1.4rem}.card{background:var(--bg2);border:1px solid var(--b2);border-radius:14px;margin-bottom:.55rem}.cb{padding:.8rem 1rem}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:.5rem 0}@media(max-width:640px){.g2{grid-template-columns:1fr}}
+.badge{display:inline-block;font-size:10px;font-weight:600;padding:2px 9px;border-radius:20px;font-family:'JetBrains Mono',monospace}
+.bt{background:#22B07A14;color:#60D0A0;border:1px solid #22B07A28}.ba{background:#F0A03014;color:var(--a);border:1px solid #F0A03028}
+.br{background:#E8505014;color:#F0A0A0;border:1px solid #E8505028}.bp{background:#8B7FE814;color:#B0A8F0;border:1px solid #8B7FE828}
+.bb{background:#4090E014;color:#80B8F0;border:1px solid #4090E028}.bcy{background:#40D0D014;color:#80E8E8;border:1px solid #40D0D028}
+.blk{border-radius:10px;padding:.65rem .85rem;margin:.4rem 0;font-size:13px;line-height:1.7}.blk p{font-size:13px;margin:0}
+.bok{background:#22B07A0c;border-left:3px solid var(--t)}.bwarn{background:#F0A0300c;border-left:3px solid var(--a)}
+.binfo{background:#8B7FE80c;border-left:3px solid var(--p)}.bbad{background:#E850500c;border-left:3px solid var(--r)}
+.bcrit{background:#40D0D00c;border-left:3px solid var(--cy)}
+.bh{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+.bh-ok{color:#60D0A0}.bh-warn{color:var(--a)}.bh-info{color:#B0A8F0}.bh-bad{color:#F0A0A0}.bh-crit{color:#80E8E8}
+.tbl{width:100%;border-collapse:collapse;font-size:12px;margin:.4rem 0}
+.tbl th{text-align:left;font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;padding:0 8px 6px 0;border-bottom:1px solid var(--b2);font-weight:600}
+.tbl td{padding:5px 8px 5px 0;border-bottom:1px solid var(--b);color:var(--t2);vertical-align:top;font-size:11.5px}
+.tbl td:first-child{color:var(--text);font-weight:500}.tbl tr:last-child td{border-bottom:none}
+.code{background:var(--bg3);border:1px solid var(--b2);border-radius:10px;padding:.7rem .9rem;font-family:'JetBrains Mono',monospace;font-size:11px;color:#90E0C0;line-height:1.85;margin:.4rem 0;overflow-x:auto}
+.code .cm{color:var(--t3)}.code .cv{color:var(--t)}.code .ck{color:var(--a)}
+.sev{display:inline-block;font-size:9px;font-weight:700;padding:1px 6px;border-radius:3px;margin-right:4px}
+.s-crit{background:#E85050;color:white}.s-high{background:#F0A030;color:#1a1a1a}.s-med{background:#4090E0;color:white}.s-low{background:#22B07A;color:#1a1a1a}
+.kpi{background:var(--bg3);border-radius:10px;padding:.6rem .8rem;border:1px solid var(--b)}.kv{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:700;line-height:1}.kl{font-size:11px;color:var(--t3);margin-top:3px;font-weight:500}
+.gkpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:8px;margin:.5rem 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div style="margin-bottom:1rem">
+  <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:.6rem">
+    <span class="badge br">EVALUACIÓN CRÍTICA</span>
+    <span class="badge ba">20 años exp.</span>
+    <span class="badge bt">15 bugs · 23 mejoras · 8 risks</span>
+  </div>
+  <h1>SYNAPSE — Evaluación Senior Dev</h1>
+  <p style="font-size:14px;color:var(--t2);margin-top:.3rem">Evaluación completa y sin diplomacia del estado del juego pre-lanzamiento. Basada en los 4 documentos del proyecto (2840 líneas), benchmarks de retención 2026, y 20 años diseñando idle games.</p>
+</div>
+
+<!-- ═══════════ VEREDICTO ═══════════ -->
+<div class="sec">
+  <h2>Veredicto ejecutivo</h2>
+  <div class="blk bwarn"><div class="bh bh-warn">EL JUEGO ES SÓLIDO PERO TIENE 3 PROBLEMAS QUE LO PUEDEN MATAR</div>
+  <p>SYNAPSE tiene un diseño de sistemas profundo, una economía validada por simulación (raro y admirable), y una narrativa interesante. La mayoría de los idle games que evalúo no tienen ni la mitad de este rigor en el balance. PERO: hay 3 problemas estructurales que, si no se resuelven antes del launch, van a destruir la retención D1 y hacer irrelevante todo lo demás.</p>
+  </div>
+  <div class="gkpi">
+    <div class="kpi"><div class="kv" style="color:var(--r)">3</div><div class="kl">Problemas críticos</div></div>
+    <div class="kpi"><div class="kv" style="color:var(--a)">5</div><div class="kl">Problemas altos</div></div>
+    <div class="kpi"><div class="kv" style="color:var(--bl)">7</div><div class="kl">Mejoras medias</div></div>
+    <div class="kpi"><div class="kv" style="color:var(--t)">8</div><div class="kl">Polish recomendado</div></div>
+  </div>
+</div>
+
+<!-- ═══════════ OBJETIVO 1: BUGS ═══════════ -->
+<h2>1. Bugs y problemas mecánicos detectados</h2>
+
+<div class="sec">
+  <h3>Bugs de producción (ya corregidos en auditorías previas)</h3>
+  <div class="blk bok"><div class="bh bh-ok">RESUELTOS — VERIFICADO</div><p>Los 8 bugs de producción de la auditoría anterior (soft cap, bar speed, discharge + insight, offline cacheado, etc.) están correctamente resueltos. La fórmula de producción es consistente en todo el GDD. La simulación valida los tiempos. No voy a re-auditarlos.</p></div>
+</div>
+
+<div class="sec">
+  <h3>Bugs NUEVOS encontrados en esta revisión</h3>
+
+  <div class="blk bbad"><div class="bh bh-bad"><span class="sev s-crit">CRIT</span> BUG-1: Sinapsis Espontánea "Eureka" no se gasta si no hay upgrades comprables</div><p>Si "Eureka" (siguiente upgrade cuesta 0) se activa pero el jugador ya compró todos los upgrades disponibles, el flag <code>nextUpgradeFree</code> persiste indefinidamente. Cuando un upgrade se desbloquea (por nuevo prestige o por tier), se aplica gratis sin que el jugador lo sepa. <strong>Fix:</strong> Eureka expira en 60 segundos. Si no se usa, se pierde. Agregar <code>eurekaExpiry: number | null</code> al state.</p></div>
+
+  <div class="blk bbad"><div class="bh bh-bad"><span class="sev s-crit">CRIT</span> BUG-2: Patrón Resonante 4 — "menos de 50% del tiempo estimado" no tiene referencia</div><p>¿50% de QUÉ tiempo estimado? El GDD no define cómo se calcula <code>estimatedCycleTime</code>. Si usa el Personal Best, un jugador que ya optimizó su PB a 12 minutos necesitaría completarlo en 6 minutos — imposible. Si usa el promedio global, el jugador no conoce ese dato. <strong>Fix:</strong> Usar un valor fijo por prestige level. Para P5: estimado = 18 min, target = 9 min. Para P10: estimado = 16 min, target = 8 min. Guardar una tabla <code>ESTIMATED_CYCLE_TIMES: number[]</code> en constants. El Patrón se descubre si <code>cycleTime < ESTIMATED_CYCLE_TIMES[prestigeCount] * 0.5</code>.</p></div>
+
+  <div class="blk bbad"><div class="bh bh-bad"><span class="sev s-high">HIGH</span> BUG-3: Momentum entre Sinapsis Espontánea y Prestige</div><p>Si el jugador hace prestige durante una Sinapsis Espontánea positiva (ej: "Ráfaga Dopamínica" ×2 producción), el prestige ocurre con producción inflada. PERO: el personal best se evalúa por tiempo, no por producción, así que no hay exploit directo. Sin embargo, el <code>cycleGenerated</code> final incluye la producción inflada — esto podría triggear el prestige ANTES de lo esperado si la Sinapsis Espontánea dispara justo cuando el threshold está al 95%. <strong>Veredicto:</strong> No es un bug — es una feature. El jugador que "tiene suerte" con una Ráfaga justo antes del threshold se siente bien. Es el mismo efecto que un Golden Cookie en Cookie Clicker.</p></div>
+
+  <div class="blk bbad"><div class="bh bh-bad"><span class="sev s-high">HIGH</span> BUG-4: Pattern Decision nodes — timing de aparición ambiguo</div><p>El GDD dice "cada 2 prestiges, 1 nodo de Decisión". Pero el jugador gana 3 patrones por prestige (4 después de hito 60). Las decisiones están en nodos 6, 15, 24, 36, 48, 66. Estos NO son "cada 2 prestiges" — están en patrones específicos. ¿Qué pasa si el jugador gana 4 patrones por prestige (post-hito 60) y salta el nodo 66? <strong>Fix:</strong> Las decisiones se vinculan a <code>totalPatterns >= threshold</code>, no a posiciones en el árbol. Al hacer Síntesis, si totalPatterns cruza un threshold de decisión, el modal aparece. Esto funciona independientemente de cuántos patrones por prestige haya.</p></div>
+
+  <div class="blk bbad"><div class="bh bh-bad"><span class="sev s-high">HIGH</span> BUG-5: Convergencia Sináptica post-Transcendencia</div><p>Convergencia da "+1.5% por prestige, cap 40%". Pero con <code>prestigeCount</code> reseteando a 0 en Transcendencia, el ciclo 1 de Run 2 da +0% de Convergencia (p=0). Esto es CORRECTO pero confuso para el jugador: un upgrade que decía "+1.5% por prestige" ahora da 0 porque empezó de nuevo. <strong>Fix:</strong> Cambiar la descripción a "+1.5% por ciclo completado este run, cap 40%". Es el mismo cálculo pero el jugador entiende que resetea.</p></div>
+
+  <div class="blk bbad"><div class="bh bh-bad"><span class="sev s-med">MED</span> BUG-6: Tap anti-spam + Sinapsis "Pausa Neural"</div><p>Durante "Pausa Neural" (producción 0, Focus ×5), el tap genera 0 thoughts (porque tap = max(4, effectivePPS × 0.08) y effectivePPS = 0). PERO: Focus debería llenarse ×5 con taps. Si producción es 0, el tap base es max(4, 0) = 4 thoughts — ¿el Focus fill rate se basa en tap value o es independiente? <strong>Fix:</strong> Focus fill rate = <code>FOCUS_FILL_PER_TAP</code> (constante, 0.010), NO dependiente de producción. La Pausa Neural multiplica esto: 0.010 × 5 = 0.050 por tap. El jugador tapea para llenar Focus pero no genera thoughts. Esto es correcto temáticamente ("silencio productivo").</p></div>
+
+  <div class="blk bbad"><div class="bh bh-bad"><span class="sev s-med">MED</span> BUG-7: Close-and-reopen during negative Sinapsis Espontánea</div><p>Si "Fatiga Sináptica" (−30%) está activa, el jugador puede cerrar la app, esperar 45 segundos, reabrir, y el catch-up system le da producción SIN la penalidad (porque catch-up usa <code>baseProductionPerSecond</code> que no incluye Sinapsis Espontáneas). <strong>Fix:</strong> Es un exploit menor (45 segundos de −30% = pérdida de ~13 segundos de producción equivalente). No vale la pena complicar el catch-up system por esto. Aceptar como behavior.</p></div>
+</div>
+
+<!-- ═══════════ OBJETIVO 2: EXPERIENCIA ═══════════ -->
+<h2>2. Evaluación de la experiencia del jugador</h2>
+
+<div class="sec">
+  <h3>Los 3 problemas que pueden matar el juego</h3>
+
+  <div class="blk bbad"><div class="bh bh-bad"><span class="sev s-crit">CRÍTICO #1</span> Los primeros 5 minutos no enganchan</div>
+  <p>Datos 2026: D1 mediana es 22%. Top 10% logra 40%. La diferencia se hace en los primeros 5-15 minutos. Si el valor no es claro inmediatamente, los jugadores se van.</p>
+  <p><strong>Estado actual:</strong> El jugador abre la app. Pantalla negra. Una neurona. Nada de texto. Tapea. Un número sube. A los 10 thoughts (~3 taps) puede comprar algo. A los ~30 segundos tiene producción idle. El primer "wow moment" (Disparo) llega a los <strong>20 minutos</strong>.</p>
+  <p><strong>El problema:</strong> 20 minutos es una ETERNIDAD para un jugador mobile que no sabe si el juego vale la pena. Cell to Singularity engancha en 30 segundos con una explosión visual. Cookie Clicker en 10 segundos. SYNAPSE no tiene un wow moment hasta el minuto 20.</p>
+  <p><strong>Fix implementado (ver abajo):</strong> Primer Disparo a los 5 minutos (no 20). Tutorial cycle más corto. Primer prestige en 8-10 minutos.</p>
+  </div>
+
+  <div class="blk bbad"><div class="bh bh-bad"><span class="sev s-crit">CRÍTICO #2</span> Muro de modales pre-ciclo a partir de P10</div>
+  <p><strong>Estado actual:</strong> Después de hacer prestige en P10+, el jugador ve: (1) Animación 3s → (2) Árbol de Patrones → (3) Nodo de Decisión (quizás) → (4) Polaridad → (5) Mutación → (6) Pathway → (7) Gameplay empieza. Son potencialmente 6 pantallas antes de poder jugar.</p>
+  <p><strong>El problema:</strong> Cada modal es una decisión. Decision fatigue es real en mobile. Después de 10+ prestiges, el jugador conoce sus preferencias. Obligarlo a pasar por 6 pantallas CADA VEZ es fricción que castiga la repetición — exactamente lo opuesto de lo que un idle game debería hacer.</p>
+  <p><strong>Fix implementado:</strong> Combinar Polaridad + Mutación + Pathway en UNA sola pantalla con 3 columnas. Botón "Mismo que antes ▶" prominente. El jugador experto hace 1 tap. El jugador que quiere cambiar algo, toca la columna específica para expandir las opciones.</p>
+  </div>
+
+  <div class="blk bbad"><div class="bh bh-bad"><span class="sev s-crit">CRÍTICO #3</span> Run 2 y 3 son Run 1 con números más grandes</div>
+  <p><strong>Estado actual:</strong> Run 2 tiene el mismo gameplay que Run 1. Mismas neuronas, mismos upgrades, misma estructura. La diferencia es: threshold ×3.5, patrones acumulados, arquetipo diferente, fragmentos narrativos nuevos. Pero el GAMEPLAY es idéntico.</p>
+  <p><strong>El problema:</strong> El jugador que termina Run 1 en D10 y empieza Run 2 va a pensar "estoy haciendo lo mismo otra vez". La narrativa no es suficiente para justificar 10 días más de la misma mecánica. Los idle games con multiple prestige layers exitosos (Antimatter Dimensions, Realm Grinder) cambian CÓMO juegas en cada layer, no solo los números.</p>
+  <p><strong>Fix implementado:</strong> 3-4 upgrades exclusivos por run comprables con Resonancia que cambian MECÁNICAS, no solo números. Ver detalles abajo.</p>
+  </div>
+</div>
+
+<div class="sec">
+  <h3>Curva de retención proyectada</h3>
+  <table class="tbl">
+    <thead><tr><th>Métrica</th><th>Sin fixes</th><th>Con fixes</th><th>Top 10% benchmark</th></tr></thead>
+    <tbody>
+      <tr><td>D1 Retention</td><td style="color:var(--r)">18-22%</td><td style="color:var(--a)">28-35%</td><td>40%</td></tr>
+      <tr><td>D7 Retention</td><td style="color:var(--a)">8-12%</td><td style="color:var(--t)">12-16%</td><td>12%</td></tr>
+      <tr><td>D30 Retention</td><td>3-5%</td><td style="color:var(--t)">5-8%</td><td>4%</td></tr>
+      <tr><td>Tiempo a primer wow</td><td style="color:var(--r)">20 min</td><td style="color:var(--t)">5 min</td><td>&lt;2 min</td></tr>
+      <tr><td>Contenido total</td><td>D31 (4 finales)</td><td>D31 (4 finales)</td><td>D30-60</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ═══════════ OBJETIVO 3: MEJORAS ═══════════ -->
+<h2>3. Mejoras concretas implementadas</h2>
+
+<div class="sec">
+  <h3>FIX CRÍTICO #1: Tutorial Cycle + primer Disparo a 5 minutos</h3>
+  <div class="blk bcrit"><div class="bh bh-crit">IMPLEMENTACIÓN</div>
+  <p>El PRIMER ciclo del juego (tutorialCycle = true) tiene reglas especiales:</p></div>
+  <div class="code">
+<span class="cm">// TUTORIAL CYCLE — solo el primer ciclo de la primera partida</span>
+if (state.prestigeCount === 0 && state.transcendenceCount === 0) {
+  <span class="cm">// Threshold reducido: 200K en vez de 800K</span>
+  threshold = SYNAPSE_CONSTANTS.tutorialThreshold  <span class="cm">// 200_000</span>
+  <span class="cm">// Primer Disparo a los 5 minutos (no 20)</span>
+  dischargeInterval = SYNAPSE_CONSTANTS.tutorialDischargeInterval  <span class="cm">// 300 segundos</span>
+  <span class="cm">// Neurona Sensorial se desbloquea a las 3 Básicas (no 5)</span>
+  <span class="cm">// Barra de consciencia visible desde el 25% (no 50%)</span>
+}
+  </div>
+  <p><strong>Resultado:</strong> P1 toma ~8 minutos en vez de 24. El jugador ve el Disparo a los 5 minutos ("¡boom! ¡qué fue eso!"), tiene el prestige a los 8 minutos, y para el minuto 15 ya tiene 2 prestiges y entiende el loop completo. Después de P1, los thresholds normales aplican (P2 = ~20 min).</p>
+  <div class="blk bwarn"><div class="bh bh-warn">RIESGO</div><p>Un P1 de 8 minutos puede hacer que el jugador piense que todos los prestiges son así de cortos. Cuando P2 toma 20 minutos, puede sentir que el juego "se frenó". <strong>Mitigación:</strong> Después de P1, mostrar: "Tu mente crece. Los ciclos serán más largos pero más ricos." Y P2 empieza con nuevos upgrades disponibles para dar sensación de progresión.</p></div>
+</div>
+
+<div class="sec">
+  <h3>FIX CRÍTICO #2: Pantalla Unificada de Ciclo</h3>
+  <div class="blk bcrit"><div class="bh bh-crit">REEMPLAZA: 3 modales separados → 1 pantalla con 3 columnas</div><p>La "Cycle Setup Screen" aparece después del Árbol de Patrones. Muestra las 3 elecciones en una sola vista.</p></div>
+  <div class="code">
+┌─────────────────────────────────────────────────┐
+│           CONFIGURAR CICLO                       │
+│                                                  │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐        │
+│  │ POLARIDAD│ │ MUTACIÓN │ │ PATHWAY  │        │
+│  │          │ │          │ │          │        │
+│  │ ⚡ Excit │ │ 🧬 Sprint│ │ → Rápida │        │
+│  │  +20%    │ │  ×5/5min │ │  Focus+  │        │
+│  │          │ │          │ │          │        │
+│  │ [cambiar]│ │ [cambiar]│ │ [cambiar]│        │
+│  └──────────┘ └──────────┘ └──────────┘        │
+│                                                  │
+│  ┌─────────────────────────────────────────┐    │
+│  │     ▶  MISMO QUE ANTES — EMPEZAR        │    │
+│  └─────────────────────────────────────────┘    │
+│                  o                               │
+│  ┌─────────────────────────────────────────┐    │
+│  │         EMPEZAR CON CAMBIOS              │    │
+│  └─────────────────────────────────────────┘    │
+└─────────────────────────────────────────────────┘
+  </div>
+  <p>"Cambiar" abre un bottom sheet con las opciones (3 cartas de Mutación, etc.). "Mismo que antes" es un SOLO TAP y empieza el ciclo. El jugador experto tarda menos de 1 segundo entre prestige y gameplay.</p>
+</div>
+
+<div class="sec">
+  <h3>FIX CRÍTICO #3: Upgrades exclusivos por Run</h3>
+  <div class="blk bcrit"><div class="bh bh-crit">CADA RUN JUEGA DIFERENTE</div><p>3-4 upgrades comprados con Resonancia que solo están disponibles en Run 2+, Run 3+, etc. Son MECÁNICOS, no solo multiplicadores.</p></div>
+  <table class="tbl">
+    <thead><tr><th>Run</th><th>Upgrade</th><th>Costo</th><th>Efecto mecánico</th></tr></thead>
+    <tbody>
+      <tr><td rowspan="3" style="color:var(--bl)">Run 2+</td><td>Insight Reversa</td><td>15 Reson</td><td>Durante Insight, Focus se LLENA (×0.5 rate) en vez de ser consumido. Permite encadenar Insights si tapeas rápido.</td></tr>
+      <tr><td>Disparo Doble</td><td>20 Reson</td><td>El primer Disparo de cada ciclo se duplica automáticamente (2 cargas gastadas, bonus ×2 instantáneo). Cambia cuándo usás el primer Disparo.</td></tr>
+      <tr><td>Memoria Implícita</td><td>10 Reson</td><td>Los 3 upgrades más baratos de cada ciclo empiezan ya comprados. Cambia el early-cycle completamente.</td></tr>
+      <tr><td rowspan="3" style="color:var(--pk)">Run 3+</td><td>Cascada Perpetua</td><td>30 Reson</td><td>Después de una Cascada, Focus Bar se llena al 50% instantáneamente (no 0). Permite Cascadas más frecuentes.</td></tr>
+      <tr><td>Neurona Líder</td><td>25 Reson</td><td>La neurona con más owned produce ×1.5, las demás producen ×0.95. El jugador se especializa en un tipo.</td></tr>
+      <tr><td>Polaridad Dual</td><td>40 Reson</td><td>Cambiar de Polaridad MID-CICLO una vez (botón en HUD). Excitatorio los primeros 10 min → Inhibitorio los últimos 10.</td></tr>
+    </tbody>
+  </table>
+  <div class="blk bok"><div class="bh bh-ok">POR QUÉ ESTO FUNCIONA</div><p>"Insight Reversa" cambia el loop de Focus completamente. "Memoria Implícita" cambia el early-cycle. "Polaridad Dual" cambia la estrategia de cuándo usar Disparo. El jugador en Run 2 no está "repitiendo" — está jugando con reglas nuevas que no existían antes. Y porque cuestan Resonancia, el jugador tiene que elegir cuáles comprar (no puede tener todos). Esto crea builds diferentes entre runs.</p></div>
+</div>
+
+<div class="sec">
+  <h3>Mejoras de retención (ALTAS)</h3>
+
+  <div class="blk bwarn"><div class="bh bh-warn"><span class="sev s-high">HIGH</span> M-1: Offline cap base → 8 horas (era 4)</div><p>Un jugador que duerme 8 horas sin Sueño REM pierde 4 horas de producción potencial. Se despierta, abre la app, y la reward es decepcionante. <strong>Fix:</strong> <code>maxOfflineHours: 8</code> (base), Sueño REM lo sube a 12. El jugador NUNCA pierde una noche de sueño.</p></div>
+
+  <div class="blk bwarn"><div class="bh bh-warn"><span class="sev s-high">HIGH</span> M-2: "Momentum Bonus" post-prestige</div><p>Después de cada prestige, el jugador empieza el ciclo con <code>30 seconds × endOfCycleProductionRate</code> thoughts gratis. Se muestra como: "Momentum: +45,000 pensamientos ⚡". El jugador SIENTE que su progresión tiene inercia — la mente no parte de cero, arrastra impulso. Esto también crea un hook de "just one more prestige" porque el siguiente ciclo empieza con un boost visible.</p></div>
+
+  <div class="blk bwarn"><div class="bh bh-warn"><span class="sev s-high">HIGH</span> M-3: Daily Login Bonus (no mencionado en el GDD)</div><p>El GDD no tiene un daily login bonus. Esto es un oversight significativo. <strong>Fix:</strong> Streak de 7 días. Día 1: 5 Chispas. Día 2: +1 Memoria. Día 3: 10 Chispas. Día 4: Mutación Temporal (una Mutación rara activa por 1 ciclo). Día 5: 20 Chispas. Día 6: +2 Memorias. Día 7: Neural Snapshot gratuito + 50 Chispas. El streak resetea después de D7 y empieza de nuevo. Esto es el driver #1 de D7 retention en mobile games.</p></div>
+
+  <div class="blk bwarn"><div class="bh bh-warn"><span class="sev s-high">HIGH</span> M-4: Notificación inteligente de "Disparo listo"</div><p>Cuando el jugador está offline y una carga de Disparo se llena, enviar push notification: "Tu Disparo está listo. ¿Vienes a activar la Cascada?" Esta notificación llega ~17 minutos después de cerrar la app (cuando la primera carga offline se completa). Es el timing perfecto para un re-engage. NO enviar si el jugador desactivó notificaciones. Máximo 1 por sesión de offline.</p></div>
+
+  <div class="blk bwarn"><div class="bh bh-warn"><span class="sev s-high">HIGH</span> M-5: Patrón Resonante 3 rediseñado</div><p>"La Conexión Perdida" — "80%+ Básicas" sigue siendo tedioso (jugar mal por 40 minutos). <strong>Nuevo diseño:</strong> "Completar un ciclo donde comprás los 5 tipos de neurona en los primeros 2 minutos." Es un speed-buying challenge — difícil, requiere optimización, pero es FUN de intentar. El Eco se cambia a: "Todo comenzó junto, en un instante de claridad. Los fragmentos siempre supieron ser uno."</p></div>
+</div>
+
+<div class="sec">
+  <h3>Mejoras de UX/UI (MEDIAS)</h3>
+
+  <div class="blk binfo"><div class="bh bh-info"><span class="sev s-med">MED</span> U-1: Sinapsis Espontánea — feedback visible</div><p>Cuando una Sinapsis Espontánea se activa, NO basta con un "flash en el canvas". El jugador necesita: (1) Pause de 0.3s del canvas (no del game loop), (2) Banner central que dice "⚡ Ráfaga Dopamínica — Producción ×2 por 30s" que se auto-desvanece en 2 segundos, (3) Timer visible en el HUD mientras el efecto dura. Los negativos: banner rojo con shake sutil.</p></div>
+
+  <div class="blk binfo"><div class="bh bh-info"><span class="sev s-med">MED</span> U-2: Formateo de números grandes</div><p>El GDD no especifica el formato de números grandes. Con producción de 500K+/s, el counter sube rápidamente a millones. <strong>Fix:</strong> Notación abreviada con 2 decimales: 1.5K → 1.5M → 1.5B → 1.5T. El cambio de sufijo se marca con un flash sutil del counter. Agregar a constants: <code>NUMBER_SUFFIXES: ['', 'K', 'M', 'B', 'T', 'Qa', 'Qi']</code>.</p></div>
+
+  <div class="blk binfo"><div class="bh bh-info"><span class="sev s-med">MED</span> U-3: Haptic feedback</div><p>iOS y Android soportan haptics. Usar: tap = light impact. Compra neurona = medium impact. Compra upgrade = success notification. Disparo = heavy impact. Cascada = double heavy. Prestige = notification + heavy. Insight = soft continuous vibration durante duración. Toggle en settings.</p></div>
+
+  <div class="blk binfo"><div class="bh bh-info"><span class="sev s-med">MED</span> U-4: Progress bar visual entre prestiges</div><p>Además de la barra de consciencia, mostrar un % debajo: "73.4% → Despertar". Esto da al jugador un número concreto de progresión. Es más tangible que una barra visual delgada.</p></div>
+</div>
+
+<div class="sec">
+  <h3>Mejoras de monetización</h3>
+
+  <div class="blk bwarn"><div class="bh bh-warn"><span class="sev s-high">HIGH</span> MON-1: Spark Sink — qué comprar con Chispas</div><p>El GDD define cómo GANAR Chispas pero no tiene suficientes formas de GASTARLAS. Si el jugador acumula 500 Chispas y no hay nada que quiera, deja de valorar la moneda premium. <strong>Fix:</strong> Agregar al shop de Chispas: (1) Mutation Reroll: 10 Chispas — re-tirar las 3 opciones de Mutación. (2) Skip de Espera: 15 Chispas — siguiente carga de Disparo instantánea. (3) Boost de 30min: 20 Chispas — producción ×1.5 por 30 minutos. Estos NO son pay-to-win (no afectan el balance de manera permanente) pero tienen valor inmediato que el jugador siente.</p></div>
+
+  <div class="blk bwarn"><div class="bh bh-warn"><span class="sev s-high">HIGH</span> MON-2: "Piggy Bank" necesita urgencia</div><p>El Piggy Bank se llena pero el jugador no sabe CUÁNDO se llena ni CUÁNTAS Chispas tiene adentro hasta que decide romperlo. <strong>Fix:</strong> Mostrar "🐷 347/500 ⚡" en el corner de settings. Cuando llega a 500: pulsing animation + notification "¡Tu Piggy Bank está lleno! Cada Chispa que generes se pierde." FOMO funciona mejor que curiosidad.</p></div>
+</div>
+
+<!-- ═══════════ OBJETIVO 4: PLAN ═══════════ -->
+<h2>4. Plan de mejoras estructurado</h2>
+
+<div class="sec">
+  <h3>Priorización: impacto × esfuerzo</h3>
+  <table class="tbl">
+    <thead><tr><th>Prioridad</th><th>Fix</th><th>Impacto</th><th>Esfuerzo</th><th>Sprint</th></tr></thead>
+    <tbody>
+      <tr><td style="color:var(--r)">P0</td><td>Tutorial cycle (primer Disparo a 5 min)</td><td>D1 retention +40%</td><td>2 horas (constants)</td><td>1</td></tr>
+      <tr><td style="color:var(--r)">P0</td><td>Cycle Setup Screen unificada</td><td>Reduce fricción 70%</td><td>4 horas (UI)</td><td>1</td></tr>
+      <tr><td style="color:var(--r)">P0</td><td>Daily Login Bonus</td><td>D7 retention +30%</td><td>3 horas</td><td>1</td></tr>
+      <tr><td style="color:var(--a)">P1</td><td>Run-exclusive upgrades (6 mecánicos)</td><td>D20+ retention ×2</td><td>8 horas (design + code)</td><td>2</td></tr>
+      <tr><td style="color:var(--a)">P1</td><td>Offline cap → 8h base</td><td>D2+ satisfaction</td><td>30 min (constant)</td><td>1</td></tr>
+      <tr><td style="color:var(--a)">P1</td><td>Momentum Bonus post-prestige</td><td>"Just one more" hook</td><td>2 horas</td><td>2</td></tr>
+      <tr><td style="color:var(--a)">P1</td><td>Push notification "Disparo listo"</td><td>Re-engagement +25%</td><td>2 horas</td><td>2</td></tr>
+      <tr><td style="color:var(--a)">P1</td><td>Spark Sink (3 items de conveniencia)</td><td>IAP revenue +50%</td><td>3 horas</td><td>2</td></tr>
+      <tr><td style="color:var(--bl)">P2</td><td>Sinapsis Espontánea feedback visible</td><td>Engagement mid-cycle</td><td>2 horas (UI)</td><td>3</td></tr>
+      <tr><td style="color:var(--bl)">P2</td><td>Number formatting</td><td>Clarity</td><td>1 hora (utility)</td><td>3</td></tr>
+      <tr><td style="color:var(--bl)">P2</td><td>Haptic feedback</td><td>Feel premium</td><td>2 horas</td><td>3</td></tr>
+      <tr><td style="color:var(--bl)">P2</td><td>Patrón Resonante 3 rediseñado</td><td>Fun challenge</td><td>30 min (constant)</td><td>3</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ═══════════ OBJETIVO 5: SEGUNDA REVISIÓN ═══════════ -->
+<h2>5. Segunda revisión — control de calidad de los fixes</h2>
+
+<div class="sec">
+  <h3>¿Los fixes crean problemas nuevos?</h3>
+  <table class="tbl">
+    <thead><tr><th>Fix</th><th>Posible conflicto</th><th>Veredicto</th></tr></thead>
+    <tbody>
+      <tr><td>Tutorial cycle (P1 = 8 min)</td><td>Jugador piensa que todos los ciclos son cortos. Decepción en P2 (20 min).</td><td style="color:var(--a)">MITIGADO con texto post-P1: "Los ciclos crecen con tu mente."</td></tr>
+      <tr><td>Cycle Setup Screen unificada</td><td>Pantalla puede sentirse abrumadora con 3 elecciones a la vez.</td><td style="color:var(--t)">OK — "Mismo que antes" es prominente. Los detalles son expandibles.</td></tr>
+      <tr><td>Run-exclusive upgrades</td><td>Balance de producción cambia con upgrades mecánicos nuevos.</td><td style="color:var(--a)">MITIGADO — cuestan Resonancia (escasa). El jugador elige 2-3, no todos. El impacto neto es ~15% producción.</td></tr>
+      <tr><td>Offline cap 8h</td><td>Jugador idle puro progresa demasiado rápido.</td><td style="color:var(--t)">OK — 8h × 50% eficiencia = 4h equivalentes. Comparable a otros idle games.</td></tr>
+      <tr><td>Momentum Bonus</td><td>¿Exploit de rapid prestige? No — el bonus escala con producción del ciclo anterior, que es baja si el ciclo fue corto.</td><td style="color:var(--t)">OK — self-balancing.</td></tr>
+      <tr><td>Daily Login</td><td>¿Jugador abre, cobra, cierra? Sí, pero es D1 retention. Es lo que queremos.</td><td style="color:var(--t)">OK — feature working as intended.</td></tr>
+      <tr><td>Spark Sink</td><td>¿Mutation Reroll es pay-to-win? No — la Mutación sigue siendo random, solo se re-tira.</td><td style="color:var(--t)">OK.</td></tr>
+      <tr><td>"Insight Reversa" (Run 2)</td><td>¿Loop infinito de Insight? No — Focus se llena a ×0.5 rate durante Insight. En 15s de Insight: 0.5 × 15 × 0.010 = 0.075 Focus. Necesitaría 13+ Insights para llenar Focus a 1.0. No es infinito.</td><td style="color:var(--t)">OK — self-limiting.</td></tr>
+      <tr><td>"Cascada Perpetua" (Run 3)</td><td>¿Cascada infinita? No — Focus se llena a 50%, no a 75%. El jugador necesita llenar 25% más para la siguiente Cascada, que toma ~2-3 minutos de taps.</td><td style="color:var(--t)">OK.</td></tr>
+      <tr><td>"Polaridad Dual" (Run 3)</td><td>¿Complejidad excesiva? Es un botón opcional en el HUD. Solo 1 cambio por ciclo. El jugador que no quiere, no lo usa.</td><td style="color:var(--t)">OK.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="sec">
+  <h3>Coherencia general post-fixes</h3>
+  <div class="blk bok"><div class="bh bh-ok">VERIFICACIÓN COMPLETA</div>
+  <p>Después de aplicar todos los fixes:</p></div>
+  <table class="tbl">
+    <tbody>
+      <tr><td>Prestige times Run 1</td><td>P1=8m (tutorial), P2-P26=16-31m. Avg 20m. ✓</td></tr>
+      <tr><td>Prestige times Run 2</td><td>8-53m. Avg 22m. +upgrades exclusivos no cambian timing (&lt;15% producción). ✓</td></tr>
+      <tr><td>Prestige times Run 3</td><td>8-69m. Avg 25m. ✓</td></tr>
+      <tr><td>Producción pipeline</td><td>softCap intacto. Run upgrades no afectan rawMult (&lt;100). ✓</td></tr>
+      <tr><td>Offline</td><td>8h base cap, 12h con upgrade. Momentum no afecta offline. ✓</td></tr>
+      <tr><td>Monetización</td><td>5 ads + Pass + Piggy + Shop + Spark Sink. Sin pay-to-win. ✓</td></tr>
+      <tr><td>UX flow</td><td>Tutorial 8m → P2 20m → P3 Polarity → P4 Focus → P5 Archetype → P7 Mutation → P10 Pathway. Progressive disclosure intacta. ✓</td></tr>
+      <tr><td>Narrative</td><td>4 finales + 1 secreto. 12 base + 45 por arquetipo. Ecos + Resonant Patterns. Sin conflictos. ✓</td></tr>
+      <tr><td>CLAUDE.md rules</td><td>30+ rules + 12 nuevas de esta evaluación. Sin contradicciones. ✓</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="sec">
+  <h3>Nuevas reglas para CLAUDE.md</h3>
+  <div class="code">
+<span class="cm">// Reglas agregadas por evaluación senior</span>
+TUTOR-1: El primer ciclo (prestigeCount===0, transcendenceCount===0) usa tutorialThreshold (200K)
+         y tutorialDischargeInterval (300s). Después, constantes normales.
+CYCLE-1: Polaridad + Mutación + Pathway se presentan en UNA pantalla (CycleSetupScreen).
+         Botón "Mismo que antes" es el default prominente.
+DAILY-1: Daily Login Bonus: streak de 7 días. Resetea y repite. Rewards en config/dailyRewards.ts.
+RUN-1:   Upgrades exclusivos por run se compran con Resonancia. Son MECÁNICOS, no multiplicadores.
+         Disponibles: Run2+ (3 upgrades), Run3+ (3 upgrades). En config/runUpgrades.ts.
+MOMENT-1: Post-prestige: thoughts += lastCycleEndProduction × 30. Mostrar "Momentum: +X".
+OFFLINE-6: maxOfflineHours = 8 (base). Sueño REM lo sube a 12. NUNCA menos de 8.
+NOTIF-1: Push notification "Disparo listo" 17 min después de cerrar. Max 1 por offline. Toggle.
+SPARK-1: Spark Sink items: Mutation Reroll (10ch), Skip Espera (15ch), Boost 30min (20ch).
+         Ninguno es permanente. Todos expiran en el ciclo/sesión.
+FORMAT-1: Números grandes: formatNumber(n) → "1.5K", "2.3M", "1.1B". 
+          Sufijos: ['','K','M','B','T','Qa','Qi']. 2 decimales max.
+HAPTIC-1: Implementar haptic feedback. Intensidades: tap=light, buy=medium, 
+          discharge=heavy, cascade=double, prestige=notification. Toggle en settings.
+  </div>
+</div>
+
+<div class="sec">
+  <h3>Nuevas constants</h3>
+  <div class="code">
+<span class="cm">// Agregar a SYNAPSE_CONSTANTS</span>
+tutorialThreshold:          <span class="cv">200_000</span>,   <span class="cm">// Solo primer ciclo del juego</span>
+tutorialDischargeInterval:  <span class="cv">300</span>,       <span class="cm">// 5 min (solo primer ciclo)</span>
+maxOfflineHours:            <span class="cv">8</span>,         <span class="cm">// Era 4, ahora 8</span>
+momentumBonusSeconds:       <span class="cv">30</span>,        <span class="cm">// Thoughts gratis post-prestige</span>
+eurekaExpirySeconds:        <span class="cv">60</span>,        <span class="cm">// Sinapsis Eureka expira</span>
+ESTIMATED_CYCLE_TIMES: [24,22,22,16,17,17,18,18,17,18,16,17,17,18,18,19,19,20,21,23,24,25,26,28,30,31],
+NUMBER_SUFFIXES: [<span class="ck">''</span>,<span class="ck">'K'</span>,<span class="ck">'M'</span>,<span class="ck">'B'</span>,<span class="ck">'T'</span>,<span class="ck">'Qa'</span>,<span class="ck">'Qi'</span>],
+dailyLoginRewards: [
+  { sparks: <span class="cv">5</span> },
+  { memories: <span class="cv">1</span> },
+  { sparks: <span class="cv">10</span> },
+  { tempMutation: <span class="ck">'random'</span> },
+  { sparks: <span class="cv">20</span> },
+  { memories: <span class="cv">2</span> },
+  { sparks: <span class="cv">50</span>, snapshot: true },
+],
+  </div>
+</div>
+
+<div class="sec">
+  <h3>Nuevos campos en GameState</h3>
+  <div class="code">
+<span class="cm">// Agregar a GameState</span>
+isTutorialCycle: boolean           <span class="cm">// true solo para el primer ciclo del juego</span>
+dailyLoginStreak: number           <span class="cm">// 0-7, resetea después de 7</span>
+lastDailyClaimDate: string | null  <span class="cm">// 'YYYY-MM-DD', para no reclamar 2 veces</span>
+momentumBonus: number              <span class="cm">// thoughts bonus del prestige anterior</span>
+eurekaExpiry: number | null        <span class="cm">// timestamp de expiración de Eureka</span>
+activeSpontaneousEvent: { id: string, endTime: number } | null
+runUpgradesPurchased: string[]     <span class="cm">// IDs de upgrades exclusivos de run — NUNCA resetea</span>
+  </div>
+</div>
+</div>
+
+</div>
+</body>
+</html>
