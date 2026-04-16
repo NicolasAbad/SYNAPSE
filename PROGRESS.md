@@ -116,6 +116,36 @@ Per CODE-7: read at session start, update at session end.
 - **Cosmetic registries** (`COSMETIC_REGISTRY` in themes, `GLOW_REGISTRY` in connections) are intentionally empty with `TODO Sprint 9` markers. The system architecture is locked in; Sprint 9 only fills lookup tables.
 - **Pattern Tree / archetype / mutation panels** out of scope.
 
+### Session 2026-04-15 (cont'd) — save system + Android fixes
+
+**Created:**
+- `src/engine/save.ts` — `saveGame()`, `loadGame()`, `clearSave()` using Capacitor Preferences directly; `loadGame` calls `migrateState()` on deserialization
+
+**Modified:**
+- `src/store/gameStore.ts` — removed Zustand `persist` middleware (was triggering 10 writes/sec via tick loop → OOM on Android); store is now in-memory only; added `hydrate` action for loading saved state, `handlePrestige` stub with `saveGame()` call, `getSnapshot()` helper that strips actions from state
+- `src/App.tsx` — wired `loadGame()` → `hydrate()` on mount; save on `visibilitychange === 'hidden'`; 30-second `setInterval` safety net; replaced React `onTouchStart` with `addEventListener('touchstart', ..., { passive: false })` + `addEventListener('mousedown', ...)` to fix passive listener error on Android
+- `src/audio/index.ts` — added `void` prefix to `Howler.ctx?.resume()` to suppress "undefined" in Android Logcat
+- `src/ui/HUD.tsx` — removed `dischargeUnlocked` gate on charge dots; ○○○ now always visible at top-center
+- `android/app/src/main/AndroidManifest.xml` — added AdMob test App ID (`ca-app-pub-3940256099942544~3347511713`) to prevent crash on launch before real AdMob account exists
+
+### Save system verification
+- [x] Tick loop never writes to Preferences (confirmed: no Preferences calls in tick.ts/production.ts/formulas.ts)
+- [x] `handlePrestige()` calls `saveGame()` (stub; Sprint 4 fills in reset logic)
+- [x] `visibilitychange === 'hidden'` calls `saveGame()`
+- [x] 30-second `setInterval` safety net calls `saveGame()`
+- [x] `loadGame()` called on app startup via `hydrate()`
+- [x] Only 3 call sites for `saveGame()`: interval, visibility, prestige
+- [x] `src/store/storage.ts` is now dead code (no importers); can be deleted
+
+### Known Issues / Deferred (Sprint 2, updated)
+- **Tick loop visibility pause** not yet implemented (rAF pauses, but `setInterval` keeps running). Low impact (state still ticks correctly), but should pause for battery/correctness.
+- **Discharge countdown text** in HUD not rendered — Sprint 3 will add charge-accumulation logic to tick.
+- **Tab content panels** (Mind/Neurons/Upgrades/Regions bodies) are placeholders — Sprint 3 wires the Neurons buy panel.
+- **Cosmetic registries** (`COSMETIC_REGISTRY` in themes, `GLOW_REGISTRY` in connections) are intentionally empty with `TODO Sprint 9` markers.
+- **`src/store/storage.ts`** is dead code after save system rewrite. Safe to delete.
+- **Neuron buying** not yet available in UI — neurons won't appear on canvas until Sprint 3 NeuronPanel.
+- **Rate shows +0/s** at game start — correct behavior; updates after buying a neuron in Sprint 3.
+
 ### Next Task (Sprint 3 — Neurons + Upgrades + Discharge)
 1. Tick loop: pause `setInterval` on `visibilitychange === 'hidden'` (currently only rAF pauses)
 2. Charge accumulation in `gameTick` using `dischargeAccumTime` + per-tick decrement
@@ -124,3 +154,4 @@ Per CODE-7: read at session start, update at session end.
 5. Wire `triggerDischarge` button (Cascade fires when Focus ≥ 0.75)
 6. Insight activation when `focusBar >= 1.0`; pick mult/duration tier from `insightMult`/`insightDuration`
 7. Haptics: light on tap, medium on buy, heavy on discharge (Capacitor Haptics)
+8. Delete dead `src/store/storage.ts`

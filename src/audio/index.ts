@@ -8,7 +8,7 @@ let unlocked = false;
 
 export function unlockAudioContext(): void {
   if (unlocked) return;
-  Howler.ctx?.resume();
+  void Howler.ctx?.resume();
   unlocked = true;
 }
 

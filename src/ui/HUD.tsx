@@ -107,7 +107,6 @@ export const HUD = memo(function HUD() {
   const showFocus = prestigeCount >= 4;
   const focusPct = clamp01(focus) * 100;
   const consciousnessPct = clamp01(cycleGenerated / Math.max(threshold, 1)) * 100;
-  const dischargeUnlocked = thoughts >= 1000 || charges > 0;
 
   return (
     <div style={styles.layer}>
@@ -117,19 +116,17 @@ export const HUD = memo(function HUD() {
       </div>
       <div style={styles.rate}>{formatRate(rate)}</div>
 
-      {dischargeUnlocked && (
-        <div style={styles.charges} aria-label={t('charges')}>
-          {Array.from({ length: maxCharges }).map((_, i) => (
-            <div
-              key={i}
-              style={{
-                ...styles.charge,
-                background: i < charges ? '#F0A030' : 'transparent',
-              }}
-            />
-          ))}
-        </div>
-      )}
+      <div style={styles.charges} aria-label={t('charges')}>
+        {Array.from({ length: maxCharges }).map((_, i) => (
+          <div
+            key={i}
+            style={{
+              ...styles.charge,
+              background: i < charges ? '#F0A030' : 'transparent',
+            }}
+          />
+        ))}
+      </div>
 
       {showFocus && (
         <div style={styles.focusBar} aria-label={t('focus')}>
@@ -145,4 +142,3 @@ export const HUD = memo(function HUD() {
     </div>
   );
 });
-
