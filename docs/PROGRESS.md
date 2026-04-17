@@ -429,6 +429,23 @@ Sprint 11a TODO for `ALL_RULE_IDS` constant must include all 16 (not 13 as state
 
 ## Session log
 
+### 2026-04-17 — Phase 4 Sprint 1: softCap doc-level fabrication detected and corrected
+
+Phase 4 implementation of softCap per GDD §4 formula produced values that differed from doc-stated "Verified values":
+- GDD claimed `softCap(10_000) ≈ 1723.6`
+- Empirical: `softCap(10_000) = 2754.229` (60% off from claim)
+
+Independent verification confirmed the implementation is correct (formula: `100 × (x/100)^0.72`, exponent constant `0.72` per §31). The doc values were fabricated — likely computed with exponent ~0.62 at writing time and never re-verified when the canonical exponent settled at 0.72.
+
+This is the **second doc-level fabrication** detected during Sprint 1 (first was `calculateThreshold(25,2)` stale 6.3B corrected in Phase 2 prep). Same class as Batch 2 2B-6 mulberry32 snapshot error that was self-flagged during the second audit.
+
+**Actions taken:**
+- GDD §4 "Verified values" section corrected to empirical values
+- `consistency.test.ts` softCap stubs updated (lines ~179-189)
+- No implementation change — code was always correct
+
+**Implication for planning:** elevate Batch 5 6A-2 (snapshot validation gate) from "v1.1 POSTLAUNCH deferred" to "Sprint 11a must-have". Two fabrications in Sprint 1 phases 2-4 demonstrates the pre-launch risk of silent doc drift is higher than estimated. The minimal version (15 min per GDD §35 note) of the gate is a clear-win.
+
 ### 2026-04-17 — Phase 3 Sprint 1: pickWeightedRandom signature divergence resolved
 
 GDD §30 RNG-1 originally specified `pickWeightedRandom` with a spontaneous-event-specific signature (`SpontaneousEventType` constraint + category weights argument). Phase 3 implementation used the generic composable signature `<T>(items: {item: T, weight: number}[], seed: number): T` per Phase 3 brief.

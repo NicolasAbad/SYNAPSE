@@ -167,21 +167,23 @@ describe('Consistency: GDD ↔ constants.ts invariants', () => {
 
 
 describe('Consistency: Production formula (GDD §4)', () => {
+  // Empirical values from Phase 4 Sprint 1 node verification.
+  // Prior claim 1723.6 for softCap(10_000) was fabricated — 60% off.
 
   test.skip('softCap(100) = 100 (identity at threshold)', () => {
     // expect(softCap(100)).toBe(100);
   });
 
-  test.skip('softCap(200) ≈ 164.9', () => {
-    // expect(softCap(200)).toBeCloseTo(164.9, 1);
+  test.skip('softCap(200) ≈ 164.72', () => {
+    // expect(softCap(200)).toBeCloseTo(164.72, 2);
   });
 
-  test.skip('softCap(1000) ≈ 524.8', () => {
-    // expect(softCap(1000)).toBeCloseTo(524.8, 1);
+  test.skip('softCap(1000) ≈ 524.81', () => {
+    // expect(softCap(1000)).toBeCloseTo(524.81, 2);
   });
 
-  test.skip('softCap(10000) ≈ 1723.6', () => {
-    // expect(softCap(10_000)).toBeCloseTo(1723.6, 1);
+  test.skip('softCap(10000) ≈ 2754.23', () => {
+    // expect(softCap(10_000)).toBeCloseTo(2754.23, 2);
   });
 
   test.skip('softCap(x ≤ 100) = x (pass-through below threshold)', () => {

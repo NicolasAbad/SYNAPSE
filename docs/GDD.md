@@ -141,11 +141,13 @@ function softCap(x: number): number {
 }
 ```
 
-**Verified values:**
-- `softCap(100)` = 100
-- `softCap(200)` ≈ 164.9
-- `softCap(1000)` ≈ 524.8
-- `softCap(10_000)` ≈ 1,723.6
+**Verified values (empirically confirmed via node, Phase 4 Sprint 1):**
+- `softCap(100)` = 100 (exact, identity at boundary)
+- `softCap(200)` = 164.71820345351463 (≈ 164.72)
+- `softCap(1000)` = 524.8074602497726  (≈ 524.81)
+- `softCap(10_000)` = 2754.2287033381663 (≈ 2754.23)
+
+These are IEEE 754 bit-exact values from the implementation in `src/engine/production.ts`. Prior audit versions of this section contained fabricated approximations (notably `softCap(10_000) ≈ 1723.6` was off by 60%); corrected Phase 4 Sprint 1. See PROGRESS.md.
 
 **Neuron cost scaling:**
 ```

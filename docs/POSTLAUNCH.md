@@ -54,9 +54,13 @@ If Firebase Crashlytics non-fatal logging proves insufficient during soft launch
 
 Minimal version (15 min effort): hardcoded list of 3-5 canonical snapshots (mulberry32, hash, softCap) checked against the real implementation via a node one-liner. Full version (~2 hours): extract snapshots from docs automatically.
 
-Defer until after v1.0 ships — the second audit itself served as a successful manual catch of the one instance that occurred.
+**Status (post-Phase-4 Sprint 1): ELEVATED to Sprint 11a must-have.**
 
-**Estimated dev:** 1 sprint (5 days).
+Two doc-level fabrications were caught during Sprint 1 implementation: (1) `calculateThreshold(25, 2)` stale 6.3B value in GDD §9 + SPRINTS (caught Phase 2 prep; corrected), (2) `softCap(10_000) ≈ 1723.6` fabricated value in GDD §4 + consistency test (caught Phase 4; corrected). Both passed two manual audits. The minimal Gate 5 (hardcoded list of 3-5 canonical snapshots verified at pre-commit) is now a Sprint 11a deliverable, not a v1.1 item.
+
+Full version (snapshot auto-extraction from docs) remains v1.1+.
+
+**Estimated dev:** 1 sprint (5 days) for full version (deferred); 15 min for minimal Sprint 11a version.
 
 ---
 
