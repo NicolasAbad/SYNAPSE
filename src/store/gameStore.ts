@@ -14,6 +14,7 @@
 import { create } from 'zustand';
 import { SYNAPSE_CONSTANTS } from '../config/constants';
 import type { GameState } from '../types/GameState';
+import { loadGame, saveGame } from './saveGame';
 
 /**
  * Pure default state. Matches GDD §32 100-field enumeration exactly.
@@ -188,15 +189,19 @@ export function createDefaultState(): GameState {
   };
 }
 
-/** Actions on the store. Sprint 1 ships only INIT-1 + reset; most actions land in later sprints. */
+/** Actions on the store. Sprint 1 ships INIT-1, reset, and Phase 7 save/load. */
 export interface GameStoreActions {
   /** INIT-1: populate the 4 impure timestamp fields with mount-time nowTimestamp. Idempotent. */
   initSessionTimestamps: (nowTimestamp: number) => void;
   /** Full reset to createDefaultState — placeholder for Sprint 7 save-load error path. */
   reset: () => void;
+  /** Phase 7: load saved state from Capacitor Preferences; returns true if a save was applied. */
+  loadFromSave: () => Promise<boolean>;
+  /** Phase 7: manual save trigger (used by scheduler + tests). */
+  saveToStorage: () => Promise<void>;
 }
 
-export const useGameStore = create<GameState & GameStoreActions>((set) => ({
+export const useGameStore = create<GameState & GameStoreActions>((set, get) => ({
   ...createDefaultState(),
   initSessionTimestamps: (nowTimestamp) => {
     set((state) => {
@@ -211,4 +216,14 @@ export const useGameStore = create<GameState & GameStoreActions>((set) => ({
     });
   },
   reset: () => set(() => createDefaultState()),
+  loadFromSave: async () => {
+    const loaded = await loadGame();
+    if (loaded === null) return false;
+    // Merge mode (no `true` flag) — preserves action bindings per CLAUDE.md Zustand pitfall rule.
+    set(loaded);
+    return true;
+  },
+  saveToStorage: async () => {
+    await saveGame(get());
+  },
 }));
