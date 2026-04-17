@@ -90,6 +90,27 @@ docs/
 - **Never edit `docs/archive/`** — historical only
 - **Never write files >200 lines** — split by responsibility (CODE-2)
 
+## Common pitfalls (framework-specific gotchas that cause silent failures)
+
+**Zustand store pattern (Sprint 1 Phase 6 discovery):**
+Never use `useGameStore.setState(state, true)` (the replace flag). The `true` flag replaces the WHOLE store object including bound action methods, leaving `initSessionTimestamps`, `reset`, and all other actions `undefined` — subsequent calls fail with cryptic "X is not a function" errors. Always use `setState(state)` (merge mode) which preserves action references. This applies to test setup, save/load flows, and any programmatic state reset.
+
+Correct:
+```ts
+useGameStore.setState(createDefaultState());       // ✓ merges
+useGameStore.setState({ thoughts: 100 });          // ✓ partial
+```
+
+Incorrect:
+```ts
+useGameStore.setState(createDefaultState(), true); // ✗ actions lost
+useGameStore.setState({ ...createDefaultState(), ...actions }, true); // ✗ brittle
+```
+
+For a true reset, prefer calling the `reset()` action (which is itself defined as `() => set(() => createDefaultState())` — Zustand's `set()` preserves actions automatically).
+
+---
+
 ## Anti-invention rules (CRITICAL — read every session)
 
 These rules prevent Claude Code from inventing values, behaviors, or specifications that are not documented. Silent invention is the #1 source of bugs in AI-assisted development.
