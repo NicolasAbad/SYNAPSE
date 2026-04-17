@@ -130,6 +130,10 @@ function makeState(overrides: Partial<GameState> = {}): GameState {
 }
 
 describe('TICK-1 step order (GDD §35)', () => {
+  // NOTE: Step 1 is a no-op per Phase 5 Sprint 1 resolution (cycleTime derived,
+  // not stored). Order position retained in the 12-step narrative; tests below
+  // cover the mutating steps (3-12) where ordering is observable.
+
   test('Step 3 (recalc) runs BEFORE Step 4 (produce) — stale PPS does not poison produce', () => {
     // State has 10 Básicas but effectivePPS stored as 0 (stale). If produce ran
     // before recalc, thoughts would still be 0. Correct order produces 10 × 0.5 × 0.1 = 0.5.

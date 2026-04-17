@@ -275,9 +275,11 @@ Higher levels are more powerful but shorter, rewarding focused burst play.
 
 **Tick logic:**
 ```ts
-// Deterministic via seeded PRNG (CODE-9)
-if (state.cycleTime - state.lastSpontaneousCheck >= randomInRange(240, 360, seed)) {
-  state.lastSpontaneousCheck = state.cycleTime;
+// Deterministic via seeded PRNG (CODE-9).
+// Note: lastSpontaneousCheck stores absolute nowTimestamp (ms since epoch),
+// not a cycleTime offset. See §32 field comment and §35 TICK-1 step 10.
+if ((nowTimestamp - state.lastSpontaneousCheck) / 1000 >= randomInRange(240, 360, seed)) {
+  state.lastSpontaneousCheck = nowTimestamp;
   if (seededRandom(seed) < 0.40) {
     const event = pickWeightedRandom(SPONTANEOUS_POOL, seed);
     applySpontaneousEvent(state, event);
@@ -1843,7 +1845,7 @@ interface GameState {
   resonanceUpgrades: string[];
 
   // === Spontaneous events (3) ===
-  lastSpontaneousCheck: number;                 // cycleTime of last check — RESETS
+  lastSpontaneousCheck: number;                 // absolute timestamp (ms since epoch) of last SPONT-1 check — RESETS
   spontaneousMemoryUsed: boolean;               // RESETS (max 1 Memoria Fugaz/cycle)
   spontaneousInterferenceUsed: boolean;         // RESETS (max 1 Interferencia/cycle)
 
@@ -2464,7 +2466,7 @@ This section consolidates all named rules. Use the ID when referencing in code c
 
 - **TICK-1** *(tick order of operations, second audit 2B-5)*: The 100ms game tick is a pure state reducer: `tick(state: GameState, nowTimestamp: number): GameState`. It executes these 12 steps in strict order every tick. Order is enforced by `tests/tick-order.test.ts` (Sprint 1). Violating order breaks determinism (CODE-9) and TEST-5 reproducibility.
 
-  1. **Timestamp advance** — derive `dt = 100ms` (fixed, never variable). Advance `state.cycleTime += dt`. Do NOT mutate `lastActiveTimestamp` here (that's done on save/background, not tick).
+  1. **Timestamp advance (informational)** — per-tick `dt` is fixed at 100ms. The engine does NOT store `cycleTime` as a field; it is derived at each use site as `(nowTimestamp - state.cycleStartTimestamp)`. This step is retained in the ordering for 12-step narrative continuity but executes no state mutation. (Audit note: earlier drafts of this rule referenced `state.cycleTime += dt` — that field never existed in §32. Resolution deferred to derivation per the Step 6 Discharge pattern. See PROGRESS.md Phase 5 Sprint 1.)
   2. **Expire temporary modifiers** — in order:
      - If `state.insightActive && state.insightEndTime !== null && nowTimestamp >= state.insightEndTime` → clear Insight (active=false, endTime=null, multiplier=1).
      - If `state.activeSpontaneousEvent !== null && state.activeSpontaneousEvent.endTime !== 0 && nowTimestamp >= state.activeSpontaneousEvent.endTime` → clear event.
@@ -2477,8 +2479,8 @@ This section consolidates all named rules. Use the ID when referencing in code c
   6. **Discharge charge accumulation** — if `nowTimestamp - state.dischargeLastTimestamp >= chargeIntervalMinutes × 60_000` → `dischargeCharges = Math.min(dischargeMaxCharges, dischargeCharges + 1)`, `dischargeLastTimestamp = nowTimestamp`.
   7. **Resonant Pattern window expiry** — if state has an active RP-1 tracking window (`cycleNeuronPurchases[0].timestamp + 120_000 < nowTimestamp`) → purge entries outside the 2-minute window (they can no longer contribute to the "5 types within 2 min" condition). Never evaluates success here — success evaluated at prestige (§22 RP-1).
   8. **Mental State triggers** — evaluate triggers in priority order (Eureka > Flow > Hyperfocus > Deep > Dormancy). Only promote if the new state is higher priority than current, OR current is null. Promotion updates `currentMentalState`, `mentalStateExpiry`, and `focusAbove50Since` as applicable. MENTAL-5 Hyperfocus sets `pendingHyperfocusBonus = true` when consumed by Discharge (handled in the discharge action, not tick).
-  9. **Era 3 event activation** — if `state.prestigeCount` in [19, 26] AND no Era 3 event has fired yet for this cycle (tracked via a derived check on `cycleStartTimestamp`) AND `state.cycleTime < 1000` (activate only in first tick of the cycle) → fire the Era 3 event for this prestigeCount. Modal opens.
-  10. **Spontaneous event trigger** — per SPONT-1 / §8: if `state.cycleTime - state.lastSpontaneousCheck >= randomInRange(240, 360, hash(state.cycleStartTimestamp + state.lastSpontaneousCheck))` → update `lastSpontaneousCheck = state.cycleTime`; with `spontaneousTriggerChance (0.40)` chance, pick weighted event and apply.
+  9. **Era 3 event activation** — if `state.prestigeCount` in [19, 26] AND no Era 3 event has fired yet for this cycle (tracked via a derived check on `cycleStartTimestamp`) AND `(nowTimestamp - state.cycleStartTimestamp) < 1000` (activate only in first tick of the cycle, where cycle age < 1 second) → fire the Era 3 event for this prestigeCount. Modal opens.
+  10. **Spontaneous event trigger** — per SPONT-1 / §8: if `(nowTimestamp - state.lastSpontaneousCheck) / 1000 >= randomInRange(240, 360, hash(state.cycleStartTimestamp + state.lastSpontaneousCheck))` (interval is seconds between checks; divide by 1000 to convert ms → seconds) → update `state.lastSpontaneousCheck = nowTimestamp`; with `spontaneousTriggerChance (0.40)` chance, pick weighted event and apply. Note: `lastSpontaneousCheck` stores an absolute timestamp (ms since epoch), NOT a cycleTime offset. See §32 field comment.
   11. **Micro-challenge trigger** — per MICRO-1/§18: if `state.prestigeCount >= 15` AND no active challenge AND `state.cycleGenerated / state.currentThreshold` just crossed `microChallengeTriggerPct (0.30)` AND cooldown respected AND `cycleMicroChallengesAttempted < microChallengeMaxPerCycle` → trigger new challenge via `hash(cycleStartTimestamp + cycleMicroChallengesAttempted)`.
   12. **Anti-spam TAP-1 evaluation** — only evaluate if `state.lastTapTimestamps.length >= 20` (circular buffer filled) AND `nowTimestamp - state.lastTapTimestamps[0] >= 30_000` (30s sustain). If avg interval <150ms AND stddev <20ms → set an internal anti-spam flag (not a field, re-derived per tick) that reduces tap effectiveness to 10% for the next window. Flag auto-clears when tap pattern normalizes.
 

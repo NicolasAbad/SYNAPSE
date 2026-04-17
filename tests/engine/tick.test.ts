@@ -326,6 +326,57 @@ describe('tick — purity', () => {
   });
 });
 
+describe('tick — Step 10 spontaneous event check', () => {
+  // Post-Phase-5 resolution: lastSpontaneousCheck is an absolute timestamp.
+  // If (nowTimestamp - lastSpontaneousCheck) / 1000 >= randomInRange(240, 360, seed),
+  // the field is mutated to nowTimestamp.
+
+  test('mutates lastSpontaneousCheck to nowTimestamp after interval passes', () => {
+    // lastSpontaneousCheck = 0 (initial), nowTimestamp = 2_000_000 → elapsed = 2000s > 240-360s max.
+    const s = makeState({
+      lastSpontaneousCheck: 0,
+      cycleStartTimestamp: 1_000_000,
+    });
+    const { state } = tick(s, 2_000_000);
+    expect(state.lastSpontaneousCheck).toBe(2_000_000);
+  });
+
+  test('does NOT mutate when elapsed is below the seeded interval', () => {
+    // nowTimestamp - lastSpontaneousCheck = 1000ms = 1s, well below the 240s min.
+    const s = makeState({
+      lastSpontaneousCheck: 1_999_000,
+      cycleStartTimestamp: 1_000_000,
+    });
+    const { state } = tick(s, 2_000_000);
+    expect(state.lastSpontaneousCheck).toBe(1_999_000);
+  });
+});
+
+describe('tick — Step 9 Era 3 first-tick window', () => {
+  // Per Phase-5 resolution: "first tick of the cycle" is now
+  // (nowTimestamp - cycleStartTimestamp) < 1000, not state.cycleTime < 1000.
+  // Step 9 body is a TODO stub, so this test only verifies the guard is reachable
+  // (no errors) for in-window vs out-of-window cases.
+
+  test('in-window Era 3: no error (stub TODO is a no-op)', () => {
+    const s = makeState({
+      prestigeCount: 20,
+      cycleStartTimestamp: 100,
+    });
+    // nowTimestamp = 500 → cycle age 400ms, within first-tick window.
+    expect(() => tick(s, 500)).not.toThrow();
+  });
+
+  test('past first-tick window: no error, still a no-op', () => {
+    const s = makeState({
+      prestigeCount: 20,
+      cycleStartTimestamp: 100,
+    });
+    // nowTimestamp = 2_000_000 → cycle age ≫ 1000ms.
+    expect(() => tick(s, 2_000_000)).not.toThrow();
+  });
+});
+
 describe('tick — expiry of temporary modifiers (Step 2)', () => {
   test('Insight expires when insightEndTime passed', () => {
     const s = makeState({

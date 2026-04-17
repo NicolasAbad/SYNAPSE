@@ -4,6 +4,13 @@
 // See §35 rules CODE-9 (determinism), TICK-1 (step order),
 // RP-1 (step 7), SPONT-1 (step 10), MICRO-1 (step 11), TAP-1 (step 12).
 //
+// cycleTime derivation: Sprint 1 Phase 5 resolved a spec gap — §35 TICK-1
+// earlier drafts referenced `state.cycleTime` but §32 never declared it.
+// Resolution (Option B): cycleTime is derived at each use site as
+// `(nowTimestamp - state.cycleStartTimestamp)`. Matches the Step 6 Discharge
+// pattern. `lastSpontaneousCheck` is now an absolute timestamp, not a
+// cycleTime offset. See PROGRESS.md Phase 5 Sprint 1.
+//
 // CODE-2 exception: this file approaches the 200-line cap due to 12
 // ordered steps, each with a stub + TODO comment tracing to its owning
 // sprint. The TODO/Sprint-ref pairs are load-bearing for Sprint 3-7
@@ -12,6 +19,7 @@
 // density (non-comment, non-blank lines) stays well under 200.
 
 import { SYNAPSE_CONSTANTS } from '../config/constants';
+import { NEURON_BASE_RATES } from '../config/neurons';
 import { hash, randomInRange } from './rng';
 import type { GameState } from '../types/GameState';
 
@@ -23,30 +31,20 @@ const HYPERFOCUS_BONUS_WINDOW_MS = 5_000;
 const RP_WINDOW_MS = 120_000;
 const ANTI_SPAM_BUFFER_SIZE = 20;
 
-export interface TickResult {
-  state: GameState;
-  /** Anti-spam flag is derived per-tick, not stored on state. Sprint 3 tap handler reads this. */
-  antiSpamActive: boolean;
-}
-
-/** Base neuron rates from GDD §5. Sprint 3 replaces the inline table with the canonical config. */
-const NEURON_BASE_RATE: Record<string, number> = {
-  basica: 0.5,
-  sensorial: 4.5,
-  piramidal: 32,
-  espejo: 220,
-  integradora: 1_800,
-};
+/**
+ * antiSpamActive is derived per-tick (TICK-1 step 12), not stored in GameState.
+ * Sprint 3's tap handler consumes this to apply the tap-effectiveness penalty.
+ */
+export type TickResult = Readonly<{ state: GameState; antiSpamActive: boolean }>;
 
 function recalcProduction(state: GameState): { base: number; effective: number } {
-  // TODO Sprint 3: move neuron rates into config/neurons.ts; apply polarity, upgrade mults.
+  // TODO Sprint 3: apply polarity, upgrade mults.
   // TODO Sprint 5: apply mutation static mods, pathway restrictions.
   // TODO Sprint 6: apply archetype bonuses, region multipliers.
   // TODO Sprint 7: apply mental state mods, pending Hyperfocus bonus to next Insight.
   let base = 0;
   for (const neuron of state.neurons) {
-    const rate = NEURON_BASE_RATE[neuron.type] ?? 0;
-    base += neuron.count * rate;
+    base += neuron.count * NEURON_BASE_RATES[neuron.type];
   }
   base *= state.connectionMult;
   // TODO Sprint 3-7: softCap the multiplier stack per §4; currently identity.
@@ -73,16 +71,13 @@ export function tick(state: GameState, nowTimestamp: number): TickResult {
   // Shallow-clone so callers treat this as pure; nested arrays/objects are replaced only when modified.
   const s: GameState = { ...state };
 
-  // Step 1: Timestamp advance — SPEC GAP flagged during Phase 5 Sprint 1.
-  // GDD §35 TICK-1 step 1 says `state.cycleTime += dt`, but §32 does NOT declare a
-  // `cycleTime` field in GameState's 110-field enumeration. Adding it would change
-  // the count to 111 and invalidate PRESTIGE_RESET (45), PRESERVE (60), UPDATE (4)
-  // splits. This is a spec gap, not a silent invention — do not resolve here.
-  // Deferred to Nico for reconciliation (see PROGRESS.md). Meanwhile dt is still
-  // fixed at 100ms for the math in steps 4 and later; we just don't store an
-  // accumulator. Derived "how long has this cycle been running" uses
-  // (nowTimestamp - state.cycleStartTimestamp) where callers need it.
-  void TICK_MS; // referenced in step 4; silence linter here
+  // Step 1: Timestamp advance (informational, no-op).
+  // Per Phase 5 Sprint 1 spec gap resolution (Option B): cycleTime is NOT a
+  // GameState field — it's derived at each use site as
+  // `(nowTimestamp - state.cycleStartTimestamp)`. This step is retained in the
+  // 12-step ordering for narrative continuity with §35 TICK-1 but executes no
+  // state mutation. dt is fixed at TICK_MS (100ms) and consumed in step 4.
+  // See PROGRESS.md Phase 5 Sprint 1 for resolution rationale.
 
   // Step 2: Expire temporary modifiers.
   if (s.insightActive && s.insightEndTime !== null && nowTimestamp >= s.insightEndTime) {
@@ -152,25 +147,33 @@ export function tick(state: GameState, nowTimestamp: number): TickResult {
   // Framework placeholder — no-op until Sprint 7 wires trigger functions.
 
   // Step 9: Era 3 event activation.
-  if (s.prestigeCount >= 19 && s.prestigeCount <= 26 && s.cycleStartTimestamp !== 0) {
-    // Using cycleStartTimestamp === 0 as "uninitialized" sentinel per INIT-1.
+  // "First tick of the cycle" per TICK-1 step 9 (post-Phase-5 resolution):
+  // (nowTimestamp - cycleStartTimestamp) < 1000 ms.
+  const cycleAgeMs = nowTimestamp - s.cycleStartTimestamp;
+  if (
+    s.prestigeCount >= 19 &&
+    s.prestigeCount <= 26 &&
+    s.cycleStartTimestamp !== 0 &&
+    cycleAgeMs >= 0 &&
+    cycleAgeMs < 1_000
+  ) {
     // TODO Sprint 6: fire Era 3 event per §23 (prestigeCount → event id → open modal).
   }
 
-  // Step 10: Spontaneous event trigger (SPONT-1) — depends on Step 1 cycleTime gap.
-  // GDD §35 TICK-1 step 10 compares `state.cycleTime - state.lastSpontaneousCheck`
-  // against a seeded random interval in seconds. Without the cycleTime field, Sprint 1
-  // cannot implement this comparison without inventing a units convention for
-  // `lastSpontaneousCheck`. Framework call to randomInRange kept here (determinism-
-  // relevant: proves the seed chain exercises rng.ts) but no state mutation occurs.
-  // TODO Sprint 6: once Step 1 spec gap is resolved, implement the cross-threshold
-  // check, update lastSpontaneousCheck, and roll spontaneousTriggerChance per §8.
+  // Step 10: Spontaneous event trigger (SPONT-1), post-Phase-5 resolution.
+  // `lastSpontaneousCheck` stores an absolute timestamp (ms since epoch), not
+  // a cycleTime offset. See §32 field comment.
   const { spontaneousCheckIntervalMin, spontaneousCheckIntervalMax } = SYNAPSE_CONSTANTS;
-  void randomInRange(
+  const nextCheckSeconds = randomInRange(
     spontaneousCheckIntervalMin,
     spontaneousCheckIntervalMax,
     hash(s.cycleStartTimestamp + s.lastSpontaneousCheck),
   );
+  const secondsSinceLastCheck = (nowTimestamp - s.lastSpontaneousCheck) / 1000;
+  if (secondsSinceLastCheck >= nextCheckSeconds) {
+    s.lastSpontaneousCheck = nowTimestamp;
+    // TODO Sprint 6: roll spontaneousTriggerChance; if success, pick weighted event and apply.
+  }
 
   // Step 11: Micro-challenge trigger (MICRO-1).
   // TODO Sprint 7: implement the cross-threshold check + cooldown + attempt cap + seeded pick per §18.

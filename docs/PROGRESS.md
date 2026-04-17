@@ -429,6 +429,22 @@ Sprint 11a TODO for `ALL_RULE_IDS` constant must include all 16 (not 13 as state
 
 ## Session log
 
+### 2026-04-17 — Phase 5 Sprint 1: cycleTime spec gap resolved (Option B)
+
+Third Sprint-1 doc gap detected (after THRES-1 stale 6.3B and softCap fabrication). This one is structural, not a value error.
+
+GDD §35 TICK-1 steps 1, 9, 10 reference `state.cycleTime`, but §32's 110-field enumeration does not declare it. Adding cycleTime as field 111 would have cascaded to §33 PRESTIGE split, DEFAULT_STATE, consistency tests, INIT-1, and 8+ other locations — all for state that is trivially derivable.
+
+Resolution: cycleTime is DERIVED at each use site as `nowTimestamp - state.cycleStartTimestamp`. Matches the pattern used in Step 6 Discharge (`nowTimestamp - dischargeLastTimestamp`). 110-field invariant preserved.
+
+Semantic change: `lastSpontaneousCheck` reinterpreted from "cycleTime-of-last-check" to "absolute nowTimestamp-of-last-check". Seed chain `hash(cycleStartTimestamp + lastSpontaneousCheck)` still deterministic. §32 field comment updated. §35 TICK-1 steps 1, 9, 10 texts updated. §8 tick-logic code block updated to match.
+
+Implementation: `tick.ts` step 10 now mutates `state.lastSpontaneousCheck = nowTimestamp` (previously stubbed — the stub was honoring the cycleTime spec that couldn't be satisfied without inventing state). Step 9 first-tick check uses `(nowTimestamp - cycleStartTimestamp) < 1000`. Step 1 is an informational no-op.
+
+`NEURON_BASE_RATES` moved from inline `tick.ts` constant to `src/config/neurons.ts` (new file, Sprint 1 scope per review). Sprint 3 will extend neurons.ts with unlock conditions, display metadata, and cost-scaling helpers.
+
+Cumulative Sprint 1 doc-vs-code gaps: 3 (Phase 2 prep 6.3B, Phase 4 softCap 1723.6, Phase 5 cycleTime structural). Confirms the Sprint 11a snapshot-validation-gate elevation is well-placed.
+
 ### 2026-04-17 — Phase 4 Sprint 1: softCap doc-level fabrication detected and corrected
 
 Phase 4 implementation of softCap per GDD §4 formula produced values that differed from doc-stated "Verified values":
