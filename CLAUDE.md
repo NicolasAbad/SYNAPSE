@@ -70,6 +70,7 @@ docs/
 ## Architecture rules (CODE-1 through CODE-9)
 - **CODE-1:** ZERO hardcoded game values. Every number in `config/constants.ts`, every player-facing string in `config/strings/{lang}.ts` via `t('key')`. Only exceptions: 0, 1, -1, array indices, CSS values.
 - **CODE-2:** MAX 200 lines per file, MAX 50 lines per function. One file = one purpose. Dependency flow: `config → engine → store → ui` (never backward). No circular imports.
+  - **Exception:** pure type definition files with >100 fields may exceed the 200-line cap IF the excess is entirely from documentation/section comments that aid audit and cross-reference. The exception must be documented in a file-level docstring citing this clause. As of post-2nd-audit, the only file under this exception is `src/types/GameState.ts` (214 lines, 110 fields).
 - **CODE-3:** Sprint is NOT done until every checkbox in `docs/SPRINTS.md` for that sprint is checked (AI checks + Player tests + Sprint tests).
 - **CODE-4:** Canvas — rAF at 60fps (visual only), separate 100ms game tick. Touch via `touchstart` not `click`. `touch-action: manipulation`. Safe areas via `env(safe-area-inset-*)`. Max 80 visible nodes. Pre-render glow.
 - **CODE-5:** Mobile — AudioContext unlock on first tap. `overscroll-behavior: none`. Android back button closes modals or minimizes. `Math.floor()` all displayed numbers. Epsilon tolerance for threshold comparisons.
