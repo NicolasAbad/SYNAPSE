@@ -1,0 +1,28 @@
+{
+  "$schema": "https://code.claude.com/schemas/settings.json",
+  "permissions": {
+    "deny": [
+      "Bash(rm -rf *)",
+      "Bash(git push --force)",
+      "Bash(git push -f)",
+      "Bash(npm publish*)"
+    ],
+    "requireConfirm": [
+      "Bash(git reset --hard*)",
+      "Bash(git rebase*)",
+      "Bash(npx cap*)",
+      "Write(docs/archive/**)"
+    ]
+  },
+  "hooks": {
+    "beforeEdit": {
+      "docs/archive/**": "echo 'WARNING: editing archived doc — archived docs should not be modified. Use the current doc instead.' && exit 1",
+      "docs/POSTLAUNCH.md": "echo 'WARNING: editing POSTLAUNCH.md — this is v1.5+ content and should NOT be implemented in v1.0 sprints.'"
+    },
+    "afterEdit": {
+      "src/engine/**/*.ts": "echo 'Reminder: engine files must not use Math.random() or Date.now() (CODE-9)'",
+      "src/**/*.ts": "echo 'Reminder: check file is under 200 lines (CODE-2) and uses constants from config/ (CODE-1)'"
+    }
+  },
+  "systemPrompt": "This is the SYNAPSE project — a mobile idle/incremental game. Always read docs/PROGRESS.md at session start. Follow rules CODE-1 through CODE-9 in CLAUDE.md strictly. When in doubt about mechanics, defer to docs/GDD.md. When in doubt about sprint scope, defer to docs/SPRINTS.md. Never implement features marked v1.5+ in docs/POSTLAUNCH.md during v1.0 development."
+}

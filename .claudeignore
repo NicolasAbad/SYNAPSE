@@ -1,0 +1,109 @@
+# Ignore from Claude Code auto-context discovery.
+# These files should not be pulled into context for general tasks.
+# Note: .claudeignore does not PREVENT access — just excludes from auto-discovery.
+# For secrets, use permissions.deny in .claude/settings.json instead.
+
+# ═══════════════════════════════════════════════════════════════════
+# SPRINT-SPECIFIC CONTEXT MANAGEMENT (post-2nd-audit)
+# ═══════════════════════════════════════════════════════════════════
+# Comment / uncomment these lines based on current sprint.
+# Rule: hide what's not needed for current sprint.
+
+# NARRATIVE.md is ONLY needed for Sprint 6 (Archetypes + Endings narrative).
+# Keep it hidden for all other sprints.
+docs/NARRATIVE.md
+
+# POSTLAUNCH.md is v1.1+ content and should NEVER be loaded during v1.0 dev.
+# Do NOT comment this line. Ever. Until v1.0 has shipped.
+docs/POSTLAUNCH.md
+
+# UI_MOCKUPS.html is a large visual reference — Claude Code can read it on
+# demand (Sprints 2, 11b), but should not auto-load it.
+docs/UI_MOCKUPS.html
+
+# ═══════════════════════════════════════════════════════════════════
+# Dependencies
+# ═══════════════════════════════════════════════════════════════════
+node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# ═══════════════════════════════════════════════════════════════════
+# Build artifacts
+# ═══════════════════════════════════════════════════════════════════
+dist/
+build/
+out/
+.next/
+.vite/
+*.tsbuildinfo
+
+# ═══════════════════════════════════════════════════════════════════
+# Native build outputs (Capacitor — Sprint 11b+)
+# ═══════════════════════════════════════════════════════════════════
+ios/App/build/
+ios/App/Pods/
+android/app/build/
+android/.gradle/
+android/build/
+android/local.properties
+
+# ═══════════════════════════════════════════════════════════════════
+# Test coverage / reports
+# ═══════════════════════════════════════════════════════════════════
+coverage/
+.nyc_output/
+test-results/
+playwright-report/
+*.xml
+*.tap
+
+# ═══════════════════════════════════════════════════════════════════
+# IDE / OS
+# ═══════════════════════════════════════════════════════════════════
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# ═══════════════════════════════════════════════════════════════════
+# Logs
+# ═══════════════════════════════════════════════════════════════════
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# ═══════════════════════════════════════════════════════════════════
+# Environment files (contain secrets — should also be in .gitignore)
+# ═══════════════════════════════════════════════════════════════════
+.env
+.env.local
+.env.*.local
+.env.production
+
+# ═══════════════════════════════════════════════════════════════════
+# Firebase
+# ═══════════════════════════════════════════════════════════════════
+.firebase/
+firebase-debug.log
+
+# ═══════════════════════════════════════════════════════════════════
+# Capacitor sync artifacts
+# ═══════════════════════════════════════════════════════════════════
+capacitor.config.json.bak
+
+# ═══════════════════════════════════════════════════════════════════
+# Game simulation outputs (large CSV files from Sprint 8c TEST-5)
+# ═══════════════════════════════════════════════════════════════════
+sim/output/
+sim/results/
+*.csv
+
+# ═══════════════════════════════════════════════════════════════════
+# Archive — historical docs not relevant to current work
+# ═══════════════════════════════════════════════════════════════════
+docs/archive/
