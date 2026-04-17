@@ -429,6 +429,17 @@ Sprint 11a TODO for `ALL_RULE_IDS` constant must include all 16 (not 13 as state
 
 ## Session log
 
+### 2026-04-17 — Sprint 1 prep: doc fixes caught during pre-implementation read
+
+Post-audit doc fixes caught while reading GDD/SPRINTS/consistency_test.ts end-to-end before starting Sprint 1. No code written yet.
+
+- **THRES-1 stale example value (Batch 3 4A-1 followup):** GDD §9 and SPRINTS.md §Sprint 1 both cited `calculateThreshold(25, 2) === 6_300_000_000` with comment "1.05B × 6.0". Batch 3 4A-1 rebalanced `baseThresholdTable[25]` from 1.05B to 7.0B, making the correct value `42_000_000_000` (7B × 6.0). Fixed both locations; comment updated to "7B × 6.0". The consistency test at `tests/consistency.test.ts:242` already asserted the new 7B value — no test change required there.
+- **consciousnessThreshold stub deleted from consistency test:** Per Batch 2 2B-3, `consciousnessThreshold` was removed from SYNAPSE_CONSTANTS as a duplicate of `baseThresholdTable[0]`. The `test.skip` stub referencing it was orphaned and has been deleted. Consciousness bar trigger uses CORE-10 (`0.5 × currentThreshold`), not a separate constant.
+
+**Files modified:** `docs/GDD.md` (§9 line 341), `docs/SPRINTS.md` (§Sprint 1 line 188), `tests/consistency.test.ts` (deleted orphan stub).
+
+**Outcome:** Docs now internally consistent with Batch 2/3 rule set. Sprint 1 implementation can proceed.
+
 ### 2026-04-17 — Second senior audit (22 findings across 5 batches)
 
 - 22 findings total: 1 BLOCKER, 5 CRITICAL, 9 HIGH, 4 MEDIUM, 2 LOW, 1 IMPROVEMENT (deferred)

@@ -338,7 +338,7 @@ function calculateCurrentThreshold(state: GameState): number {
 }
 ```
 
-Verified values: `calculateThreshold(0, 0) === 800_000` (P0→P1 Run 1), `calculateThreshold(0, 1) === 2_800_000` (P0→P1 Run 2, 800K × 3.5), `calculateThreshold(25, 2) === 6_300_000_000` (P25→P26 Run 3, 1.05B × 6.0). With `isTutorialCycle: true`, `calculateCurrentThreshold` returns `50_000` instead of 800K for P0→P1.
+Verified values: `calculateThreshold(0, 0) === 800_000` (P0→P1 Run 1), `calculateThreshold(0, 1) === 2_800_000` (P0→P1 Run 2, 800K × 3.5), `calculateThreshold(25, 2) === 42_000_000_000` (P25→P26 Run 3, 7B × 6.0). With `isTutorialCycle: true`, `calculateCurrentThreshold` returns `50_000` instead of 800K for P0→P1.
 
 **Era 1 — El Despertar (P1-P9)**
 - Bioluminescent aesthetic

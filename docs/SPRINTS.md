@@ -185,7 +185,7 @@ Scaffold the project, implement the engine primitives and save system.
 - [ ] Unit: `softCap()` exact values for 0, 100, 200, 1000, 10000
 - [ ] Unit: neuron cost scaling `baseCost × 1.28^owned` for owned=0..50
 - [ ] Unit: `GameState` JSON round-trip preserves all 110 fields
-- [ ] Unit: `calculateThreshold(p, t)` pure function — `calculateThreshold(0, 0) === 800_000`, `calculateThreshold(0, 1) === 2_800_000`, `calculateThreshold(25, 2) === 6_300_000_000`. Out-of-range `p` clamps to `[0, 25]`, out-of-range `t` clamps to `[0, 5]`. Uses `RUN_THRESHOLD_MULT[t]` correctly (THRES-1, §9).
+- [ ] Unit: `calculateThreshold(p, t)` pure function — `calculateThreshold(0, 0) === 800_000`, `calculateThreshold(0, 1) === 2_800_000`, `calculateThreshold(25, 2) === 42_000_000_000`. Out-of-range `p` clamps to `[0, 25]`, out-of-range `t` clamps to `[0, 5]`. Uses `RUN_THRESHOLD_MULT[t]` correctly (THRES-1, §9).
 - [ ] Unit: `calculateCurrentThreshold(state)` — with `isTutorialCycle: true, transcendenceCount: 0` → returns `50_000`. With `isTutorialCycle: false, prestigeCount: 0, transcendenceCount: 0` → returns `800_000` (TUTOR-2).
 - [ ] Unit: `DEFAULT_STATE` has exactly 110 keys (assert count + assert each is in GameState)
 - [ ] Unit: tick at 100ms accumulates thoughts correctly over 10 seconds

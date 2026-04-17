@@ -64,10 +64,6 @@ describe('Consistency: GDD ↔ constants.ts invariants', () => {
     // expect(SYNAPSE_CONSTANTS.tutorialDischargeMult).toBe(3.0);
   });
 
-  test.skip('consciousnessThreshold = 800000 (GDD §31)', () => {
-    // expect(SYNAPSE_CONSTANTS.consciousnessThreshold).toBe(800_000);
-  });
-
   test.skip('costMult = 1.28 (GDD §31)', () => {
     // expect(SYNAPSE_CONSTANTS.costMult).toBe(1.28);
   });
