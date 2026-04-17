@@ -2016,7 +2016,7 @@ Historical note: old docs claimed 105, actual interface had 104 (BUG-D discrepan
 
 ### DEFAULT_STATE non-trivial initial values (second audit 2B-1b)
 
-The majority of `DEFAULT_STATE`'s 110 fields initialize to falsy defaults implied by their TypeScript type (0 for numbers, false for booleans, null for `T | null`, [] for arrays, {} for records). Only these fields have non-falsy initial values — Sprint 1 must set them explicitly:
+The majority of `DEFAULT_STATE`'s 110 fields initialize to falsy defaults implied by their TypeScript type (0 for numbers, false for booleans, null for `T | null`, [] for arrays, {} for records). These 12 fields have non-falsy initial values (updated Phase 6 Sprint 1 — `insightMultiplier` added, see PROGRESS.md) — Sprint 1 must set them explicitly:
 
 ```ts
 export function createDefaultState(): GameState {
@@ -2034,6 +2034,7 @@ export function createDefaultState(): GameState {
     ],
     connectionMult: 1,                         // 1 neuron type at start (no pairs)
     dischargeMaxCharges: 2,                    // §7 base for P0-P9
+    insightMultiplier: 1,                      // identity multiplier; matches §33 PRESTIGE_RESET and TICK-1 step 2 exit (added Phase 6 Sprint 1, §32 gap fix)
     focusFillRate: 0.01,                       // base focusFillPerTap (no upgrades yet)
     currentOfflineCapHours: 4,                 // baseOfflineCapHours
     currentOfflineEfficiency: 0.50,            // baseOfflineEfficiency

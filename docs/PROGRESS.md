@@ -429,6 +429,23 @@ Sprint 11a TODO for `ALL_RULE_IDS` constant must include all 16 (not 13 as state
 
 ## Session log
 
+### 2026-04-17 — Phase 6 Sprint 1: insightMultiplier default omission resolved
+
+Fourth Sprint-1 doc-vs-spec gap detected (after THRES-1 stale 6.3B, softCap 1723.6 fabrication, cycleTime structural). This one is a coverage gap — §32 DEFAULT_STATE block enumerated 11 non-trivial initial values, but `insightMultiplier` should have been the 12th.
+
+Three sources of truth all point to `insightMultiplier = 1` as the rest state:
+- §33 PRESTIGE_RESET writes `insightMultiplier: 1` on prestige
+- §35 TICK-1 step 2 clears to "multiplier=1" on Insight expiration
+- Identity semantic: `1` = no-op multiplier; `0` would zero production silently if a future caller forgets the `insightActive` guard
+
+Resolution: `createDefaultState()` sets `insightMultiplier: 1` (12th non-trivial initial value). §32 block updated. No implementation beyond adding one line + incrementing the count.
+
+Claude Code caught this via pre-flight ambiguity check per the Phase 6 prompt's rule (1) on ambiguous defaults. The gap would otherwise have produced a first-cycle state with `insightMultiplier=0` that differs from every post-prestige state (always 1) — invisible in normal play (guarded by `insightActive`), but would have caused subtle failures if the guard slipped.
+
+**Tick test helper audit (FIX 3):** both `makeState` helpers in `tests/engine/tick.test.ts` and `tests/engine/tick-order.test.ts` already had `insightMultiplier: 1` pre-emptively set during Phase 5. Claude Code picked the safe identity value by instinct during Phase 5 fixture construction; no update needed here.
+
+Cumulative Sprint 1 doc gaps: 4 (Phase 2 prep 6.3B, Phase 4 softCap 1723.6, Phase 5 cycleTime structural, Phase 6 insightMultiplier omission). Confirms Sprint 11a snapshot-validation-gate elevation remains well-placed. All 4 gaps were structural/numeric quality issues in pre-existing docs, not implementation errors.
+
 ### 2026-04-17 — Phase 5 Sprint 1: cycleTime spec gap resolved (Option B)
 
 Third Sprint-1 doc gap detected (after THRES-1 stale 6.3B and softCap fabrication). This one is structural, not a value error.
