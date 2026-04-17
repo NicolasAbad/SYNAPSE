@@ -1557,28 +1557,46 @@ function randomInRange(min: number, max: number, seed: number): number {
 }
 
 /**
- * pickWeightedRandom — deterministic weighted pick from pool of events.
- * Pool items must have a `type` field matching the weights map keys.
- * Returns one item. Used for spontaneous event type selection.
+ * pickWeightedRandom — generic weighted-random selection over items with positive weights.
+ * Deterministic per seed. Returns the item whose cumulative weight range contains
+ * seededRandom(seed) × totalWeight.
  */
-function pickWeightedRandom<T extends { type: SpontaneousEventType }>(
-  pool: T[],
+function pickWeightedRandom<T>(
+  items: Array<{ item: T; weight: number }>,
   seed: number,
-  weights: { positive: number; neutral: number; negative: number } = SYNAPSE_CONSTANTS.spontaneousWeights,
 ): T {
-  // Step 1: choose category from weighted triangle
-  const r1 = seededRandom(seed);
-  const chosenType: SpontaneousEventType =
-    r1 < weights.positive ? 'positive'
-    : r1 < weights.positive + weights.neutral ? 'neutral'
-    : 'negative';
-  // Step 2: pick uniformly within chosen type (use hash-derived second seed to avoid correlation with r1)
-  const subPool = pool.filter(x => x.type === chosenType);
-  if (subPool.length === 0) return pool[0];  // defensive: shouldn't happen if pool is well-typed
-  const r2 = seededRandom(hash(seed + 1));
-  return subPool[Math.floor(r2 * subPool.length)];
+  let totalWeight = 0;
+  for (const entry of items) totalWeight += entry.weight;
+  const roll = seededRandom(seed) * totalWeight;
+  let cumulative = 0;
+  for (const entry of items) {
+    cumulative += entry.weight;
+    if (roll < cumulative) return entry.item;
+  }
+  // Reachable only via float rounding when roll ≈ totalWeight exactly.
+  return items[items.length - 1].item;
 }
 ```
+
+Generic weighted-random selection over an array of items with positive weights. Used throughout the engine for any weighted pick (Mutations, Spontaneous events, Micro-challenges, etc.).
+
+For two-step category-then-uniform picks (e.g. SPONT-1 which first picks a positive/neutral/negative category, then picks uniformly within that category), compose two calls:
+
+```ts
+// Step 1: weighted category pick via pickWeightedRandom
+const category = pickWeightedRandom([
+  { item: 'positive', weight: spontaneousWeights.positive },
+  { item: 'neutral',  weight: spontaneousWeights.neutral  },
+  { item: 'negative', weight: spontaneousWeights.negative },
+], seed);
+
+// Step 2: uniform pick within category via randomInRange
+const candidates = pool.filter(e => e.type === category);
+const idx = randomInRange(0, candidates.length - 1, hash(`${seed}:cat-${category}`));
+return candidates[idx];
+```
+
+Sprint 6 (spontaneous events) will implement this composition in `src/engine/spontaneousEvents.ts` as `pickSpontaneousEvent()`.
 
 **RNG verification (Sprint 1 snapshot test):**
 - `mulberry32(12345)()` first 3 values: `0.9797282677609473`, `0.3067522644996643`, `0.484205421525985` (computed with the implementation above; exact to IEEE 754 double precision). Sprint 1 asserts these exact values — any drift in the PRNG implementation fails the test.

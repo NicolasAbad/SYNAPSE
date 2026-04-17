@@ -429,6 +429,16 @@ Sprint 11a TODO for `ALL_RULE_IDS` constant must include all 16 (not 13 as state
 
 ## Session log
 
+### 2026-04-17 — Phase 3 Sprint 1: pickWeightedRandom signature divergence resolved
+
+GDD §30 RNG-1 originally specified `pickWeightedRandom` with a spontaneous-event-specific signature (`SpontaneousEventType` constraint + category weights argument). Phase 3 implementation used the generic composable signature `<T>(items: {item: T, weight: number}[], seed: number): T` per Phase 3 brief.
+
+The generic version is strictly more general — the original two-step category pick can be composed from `pickWeightedRandom` + `randomInRange`. GDD §30 updated to reflect the implemented signature with an inline composition recipe for two-step picks.
+
+Sprint 6 (spontaneous events) will implement `pickSpontaneousEvent()` in `src/engine/spontaneousEvents.ts` using this composition pattern.
+
+No behavioral change vs spec — outcomes identical given same seed. Flagged in case Sprint 6 auditor needs context.
+
 ### 2026-04-17 — Sprint 1 prep: doc fixes caught during pre-implementation read
 
 Post-audit doc fixes caught while reading GDD/SPRINTS/consistency_test.ts end-to-end before starting Sprint 1. No code written yet.
