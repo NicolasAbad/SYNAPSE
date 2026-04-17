@@ -4,10 +4,6 @@
 
 # Dependencies
 node_modules/
-package-lock.json
-# NOTE: keep yarn.lock / pnpm-lock.yaml IF you use those package managers
-# (committing lockfile is standard practice). For npm, package-lock.json
-# is typically committed — if you use npm, remove that line above.
 
 # Build artifacts
 dist/
