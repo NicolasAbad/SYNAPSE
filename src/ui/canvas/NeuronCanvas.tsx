@@ -8,20 +8,56 @@
  * - Re-apply DPR on window resize
  * - Clean up listeners + cancel rAF on unmount
  *
- * React contract: no per-frame re-renders. The canvas element is
- * created once; all drawing happens via the ref + imperative ctx.
- * Per CODE-4 "rAF at 60fps (visual only), separate 100ms game tick" —
- * this component is visual-only; game state advances in the 100ms
- * tick (Sprint 1 engine), not in this render loop.
+ * Phase 3 additions:
+ * - onPointerDown handler: hit-test + minimum-thought increment + AudioContext unlock
+ * - First-tap stub: console.debug('tap:first-tap') — Sprint 6 wires to narrative fragment fade-in
+ *
+ * Event type choice: React `onPointerDown` covers touch + mouse + pen with a
+ * unified API and fires immediately (no 300ms click delay). CODE-4 says
+ * "touchstart not click" — PointerEvent satisfies the intent while enabling
+ * desktop dev/test. `touch-action: manipulation` on the canvas suppresses
+ * double-tap zoom while preserving pan/pinch per mobile expectations.
+ *
+ * React contract: no per-frame re-renders. The canvas element is created
+ * once; all drawing happens via the ref + imperative ctx. Per CODE-4
+ * "rAF at 60fps (visual only), separate 100ms game tick" — this component
+ * is visual-only; game state advances in the 100ms tick.
  */
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, type PointerEvent as ReactPointerEvent } from 'react';
 import { useGameStore } from '../../store/gameStore';
+import { unlockAudioOnFirstTap } from './audioUnlock';
 import { setupHiDPICanvas } from './dpr';
 import { BIOLUMINESCENT_THEME, draw } from './renderer';
+import { testHit } from './tapHandler';
 
 export function NeuronCanvas() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const dimsRef = useRef<{ width: number; height: number }>({ width: 0, height: 0 });
+  const firstTapFiredRef = useRef(false);
+
+  const handlePointerDown = (ev: ReactPointerEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const tapX = ev.clientX - rect.left;
+    const tapY = ev.clientY - rect.top;
+
+    // AudioContext unlock — iOS Safari requires first user gesture (CODE-5).
+    void unlockAudioOnFirstTap();
+
+    const state = useGameStore.getState();
+    const result = testHit(tapX, tapY, state, dimsRef.current.width, dimsRef.current.height);
+    if (!result.hit) return;
+
+    // First-tap side effect stub — Sprint 6 replaces with narrative event bus.
+    if (!firstTapFiredRef.current) {
+      firstTapFiredRef.current = true;
+      console.debug('tap:first-tap');
+    }
+
+    useGameStore.getState().incrementThoughtsByMinTap();
+  };
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -29,7 +65,7 @@ export function NeuronCanvas() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    let dims = setupHiDPICanvas(canvas, ctx);
+    dimsRef.current = setupHiDPICanvas(canvas, ctx);
     const startTime = performance.now();
     let rafId = 0;
     let paused = false;
@@ -38,7 +74,7 @@ export function NeuronCanvas() {
       if (paused) return;
       const elapsedMs = performance.now() - startTime;
       const state = useGameStore.getState();
-      draw(ctx, state, BIOLUMINESCENT_THEME, dims, elapsedMs);
+      draw(ctx, state, BIOLUMINESCENT_THEME, dimsRef.current, elapsedMs);
       rafId = requestAnimationFrame(tick);
     };
 
@@ -53,7 +89,7 @@ export function NeuronCanvas() {
     };
 
     const handleResize = () => {
-      dims = setupHiDPICanvas(canvas, ctx);
+      dimsRef.current = setupHiDPICanvas(canvas, ctx);
     };
 
     document.addEventListener('visibilitychange', handleVisibility);
@@ -73,6 +109,7 @@ export function NeuronCanvas() {
       data-testid="neuron-canvas"
       className="block w-full h-full"
       style={{ touchAction: 'manipulation' }}
+      onPointerDown={handlePointerDown}
     />
   );
 }

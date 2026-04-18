@@ -199,6 +199,12 @@ export interface GameStoreActions {
   loadFromSave: () => Promise<boolean>;
   /** Phase 7: manual save trigger (used by scheduler + tests). */
   saveToStorage: () => Promise<void>;
+  /**
+   * Sprint 2 Phase 3 stub: adds the minimum tap floor (baseTapThoughtMin = 1).
+   * Sprint 3 replaces with the full TAP-2 formula (focus fill + anti-spam
+   * buffer + effectiveProductionPerSecond × baseTapThoughtPct).
+   */
+  incrementThoughtsByMinTap: () => void;
 }
 
 export const useGameStore = create<GameState & GameStoreActions>((set, get) => ({
@@ -226,4 +232,6 @@ export const useGameStore = create<GameState & GameStoreActions>((set, get) => (
   saveToStorage: async () => {
     await saveGame(get());
   },
+  incrementThoughtsByMinTap: () =>
+    set((state) => ({ thoughts: state.thoughts + SYNAPSE_CONSTANTS.baseTapThoughtMin })),
 }));

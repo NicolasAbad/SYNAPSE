@@ -157,6 +157,10 @@ export const CANVAS = {
   // Circle stroke + fill style (matches UI_MOCKUPS canvas section).
   neuronStrokeWidth: 1.5,
   neuronFillOpacityHex: '30', // 2-digit hex alpha suffix (~19% fill)
+  // Tap hit-area enforcement (Sprint 2 Phase 3 — CODE-4 touch targets).
+  // iOS 44pt / Android 48dp minimum ÷ 2 = 24 CSS px radius.
+  // Hit radius per neuron = max(visualRadius, minHitRadiusPx).
+  minHitRadiusPx: 24,
   // Deterministic scatter layout for multi-neuron rendering (Phase 3+).
   scatterGoldenAngle: 2.399, // ≈ 137.5° in radians — natural spiral
   scatterBaseRadius: 40, // distance from canvas center for first scattered neuron

@@ -3,6 +3,7 @@
 
 import { beforeEach, describe, expect, test } from 'vitest';
 import { createDefaultState, useGameStore } from '../../src/store/gameStore';
+import { SYNAPSE_CONSTANTS } from '../../src/config/constants';
 import type { GameState } from '../../src/types/GameState';
 
 describe('createDefaultState — field count and purity', () => {
@@ -175,5 +176,46 @@ describe('useGameStore — reset action', () => {
     expect(s.prestigeCount).toBe(0);
     expect(s.isTutorialCycle).toBe(true);
     expect(s.insightMultiplier).toBe(1);
+  });
+});
+
+// Sprint 2 Phase 3: minimum-floor tap action (stub; Sprint 3 replaces with TAP-2).
+describe('useGameStore — incrementThoughtsByMinTap action', () => {
+  beforeEach(() => {
+    useGameStore.getState().reset();
+  });
+
+  test('adds exactly SYNAPSE_CONSTANTS.baseTapThoughtMin to thoughts', () => {
+    const before = useGameStore.getState().thoughts;
+    useGameStore.getState().incrementThoughtsByMinTap();
+    const after = useGameStore.getState().thoughts;
+    expect(after - before).toBe(SYNAPSE_CONSTANTS.baseTapThoughtMin);
+  });
+
+  test('two taps add 2 × baseTapThoughtMin', () => {
+    useGameStore.getState().incrementThoughtsByMinTap();
+    useGameStore.getState().incrementThoughtsByMinTap();
+    expect(useGameStore.getState().thoughts).toBe(SYNAPSE_CONSTANTS.baseTapThoughtMin * 2); // CONST-OK: arithmetic intrinsic
+  });
+
+  test('does not mutate unrelated fields', () => {
+    const before = useGameStore.getState();
+    const memBefore = before.memories;
+    const focusBefore = before.focusBar;
+    const prestigeBefore = before.prestigeCount;
+    useGameStore.getState().incrementThoughtsByMinTap();
+    const after = useGameStore.getState();
+    expect(after.memories).toBe(memBefore);
+    expect(after.focusBar).toBe(focusBefore);
+    expect(after.prestigeCount).toBe(prestigeBefore);
+  });
+
+  test('action references preserved after call (Zustand pitfall per CLAUDE.md)', () => {
+    const beforeRef = useGameStore.getState().incrementThoughtsByMinTap;
+    useGameStore.getState().incrementThoughtsByMinTap();
+    const afterRef = useGameStore.getState().incrementThoughtsByMinTap;
+    expect(afterRef).toBe(beforeRef);
+    expect(useGameStore.getState().reset).toBeTypeOf('function');
+    expect(useGameStore.getState().initSessionTimestamps).toBeTypeOf('function');
   });
 });

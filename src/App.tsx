@@ -22,6 +22,9 @@ export function App() {
 
   useSaveScheduler();
 
+  // Phase 3 placeholder readout — Phase 5 replaces with real HUD (thoughts TL, rate TR, etc).
+  const thoughts = useGameStore((s) => s.thoughts);
+
   return (
     <main
       style={{
@@ -35,15 +38,28 @@ export function App() {
         fontFamily: 'var(--font-body)',
       }}
     >
-      <h1
+      <header
         style={{
-          padding: 'var(--spacing-4)',
-          margin: 0,
-          fontSize: 'var(--text-xl)',
+          padding: 'var(--spacing-4)', // CONST-OK: CSS custom property ref (CODE-1 exception)
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'baseline',
+          gap: 'var(--spacing-4)', // CONST-OK: CSS custom property ref (CODE-1 exception)
         }}
       >
-        SYNAPSE
-      </h1>
+        <h1 style={{ margin: 0, fontSize: 'var(--text-xl)' }}>SYNAPSE</h1>
+        <div
+          data-testid="thoughts-readout"
+          style={{
+            fontFamily: 'var(--font-mono)',
+            fontVariantNumeric: 'tabular-nums',
+            color: 'var(--color-thoughts-counter)',
+            fontWeight: 'var(--font-weight-bold)',
+          }}
+        >
+          Thoughts: {Math.floor(thoughts)}
+        </div>
+      </header>
       <div style={{ flex: 1, position: 'relative', minHeight: 0 }}>
         <NeuronCanvas />
       </div>

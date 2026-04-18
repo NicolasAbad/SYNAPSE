@@ -547,6 +547,69 @@ Sprint 11a TODO for `ALL_RULE_IDS` constant must include all 16 (not 13 as state
 
 ## Session log
 
+### 2026-04-17 — Sprint 2 Phase 3: tap handler + AudioContext + hit-testing
+
+Phase 3 delivers tap-input plumbing. NARROW scope: hit-testing, minimum-thought increment, AudioContext unlock, first-tap stub. All Sprint 3 game logic (Focus Bar fill, Insight, full TAP-2 formula, anti-spam wiring, haptics, Undo toast, tutorial hints, Discharge) remains deferred to Sprint 3 per the sprint-boundary discipline — verified none leaked in.
+
+**Files created:**
+- `src/ui/canvas/tapHandler.ts` — pure `testHit(tapX, tapY, state, canvasW, canvasH, hitRadiusMin)` with 48dp (24 CSS px radius) minimum per CODE-4. Reuses `getNeuronPosition` from renderer (no layout duplication). Nearest-wins on overlapping hit areas.
+- `src/ui/canvas/audioUnlock.ts` — singleton AudioContext + `unlockAudioOnFirstTap()` with UI-8 silent-fail on `resume()` rejection. Supports `webkitAudioContext` fallback for older iOS Safari. Idempotent: second call returns early if state is no longer `suspended`.
+- `tests/ui/canvas/tapHandler.test.ts` — 10 tests covering visual-radius hits, 48dp-minimum hit area (inside min but outside visual), miss cases, multi-neuron nearest-wins, empty state, determinism.
+- `tests/ui/canvas/audioUnlock.test.ts` — 6 tests covering singleton, idempotent unlock, UI-8 silent fail, SSR safety (no ctor available).
+
+**Files modified:**
+- `src/ui/tokens.ts` — CANVAS block adds `minHitRadiusPx: 24` (iOS 44pt / Android 48dp ÷ 2).
+- `src/store/gameStore.ts` — new `incrementThoughtsByMinTap()` action adds `SYNAPSE_CONSTANTS.baseTapThoughtMin` (= 1). Stub for Sprint 3 full TAP-2 implementation.
+- `src/ui/canvas/NeuronCanvas.tsx` — added `onPointerDown` handler: calls `unlockAudioOnFirstTap()` (fire-and-forget), runs `testHit` against current state, increments thoughts on hit, logs `tap:first-tap` once (Sprint 6 replaces with narrative event bus). `dims` now a `useRef` so the handler reads current values.
+- `src/App.tsx` — header row with SYNAPSE title (left) + live thoughts readout (right) using JetBrains Mono + tabular-nums + `--color-thoughts-counter` amber. Placeholder only — Phase 5 ships the real HUD.
+- `tests/store/gameStore.test.ts` — 4 new tests for `incrementThoughtsByMinTap` (adds floor, multi-call arithmetic, no unrelated-field mutation, action-reference preservation per Zustand pitfall).
+- `tests/ui/canvas/NeuronCanvas.test.tsx` — 3 new integration tests (hit tap increments thoughts, miss tap does not, first-tap stub logs exactly once).
+
+**Event-type choice documented in NeuronCanvas.tsx:** React `onPointerDown` covers touch + mouse + pen with a unified API, fires immediately (no 300ms click delay). CODE-4 says "touchstart not click" — PointerEvent satisfies the intent while enabling desktop dev/test. `touch-action: manipulation` on the canvas element suppresses double-tap zoom.
+
+**Gates at Phase 3 close:**
+- `npm run typecheck` — 0 errors
+- `npm run lint` — 0 warnings
+- `bash scripts/check-invention.sh` — 4/4 PASS, Gate 3 ratio **0.93** (13 constants, 1 literal — improved from 0.86 because new `SYNAPSE_CONSTANTS.baseTapThoughtMin` reference added a constant)
+- `npm test` — **250 passed / 54 skipped** (up from 227 — 23 new Phase 3 tests: tapHandler 10, audioUnlock 6, gameStore 4, NeuronCanvas 3)
+- `npm run build` — 165.90 KB JS (+1.71 KB, 54.95 KB gzipped) + 13.64 KB CSS (5.39 KB gzipped) + ~131 KB fonts
+
+**Runtime smoke check:** `npm run dev` → Vite ready in 429ms. `/` returns 200 (587 B). `/src/App.tsx` transforms cleanly with HMR hooks. Unit-level `NeuronCanvas.test.tsx` integration test confirms: tap on centered Básica → `thoughts` increments by `baseTapThoughtMin (= 1)`; tap in corner → no increment; first-tap stub logs exactly once across multiple taps. Full in-browser tap verification (passive accumulation + tap increment interleaved) will happen at Phase 7 perf spike when the performance profile is also captured.
+
+**Scope boundary confirmation (explicit, per Phase 3 directive):** the following Sprint 3 items were NOT implemented and remain deferred per SPRINTS.md §Sprint 3:
+- Focus Bar fill (`focusFillPerTap`) — Sprint 3
+- Insight auto-trigger at `focusBar >= 1.0` — Sprint 3
+- Full TAP-2 formula (`Math.max(baseTapThoughtMin, effectivePPS × baseTapThoughtPct)`) — Sprint 3
+- TAP-1 anti-spam wiring (tick.ts step 12 still stubbed) — Sprint 3
+- Haptic feedback (requires `@capacitor/haptics` install) — Sprint 3
+- Undo toast (UI-4) — Sprint 3
+- Tutorial hints (P0 3-tooltip sequence) — Sprint 3
+- Discharge / Cascade — Sprint 3
+
+The Phase 3 stub action `incrementThoughtsByMinTap` contains a JSDoc comment explicitly marking it as Sprint 3's replacement target.
+
+#### Phase 3 findings (1)
+
+**Finding #8: CSS custom-property references in JSX `style` strings trip Gate 3.** Added `padding: 'var(--spacing-4)'` to App.tsx; Gate 3 caught the `-4` inside the string literal. CODE-1 lists "CSS values" as an exception, but the gate grep cannot distinguish string-context from numeric-context — it sees a digit between non-word chars and counts it. Resolution: `// CONST-OK: CSS custom property ref (CODE-1 exception)` annotation on each affected line. As HUD expands in Phase 5 (more `var(--spacing-N)` / `var(--text-Nxl)` refs in JSX), expect the same pattern; the Gate 3 comment already documents this as an expected annotation site. A future tooling improvement (Gate 6 adjacent?) could teach the grep to recognize `'var(--...)'` as a CSS-value context and auto-exclude, but not worth building for v1.0.
+
+**Cumulative Sprint 2 findings: 8** (Phase 1: 4, Phase 2 pre-code: 1, Phase 2 impl: 2, Phase 3: 1). All caught pre-commit; zero shipped bugs.
+
+**Next action:** Phase 4 — HUD (5 sub-components: thoughts TL, rate TR, charges TC, Focus Bar right, consciousness bar left) per GDD §29. Sprint 2 test checklist item 3 (real-Chromium HUD test) may come in Phase 4 or Phase 5 per setup cost.
+
+---
+
+### 2026-04-17 — Meta: reviewer-side scope fabrication (4th instance)
+
+During Phase 3 kickoff, Claude-the-reviewer initially proposed a scope including 8 items, 7 of which belong to Sprint 3 per SPRINTS.md (Focus Bar fill, Insight, TAP-2 formula, anti-spam wiring, haptic, Undo, tutorial hints, Discharge). Caught via grep before the prompt was sent to Claude Code.
+
+Cumulative reviewer-prompt fabrications in Sprint 1+2: **4** (GDD §3 misattribution, palette invention, "mental flag" backlog loss, scope creep this phase). All caught pre-code, zero shipped.
+
+**Rule established:** phase kickoff scope must be derived by explicit subtraction: (AI checks in SPRINTS.md §Sprint X) − (items already completed per prior phase checkpoints). Memory-based scope enumeration has 50% fabrication rate across 4 attempts — unreliable.
+
+Cumulative Sprint 1+2 findings total: **12** (4 GDD doc gaps, 2 tooling bugs, 2 framework gotchas, 4 reviewer fabrications).
+
+---
+
 ### 2026-04-17 — Meta: anti-invention self-audit on "mental flag" anti-pattern
 
 During Sprint 2 Phase 2 review, Claude (acting as reviewer) suggested deferring a "Gate 6 canonical-storage audit" to Sprint 11a as a "mental flag for later". Nico correctly called this out: mental flags get lost, which is exactly the failure mode the anti-invention framework exists to prevent.
