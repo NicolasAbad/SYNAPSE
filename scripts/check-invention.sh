@@ -112,9 +112,11 @@ if [ -d "src" ]; then
 
   # Count numeric literals in src/ (excluding 0, 1, -1, obvious cases).
   # Same comment-prefix fix as Gate 1.
-  # Exclude src/config/ wholesale — config modules ARE the canonical spec-value
-  # storage layer that Gate 1 directs inventions TO (moving literals into config
-  # is the fix). Counting config values as "literals" makes the target unreachable.
+  # Excludes canonical storage files — both src/config/ (game-logic spec values,
+  # Sprint 1 Phase 8 precedent) and src/ui/tokens.ts (UI design tokens,
+  # Sprint 2 Phase 1 precedent). These are where Gate 1 directs inventions TO —
+  # counting them against the ratio would make 0.80 mathematically unreachable.
+  # See CLAUDE.md "Canonical storage file rule" for how to extend this list.
   NUM_LITERALS=$(grep -rnE "[^a-zA-Z_0-9]([2-9]|[1-9][0-9]+|0\.[0-9]+)[^a-zA-Z_0-9]" src/ \
     --include="*.ts" \
     --include="*.tsx" 2>/dev/null \
@@ -123,6 +125,7 @@ if [ -d "src" ]; then
     | grep -vE '^[^:]+:[0-9]+:\s*/\*' \
     | grep -v "CONST-OK" \
     | grep -v "src/config/" \
+    | grep -v "ui/tokens.ts" \
     | wc -l | tr -d ' ')
 
   if [ "$CONST_REFS" -eq 0 ] && [ "$NUM_LITERALS" -eq 0 ]; then

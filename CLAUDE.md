@@ -156,6 +156,22 @@ Before running `npm test`, run `npm run check-invention` which executes these ga
 
 If any gate fails, the commit is blocked by the pre-commit hook.
 
+## Canonical storage file rule (Sprint 1/2 precedent)
+
+Files that serve as the CANONICAL SOURCE OF TRUTH for spec values must be excluded from `scripts/check-invention.sh` Gate 3's literal count. Counting canonical values as "inventions" makes the constants-coverage ratio mathematically unreachable.
+
+**Current exclusions in Gate 3:**
+- `src/config/` (game-logic spec values — Sprint 1 Phase 8 precedent)
+- `src/ui/tokens.ts` (UI design tokens — Sprint 2 Phase 1 precedent)
+
+When adding a new canonical storage file (e.g. `src/config/audio.ts`, `src/config/achievements.ts`, `src/ui/animations.ts`), extend the Gate 3 exclusion list with a new `| grep -v "path/to/file"` line, parallel to the existing entries. Log the change in `docs/PROGRESS.md`.
+
+This is NOT an escape hatch. Canonical storage files must:
+1. Contain ONLY data (no logic).
+2. Be imported by code that uses `SYNAPSE_CONSTANTS` or equivalent centralized pattern.
+3. Be documented in GDD (or equivalent) as the source of truth.
+4. Be reviewed at sprint close to confirm they still fit the "data, not code" criterion.
+
 ## Key constants (quick reference — full list in GDD §constants)
 ```
 tutorialThreshold:      50_000     // P1 tutorial ~7-8 min

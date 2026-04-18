@@ -13,6 +13,7 @@ This is the single source of truth for SYNAPSE's mechanics. When a value in code
 1. [Concept & vision](#1-concept--vision)
 2. [Core loops](#2-core-loops)
 3. [Economy — 3 currencies](#3-economy--3-currencies)
+3b. [Visual identity — bioluminescent aesthetic](#3b-visual-identity--bioluminescent-aesthetic)
 4. [Production formula](#4-production-formula)
 5. [Neurons — 5 types](#5-neurons--5-types)
 6. [Focus Bar & Insight](#6-focus-bar--insight)
@@ -107,6 +108,39 @@ Clean role separation — no currency overlap. Each currency has one purpose.
 | Resonant Pattern discovered | +5 Sparks (not Memories) | 4 times lifetime |
 | Lucid Dream Option B | +2 (or +3 with Regulación Emocional) | P10+, 33% chance |
 | Spontaneous "Memoria Fugaz" | +1 | Max 1 per cycle |
+
+---
+
+# 3b. Visual identity — bioluminescent aesthetic
+
+Canonical palette (from `docs/UI_MOCKUPS.html` `:root`):
+
+| Token | Hex | Usage |
+|---|---|---|
+| `--bg` | `#05070d` | Background deep (canvas base) |
+| `--bg2` | `#0a0d1a` | Background elevated (modals, sheets) |
+| `--p` | `#8B7FE8` | Primary — violet/lavender (Focus Bar, Consciousness Bar default) |
+| `--t` | `#22B07A` | Success — rate counter, gains |
+| `--a` | `#F0A030` | Accent — thoughts counter, Discharge button |
+| `--r` | `#E85050` | Error — rare warnings |
+| `--bl` | `#4090E0` | Secondary accent blue |
+| `--pk` | `#E06090` | Accent pink (Espejo, spontaneous events) |
+| `--cy` | `#40D0D0` | Consciousness Bar highlights, Resonant Patterns |
+| `--text` | `#e8e6f8` | Primary text (violet-white) |
+| `--t2` | `#7070a0` | Secondary text (muted) |
+| `--t3` | `#383860` | Disabled states |
+
+**Typography:** Outfit (display + body) + JetBrains Mono (numeric displays for tabular figures that prevent HUD counter jitter). Both self-hosted via `@fontsource-variable/*` packages — no CDN dependencies per UI-8.
+
+**Aesthetic direction:** dark canvas with violet + cyan organic glows evoking synapses firing at night. Amber accents for numeric emphasis (thoughts, Discharge). Era 1 is the bioluminescent default; Era 2 shifts toward cooler "clean geometry" aesthetics; Era 3 cosmic. Narrative tie-ins documented:
+- `NARRATIVE.md:476` — Consciousness Bar violet by default, transitions to white-gold at P26 (Era 3 final cycle).
+- `NARRATIVE.md:60` — Era 2 transition: "glow of biology replaced by clean geometry of thought made precise".
+
+**Source of truth pairing:** `src/ui/tokens.ts` (TypeScript canonical values) + `docs/UI_MOCKUPS.html` (visual reference) + this section. Tailwind v4 `@theme` block is auto-generated from `tokens.ts` via `scripts/generate-tailwind-theme.ts` (`npm run build:tokens`) — `styles/_theme.generated.css` is a build artifact, not source. Changes to palette: update `tokens.ts` + `UI_MOCKUPS.html` + §3b table. Tailwind regenerates automatically on next build.
+
+**Neuron type colors:** Deferred. GDD §5 does not currently specify per-type hex values. Sprint 2 Phase 2 (Canvas renderer) will propose a mapping from `UI_MOCKUPS` canvas section + §5 visual descriptions and document the mapping here.
+
+**Colorblind accessibility:** Sprint 10 (SPRINTS.md §Sprint 10) will add shape/pattern alternatives for color-only indicators. Current palette is NOT colorblind-safe by design — that is a Sprint 10 layer.
 
 ---
 
@@ -1368,6 +1402,7 @@ Sequence: Awakening → 3s animation → Pattern Tree view → CycleSetupScreen 
 
 ### UI rules
 - **UI-1:** Max 1 tab badge (UI-3)
+- **UI-3 (tab badge priority):** Max 1 tab badge visible at a time. Priority order: (1) new feature unlock > (2) affordable upgrade not yet purchased > (3) Discharge charge ready > (4) active mission/challenge. Dismissed badges persist in `tabBadgesDismissed: string[]` (RESETS per §33). Clears on tab opened. Formalized Sprint 2 kickoff — previously existed only as §29 heading text.
 - **UI-4:** Undo expensive purchase — 3s toast if purchase >10% of current thoughts
 - **UI-5:** Fragment archive — every shown fragment saved to `narrativeFragmentsSeen`
 - **UI-6:** Landscape on tablets ≥900px wide
@@ -1375,6 +1410,7 @@ Sequence: Awakening → 3s animation → Pattern Tree view → CycleSetupScreen 
 - **UI-8 (error states):** All network-dependent services fail silently with graceful fallback. Firebase Analytics/Crashlytics: silent fail, game continues (CODE-8 try/catch). RevenueCat: store shows cached prices or "Store temporarily unavailable" banner, retry on next foreground. AdMob: toast per MONEY-7. Cloud save: toast "Saved locally. Cloud sync will resume when online." Full offline: game fully playable, no blocking modals.
 - **UI-9 (first-open sequence):** (1) Branded splash screen (2s max, app icon + "SYNAPSE", dark background). (2) If EU detected: GDPR consent modal (minimal, Accept / Manage — game starts regardless). (3) Canvas loads with 1 Básica neuron auto-granted and pulsing. (4) Tutorial hint "Tap the neuron" after 2s idle. (5) On first tap: thoughts accumulate, BASE-01 fragment fades in.
 - **CYCLE-2 (mobile layout):** On screens <600px wide, CycleSetupScreen uses step-by-step flow (swipe or "Next") instead of 3 simultaneous columns: Step 1 = Polarity (full width), Step 2 = Mutation (full width), Step 3 = Pathway (full width). Progress dots at bottom. "SAME AS LAST" visible on Step 1. Tablets/landscape ≥600px keep 3-column layout per CYCLE-1.
+- **UI-2, UI-10, TAB-1, TAB-2 are NOT formal rules.** If referenced in prompts or session handoffs, flag as fabrication. Colorblind mode (previously attributed to UI-10) is Sprint 10 scope per SPRINTS.md §Sprint 10 — see §3b accessibility note.
 
 ---
 
@@ -1764,6 +1800,8 @@ export const SYNAPSE_CONSTANTS = {
   // UI
   undoToastDurationMs: 3_000,
   undoExpensiveThresholdPct: 0.10,        // >10% of thoughts triggers undo
+  splashDurationMs: 2_000,                // UI-9 step 1: 2s branded splash (Sprint 2 kickoff)
+  firstOpenTutorialHintIdleMs: 2_000,     // UI-9 step 4: 2s idle → "Tap the neuron" (Sprint 2 kickoff)
 
   // Version
   gameVersion: '1.0.0',
