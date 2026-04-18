@@ -220,3 +220,41 @@ describe('useGameStore loadFromSave / saveToStorage actions', () => {
     expect(result).toBe(false);
   });
 });
+
+describe('mount sequence (Phase 7 Finding B — INIT-1 rule 3 compliance)', () => {
+  beforeEach(() => {
+    mockStorage.clear();
+    useGameStore.setState(createDefaultState());
+  });
+
+  test('load before init prevents timestamp overwrite', async () => {
+    // Prime the save with non-zero timestamps (as a restored session would have).
+    const saved = createDefaultState();
+    saved.cycleStartTimestamp = 1_000_000;
+    saved.sessionStartTimestamp = 1_000_000;
+    await saveGame(saved);
+
+    // Simulate mount sequence: loadFromSave first.
+    const loaded = await useGameStore.getState().loadFromSave();
+    expect(loaded).toBe(true);
+
+    // initSessionTimestamps runs afterward — must be a no-op because
+    // timestamps are already non-zero per INIT-1 rule 3.
+    useGameStore.getState().initSessionTimestamps(9_999_999);
+
+    // Saved values preserved.
+    expect(useGameStore.getState().cycleStartTimestamp).toBe(1_000_000);
+    expect(useGameStore.getState().sessionStartTimestamp).toBe(1_000_000);
+  });
+
+  test('no save present: init populates timestamps from param', async () => {
+    // Fresh-install path: load returns false, init fires normally.
+    const loaded = await useGameStore.getState().loadFromSave();
+    expect(loaded).toBe(false);
+
+    useGameStore.getState().initSessionTimestamps(7_777_777);
+
+    expect(useGameStore.getState().cycleStartTimestamp).toBe(7_777_777);
+    expect(useGameStore.getState().sessionStartTimestamp).toBe(7_777_777);
+  });
+});

@@ -429,6 +429,24 @@ Sprint 11a TODO for `ALL_RULE_IDS` constant must include all 16 (not 13 as state
 
 ## Session log
 
+### 2026-04-17 — Phase 7 Sprint 1: save/load verified; Node smoke test limitation noted
+
+Save system round-trip verified via vitest suite (24 tests passing, including 110-field preservation, `insightMultiplier=1` survival, tuple/record type preservation).
+
+Tooling note for future sessions: `npx tsx -e "..."` with import of `@capacitor/preferences` hangs silently in raw Node (package's web fallback expects browser `localStorage` global). Any Node-based CI smoke script touching the save module MUST mock Capacitor before import, e.g.:
+
+```ts
+vi.mock('@capacitor/preferences', () => ({ Preferences: { /* ... */ } }))
+```
+
+or for vanilla Node (no vitest):
+
+```ts
+globalThis.Preferences = { set: async () => {}, get: async () => ({ value: null }) };
+```
+
+For browser runs (`npm run dev`) and native builds, no workaround needed — package works as designed.
+
 ### 2026-04-17 — Phase 6 Sprint 1: insightMultiplier default omission resolved
 
 Fourth Sprint-1 doc-vs-spec gap detected (after THRES-1 stale 6.3B, softCap 1723.6 fabrication, cycleTime structural). This one is a coverage gap — §32 DEFAULT_STATE block enumerated 11 non-trivial initial values, but `insightMultiplier` should have been the 12th.

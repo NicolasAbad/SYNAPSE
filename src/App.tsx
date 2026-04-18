@@ -1,17 +1,26 @@
 import { useEffect } from 'react';
 import { useGameStore } from './store/gameStore';
-import { useInitSession } from './store/initSession';
 import { useSaveScheduler } from './store/saveScheduler';
 
 export function App() {
-  // Load saved state before INIT-1 populates timestamps. If a save exists,
-  // its saved timestamps (non-zero) will block the mount effect from
-  // overwriting them per INIT-1 rule 3. If no save, mount populates from Date.now().
+  // Sequential mount: load saved state first, then init timestamps ONLY if no
+  // save was present. This prevents the Phase 7 Finding B race where the sync
+  // mount effect could write mount-time timestamps before the async load
+  // overwrote them. See PROGRESS.md Phase 7 Finding B.
   useEffect(() => {
-    void useGameStore.getState().loadFromSave();
+    const initialize = async () => {
+      const loaded = await useGameStore.getState().loadFromSave();
+      if (!loaded) {
+        useGameStore.getState().initSessionTimestamps(Date.now());
+      }
+      // If loaded === true: saved timestamps already present per
+      // INIT-1 rule 3 (mount effect does NOT overwrite non-zero).
+    };
+    void initialize();
   }, []);
-  useInitSession();
+
   useSaveScheduler();
+
   const thoughts = useGameStore((s) => s.thoughts);
   return (
     <main style={{ fontFamily: 'system-ui', padding: 16 }}>
