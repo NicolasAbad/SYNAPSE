@@ -156,6 +156,26 @@ Before running `npm test`, run `npm run check-invention` which executes these ga
 
 If any gate fails, the commit is blocked by the pre-commit hook.
 
+## Pre-code research pattern (Sprint 1+2 precedent)
+
+Before writing code for any phase, complete a pre-code research step of 5-15 minutes:
+
+1. Grep `docs/` and `src/` for any reference to the phase's key concepts (names, rules, numbers mentioned in the phase prompt).
+2. Identify ambiguities, undefined terms, or potential naming collisions.
+3. Propose interpretations or resolutions with explicit STOP-for-approval gates where appropriate.
+4. Only after resolution: write code.
+
+This pattern caught 3 significant pre-code findings in Sprint 1+2:
+- Phase 2 Sprint 2: `UI_MOCKUPS.html` `#4060E0` drift from canonical `--bl #4090E0`
+- Phase 4 Sprint 2: "9 theme slots" ambiguity + `cosmic` naming collision (Era vs Cosmetics Store canvas theme)
+- Phase 4 Sprint 2 (meta): `nebula` counter-proposal would have created a new collision — caught by pre-code catalog audit
+
+Pattern cost: ~15 min per phase. Pattern benefit: catches the class of bugs that code review cannot — the code would look correct against its local spec; the bug lives in spec-to-spec inconsistencies.
+
+Especially critical for phases that introduce NAMES (type unions, identifiers, enum values), NUMBERS (thresholds, caps, timing values), or VISUAL TOKENS (colors, sizes) — these are the most common sources of silent drift in canonical docs.
+
+Not required for phases that purely implement already-specified behavior with no new concepts introduced (e.g., wiring an existing utility into a new consumer).
+
 ## Canonical storage file rule (Sprint 1/2 precedent)
 
 Files that serve as the CANONICAL SOURCE OF TRUTH for spec values must be excluded from `scripts/check-invention.sh` Gate 3's literal count. Counting canonical values as "inventions" makes the constants-coverage ratio mathematically unreachable.

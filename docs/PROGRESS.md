@@ -547,6 +547,20 @@ Sprint 11a TODO for `ALL_RULE_IDS` constant must include all 16 (not 13 as state
 
 ## Session log
 
+### 2026-04-17 — Sprint 2 Phase 4 pre-code: "9 theme slots" resolved + cosmic collision fixed
+
+"9 theme slots" (SPRINTS.md line 217) derived empirically from GDD §26 by Claude Code: 3 Era + 4 Store + Genius Gold + Neon Pulse = 9. Enumeration added to GDD §3b subsection "Canvas theme slots (9 total)" to close the documentation gap.
+
+Naming collision audit: `cosmic` (Era 3) collided with `cosmic` (Cosmetics Store theme #3). Initial proposed rename to `nebula` was caught by Claude Code's pre-code catalog audit as creating a NEW collision with Neuron skin #8. Final rename: `cosmic` → `deep_space` (naming parity with existing `deep_ocean`). Era name `cosmic` unchanged — it's part of the closed `EraVisualTheme` union type + consistency tests.
+
+Pre-existing intentional cross-category collisions (`aurora` appears in 2 categories, `plasma` appears in 2 categories) documented as GDD §26 footnote ("Cross-category ID collisions — intentional pattern"). These work because each category has a distinct GameState slot + separate `Record<string, ...>` registry. Sprint 9 implementer must NOT attempt to "fix" them.
+
+New CLAUDE.md section added: "Pre-code research pattern". Formalizes the 5-15 min grep-first step that caught the Phase 2 `#4060E0` drift, the Phase 4 `9 theme slots` ambiguity + cosmic collision, and the Phase 4 meta-catch of `nebula` double-collision. Especially critical for phases that introduce NAMES, NUMBERS, or VISUAL TOKENS — the pattern is the only filter that catches spec-to-spec inconsistencies that local code review cannot.
+
+Cumulative Sprint 2 findings: 11 (10 pre-Phase-4 + this combined ambiguity + collision resolution). Cumulative Sprint 1+2: **16**. Reviewer-side fabrications tally: **5** (Nico proposing `nebula` without catalog audit — caught by Claude Code pre-code; consistent with prior 4 in §3 misattribution, palette invention, "mental flag" backlog loss, Phase 3 scope creep).
+
+---
+
 ### 2026-04-17 — Sprint 2 Phase 3.5: runtime integration gap caught by smoke test
 
 Manual smoke test after Phase 3 (Nico on Windows Chrome localhost) exposed a critical integration gap: `src/engine/tick.ts` had 29 passing unit tests since Sprint 1 Phase 5 but was NOT invoked at runtime — no React hook wrapped `setInterval` around `tick()`. All passive production, Discharge charge regen, and Mental State triggers were silent no-ops in the real app.

@@ -170,6 +170,26 @@ These canvas animation constants were introduced Sprint 2 Phase 2 with judgment-
 
 Tunable via `tokens.ts` edit + `npm run build:tokens`. Changes require visual verification per CLAUDE.md "Canonical storage file rule".
 
+### Canvas theme slots (9 total)
+
+The canvas rendering system supports 9 theme variants total — the "9 theme slots" figure referenced in SPRINTS.md §Sprint 2. These are derived empirically from the following GDD sections:
+
+| Source | Count | Names | Selection |
+|---|---|---|---|
+| Era themes (§9) | 3 | `bioluminescent`, `digital`, `cosmic` | `state.eraVisualTheme` (prestige-driven) |
+| Cosmetics Store themes (§26) | 4 | `aurora`, `deep_ocean`, `deep_space`, `temple` | `state.activeCanvasTheme` (purchased, $1.99 each) |
+| Genius Pass exclusive (§26) | 1 | `genius_gold` | `state.activeCanvasTheme` (subscriber-only) |
+| Starter Pack exclusive (§26) | 1 | `neon_pulse` | `state.activeCanvasTheme` (purchased $2.99 starter pack) |
+| **Total** | **9** | | |
+
+Era themes live in `ERA_THEMES: Record<EraVisualTheme, Theme>` registry (`src/ui/theme/themes.ts`). The other 6 cosmetic themes live in `CANVAS_THEMES: Record<string, Partial<Theme>>` (Sprint 9 content, Phase 4 ships empty).
+
+Resolution order in `useActiveTheme()`:
+1. Base: `ERA_THEMES[state.eraVisualTheme]`
+2. Override if `state.activeCanvasTheme !== null`: `CANVAS_THEMES[state.activeCanvasTheme]`
+
+`null` active canvas theme = Era default applies.
+
 **Colorblind accessibility:** Sprint 10 (SPRINTS.md §Sprint 10) will add shape/pattern alternatives for color-only indicators. Current palette is NOT colorblind-safe by design — that is a Sprint 10 layer.
 
 ---
@@ -1300,9 +1320,19 @@ Offered at: post-P1, post-Personal Best, post-P5, post-P10, post-Transcendence. 
 
 ### Cosmetics Store — "Neural Aesthetics"
 - **Neuron skins (8):** ember, frost, void, plasma, aurora, crystal, spore, nebula — $0.99 each
-- **Canvas themes (4):** aurora, deep_ocean, cosmic, temple — $1.99 each
+- **Canvas themes (4):** aurora, deep_ocean, deep_space, temple — $1.99 each
 - **Glow packs (3):** firefly, halo, plasma — $0.99 each
 - **HUD style pack (1):** minimal — $1.99
+
+**Cross-category ID collisions (intentional pattern):**
+
+Some cosmetic identifiers appear in multiple categories:
+- `aurora`: Neuron skin #5 AND Canvas theme #1
+- `plasma`: Neuron skin #4 AND Glow pack #3
+
+These are NOT bugs. Each cosmetic category maps to a distinct GameState slot (`activeNeuronSkin`, `activeCanvasTheme`, `activeGlowPack`, `activeHudStyle`), and the Sprint 9 registry architecture keeps each category in a separate `Record<string, ...>` (`NEURON_SKINS`, `CANVAS_THEMES`, `GLOW_PACKS`, `HUD_STYLES` — see `src/ui/theme/cosmeticOverrides.ts`). Lookups are always scoped by category: `NEURON_SKINS[state.activeNeuronSkin]`, never `ALL_COSMETICS[id]`. No runtime collision possible.
+
+Era theme IDs (`bioluminescent`, `digital`, `cosmic`) live in a separate registry (`ERA_THEMES`) with a closed union type (`EraVisualTheme`) — they MUST NOT overlap with cosmetic IDs to preserve type safety. The earlier `cosmic` cosmetic was renamed to `deep_space` (Sprint 2 Phase 4) to prevent this specific Era/cosmetic overlap. `deep_space` also mirrors the `deep_ocean` naming pattern.
 
 3-second live preview on canvas before purchase. Persist forever (survive prestige + transcendence). Mix-and-match.
 
