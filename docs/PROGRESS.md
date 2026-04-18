@@ -6,10 +6,44 @@
 
 ## Current status
 
-**Phase:** Pre-Sprint 1 (documentation foundation complete, 2nd audit complete — 22 findings applied across 5 batches)
-**Last updated:** 2026-04-17 by second senior audit (22 findings, all resolved)
-**Active sprint:** None yet — ready to begin Sprint 1
-**Next action:** Start Sprint 1 (Project Setup + Core Engine) per `docs/SPRINTS.md`. Read CLAUDE.md + PROGRESS.md §"Second audit decisions applied" + the 16 new rules before coding.
+**Phase:** Sprint 1 complete — engine foundation in place
+**Last updated:** 2026-04-17 after Phase 8 completion
+**Active sprint:** None — Sprint 1 closed
+**Next action:** Begin Sprint 2 (Canvas + HUD + Performance Spike) per `docs/SPRINTS.md` §Sprint 2. Read CLAUDE.md (including new Zustand pitfall section + CODE-2 exception note) + PROGRESS.md §"Sprint 1 closing dashboard" at minimum.
+
+### Sprint 1 closing dashboard
+
+- **Phases:** 8 (scaffolding → constants+types → RNG → production → tick → store → save → tests+hook+ritual)
+- **Active tests:** 183 passing, 0 failing
+- **Skipped tests:** 54 (all tagged `BLOCKED-SPRINT-X`; un-skip as each sprint ships its exports)
+- **Typecheck errors:** 0 (`tsc -b --noEmit` clean)
+- **Lint warnings:** 0 (`eslint .` clean)
+- **Anti-invention gates:** 4/4 PASS (constants ratio 0.86)
+- **Production bundle:** 160.84 KB (52.92 KB gzipped) — well under 2 MB budget
+- **Doc-vs-code gaps caught + resolved:** 4 (THRES-1 6.3B stale, softCap fabrication, cycleTime structural, insightMultiplier omission)
+- **CODE-2 exceptions:** 2 (`GameState.ts`, `gameStore.ts`) — both data artifacts with documented docstring justification
+- **Sprint 11a deliverable elevated from v1.1:** snapshot validation gate (Batch 5 6A-2)
+- **Husky pre-commit hook:** installed, runs 4 gates on every commit
+
+### Sprint 1 deliverables shipped
+
+- `src/config/constants.ts` — every GDD §31 value including 26-entry `baseThresholdTable`
+- `src/config/neurons.ts` — GDD §5 base rates + costs (Sprint 3 adds metadata)
+- `src/types/GameState.ts` — 110-field interface with CODE-2 exception rationale
+- `src/types/index.ts` — domain types per GDD §30
+- `src/engine/rng.ts` — `mulberry32`, `hash`, `seededRandom`, `randomInRange`, `pickWeightedRandom`
+- `src/engine/production.ts` — `softCap`, `calculateThreshold`, `calculateCurrentThreshold`
+- `src/engine/tick.ts` — 12-step TICK-1 reducer with Sprint 3-7 TODO scaffolding
+- `src/store/gameStore.ts` — `createDefaultState` + Zustand store + INIT-1 action + load/save actions
+- `src/store/initSession.ts` — `useInitSession` React boundary
+- `src/store/saveGame.ts` — `saveGame` / `loadGame` / `clearSave` + `validateLoadedState`
+- `src/store/saveScheduler.ts` — `useSaveScheduler` + `trySave` anti-race
+- `src/App.tsx` — sequential mount (load → init-if-no-save), wires save scheduler
+- `.husky/pre-commit` — typecheck → lint → check-invention → test
+- `scripts/check-invention.sh` — comment-filter bug fixed, `src/config/` excluded from Gate 3
+- `tests/consistency.test.ts` — 59 active, 54 skipped with Sprint markers
+- `tests/engine/*.test.ts` — rng (17) + production (23) + tick (28) + tick-order (5)
+- `tests/store/*.test.ts` — gameStore (18) + initSession (1) + saveGame (26) + saveScheduler (6)
 
 ---
 
@@ -428,6 +462,28 @@ Sprint 11a TODO for `ALL_RULE_IDS` constant must include all 16 (not 13 as state
 ---
 
 ## Session log
+
+### 2026-04-17 — Sprint 1 complete (Phase 8)
+
+Phase 8 closes Sprint 1. Three parts ran sequentially: consistency test un-skip, husky + pre-commit hook, post-sprint ritual.
+
+**Part 1 — Consistency tests:** 59 tests un-skipped (constants, production, threshold, RNG snapshots, store, tick, file-structure invariants). 54 remain skipped with `BLOCKED-SPRINT-X` markers: Sprint 3 (6), Sprint 4a (6), Sprint 5 (6), Sprint 6 (16), Sprint 7 (11), Sprint 8b (7), Sprint 8c (2), Sprint 10 (6). 0 deleted as obsolete. Three test-side fixes while un-skipping:
+- ECO-1 monotonicity rewritten as index-1-onward + explicit tutorial-override discontinuity test (the table is deliberately non-monotonic at [0] → [1] because [0] is only consulted by TUTOR-2).
+- `productionPerSecond` and POSTLAUNCH file scans strip comments before regex to avoid false-positives on intentional boundary-explaining documentation.
+
+**Part 2 — Husky pre-commit:** Installed husky@9.1.7 + lint-staged@16.4.0 (devDeps). `.husky/pre-commit` runs typecheck → lint → check-invention → test, fail-fast. Verified end-to-end by the commit that introduced it (hook auto-ran against itself).
+
+**Phase 8 finding — scripts/check-invention.sh had two bugs:**
+- Gate 1 and Gate 3 comment-filter regexes (`^\s*//`, `^\s*\*`) never matched because grep output format is `file:lineno:content` — the `^` anchor sat on the filename prefix, not the code line. Fixed with prefix-aware patterns (`^[^:]+:[0-9]+:\s*//` etc.). Before fix: 62 false-positive hits (comments). After: 12 real hits.
+- Gate 3 counted `src/config/` literals as "uncaptured", making the 0.8 ratio target mathematically unreachable — config files ARE the designated home for spec values (that's where Gate 1 directs inventions TO). Fixed by excluding `src/config/` from the literal count.
+
+**Engine constants cleanup:** After fixing the grep, the real 12 hits were triaged as (a) algorithm intrinsics annotated `// CONST-OK` with rationale (mulberry32 bit-shifts, FNV-1a offset basis + prime, 2^32 normalizer, softCap anchor 100, ms→sec divisor 1000, variance `** 2`), (b) spec values lifted into `SYNAPSE_CONSTANTS` (`era3StartPrestige: 19`, `era3EndPrestige: 26`, `consciousnessBarTriggerRatio: 0.5`, `piggyBankMaxSparks: 500`, `piggyBankSparksPerThoughts: 10_000`), (c) §32 DEFAULT_STATE non-trivial values tagged `// CONST-OK` citing their §32 authority. Gate 3 ratio post-fix: 0.86.
+
+**Part 3 — Post-sprint ritual:** `npm run build` produces 160.84 KB bundle (52.92 KB gzipped). All 4 gates green. Typecheck 0 errors. Lint 0 warnings. 183 tests pass.
+
+**Cumulative Sprint 1 doc gaps: 4** (THRES-1 6.3B stale, softCap 1723.6 fabrication, cycleTime structural, insightMultiplier omission). All 4 were pre-existing doc errors caught during implementation; zero implementation bugs shipped. Sprint 11a snapshot-validation-gate elevation (from v1.1 deferred to Sprint 11a must-have) remains justified by this rate.
+
+**Next sprint:** Sprint 2 (Canvas + HUD + Performance Spike) per `docs/SPRINTS.md`.
 
 ### 2026-04-17 — Phase 7 Sprint 1: save/load verified; Node smoke test limitation noted
 
