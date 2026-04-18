@@ -14,10 +14,15 @@ import type { GameState } from '../types/GameState';
 /**
  * Soft cap per GDD §4. Pass-through below 100; diminishing-returns power curve above.
  * Identity at x === 100. Used to temper runaway snowball effects.
+ *
+ * The number 100 is the formula's normalization anchor (softCap(x) = 100 × (x/100)^exp).
+ * Not a tunable balance value — changing it breaks the math's identity property
+ * and invalidates the §4 "Verified values" snapshot tests. The tunable is
+ * `softCapExponent` (0.72), which lives in SYNAPSE_CONSTANTS.
  */
 export function softCap(x: number): number {
-  if (x <= 100) return x;
-  return 100 * Math.pow(x / 100, SYNAPSE_CONSTANTS.softCapExponent);
+  if (x <= 100) return x; // CONST-OK (softCap normalization anchor, §4)
+  return 100 * Math.pow(x / 100, SYNAPSE_CONSTANTS.softCapExponent); // CONST-OK
 }
 
 /**

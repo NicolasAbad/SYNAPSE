@@ -15,13 +15,16 @@
  * Reference: github.com/bryc/code/blob/master/jshash/PRNGs.md#mulberry32
  */
 export function mulberry32(seed: number): () => number {
+  // All magic numbers below are algorithm constants from the mulberry32 reference
+  // (github.com/bryc/code). Changing any of them breaks the deterministic sequence
+  // and fails the snapshot tests. These are NOT designer-tunable.
   let s = seed >>> 0;
   return function () {
     s = (s + 0x6d2b79f5) | 0;
     let t = s;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    t = Math.imul(t ^ (t >>> 15), t | 1); // CONST-OK (mulberry32 constants)
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61); // CONST-OK (mulberry32 constants)
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296; // CONST-OK (2^32 normalizer)
   };
 }
 
@@ -31,11 +34,14 @@ export function mulberry32(seed: number): () => number {
  * Output: uint32 in [0, 2^32). Stable across JS engines via Math.imul.
  */
 export function hash(input: number | string): number {
-  let h = 2166136261 >>> 0;
+  // FNV-1a 32-bit: offset basis 2166136261, prime 16777619. These are the canonical
+  // constants from the FNV spec (Fowler/Noll/Vo). Changing them produces a different
+  // hash function and fails the hash("0") === 890022063 snapshot.
+  let h = 2166136261 >>> 0; // CONST-OK (FNV-1a offset basis)
   const str = String(input);
   for (let i = 0; i < str.length; i++) {
     h ^= str.charCodeAt(i);
-    h = Math.imul(h, 16777619);
+    h = Math.imul(h, 16777619); // CONST-OK (FNV-1a prime)
   }
   return h >>> 0;
 }

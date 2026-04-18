@@ -1,0 +1,15 @@
+#!/usr/bin/env sh
+
+echo "→ [1/4] Typecheck..."
+npm run typecheck || exit 1
+
+echo "→ [2/4] Lint..."
+npm run lint || exit 1
+
+echo "→ [3/4] Anti-invention gates..."
+bash scripts/check-invention.sh || exit 1
+
+echo "→ [4/4] Tests..."
+npm test || exit 1
+
+echo "✓ All 4 gates passed"

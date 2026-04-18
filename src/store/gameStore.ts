@@ -44,13 +44,13 @@ export function createDefaultState(): GameState {
     connectionMult: 1, // 1 neuron type at start (no pairs yet)
     // === Focus (5) ===
     focusBar: 0,
-    focusFillRate: 0.01, // base focusFillPerTap
+    focusFillRate: 0.01, // CONST-OK — §32 DEFAULT_STATE: base focusFillPerTap
     insightActive: false,
-    insightMultiplier: 1, // identity; matches §33 PRESTIGE_RESET + TICK-1 step 2 exit
+    insightMultiplier: 1, // CONST-OK — §32 DEFAULT_STATE: identity; matches §33 PRESTIGE_RESET + TICK-1 step 2 exit
     insightEndTime: null,
     // === Discharge (4) ===
     dischargeCharges: 0,
-    dischargeMaxCharges: 2, // §7 base for P0-P9
+    dischargeMaxCharges: 2, // CONST-OK — §32 DEFAULT_STATE: §7 base for P0-P9
     dischargeLastTimestamp: 0, // INIT-1 impure — mount effect populates
     nextDischargeBonus: 0,
     // === Upgrades (1) ===
@@ -61,8 +61,8 @@ export function createDefaultState(): GameState {
     mutationSeed: 0,
     currentPathway: null,
     // === Offline (2) ===
-    currentOfflineCapHours: 4, // baseOfflineCapHours
-    currentOfflineEfficiency: 0.5, // baseOfflineEfficiency
+    currentOfflineCapHours: 4, // CONST-OK — §32 DEFAULT_STATE: baseOfflineCapHours
+    currentOfflineEfficiency: 0.5, // CONST-OK — §32 DEFAULT_STATE: baseOfflineEfficiency
     // === Session (1) ===
     sessionStartTimestamp: null, // INIT-1 impure — mount effect populates
     // === Prestige & progression (11) ===

@@ -34,15 +34,18 @@ if [ -d "src/engine" ]; then
   # - in const declarations that reference SYNAPSE_CONSTANTS
   # - explicitly marked with // CONST-OK comment (escape hatch for proven cases)
 
+  # grep output is "file:lineno:content"; strip the prefix before applying
+  # code-vs-comment filters so they match the actual code line (not the prefix).
   HITS=$(grep -rnE "[^a-zA-Z_0-9]([2-9]|[1-9][0-9]+|0\.[0-9]+|-[2-9]|-[1-9][0-9]+)[^a-zA-Z_0-9]" src/engine/ \
     --include="*.ts" \
     --include="*.tsx" 2>/dev/null \
-    | grep -v "^\s*//" \
-    | grep -v "^\s*\*" \
+    | grep -vE '^[^:]+:[0-9]+:\s*//' \
+    | grep -vE '^[^:]+:[0-9]+:\s*\*' \
+    | grep -vE '^[^:]+:[0-9]+:\s*/\*' \
     | grep -v "CONST-OK" \
     | grep -v "SYNAPSE_CONSTANTS\." \
     | grep -v "from.*constants" \
-    | grep -vE "Math\.(floor|ceil|round|min|max|abs|pow|log|sqrt)\(" \
+    | grep -vE "Math\.(floor|ceil|round|min|max|abs|pow|log|sqrt|imul)\(" \
     | grep -vE '\[\d+\]' \
     | grep -vE 'case \d+' \
     | grep -vE '\.length.*===.*\d+' \
@@ -107,14 +110,19 @@ if [ -d "src" ]; then
   # Count references to SYNAPSE_CONSTANTS in src/
   CONST_REFS=$(grep -rE "SYNAPSE_CONSTANTS\." src/ --include="*.ts" --include="*.tsx" 2>/dev/null | wc -l | tr -d ' ')
 
-  # Count numeric literals in src/ (excluding 0, 1, -1, obvious cases)
+  # Count numeric literals in src/ (excluding 0, 1, -1, obvious cases).
+  # Same comment-prefix fix as Gate 1.
+  # Exclude src/config/ wholesale — config modules ARE the canonical spec-value
+  # storage layer that Gate 1 directs inventions TO (moving literals into config
+  # is the fix). Counting config values as "literals" makes the target unreachable.
   NUM_LITERALS=$(grep -rnE "[^a-zA-Z_0-9]([2-9]|[1-9][0-9]+|0\.[0-9]+)[^a-zA-Z_0-9]" src/ \
     --include="*.ts" \
     --include="*.tsx" 2>/dev/null \
-    | grep -v "^\s*//" \
-    | grep -v "^\s*\*" \
+    | grep -vE '^[^:]+:[0-9]+:\s*//' \
+    | grep -vE '^[^:]+:[0-9]+:\s*\*' \
+    | grep -vE '^[^:]+:[0-9]+:\s*/\*' \
     | grep -v "CONST-OK" \
-    | grep -v "config/constants.ts" \
+    | grep -v "src/config/" \
     | wc -l | tr -d ' ')
 
   if [ "$CONST_REFS" -eq 0 ] && [ "$NUM_LITERALS" -eq 0 ]; then

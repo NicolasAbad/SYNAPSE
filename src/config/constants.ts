@@ -135,6 +135,17 @@ export const SYNAPSE_CONSTANTS = {
   antiSpamVarianceThreshold: 20, // std dev < 20ms = machine-like
   antiSpamPenaltyMultiplier: 0.1,
 
+  // ── Era 3 ──
+  era3StartPrestige: 19, // §23: Era 3 first cycle
+  era3EndPrestige: 26, // §23: Era 3 final cycle (triggers ending)
+
+  // ── CORE-10 consciousness bar ──
+  consciousnessBarTriggerRatio: 0.5, // CORE-10 (§35): cycleGenerated / currentThreshold crossover
+
+  // ── Piggy Bank ──
+  piggyBankMaxSparks: 500, // MONEY-10 (§35): hard cap
+  piggyBankSparksPerThoughts: 10_000, // MONEY-8/10: 1 spark per 10K totalGenerated crossed
+
   // ── Monetization ──
   maxSparksPurchasedPerMonth: 1000,
   noAdTutorialMinutes: 10,

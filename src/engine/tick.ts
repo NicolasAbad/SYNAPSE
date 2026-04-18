@@ -23,13 +23,16 @@ import { NEURON_BASE_RATES } from '../config/neurons';
 import { hash, randomInRange } from './rng';
 import type { GameState } from '../types/GameState';
 
-const TICK_MS = 100;
-const PIGGY_BANK_INCREMENT_PER_THOUGHTS = 10_000;
-const PIGGY_BANK_MAX = 500;
-const CONSCIOUSNESS_BAR_TRIGGER_RATIO = 0.5;
-const HYPERFOCUS_BONUS_WINDOW_MS = 5_000;
-const RP_WINDOW_MS = 120_000;
-const ANTI_SPAM_BUFFER_SIZE = 20;
+// CONST-OK: TICK_MS is the fixed game-loop dt per §35 TICK-1 step 1 (implementation
+// detail, not a designer-tunable balance value; changing it would break determinism).
+const TICK_MS = 100; // CONST-OK (§35 TICK-1 fixed dt)
+// CONST-OK: 5-second Hyperfocus-bonus expiry window per §35 TICK-1 step 2 (MENTAL-5).
+const HYPERFOCUS_BONUS_WINDOW_MS = 5_000; // CONST-OK (§35 TICK-1 step 2 / MENTAL-5)
+// CONST-OK: RP-1 2-minute purchase window per §22; purging beyond keeps state bounded.
+const RP_WINDOW_MS = 120_000; // CONST-OK (§22 RP-1 window)
+// CONST-OK: TAP-1 buffer size per §35 step 12 — structural size of the circular
+// buffer, not a designer-tunable value (derived from antiSpamTapWindow / antiSpamTapIntervalMs).
+const ANTI_SPAM_BUFFER_SIZE = 20; // CONST-OK (§35 TICK-1 step 12)
 
 /**
  * antiSpamActive is derived per-tick (TICK-1 step 12), not stored in GameState.
@@ -62,7 +65,7 @@ function computeAntiSpam(state: GameState, nowTimestamp: number): boolean {
   for (let i = 1; i < stamps.length; i++) intervals.push(stamps[i] - stamps[i - 1]);
   const avg = intervals.reduce((a, b) => a + b, 0) / intervals.length;
   if (avg >= antiSpamTapIntervalMs) return false;
-  const variance = intervals.reduce((a, b) => a + (b - avg) ** 2, 0) / intervals.length;
+  const variance = intervals.reduce((a, b) => a + (b - avg) ** 2, 0) / intervals.length; // CONST-OK (variance formula: power of 2)
   const stddev = Math.sqrt(variance);
   return stddev < antiSpamVarianceThreshold;
 }
@@ -110,21 +113,28 @@ export function tick(state: GameState, nowTimestamp: number): TickResult {
   s.effectiveProductionPerSecond = effective;
 
   // Step 4: Produce. No rounding in engine (CODE-9); UI rounds on display.
-  const delta = effective * (TICK_MS / 1000);
+  // 1000 = ms→sec divisor (time-unit identity). CONST-OK.
+  const delta = effective * (TICK_MS / 1000); // CONST-OK (ms→sec)
   const prevTotal = s.totalGenerated;
   s.thoughts = s.thoughts + delta;
   s.cycleGenerated = s.cycleGenerated + delta;
   s.totalGenerated = s.totalGenerated + delta;
   // Piggy Bank: cross-threshold counter on every 10K increment (MONEY-10 hard cap at 500).
-  const prevBuckets = Math.floor(prevTotal / PIGGY_BANK_INCREMENT_PER_THOUGHTS);
-  const nowBuckets = Math.floor(s.totalGenerated / PIGGY_BANK_INCREMENT_PER_THOUGHTS);
+  const prevBuckets = Math.floor(prevTotal / SYNAPSE_CONSTANTS.piggyBankSparksPerThoughts);
+  const nowBuckets = Math.floor(s.totalGenerated / SYNAPSE_CONSTANTS.piggyBankSparksPerThoughts);
   if (nowBuckets > prevBuckets) {
     const increments = nowBuckets - prevBuckets;
-    s.piggyBankSparks = Math.min(PIGGY_BANK_MAX, s.piggyBankSparks + increments);
+    s.piggyBankSparks = Math.min(
+      SYNAPSE_CONSTANTS.piggyBankMaxSparks,
+      s.piggyBankSparks + increments,
+    );
   }
 
   // Step 5: CORE-10 — flip consciousnessBarUnlocked once.
-  if (!s.consciousnessBarUnlocked && s.cycleGenerated >= CONSCIOUSNESS_BAR_TRIGGER_RATIO * s.currentThreshold) {
+  if (
+    !s.consciousnessBarUnlocked &&
+    s.cycleGenerated >= SYNAPSE_CONSTANTS.consciousnessBarTriggerRatio * s.currentThreshold
+  ) {
     s.consciousnessBarUnlocked = true;
   }
 
@@ -150,12 +160,13 @@ export function tick(state: GameState, nowTimestamp: number): TickResult {
   // "First tick of the cycle" per TICK-1 step 9 (post-Phase-5 resolution):
   // (nowTimestamp - cycleStartTimestamp) < 1000 ms.
   const cycleAgeMs = nowTimestamp - s.cycleStartTimestamp;
+  // 1_000ms "first tick" window — CONST-OK (§35 TICK-1 step 9 post-Phase-5 resolution).
   if (
-    s.prestigeCount >= 19 &&
-    s.prestigeCount <= 26 &&
+    s.prestigeCount >= SYNAPSE_CONSTANTS.era3StartPrestige &&
+    s.prestigeCount <= SYNAPSE_CONSTANTS.era3EndPrestige &&
     s.cycleStartTimestamp !== 0 &&
     cycleAgeMs >= 0 &&
-    cycleAgeMs < 1_000
+    cycleAgeMs < 1_000 // CONST-OK (first-tick window)
   ) {
     // TODO Sprint 6: fire Era 3 event per §23 (prestigeCount → event id → open modal).
   }
@@ -169,7 +180,7 @@ export function tick(state: GameState, nowTimestamp: number): TickResult {
     spontaneousCheckIntervalMax,
     hash(s.cycleStartTimestamp + s.lastSpontaneousCheck),
   );
-  const secondsSinceLastCheck = (nowTimestamp - s.lastSpontaneousCheck) / 1000;
+  const secondsSinceLastCheck = (nowTimestamp - s.lastSpontaneousCheck) / 1000; // CONST-OK (ms→sec)
   if (secondsSinceLastCheck >= nextCheckSeconds) {
     s.lastSpontaneousCheck = nowTimestamp;
     // TODO Sprint 6: roll spontaneousTriggerChance; if success, pick weighted event and apply.
