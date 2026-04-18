@@ -1,0 +1,110 @@
+/**
+ * Canvas 2D renderer — pure draw() function.
+ *
+ * Visual contract (Sprint 2 Phase 2):
+ * - Neurons render as stroked + semi-transparent-filled circles (UI_MOCKUPS pattern)
+ * - Pre-rendered glow halo behind each neuron (getGlowSprite)
+ * - Ambient pulse: radius ±pulseRadiusAmp and opacity [pulseOpacityMin..pulseOpacityMax]
+ *   via sin(2π × elapsedMs / durPulse) — MOTION tokens govern envelope
+ * - Deterministic placement (no Math.random) so rendering is replay-safe
+ *
+ * Visual radii from CANVAS.neuronRadii (Phase 2 mapping, GDD §3b).
+ * Visual radii are NOT tap hit-areas — Phase 3 adds a separate hit-test
+ * layer enforcing CODE-4 touch-target minimums.
+ *
+ * Phase 2 scope: render N neurons from state.neurons. HUD, tabs, and
+ * background effects (particles, connection lines) are Phase 4+.
+ */
+
+import type { GameState } from '../../types/GameState';
+import type { NeuronType } from '../../types';
+import { COLORS, CANVAS, MOTION } from '../tokens';
+import { getGlowSprite } from './glowCache';
+
+export interface CanvasTheme {
+  background: string;
+  neuronColor: Record<NeuronType, string>;
+}
+
+export const BIOLUMINESCENT_THEME: CanvasTheme = {
+  background: COLORS.bgDeep,
+  neuronColor: {
+    basica: COLORS.neuronBasica,
+    sensorial: COLORS.neuronSensorial,
+    piramidal: COLORS.neuronPiramidal,
+    espejo: COLORS.neuronEspejo,
+    integradora: COLORS.neuronIntegradora,
+  },
+};
+
+export interface DrawDims {
+  width: number;
+  height: number;
+}
+
+const TWO_PI = Math.PI * 2; // CONST-OK: full radian circle (geometric intrinsic)
+
+export function draw(
+  ctx: CanvasRenderingContext2D,
+  state: GameState,
+  theme: CanvasTheme,
+  dims: DrawDims,
+  elapsedMs: number,
+): void {
+  ctx.fillStyle = theme.background;
+  ctx.fillRect(0, 0, dims.width, dims.height);
+
+  const pulsePhase = Math.sin((elapsedMs / MOTION.durPulse) * TWO_PI); // -1..1
+  const radiusMult = 1 + pulsePhase * MOTION.pulseRadiusAmp;
+  const normalized = (pulsePhase + 1) / 2; // CONST-OK: sin(-1..1) → (0..1) mapping
+  const opacity =
+    MOTION.pulseOpacityMin + normalized * (MOTION.pulseOpacityMax - MOTION.pulseOpacityMin);
+
+  let globalIndex = 0;
+  for (const neuron of state.neurons) {
+    if (neuron.count <= 0) continue;
+    const baseRadius = CANVAS.neuronRadii[neuron.type];
+    const color = theme.neuronColor[neuron.type];
+    for (let i = 0; i < neuron.count; i++) {
+      drawNeuron(ctx, color, baseRadius, radiusMult, opacity, globalIndex, dims);
+      globalIndex++;
+    }
+  }
+}
+
+function drawNeuron(
+  ctx: CanvasRenderingContext2D,
+  color: string,
+  baseRadius: number,
+  radiusMult: number,
+  opacity: number,
+  index: number,
+  dims: DrawDims,
+): void {
+  const { x, y } = getNeuronPosition(index, dims);
+  const pulsedRadius = baseRadius * radiusMult;
+
+  const sprite = getGlowSprite(color, baseRadius);
+  const prevAlpha = ctx.globalAlpha;
+  ctx.globalAlpha = opacity;
+  ctx.drawImage(sprite.canvas, x - sprite.halfSize, y - sprite.halfSize);
+
+  ctx.beginPath();
+  ctx.arc(x, y, pulsedRadius, 0, TWO_PI);
+  ctx.fillStyle = color + CANVAS.neuronFillOpacityHex;
+  ctx.fill();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = CANVAS.neuronStrokeWidth;
+  ctx.stroke();
+
+  ctx.globalAlpha = prevAlpha;
+}
+
+export function getNeuronPosition(index: number, dims: DrawDims): { x: number; y: number } {
+  const cx = dims.width / 2; // CONST-OK: canvas center = width / 2 (geometric intrinsic)
+  const cy = dims.height / 2; // CONST-OK: canvas center = height / 2 (geometric intrinsic)
+  if (index === 0) return { x: cx, y: cy };
+  const angle = index * CANVAS.scatterGoldenAngle;
+  const r = CANVAS.scatterBaseRadius + index * CANVAS.scatterRadiusStep;
+  return { x: cx + Math.cos(angle) * r, y: cy + Math.sin(angle) * r };
+}

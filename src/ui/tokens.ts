@@ -131,5 +131,34 @@ export const MOTION = {
   durFast: 200, // tab switch, button press
   durMedium: 400, // modal enter
   durSlow: 800, // splash → canvas transition
-  durPulse: 2400, // neuron ambient pulse
+  durPulse: 2400, // neuron ambient pulse (full sin cycle)
+  // Pulse envelope (Sprint 2 Phase 2 — renderer.ts consumes these)
+  pulseRadiusAmp: 0.1, // ±10% of base radius at pulse peak/trough
+  pulseOpacityMin: 0.7, // opacity at pulse trough
+  pulseOpacityMax: 1.0, // opacity at pulse peak
+} as const;
+
+// Canvas-specific geometry + rendering primitives (TS-only tokens;
+// not emitted as CSS vars because canvas code reads them directly).
+export const CANVAS = {
+  // Pre-rendered glow sprite size = neuron radius × this multiplier.
+  glowRadiusMultiplier: 2.5,
+  glowCacheMaxEntries: 20, // FIFO eviction beyond this
+  // Visual radii per neuron type (Sprint 2 Phase 2 mapping, GDD §3b).
+  // Progression = tier × 2 + 6 px. Visual only — tap hit-areas are a
+  // Phase 3 concern per CODE-4 (iOS 44pt / Android 48dp minimums).
+  neuronRadii: {
+    basica: 8,
+    sensorial: 10,
+    piramidal: 12,
+    espejo: 14,
+    integradora: 16,
+  },
+  // Circle stroke + fill style (matches UI_MOCKUPS canvas section).
+  neuronStrokeWidth: 1.5,
+  neuronFillOpacityHex: '30', // 2-digit hex alpha suffix (~19% fill)
+  // Deterministic scatter layout for multi-neuron rendering (Phase 3+).
+  scatterGoldenAngle: 2.399, // ≈ 137.5° in radians — natural spiral
+  scatterBaseRadius: 40, // distance from canvas center for first scattered neuron
+  scatterRadiusStep: 12, // additional distance per index
 } as const;

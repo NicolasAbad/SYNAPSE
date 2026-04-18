@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useGameStore } from './store/gameStore';
 import { useSaveScheduler } from './store/saveScheduler';
+import { NeuronCanvas } from './ui/canvas/NeuronCanvas';
 
 export function App() {
   // Sequential mount: load saved state first, then init timestamps ONLY if no
@@ -21,11 +22,32 @@ export function App() {
 
   useSaveScheduler();
 
-  const thoughts = useGameStore((s) => s.thoughts);
   return (
-    <main style={{ fontFamily: 'system-ui', padding: 16 }}>
-      <h1>SYNAPSE</h1>
-      <p>Thoughts: {Math.floor(thoughts)}</p>
+    <main
+      style={{
+        margin: 0,
+        padding: 0,
+        height: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        background: 'var(--color-bg-deep)',
+        color: 'var(--color-text-primary)',
+        fontFamily: 'var(--font-body)',
+      }}
+    >
+      <h1
+        style={{
+          padding: 'var(--spacing-4)',
+          margin: 0,
+          fontSize: 'var(--text-xl)',
+        }}
+      >
+        SYNAPSE
+      </h1>
+      <div style={{ flex: 1, position: 'relative', minHeight: 0 }}>
+        <NeuronCanvas />
+      </div>
+      {/* HUD + TabBar come in later phases */}
     </main>
   );
 }
