@@ -138,7 +138,21 @@ Canonical palette (from `docs/UI_MOCKUPS.html` `:root`):
 
 **Source of truth pairing:** `src/ui/tokens.ts` (TypeScript canonical values) + `docs/UI_MOCKUPS.html` (visual reference) + this section. Tailwind v4 `@theme` block is auto-generated from `tokens.ts` via `scripts/generate-tailwind-theme.ts` (`npm run build:tokens`) — `styles/_theme.generated.css` is a build artifact, not source. Changes to palette: update `tokens.ts` + `UI_MOCKUPS.html` + §3b table. Tailwind regenerates automatically on next build.
 
-**Neuron type colors:** Deferred. GDD §5 does not currently specify per-type hex values. Sprint 2 Phase 2 (Canvas renderer) will propose a mapping from `UI_MOCKUPS` canvas section + §5 visual descriptions and document the mapping here.
+**Neuron type colors** (mapped Sprint 2 Phase 2 from canonical palette — ECO-1: no new hex values introduced):
+
+| Type | Hex | Canonical token | Radius | Rationale |
+|---|---|---|---|---|
+| Básica | `#4090E0` | --bl blue | 8px | Foundational/calm; first type new players see |
+| Sensorial | `#22B07A` | --t green | 10px | Biological "alive" perception (rate-counter overlap is semantically coherent: sense → rate) |
+| Piramidal | `#8B7FE8` | --p violet | 12px | Primary/workhorse; mid-tier that carries P0-P9 progression |
+| Espejo | `#E06090` | --pk pink | 14px | Reflective/empathic; mockup precedent (r=8 accent circle) |
+| Integradora | `#40D0D0` | --cy cyan | 16px | Era 2 "clean geometry" foreshadow; semantic overlap with Consciousness Bar is deliberate (both = integration) |
+
+Radii progression = `tier × 2 + 6 px` (Básica tier 1 → 8px, Integradora tier 5 → 16px). Visual radius only — tap hit-area is a separate Phase 3 concern per CODE-4 (iOS 44pt / Android 48dp minimums).
+
+**Amber `--a` reserved HUD-only** (thoughts counter + Discharge button). Not assigned to any neuron type. Mockup's amber neuron circle (canvas line 46) is interpreted as a Flujo Eureka Mental State render — Sprint 7 MENTAL-4 will implement temporary amber glow on all neurons during that state.
+
+Era arc via neuron palette: Era 1 violet-dominated (Piramidal is the primary buy) → Era 2 introduces cyan (Integradora unlocks P10+, Consciousness Bar also cyan) → Era 3 transitions to white-gold at P26 (per NARRATIVE:476, "consciousness bar is no longer purple — it's white-gold"). Each era transition introduces a new palette tone without backtracking.
 
 **Colorblind accessibility:** Sprint 10 (SPRINTS.md §Sprint 10) will add shape/pattern alternatives for color-only indicators. Current palette is NOT colorblind-safe by design — that is a Sprint 10 layer.
 

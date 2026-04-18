@@ -49,13 +49,16 @@ export const COLORS = {
   borderMedium: '#ffffff20', // ~12% white
   borderStrong: '#ffffff30', // ~18% white
 
-  // ── Neuron type colors ──
-  // DEFERRED to Phase 2: GDD §5 does not specify per-type hex values.
-  // UI_MOCKUPS canvas section uses 5+ colors but mapping to
-  // Básica/Sensorial/Piramidal/Espejo/Integradora is not documented.
-  // Phase 2 (Canvas renderer) will propose a mapping by reading
-  // UI_MOCKUPS canvas block + GDD §5 visual descriptions, then
-  // flag for Nico approval before committing.
+  // ── Neuron type colors (Sprint 2 Phase 2 — GDD §5 × canonical palette) ──
+  // Mapping rationale in GDD §3b + PROGRESS.md Phase 2 pre-code entry.
+  // Era arc: Era 1 violet (Piramidal-dominated) → Era 2 cyan (Integradora unlocks P10+) → Era 3 white-gold (P26).
+  neuronBasica: '#4090E0', // --bl blue — foundational/calm; first type new players see
+  neuronSensorial: '#22B07A', // --t green — biological "alive" perception (overlaps rate counter; semantically coherent — sense → rate)
+  neuronPiramidal: '#8B7FE8', // --p violet — primary/workhorse; mid-tier that carries P0-P9 progression
+  neuronEspejo: '#E06090', // --pk pink — reflective/empathic; mockup precedent (r=8 accent circle)
+  neuronIntegradora: '#40D0D0', // --cy cyan — Era 2 "clean geometry" foreshadow; semantic overlap with Consciousness Bar is deliberate (both = integration)
+  // NOTE: amber --a is reserved HUD-only (thoughts counter + Discharge button).
+  // Mockup's amber neuron circle (line 46) is likely a Flujo Eureka Mental State render (Sprint 7 MENTAL-4).
 } as const;
 
 export const TYPOGRAPHY = {

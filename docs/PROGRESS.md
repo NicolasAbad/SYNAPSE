@@ -547,6 +547,34 @@ Sprint 11a TODO for `ALL_RULE_IDS` constant must include all 16 (not 13 as state
 
 ## Session log
 
+### 2026-04-17 — Sprint 2 Phase 2 (pre-code): neuron color mapping + mockup drift correction
+
+Five neuron types mapped to canonical palette values after `UI_MOCKUPS.html` canvas section analysis + GDD §5 thematic review. Mapping preserves narrative Era arc (violet → cyan → white-gold at P26):
+
+| Type | Hex | Token | Radius | Role |
+|---|---|---|---|---|
+| Básica | `#4090E0` | --bl | 8px | Foundational/calm |
+| Sensorial | `#22B07A` | --t | 10px | Biological perception |
+| Piramidal | `#8B7FE8` | --p | 12px | Primary workhorse |
+| Espejo | `#E06090` | --pk | 14px | Reflective/empathic |
+| Integradora | `#40D0D0` | --cy | 16px | Era 2 integration foreshadow |
+
+Amber `--a` reserved HUD-only (thoughts counter + Discharge button). Mockup's amber neuron circle (canvas line 46) identified as likely Flujo Eureka Mental State representation — pre-recorded design note for Sprint 7 MENTAL-4 implementation: Flujo Eureka should render as temporary amber glow on all neurons, honoring the mockup's visual intent and reinforcing "amber = peak attention moment".
+
+Radii progression `tier × 2 + 6 px` is visual only. Hit-area enforcement per CODE-4 + iOS 44pt / Android 48dp minimums is a separate Phase 3 concern (expanded collision detection around each neuron, independent of visual radius).
+
+**Mockup drift corrected (5th Sprint 2 finding):** `docs/UI_MOCKUPS.html` lines 42 + 47 used `#4060E0` (non-canonical) instead of `--bl #4090E0`. Both occurrences replaced in this same commit. Visual difference is ~12% darker blue, not player-observable at 10px circle size. Fix establishes the precedent "canonical palette drift is a bug, not tolerated" — important to cut the pattern now while the repo is small rather than propagate when components are later copied from the mockup.
+
+Files updated in pre-code commit:
+- `src/ui/tokens.ts` — 5 neuron color entries added (62 total tokens, up from 57)
+- `docs/GDD.md` §3b — neuron color table + rationale + era arc supersedes prior "deferred" comment
+- `docs/UI_MOCKUPS.html` — `#4060E0` → `#4090E0` (2 replacements)
+- `styles/_theme.generated.css` — regenerated, gitignored (build artifact)
+
+**Cumulative Sprint 2 findings: 5** (Phase 1: vitest pin, Tailwind v4, vite-env types, Gate 3 regression; Phase 2 pre-code: mockup drift). All caught before any canvas code written. Canvas implementation (renderer.ts, glowCache.ts, NeuronCanvas.tsx, formatNumber.ts) follows in Phase 2 implementation commit.
+
+---
+
 ### 2026-04-17 — Sprint 2 Phase 1: design tokens + Tailwind v4 + font system
 
 Phase 1 scaffolds the visual system for Sprint 2 without touching the frozen engine. Canonical palette sourced from `docs/UI_MOCKUPS.html` (pre-existing project canonical — verified via `grep :root` before any code was written). GDD §3b created to formalize the palette as a documentation section; UI-3 formalized from heading to explicit rule; UI-2/UI-10/TAB-1/TAB-2 flagged as non-existent in §29 to prevent re-fabrication.
