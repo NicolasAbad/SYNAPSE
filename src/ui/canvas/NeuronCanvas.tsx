@@ -26,15 +26,19 @@
 
 import { useEffect, useRef, type PointerEvent as ReactPointerEvent } from 'react';
 import { useGameStore } from '../../store/gameStore';
+import { useActiveTheme } from '../theme/useActiveTheme';
 import { unlockAudioOnFirstTap } from './audioUnlock';
 import { setupHiDPICanvas } from './dpr';
-import { BIOLUMINESCENT_THEME, draw } from './renderer';
+import { draw } from './renderer';
 import { testHit } from './tapHandler';
 
 export function NeuronCanvas() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const dimsRef = useRef<{ width: number; height: number }>({ width: 0, height: 0 });
   const firstTapFiredRef = useRef(false);
+  const theme = useActiveTheme();
+  const themeRef = useRef(theme);
+  themeRef.current = theme;
 
   const handlePointerDown = (ev: ReactPointerEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
@@ -74,7 +78,7 @@ export function NeuronCanvas() {
       if (paused) return;
       const elapsedMs = performance.now() - startTime;
       const state = useGameStore.getState();
-      draw(ctx, state, BIOLUMINESCENT_THEME, dimsRef.current, elapsedMs);
+      draw(ctx, state, themeRef.current, dimsRef.current, elapsedMs);
       rafId = requestAnimationFrame(tick);
     };
 

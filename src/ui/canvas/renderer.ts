@@ -17,25 +17,18 @@
  */
 
 import type { GameState } from '../../types/GameState';
-import type { NeuronType } from '../../types';
-import { COLORS, CANVAS, MOTION } from '../tokens';
+import { CANVAS, MOTION } from '../tokens';
+import type { Theme } from '../theme/types';
+import { THEME_BIOLUMINESCENT } from '../theme/themes';
 import { getGlowSprite } from './glowCache';
 
-export interface CanvasTheme {
-  background: string;
-  neuronColor: Record<NeuronType, string>;
-}
-
-export const BIOLUMINESCENT_THEME: CanvasTheme = {
-  background: COLORS.bgDeep,
-  neuronColor: {
-    basica: COLORS.neuronBasica,
-    sensorial: COLORS.neuronSensorial,
-    piramidal: COLORS.neuronPiramidal,
-    espejo: COLORS.neuronEspejo,
-    integradora: COLORS.neuronIntegradora,
-  },
-};
+/**
+ * Re-exported as `BIOLUMINESCENT_THEME` for backwards-compatible tests
+ * that predate the Phase 4 theme system. New code should consume the
+ * full `Theme` via `useActiveTheme()` — this single-export path is
+ * for test fixtures only.
+ */
+export const BIOLUMINESCENT_THEME: Theme = THEME_BIOLUMINESCENT;
 
 export interface DrawDims {
   width: number;
@@ -47,26 +40,26 @@ const TWO_PI = Math.PI * 2; // CONST-OK: full radian circle (geometric intrinsic
 export function draw(
   ctx: CanvasRenderingContext2D,
   state: GameState,
-  theme: CanvasTheme,
+  theme: Theme,
   dims: DrawDims,
   elapsedMs: number,
 ): void {
-  ctx.fillStyle = theme.background;
+  ctx.fillStyle = theme.canvasBackground;
   ctx.fillRect(0, 0, dims.width, dims.height);
 
   const pulsePhase = Math.sin((elapsedMs / MOTION.durPulse) * TWO_PI); // -1..1
   const radiusMult = 1 + pulsePhase * MOTION.pulseRadiusAmp;
   const normalized = (pulsePhase + 1) / 2; // CONST-OK: sin(-1..1) → (0..1) mapping
   const opacity =
-    MOTION.pulseOpacityMin + normalized * (MOTION.pulseOpacityMax - MOTION.pulseOpacityMin);
+    theme.glowPack.opacityMin + normalized * (theme.glowPack.opacityMax - theme.glowPack.opacityMin);
 
   let globalIndex = 0;
   for (const neuron of state.neurons) {
     if (neuron.count <= 0) continue;
     const baseRadius = CANVAS.neuronRadii[neuron.type];
-    const color = theme.neuronColor[neuron.type];
+    const entry = theme.neurons[neuron.type];
     for (let i = 0; i < neuron.count; i++) {
-      drawNeuron(ctx, color, baseRadius, radiusMult, opacity, globalIndex, dims);
+      drawNeuron(ctx, entry.color, baseRadius, radiusMult, opacity, globalIndex, dims);
       globalIndex++;
     }
   }

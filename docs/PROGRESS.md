@@ -547,6 +547,69 @@ Sprint 11a TODO for `ALL_RULE_IDS` constant must include all 16 (not 13 as state
 
 ## Session log
 
+### 2026-04-17 — Sprint 2 Phase 4: theme architecture (3 Era themes + 4-slot cosmetic override system)
+
+Theme system ships with zero visual regression. Bioluminescent Era is the composed default; Eras 2/3 are `isInterim` stubs inheriting the bioluminescent palette until Sprint 9+ tunes them.
+
+**Files created (221 src + 178 test = 399 total):**
+- `src/ui/theme/types.ts` — 64 lines — `Theme` interface + `NeuronThemeEntry` + `GlowPackConfig`
+- `src/ui/theme/themes.ts` — 70 lines — 3 Era entries (`THEME_BIOLUMINESCENT` real, `THEME_DIGITAL` + `THEME_COSMIC` interim stubs) + `ERA_THEMES` registry
+- `src/ui/theme/cosmeticOverrides.ts` — 30 lines — 4 EMPTY override registries (NEURON_SKINS, CANVAS_THEMES, GLOW_PACKS, HUD_STYLES); docstring names each of the 18 expected Sprint 9+9b entries
+- `src/ui/theme/useActiveTheme.ts` — 57 lines — composition hook with 3-layer precedence (Era → canvas theme → neuron skin → glow pack)
+- `tests/ui/theme/themes.test.ts` — 9 tests (registry shape, hex-format validation, interim flag distribution, NARRATIVE:476 P26 override present on bioluminescent, interim Eras inherit neurons)
+- `tests/ui/theme/useActiveTheme.test.tsx` — 8 tests (3 Era base selections, 4 override modes, unknown-cosmetic silent fallback per UI-8, triple-override precedence)
+
+**Files modified:**
+- `src/ui/canvas/renderer.ts` — `draw()` now consumes `Theme` param (`theme.canvasBackground`, `theme.neurons[type]`, `theme.glowPack.opacityMin/Max`). Removed direct `COLORS` imports (all via theme). Kept `BIOLUMINESCENT_THEME` re-export as `THEME_BIOLUMINESCENT` alias for test fixtures.
+- `src/ui/canvas/NeuronCanvas.tsx` — added `useActiveTheme()` + `themeRef` so the rAF loop reads the current composed theme every frame without re-creating closures on theme changes.
+
+**All 4 cosmetic registries ship EMPTY** — Sprint 9 + Sprint 9b populate. The type signatures accommodate every expected entry (8 neuron skins, 6 canvas themes, 3 glow packs, 1 HUD style = 18 total, matching GDD §26 catalog plus the 2 monetization exclusives).
+
+**Pre-code research pattern paid off twice:**
+1. "9 theme slots" derivation resolved ambiguity without requiring Nico to define the number
+2. `nebula` counter-proposal caught as a new collision before any code was written — the 15-min catalog audit prevented silently shipping a rename that would have broken Neuron skin #8
+
+**Composition precedence documented in `useActiveTheme.ts` docstring:**
+1. Era base (`ERA_THEMES[eraVisualTheme]`)
+2. Canvas theme cosmetic (merges `Partial<Theme>` over composed)
+3. Neuron skin cosmetic (merges per-type `Partial<NeuronThemeEntry>`)
+4. Glow pack cosmetic (replaces `glowPack` entirely)
+
+HUD style is NOT in the composition — Phase 5 HUD reads `state.activeHudStyle` independently.
+
+**Gates at Phase 4 close:**
+- `npm run typecheck` — 0 errors
+- `npm run lint` — 0 warnings
+- `bash scripts/check-invention.sh` — 4/4 PASS, Gate 3 ratio **0.88** (14 constants, 2 literals — unchanged from Phase 3.5)
+- `npm test` — 273 passed / 54 skipped (up from 256 — 17 new Phase 4 tests: themes 9 + useActiveTheme 8)
+- `npm run build` — 170.33 KB JS (+1.18 KB, 56.33 KB gz) + 13.74 KB CSS (5.42 KB gz)
+
+**Runtime smoke check (Playwright headless + canvas pixel inspection):**
+- Initial thoughts: `0` ✓
+- After 6s passive: `3` ✓ (matches Phase 3.5 exactly — identical production rate, identical formula)
+- After 1 tap: `4` ✓
+- Canvas bg pixel at (10,10): `rgba(5,7,13,255)` = `#05070d` = `--bg` = bioluminescent Era background ✓
+- `tap:first-tap` logged once ✓
+- Zero pageerrors ✓
+
+Zero visual regression. The refactor is purely structural: before Phase 4 the renderer imported `COLORS.neuronBasica` directly; after Phase 4 it reads `theme.neurons.basica.color` where `theme = THEME_BIOLUMINESCENT` (composed from `ERA_THEMES.bioluminescent` with no cosmetic overrides). The values are the same references — the indirection is what enables Sprint 9's cosmetic system.
+
+**Mid-flight finding (Phase 4 sub-catch):** during the renderer refactor I wrote an algebraically nonsensical `radiusMult` line (`pulsePhase * glowPack.radiusMultiplier * MOTION.pulseRadiusAmp / glowPack.radiusMultiplier` — the multiplier cancels out, leaving the original expression but with two wasted ops and confused semantics). Caught while re-reading before commit; the architectural mistake was conflating "glow halo size" (governed by `glowPack.radiusMultiplier` = 2.5) with "neuron pulse amplitude" (governed by `MOTION.pulseRadiusAmp` = 0.1). These are independent concerns: glow governs the pre-rendered halo sprite, pulse governs each neuron's breathing animation. Reverted the line to the Phase 2 form `1 + pulsePhase * MOTION.pulseRadiusAmp`. Documented here so Phase 7 perf tuning doesn't re-conflate them.
+
+**Scope confirmation (explicit):**
+- ❌ Cosmetic content (8 neuron skins, 4 store themes, 2 exclusives, 3 glow packs, 1 HUD) — **Sprint 9 scope**
+- ❌ Era 2 digital real palette — **Sprint 9+** (currently `isInterim: true` inheriting bioluminescent)
+- ❌ Era 3 cosmic real palette — **Sprint 9+** (same)
+- ❌ `wrapText` canvas helper — **Phase 5** (needed by HUD, not renderer)
+- ❌ Genius Pass "Genius Gold" theme content — **Sprint 9b monetization**
+- ❌ HUD styling architecture — **Phase 5**
+
+**Cumulative Sprint 2 findings: 12** (Phase 1: 4, Phase 2 pre-code: 1, Phase 2 impl: 2, Phase 3: 1, Phase 3.5: 2, Phase 4 pre-code: 1 combined ambiguity + collision, Phase 4 impl: 1 mid-flight radiusMult algebra error). Cumulative Sprint 1+2: **16**.
+
+**Next action:** Phase 5 — HUD (5 sub-components per GDD §29): thoughts TL (already placeholder-positioned), rate TR, charges TC, Focus Bar right-vertical, Consciousness Bar left-vertical. `formatNumber()` already landed Phase 2. `wrapText()` utility + Vitest Browser Mode real-Chromium test are Phase 5 scope.
+
+---
+
 ### 2026-04-17 — Sprint 2 Phase 4 pre-code: "9 theme slots" resolved + cosmic collision fixed
 
 "9 theme slots" (SPRINTS.md line 217) derived empirically from GDD §26 by Claude Code: 3 Era + 4 Store + Genius Gold + Neon Pulse = 9. Enumeration added to GDD §3b subsection "Canvas theme slots (9 total)" to close the documentation gap.
