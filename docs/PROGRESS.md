@@ -547,6 +547,18 @@ Sprint 11a TODO for `ALL_RULE_IDS` constant must include all 16 (not 13 as state
 
 ## Session log
 
+### 2026-04-17 — Meta: anti-invention self-audit on "mental flag" anti-pattern
+
+During Sprint 2 Phase 2 review, Claude (acting as reviewer) suggested deferring a "Gate 6 canonical-storage audit" to Sprint 11a as a "mental flag for later". Nico correctly called this out: mental flags get lost, which is exactly the failure mode the anti-invention framework exists to prevent.
+
+**Rule established:** when a future-sprint backlog item is identified during a review, it MUST be logged in `docs/SPRINTS.md` §Sprint X (where it will be executed), not in conversation memory. "Mental flag for later" is equivalent to silent invention by omission.
+
+Gate 6 concept logged formally in `docs/SPRINTS.md` §Sprint 11a adjacent to the existing Gate 5 snapshot-validation item. Future "this would be nice to check" ideas follow the same pattern: write them into SPRINTS.md at the target sprint, with enough context that the implementer understands what to do.
+
+Phase 2 introduced 7 interim animation constants in `tokens.ts` (pulse envelope, glow radius, scatter layout). All are judgment calls for visual "feel" without GDD guidance; values are subject to revision in Phase 7 (perf spike) and Phase 3 (multi-neuron scatter). Documented in GDD §3b subsection "Phase 2 interim animation constants" with tune-target sprints noted. This closes the "invisible to future sprints" gap — Phase 7 implementer reading §3b will find both the values and the tune-window guidance.
+
+---
+
 ### 2026-04-17 — Sprint 2 Phase 2: canvas renderer (1 pulsing Básica)
 
 Phase 2 delivers the Canvas 2D rendering foundation. Scope: formatNumber utility, DPR scaling, pre-rendered glow cache, pure draw() renderer, NeuronCanvas React component with rAF loop + visibility-pause + resize handling. Integration into App.tsx replaces the Sprint 1 placeholder "Thoughts: 0" text with the live canvas.

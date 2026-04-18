@@ -154,6 +154,22 @@ Radii progression = `tier × 2 + 6 px` (Básica tier 1 → 8px, Integradora tier
 
 Era arc via neuron palette: Era 1 violet-dominated (Piramidal is the primary buy) → Era 2 introduces cyan (Integradora unlocks P10+, Consciousness Bar also cyan) → Era 3 transitions to white-gold at P26 (per NARRATIVE:476, "consciousness bar is no longer purple — it's white-gold"). Each era transition introduces a new palette tone without backtracking.
 
+**Phase 2 interim animation constants**
+
+These canvas animation constants were introduced Sprint 2 Phase 2 with judgment-call values; Phase 7 perf spike may tune them after Pixel 4a testing. Values live in `src/ui/tokens.ts` MOTION and CANVAS blocks.
+
+| Constant | Value | Rationale (Phase 2 interim) | Tune in |
+|---|---|---|---|
+| `MOTION.pulseRadiusAmp` | `0.1` | ±10% radius oscillation around base — subtle "alive" feel without distraction | Phase 7 |
+| `MOTION.pulseOpacityMin` | `0.7` | Minimum opacity during pulse valley — neuron never fully fades | Phase 7 |
+| `MOTION.pulseOpacityMax` | `1.0` | Maximum opacity during pulse peak — full visibility | Phase 7 |
+| `CANVAS.glowRadiusMultiplier` | `2.5` | Glow halo extends 2.5× neuron radius — visible without dominating | Phase 7 |
+| `CANVAS.scatterGoldenAngle` | `2.399` (≈137.5°) | Golden-angle spiral prevents clustering as neurons multiply | Phase 3 (multi-neuron) |
+| `CANVAS.scatterBaseRadius` | `40` | Distance from canvas center to first non-Básica neuron | Phase 3 |
+| `CANVAS.scatterRadiusStep` | `12` | Spacing increase per additional neuron | Phase 3 |
+
+Tunable via `tokens.ts` edit + `npm run build:tokens`. Changes require visual verification per CLAUDE.md "Canonical storage file rule".
+
 **Colorblind accessibility:** Sprint 10 (SPRINTS.md §Sprint 10) will add shape/pattern alternatives for color-only indicators. Current palette is NOT colorblind-safe by design — that is a Sprint 10 layer.
 
 ---

@@ -918,6 +918,13 @@ Coverage thresholds enforced, property-based tests, save fuzz, migration chain, 
 - [ ] 157-rule grep: script confirms every GDD rule ID (e.g., TRANS-1, MENTAL-5, PAT-3) appears in at least one test file OR comment block referencing it
 - [ ] `tests/consistency.test.ts` — ALL tests un-skipped, all pass (final pass)
 - [ ] Implement minimal snapshot validation gate (Gate 5 of `check-invention.sh`) per POSTLAUNCH.md 6A-2 — elevated from v1.1 due to 2 Sprint 1 fabrications. Hardcoded list of canonical snapshots: `mulberry32(12345)()` first 3 values, `hash("0") === 890022063`, `softCap(100/200/1000/10000)`, `calculateThreshold(0,0 / 0,1 / 25,2 / 25,5)`. Gate compares against the live implementation output.
+- [ ] **Gate 6: canonical storage consistency audit** (Sprint 2 Phase 2 backlog item, elevated from "mental flag" to formal backlog per anti-invention discipline)
+    - Extract all hex values from `docs/UI_MOCKUPS.html`
+    - Compare against `src/ui/tokens.ts` COLORS entries
+    - Report any drift (mockup hex not in tokens, or tokens hex not referenced in mockup)
+    - Similar audit: `docs/GDD.md` §3b palette table vs tokens.ts
+    - Add to `scripts/check-invention.sh` as Gate 6 (or a separate `scripts/check-palette-drift.sh` called from check-invention)
+    - Context: drift caught and corrected in Sprint 2 Phase 2 pre-code (`#4060E0` vs canonical `--bl #4090E0` in UI_MOCKUPS lines 42+47). Automated check prevents recurrence as UI_MOCKUPS extends with Sprint 5-10 screens.
 
 **Sprint 11a tests 🧪:**
 - [ ] Coverage report shows engine ≥85%
