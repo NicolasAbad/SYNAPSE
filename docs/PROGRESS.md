@@ -25,6 +25,90 @@
 - **Sprint 11a deliverable elevated from v1.1:** snapshot validation gate (Batch 5 6A-2)
 - **Husky pre-commit hook:** installed, runs 4 gates on every commit
 
+### Handoff state for Sprint 2
+
+**What Sprint 2 will build** (per `docs/SPRINTS.md` §Sprint 2 — Canvas + HUD + Performance Spike):
+
+- Canvas2D renderer with `devicePixelRatio` scaling for retina
+- HUD overlay: thoughts (TL), rate (TR), charges (TC), Focus Bar (right vertical), consciousness bar (left vertical)
+- 4-tab bottom nav shell (Neurons, Upgrades, Regions, Mind) with progressive disclosure
+- UI-9 first-open sequence: branded splash (2s) → GDPR if EU → canvas with 1 auto-granted Básica pulsing
+- CycleSetupScreen layout shell per CYCLE-2 (step-by-step on <600px, 3-column ≥600px)
+- Theme system scaffolding: 9 theme slots, 3 Era themes (bio, digital, cosmic)
+- Performance spike: 100 animated nodes + full glow on Pixel 4a emulator → ≥30 fps, <20 MB memory delta, <2%/30s battery
+- `formatNumber()` helper with suffix precision (K/M/B/T/Q)
+- `wrapText()` canvas helper via `ctx.measureText()`
+- AudioContext unlock-on-first-tap for iOS
+- `touchstart` (not `click`) + `touch-action: manipulation` + `env(safe-area-inset-*)` for mobile
+- Canvas pause on `visibilitychange === 'hidden'`
+
+**What Sprint 2 does NOT touch** — the engine is frozen unless a bug is found:
+
+- `src/engine/rng.ts` — RNG-1 primitives (frozen)
+- `src/engine/production.ts` — softCap + threshold primitives (frozen)
+- `src/engine/tick.ts` — 12-step TICK-1 reducer (Sprint 3+ wires production multipliers; Sprint 2 only reads cached `effectiveProductionPerSecond`)
+- `src/store/gameStore.ts` core state + `createDefaultState` + INIT-1 action (frozen; Sprint 2 may add UI-specific actions like `setActiveTab` at the end, but not modify existing state shape)
+- `src/store/saveGame.ts`, `src/store/saveScheduler.ts` — save system (frozen)
+- `src/types/GameState.ts` — 110-field interface (frozen — adding a field cascades to §32, §33, consistency tests, PRESTIGE split)
+- `src/config/constants.ts` — all spec values (frozen)
+
+Any bug or spec gap found in the above MUST be flagged (PROGRESS.md session log + halt) rather than fixed silently — same discipline as Sprint 1's 4-gap rhythm.
+
+**Key dependencies Sprint 2 will add** (approximate — Sprint 2 kickoff finalizes):
+
+- **Tailwind CSS** — for HUD + tab styles (utility-first scales well for small dev budgets)
+- **jsdom** — unblocks render-based tests previously TODO'd in `tests/store/initSession.test.ts` and `tests/store/saveScheduler.test.ts`
+- **@testing-library/react** — component rendering + interaction tests
+- **@testing-library/jest-dom** — DOM matcher assertions (optional, nice-to-have)
+- **Capacitor Haptics** — Sprint 3 uses it; Sprint 2 may install the plugin for a shared Haptics utility
+
+Total added dep footprint: ~30–50 MB dev, ~40 KB runtime (Tailwind purges to ~10 KB).
+
+**Sprint 2 performance target:** ≥30 fps on Pixel 4a per GDD §29 / CODE-4. Performance spike test (`npm run test:perf`, added in Sprint 2) runs 30s stress with 100 nodes + full glow. Fails the sprint if budget exceeded.
+
+**Where Sprint 2 reads from existing state** (no writes except UI-local):
+
+- `state.thoughts`, `state.memories`, `state.sparks` — HUD currency displays (via `useGameStore(s => s.thoughts)` selectors; `Math.floor()` on display per CODE-5)
+- `state.effectiveProductionPerSecond` — HUD rate display (cached by TICK-1 step 3)
+- `state.neurons` — canvas node rendering (5 types, counts determine visible density)
+- `state.connectionMult` — HUD/canvas visual edge density
+- `state.focusBar` — right vertical Focus Bar fill level (0.0–3.0)
+- `state.dischargeCharges`, `state.dischargeMaxCharges` — HUD top-center charges pip
+- `state.consciousnessBarUnlocked`, `state.cycleGenerated`, `state.currentThreshold` — left vertical consciousness bar visibility + fill
+- `state.insightActive`, `state.insightEndTime` — Insight visual state
+- `state.eraVisualTheme` — theme selection (`bioluminescent` | `digital` | `cosmic`)
+- `state.activeCanvasTheme`, `state.activeNeuronSkin`, `state.activeGlowPack`, `state.activeHudStyle` — cosmetics (defaults null → use era defaults)
+- `state.currentMentalState` — Mental State visual overlay (null in Sprint 2; wired in Sprint 7)
+
+**Sprint 2 tab badge state** — `state.tabBadgesDismissed` is in GameState (§32) but only HUD component writes happen in Sprint 2 (UI-3: max 1 badge active).
+
+**54 consistency tests still BLOCKED-SPRINT-X** (by category):
+
+| Sprint | Count | What unblocks them |
+|---|---|---|
+| Sprint 3 | 5 | `NEURON_TYPES`, `NEURON_CONFIG`, `UPGRADES` exports (neurons + upgrades + taps + Discharge) |
+| Sprint 4a | 6 | `PRESTIGE_RESET`, `PRESTIGE_PRESERVE`, `handlePrestige` (45/60/4/1 split enforcement) |
+| Sprint 5 | 6 | `MUTATIONS`, `PATHWAYS`, `getMutationOptions` exports |
+| Sprint 6 | 16 | `ARCHETYPES`, `SPONTANEOUS_EVENTS`, `ERA_3_EVENTS`, `FRAGMENTS`, `ECHOES`, `ENDINGS`, weighted-events helper |
+| Sprint 7 | 11 | `MENTAL_STATES`, `MICRO_CHALLENGES`, `ACHIEVEMENTS` |
+| Sprint 8b | 7 | `RUN_EXCLUSIVE_UPGRADES`, `RESONANCE_UPGRADES` |
+| Sprint 8c | 2 | `RESONANT_PATTERNS` |
+| Sprint 10 | 6 | `WEEKLY_CHALLENGES`, `ANALYTICS_EVENTS` |
+| **Total** | **54** | Grep `BLOCKED-SPRINT-` in `tests/consistency.test.ts` for the exact list |
+
+Sprint 2 does NOT un-skip any consistency tests — its deliverables are UI/render-focused. Test un-skipping resumes in Sprint 3 (neurons + upgrades).
+
+**Clean-baseline verification at handoff** (all 4 gates green from cold state):
+
+- `git status` — clean (empty)
+- `npm run typecheck` — 0 errors
+- `npm run lint` — 0 warnings
+- `bash scripts/check-invention.sh` — all 4 gates PASS, ratio 0.86
+- `npm test` — 183 passed / 54 skipped / 0 failing
+- `npm run build` — 160.84 KB bundle (52.92 KB gzipped)
+
+---
+
 ### Sprint 1 deliverables shipped
 
 - `src/config/constants.ts` — every GDD §31 value including 26-entry `baseThresholdTable`
