@@ -85,3 +85,6 @@ sim/results/
 # Editor artifacts
 *.orig
 *.rej
+
+# Auto-generated Tailwind theme (from tokens.ts)
+styles/_theme.generated.css

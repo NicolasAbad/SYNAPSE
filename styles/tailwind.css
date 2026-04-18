@@ -1,0 +1,27 @@
+/* SYNAPSE Tailwind entry — v4 CSS-first config */
+
+@import "tailwindcss";
+@import "./_theme.generated.css";
+
+/* Custom base styles */
+@layer base {
+  html {
+    background-color: var(--color-bg-deep);
+    color: var(--color-text-primary);
+    font-family: var(--font-body);
+    /* Prevent iOS rubber-band scroll on root */
+    overscroll-behavior: none;
+  }
+
+  /* Prevent text selection on tap (game UI) */
+  body {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Tabular figures for numeric displays — prevent HUD counter jitter */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}

@@ -1,3 +1,11 @@
+// Fonts (self-hosted — UI-8 compliance, no CDN deps)
+import '@fontsource-variable/outfit';
+import '@fontsource-variable/jetbrains-mono';
+
+// Styles (Tailwind v4 + safe-area utilities)
+import '../styles/tailwind.css';
+import '../styles/safe-area.css';
+
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './App';

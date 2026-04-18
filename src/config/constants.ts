@@ -166,6 +166,8 @@ export const SYNAPSE_CONSTANTS = {
   // ── UI ──
   undoToastDurationMs: 3_000,
   undoExpensiveThresholdPct: 0.1, // >10% of thoughts triggers undo
+  splashDurationMs: 2_000, // UI-9 step 1: 2s branded splash (Sprint 2 kickoff)
+  firstOpenTutorialHintIdleMs: 2_000, // UI-9 step 4: 2s idle → "Tap the neuron" (Sprint 2 kickoff)
 
   // ── Version ──
   gameVersion: '1.0.0',
