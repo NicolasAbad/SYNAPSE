@@ -925,6 +925,14 @@ Coverage thresholds enforced, property-based tests, save fuzz, migration chain, 
     - Similar audit: `docs/GDD.md` §3b palette table vs tokens.ts
     - Add to `scripts/check-invention.sh` as Gate 6 (or a separate `scripts/check-palette-drift.sh` called from check-invention)
     - Context: drift caught and corrected in Sprint 2 Phase 2 pre-code (`#4060E0` vs canonical `--bl #4090E0` in UI_MOCKUPS lines 42+47). Automated check prevents recurrence as UI_MOCKUPS extends with Sprint 5-10 screens.
+- [ ] **TICK-RUNTIME-1: end-to-end runtime integration test** (Sprint 2 Phase 3.5 backlog, caught by smoke test)
+    - Mount full App tree via Vitest Browser Mode (real Chromium per Sprint 2 checklist test item 3)
+    - Wait 5 seconds via `vi.advanceTimersByTime` OR real time
+    - Assert `state.thoughts > 0` (passive accumulation occurred)
+    - Assert `state.dischargeLastTimestamp` updated if a charge tick ran
+    - Assert `sessionStartTimestamp` populated by INIT-1 mount effect
+    - Prevents the class of bug where unit tests pass but the runtime scheduler is missing. Pattern: "engine works in isolation but doesn't get called by the app".
+    - Context: `src/engine/tick.ts` had 29 passing unit tests from Sprint 1 Phase 5 but was NOT wired to any runtime loop until Sprint 2 Phase 3.5 added `src/store/tickScheduler.ts`. Passive production was silently zero in the browser despite green tests. Mitigation was `tests/store/tickScheduler.test.ts` (6 tests with fake timers + guarded init), but a real-Chromium end-to-end check is still the only way to catch "scheduler hook not called" regressions.
 
 **Sprint 11a tests 🧪:**
 - [ ] Coverage report shows engine ≥85%

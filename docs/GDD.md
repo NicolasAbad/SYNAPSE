@@ -1823,6 +1823,9 @@ export const SYNAPSE_CONSTANTS = {
   // Daily login
   dailyLoginRewards: [5, 5, 10, 10, 15, 20, 50],
 
+  // Runtime scheduler
+  tickIntervalMs: 100,                    // CODE-4 + §35 TICK-1 step 1: fixed 100ms dt (surfaced Sprint 2 Phase 3.5)
+
   // Save
   saveIntervalMs: 30_000,                 // 30s auto-save during active
   saveDebounceMs: 2_000,                  // debounce rapid saves

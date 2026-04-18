@@ -547,6 +547,44 @@ Sprint 11a TODO for `ALL_RULE_IDS` constant must include all 16 (not 13 as state
 
 ## Session log
 
+### 2026-04-17 — Sprint 2 Phase 3.5: runtime integration gap caught by smoke test
+
+Manual smoke test after Phase 3 (Nico on Windows Chrome localhost) exposed a critical integration gap: `src/engine/tick.ts` had 29 passing unit tests since Sprint 1 Phase 5 but was NOT invoked at runtime — no React hook wrapped `setInterval` around `tick()`. All passive production, Discharge charge regen, and Mental State triggers were silent no-ops in the real app.
+
+**Why tests didn't catch it:**
+- `tick.test.ts` calls `tick()` manually with mock timestamps — tests the pure reducer, not the runtime integration
+- No end-to-end test ever mounted the app, waited 1 second, and asserted `thoughts > 0` from passive accumulation
+- jsdom tests use fake timers and explicit `renderHook`, so a missing scheduler call in `App.tsx` would be invisible there too
+
+**Fix #1 — tick runtime scheduler:** `src/store/tickScheduler.ts` — 38 lines, parallel pattern to `saveScheduler.ts` from Sprint 1 Phase 7. 100ms interval per CODE-4 + GDD §35 TICK-1 step 1. Three safety guards baked in:
+
+1. **`Date.now()` not `performance.now()`** — INIT-1 seeds `cycleStartTimestamp` with `Date.now()` (epoch ms); using `performance.now()` (page-load-relative) would make derived durations wildly negative. Caught mid-implementation before the first test run.
+2. **INIT-1 init guard** — `if (current.cycleStartTimestamp === 0) return;` skips ticks until mount effect populates timestamps. Covers the <100ms mount race + the async `loadFromSave` window where the interval could fire before timestamps exist.
+3. **Merge-mode `setState`** — no `true` flag per CLAUDE.md Zustand pitfall rule; action bindings preserved across every tick.
+
+**Background behavior:** `setInterval` fires regardless of tab visibility. Sprint 8a OFFLINE-1 recalc supersedes on return; a backgrounded browser tab throttles `setInterval` to ~1 Hz anyway, so waste is minimal.
+
+**Fix #2 — HUD placement:** Phase 3 placed thoughts counter top-right with arbitrary styling. Corrected to top-left amber monospace per UI_MOCKUPS line 33 (amber `--a`, JetBrains Mono, weight 800, x=20 offset). SYNAPSE h1 placeholder removed — it was residue from Phase 1 pre-canvas scaffolding that became visually ambiguous once the canvas took the full viewport. Thoughts counter now uses `pointer-events: none` so taps pass through to the canvas below. `toLocaleString()` adds thousand separators per UI_MOCKUPS line 33 ("1,847,293"). Phase 5 replaces with the full HUD (thoughts TL + rate TR + charges TC + Focus Bar right + consciousness bar left).
+
+**Files:**
+- New: `src/store/tickScheduler.ts`, `tests/store/tickScheduler.test.ts` (6 tests: interval registered, clearInterval on unmount, INIT-1 guard blocks pre-init ticks, post-init accumulation, action refs preserved, cleanup stops further ticks)
+- Modified: `src/App.tsx` (hook + layout rewrite), `docs/SPRINTS.md` §Sprint 11a (TICK-RUNTIME-1 backlog item)
+
+**Gates at Phase 3.5 close:**
+- `npm run typecheck` — 0 errors
+- `npm run lint` — 0 warnings
+- `bash scripts/check-invention.sh` — 4/4 PASS (see ratio in checkpoint)
+- `npm test` — 256 passed / 54 skipped (up from 250 — 6 new tickScheduler tests)
+
+**Lessons:**
+- **Manual smoke test is irreplaceable** for runtime integration gaps. Unit tests + jsdom tests are necessary but insufficient.
+- Going forward: Phase 7 perf spike + Sprint 8a offline spike should BOTH include a "mount and wait" assertion to catch runtime-scheduler regressions.
+- Formalized as SPRINTS.md §Sprint 11a item **TICK-RUNTIME-1** — an end-to-end test that mounts the app, advances timers, and asserts state evolution. Pattern name: "engine works in isolation but doesn't get called by the app".
+
+**Cumulative Sprint 2 findings: 9** (Phase 1: 4, Phase 2 pre-code: 1, Phase 2 impl: 2, Phase 3: 1, Phase 3.5: 1 — the first Sprint 2 finding caught by runtime behavior rather than review or static analysis). Cumulative Sprint 1+2 total: **13**.
+
+---
+
 ### 2026-04-17 — Sprint 2 Phase 3: tap handler + AudioContext + hit-testing
 
 Phase 3 delivers tap-input plumbing. NARROW scope: hit-testing, minimum-thought increment, AudioContext unlock, first-tap stub. All Sprint 3 game logic (Focus Bar fill, Insight, full TAP-2 formula, anti-spam wiring, haptics, Undo toast, tutorial hints, Discharge) remains deferred to Sprint 3 per the sprint-boundary discipline — verified none leaked in.

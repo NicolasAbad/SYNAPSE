@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useGameStore } from './store/gameStore';
 import { useSaveScheduler } from './store/saveScheduler';
+import { useTickScheduler } from './store/tickScheduler';
 import { NeuronCanvas } from './ui/canvas/NeuronCanvas';
 
 export function App() {
@@ -20,6 +21,7 @@ export function App() {
     void initialize();
   }, []);
 
+  useTickScheduler(); // game tick runtime (Phase 3.5 Finding #1 fix)
   useSaveScheduler();
 
   // Phase 3 placeholder readout — Phase 5 replaces with real HUD (thoughts TL, rate TR, etc).
@@ -31,39 +33,44 @@ export function App() {
         margin: 0,
         padding: 0,
         height: '100vh',
-        display: 'flex',
-        flexDirection: 'column',
+        position: 'relative',
         background: 'var(--color-bg-deep)',
         color: 'var(--color-text-primary)',
         fontFamily: 'var(--font-body)',
+        overflow: 'hidden',
       }}
     >
-      <header
+      <NeuronCanvas />
+      {/* Thoughts readout — top-left amber monospace per UI_MOCKUPS canvas section.
+          Absolute-positioned over the canvas. Placeholder until the full HUD ships. */}
+      <div
+        data-testid="thoughts-readout"
         style={{
-          padding: 'var(--spacing-4)', // CONST-OK: CSS custom property ref (CODE-1 exception)
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'baseline',
-          gap: 'var(--spacing-4)', // CONST-OK: CSS custom property ref (CODE-1 exception)
+          position: 'absolute',
+          top: 'var(--spacing-5)', // CONST-OK: CSS custom property ref (CODE-1 exception)
+          left: 'var(--spacing-5)', // CONST-OK: CSS custom property ref (CODE-1 exception)
+          color: 'var(--color-thoughts-counter)',
+          fontFamily: 'var(--font-mono)',
+          fontSize: 'var(--text-3xl)',
+          fontWeight: 'var(--font-weight-black)',
+          fontVariantNumeric: 'tabular-nums',
+          lineHeight: 1,
+          pointerEvents: 'none',
         }}
       >
-        <h1 style={{ margin: 0, fontSize: 'var(--text-xl)' }}>SYNAPSE</h1>
+        {Math.floor(thoughts).toLocaleString()}
         <div
-          data-testid="thoughts-readout"
           style={{
-            fontFamily: 'var(--font-mono)',
-            fontVariantNumeric: 'tabular-nums',
-            color: 'var(--color-thoughts-counter)',
-            fontWeight: 'var(--font-weight-bold)',
+            fontFamily: 'var(--font-body)',
+            fontSize: 'var(--text-xs)',
+            fontWeight: 'var(--font-weight-regular)',
+            color: 'var(--color-text-secondary)',
+            marginTop: 'var(--spacing-1)', // CONST-OK: CSS custom property ref (CODE-1 exception)
           }}
         >
-          Thoughts: {Math.floor(thoughts)}
+          thoughts
         </div>
-      </header>
-      <div style={{ flex: 1, position: 'relative', minHeight: 0 }}>
-        <NeuronCanvas />
       </div>
-      {/* HUD + TabBar come in later phases */}
     </main>
   );
 }
