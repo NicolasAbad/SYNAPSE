@@ -160,7 +160,7 @@ The Empathic mind senses other consciousnesses — other players, other runs, th
 ### EMP-07 · P12
 > There's a mind that doesn't speak. It just watches. You can feel its attention like sunlight on closed eyelids — warm, constant, patient.
 
-*Hints at the Creator (Oneiric System, v1.5) and the Observer archetype.*
+<!-- Hints at the Creator (Oneiric System, v1.5) and the Observer archetype. Claude: do not expose this in Sprint 6 narrative work; rewrite when fragment ships per Sprint 6 AI check. -->
 
 ### EMP-08 · P14
 > The watching mind is grieving. You can feel it underneath everything — a deep, old sadness that predates your existence.

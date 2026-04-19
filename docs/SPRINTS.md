@@ -165,7 +165,8 @@ Scaffold the project, implement the engine primitives and save system.
 - [ ] `calculateProduction()` returns `{ base, effective }` separately (no deprecated `productionPerSecond`)
 - [ ] Tick loop runs at 100ms with fixed dt (not variable)
 - [ ] Tick implements TICK-1 order exactly (12 steps per GDD §35). Order covered by `tests/tick-order.test.ts` snapshot test — each step observed via state delta between step N and N+1.
-- [ ] `t('key')` returns English strings for all keys; placeholder Spanish file exists
+- [x] `t('key')` returns English strings for all keys (Phase 4.9 Sprint 2 — deferred from Sprint 1 per Finding #16)
+- [ ] Spanish locale (es.ts) deferred to v1.1 per POSTLAUNCH.md — v1.0 is English-only user-facing (Finding #17)
 - [ ] `saveGame()` called ONLY on prestige + background + 30s interval — NEVER on tick
 - [ ] `PROGRESS.md` created with Sprint 1 status
 - [ ] ESLint zero warnings. No file > 200 lines. No function > 50 lines.
@@ -216,7 +217,7 @@ Canvas2D rendering, HUD overlay, tab navigation, theme architecture, performance
 - [ ] Safe areas respected via `env(safe-area-inset-*)`
 - [ ] Theme system: 9 theme slots, 3 Era themes implemented (bio, digital, cosmic)
 - [ ] Skin/GlowPack system architecture (configs loadable by canvas)
-- [ ] HUD: thoughts (TL), rate (TR), charges (TC), Focus Bar (right vertical), consciousness bar (left vertical)
+- [ ] HUD: thoughts (TL), rate (TR), charges (TC), Focus Bar (top horizontal cyan), consciousness bar (right vertical violet) — per UI_MOCKUPS canonical SVG (Phase 4.9 Finding #18)
 - [ ] 4 tabs bottom (Neurons, Upgrades, Regions, Mind). Progressive disclosure per GDD §29.
 - [ ] Max 1 tab badge active (UI-3 enforced)
 - [ ] `formatNumber()` with suffixes: K (10³), M (10⁶), B (10⁹), T (10¹²), Q (10¹⁵). Precision: 2 decimals <10, 1 decimal <100, 0 above.
@@ -456,7 +457,7 @@ Not a sprint. 2 days reserved for integration + bug fixes on the Sprint 4a/4b/4c
 - [ ] Equilibrada: all upgrade bonuses ×0.85, pathwayCostMod 1.0
 - [ ] Blocked upgrade UI: greyed out with tooltip, not hidden
 - [ ] 5 Regions visible: Hipocampo (P0), Prefrontal (P0 visible, upgrades P2+), Límbico (P0), Visual (P0), Broca (P14 unlock)
-- [ ] 5 Region upgrades (costs in Memorias) — see GDD §24
+- [ ] 5 Region upgrades (costs in Memories) — see GDD §24
 - [ ] Área de Broca "Name your mind" input (P14) — max 20 chars, profanity-filtered
 - [ ] What-if Preview on CycleSetupScreen: shows estimated next cycle time per choice
 
@@ -469,7 +470,7 @@ Not a sprint. 2 days reserved for integration + bug fixes on the Sprint 4a/4b/4c
 - [ ] Unit: Pathway gating — Rápida enables [tap, foc, syn, met], blocks [reg, con, new]
 - [ ] Unit: cost order per COST-1 — base × mutMod × FE × pathMod exactly in that order
 - [ ] Unit: Equilibrada: all upgrade bonuses scaled by 0.85
-- [ ] Unit: Region upgrades cost Memorias (not Pensamientos)
+- [ ] Unit: Region upgrades cost Memories (not Thoughts)
 - [ ] Unit: Broca unlock at exactly prestigeCount === 14
 - [ ] Integration: pick Déjà Vu Mutation, next cycle starts with prior upgrades + ×2 costs
 

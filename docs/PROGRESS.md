@@ -547,6 +547,72 @@ Sprint 11a TODO for `ALL_RULE_IDS` constant must include all 16 (not 13 as state
 
 ## Session log
 
+### 2026-04-18 — Sprint 2 Phase 4.9: Sprint 1 i18n gap + language policy + HUD alignment
+
+Pre-Phase-5 checkpoint. Two commits: doc-alignment (Commit 1) + i18n foundation (Commit 2). Stage 1 audit (Phase 4.9.0) surfaced 4 additional findings beyond the 3 originally scoped; [A1] and [A2] partial-fix approved for inclusion, [A3] and [A4] deferred to consuming sprints.
+
+**Finding #16 — Sprint 1 infrastructure gap: i18n never implemented.**
+SPRINTS.md §Sprint 1 AI check "t('key') returns English strings for all keys; placeholder Spanish file exists" silently skipped during Sprint 1 and missed by the 4 anti-invention gates (no gate checks for file existence). Gap undetected through Sprint 2 Phases 1-4 because no component had user-facing strings. Phase 5 HUD exposed it: hardcoding tab labels would violate CODE-1. Resolution: i18n foundation shipped in Phase 4.9.2 (Commit 2) — `src/config/strings/en.ts` + `index.ts` + 7 contract tests. Sprint 1 checkbox retroactively checked with Phase 4.9 reference.
+
+**Finding #17 — Language policy: v1.0 English-only user-facing (sprint-owned translation).**
+CLAUDE.md Glossary originally mandated "mechanic names stay Spanish"; reverted. Nico decision based on target audience (anglophone mobile idle market): all user-facing English for v1.0. Translation happens INCREMENTALLY per sprint — each sprint translates the GDD sections it implements. Phase 4.9 Sprint 2 translated §29 (HUD), UI_MOCKUPS.html user-facing labels, and CLAUDE.md Glossary intro. Sprints 3-10 will translate their respective sections at kickoff with per-name Nico approval (see new CLAUDE.md "Language translation — sprint-level ownership" rule).
+
+Rationale for incremental approach:
+1. Many GDD compound names are gameplay creative decisions with no neuroscientific equivalent — translating them requires designer intent, not lookup (e.g., Mente Despierta, Eco Ancestral, Modo Ascensión).
+2. Mass find-and-replace of bare terms inside compound names produces nonsense hybrids ("Amplificador de Discharge").
+3. Each sprint implementer reviews their own surface with fresh context; distributed cognitive load.
+
+Internal TS union identifiers (`'basica'`, `'rapida'`, `'analitica'`) KEEP Spanish — refactoring = 15+ file churn for zero player impact. v1.1 adds `es.ts` and multi-locale via POSTLAUNCH.md §v1.1 roadmap.
+
+**Finding #18 — HUD position docs vs mockup alignment.**
+GDD §29 + SPRINTS §Sprint 2 said "Consciousness LEFT / Focus RIGHT vertical", but UI_MOCKUPS.html canonical SVG (verifiable at `x=382` for Consciousness, `x=80 y=76` for Focus) shows "Consciousness RIGHT vertical violet / Focus TOP horizontal cyan". Per GDD §3b pairing rule, mockup is canonical visual. Updated GDD §29 + SPRINTS Sprint 2 + tokens.ts focusBar color (violet `#8B7FE8` → cyan `#40D0D0`). Regenerated `styles/_theme.generated.css` via `npm run build:tokens`; verified `--color-focus-bar: #40D0D0;` emitted.
+
+**Finding #19 — POSTLAUNCH v1.1 scope contamination in UI_MOCKUPS.**
+Screen 6 "Tab Neuronas" mockup displayed Auto-buy toggle (POSTLAUNCH §v1.1, line 29-30) without deferral qualifier. Sprint 3 implementer reading mockup literally (consistent with prior finding pattern — #4060E0, 9-theme-slots, consciousness LEFT/RIGHT drift) would have built a v1.1 feature into v1.0 scope. Removed SVG elements (rect + "Auto ⟳" text) + description "Auto-buy toggle (P5+)." mention, added HTML comment documenting the deferral. Canonical mockup is now v1.0-clean for neurons panel. Caught by Phase 4.9.0 audit.
+
+**Finding #20 — NARRATIVE.md v1.5+ spoiler annotation (partial mitigation).**
+EMP-07 fragment annotation at line 163 named "Observer archetype (v1.5)" and "Oneiric System (v1.5)" in player-visible doc context. Partial mitigation: wrapped in HTML comment to hide from markdown render (zero-risk change). Full resolution deferred to Sprint 6 narrative pass — implementer will review all fragment annotations and decide whether to strip, reword, or retain as design notes.
+
+### Neuron display names (for Phase 5 HUD, verified via neuroscience)
+
+Each internal type mapped to a real neuroscientific term:
+
+| Internal | Display | Source |
+|---|---|---|
+| `basica` | Basic | Conceptual proto-neuron |
+| `sensorial` | Sensory | Canonical term (Healthline) |
+| `piramidal` | Pyramidal | Wikipedia — cortex excitation units |
+| `espejo` | Mirror | Cell (2022) — monkey premotor cells |
+| `integradora` | Interneuron | Wikipedia — central nodes of circuits |
+
+Chose `Interneuron` over `Integrator` — actual neuroscientific term, aligns with GDD §5 integration role, thematically connects with Inhibitory Polarity unlock at P3.
+
+### UI_MOCKUPS.html translation pass (Phase 4.9.1)
+
+All Spanish user-facing text in the mockup translated to English: 6 screen descriptions reworded, tab labels (Mente/Neuronas/Mejoras/Regiones → Mind/Neurons/Upgrades/Regions), HUD text (Disparo → Discharge, Ráfaga Dopamínica → Dopamine Burst, NUEVO RÉCORD → NEW RECORD), CycleSetupScreen labels (POLARIDAD → POLARITY, Excitatorio → Excitatory, MUTACIÓN → MUTATION, Rápida → Swift, [cambiar] → [change]), Pattern Tree labels (carga → charge, ciclo → cycle, Árbol + Decisión → Tree + Decision), Neuron panel (Básica/Sensorial/Piramidal → Basic/Sensory/Pyramidal), Offline screen description (Sueño Lúcido → Lucid Dream). HTML `lang="es"` → `lang="en"`. Compound names intentionally untouched per CLAUDE.md sprint-ownership rule — e.g. `Ínsula` (v2.0 feature per POSTLAUNCH, already flagged in mockup description).
+
+### GDD §29 translation pass (Phase 4.9.1)
+
+Scope narrowed to §29 only per Option A decision (§5/§8/§13/§15/§16/§24 deferred to consuming sprints per per-name approval). §29 terms translated: `Pensamientos` → `Thoughts`, `Polaridad`/`Arquetipo` → `Polarity`/`Archetype` (UI-7 rule), `Básica` → `Basic` (UI-9 first-open sequence). HUD Layout section corrected for Finding #18 positions. No compound names present in §29; no ambiguities surfaced.
+
+### Commit 1 scope summary
+
+Files modified:
+- `docs/GDD.md` — §29 only (HUD positions + 4 bare-term translations)
+- `docs/UI_MOCKUPS.html` — 6 screens user-facing text → English, Auto ⟳ removed, `lang` attribute
+- `docs/NARRATIVE.md` — EMP-07 annotation wrapped in HTML comment
+- `docs/SPRINTS.md` — Memorias/Pensamientos line 459+472, Sprint 2 HUD line 219, Sprint 1 i18n checkbox
+- `CLAUDE.md` — Glossary intro reword + new "Language translation — sprint-level ownership" section
+- `src/ui/tokens.ts` — focusBar violet → cyan
+- `styles/_theme.generated.css` — regenerated (62 tokens, `--color-focus-bar: #40D0D0`)
+- `docs/PROGRESS.md` — this entry (Findings #16-#20)
+
+Cumulative Sprint 1+2 findings: **20** (Sprint 1: 4, Sprint 2 Phases 1-4: 12, Phase 4.9: 4 new + 3 known = 5 logged this session). Shipped bugs: 0.
+
+**Next action:** Commit 2 — i18n foundation (`src/config/strings/en.ts` + `index.ts` + `tests/i18n/en.test.ts`).
+
+---
+
 ### 2026-04-17 — Sprint 2 Phase 4: theme architecture (3 Era themes + 4-slot cosmetic override system)
 
 Theme system ships with zero visual regression. Bioluminescent Era is the composed default; Eras 2/3 are `isInterim` stubs inheriting the bioluminescent palette until Sprint 9+ tunes them.

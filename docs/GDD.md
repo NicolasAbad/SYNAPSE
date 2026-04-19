@@ -1420,14 +1420,16 @@ Firebase Crashlytics enabled by default. Non-fatal errors logged for: save load 
 # 29. UI / HUD / tabs
 
 ### HUD Layout (portrait)
-- Top-left: Pensamientos (current thoughts, large number)
+- Top-left: Thoughts (current count, large number)
 - Top-right: Rate (thoughts/sec)
 - Top-center: Discharge charges count + timer to next charge
-- Left vertical: Consciousness bar (rises with cycleGenerated)
-- Right vertical: Focus Bar (rises with taps)
+- Top horizontal bar (below thoughts/rate): Focus Bar, cyan (rises with taps)
+- Right vertical: Consciousness bar, violet (rises with cycleGenerated)
 - Bottom: 4 tabs (Neurons, Upgrades, Regions, Mind)
 - Center bottom: Discharge button (large, pulsing when charge available)
 - Overlay banners: Spontaneous event, Mental State chip, Micro-challenge, Weekly challenge progress
+
+*Positions verified against [UI_MOCKUPS.html](UI_MOCKUPS.html) canonical SVG (Phase 4.9.1 Sprint 2 pre-code alignment — Finding #18). Focus Bar is at `x=80 y=76 w=230 h=4` (top horizontal cyan `#40D0D0`). Consciousness bar is at `x=382 y=120..480` (right vertical violet `#8B7FE8`). Per GDD §3b pairing rule, the mockup is the canonical visual source.*
 
 ### Tabs (always 4)
 1. **Neurons** — buy neurons, see connection stats
@@ -1466,9 +1468,9 @@ Sequence: Awakening → 3s animation → Pattern Tree view → CycleSetupScreen 
 - **UI-4:** Undo expensive purchase — 3s toast if purchase >10% of current thoughts
 - **UI-5:** Fragment archive — every shown fragment saved to `narrativeFragmentsSeen`
 - **UI-6:** Landscape on tablets ≥900px wide
-- **UI-7 (INT-11 note):** The 3-choice stack (Polaridad + Arquetipo + Pathway) creates specialist builds with ~40% variance between weakest and strongest. This is BY DESIGN — balanced by Run-over-Run re-choice.
+- **UI-7 (INT-11 note):** The 3-choice stack (Polarity + Archetype + Pathway) creates specialist builds with ~40% variance between weakest and strongest. This is BY DESIGN — balanced by Run-over-Run re-choice.
 - **UI-8 (error states):** All network-dependent services fail silently with graceful fallback. Firebase Analytics/Crashlytics: silent fail, game continues (CODE-8 try/catch). RevenueCat: store shows cached prices or "Store temporarily unavailable" banner, retry on next foreground. AdMob: toast per MONEY-7. Cloud save: toast "Saved locally. Cloud sync will resume when online." Full offline: game fully playable, no blocking modals.
-- **UI-9 (first-open sequence):** (1) Branded splash screen (2s max, app icon + "SYNAPSE", dark background). (2) If EU detected: GDPR consent modal (minimal, Accept / Manage — game starts regardless). (3) Canvas loads with 1 Básica neuron auto-granted and pulsing. (4) Tutorial hint "Tap the neuron" after 2s idle. (5) On first tap: thoughts accumulate, BASE-01 fragment fades in.
+- **UI-9 (first-open sequence):** (1) Branded splash screen (2s max, app icon + "SYNAPSE", dark background). (2) If EU detected: GDPR consent modal (minimal, Accept / Manage — game starts regardless). (3) Canvas loads with 1 Basic neuron auto-granted and pulsing. (4) Tutorial hint "Tap the neuron" after 2s idle. (5) On first tap: thoughts accumulate, BASE-01 fragment fades in.
 - **CYCLE-2 (mobile layout):** On screens <600px wide, CycleSetupScreen uses step-by-step flow (swipe or "Next") instead of 3 simultaneous columns: Step 1 = Polarity (full width), Step 2 = Mutation (full width), Step 3 = Pathway (full width). Progress dots at bottom. "SAME AS LAST" visible on Step 1. Tablets/landscape ≥600px keep 3-column layout per CYCLE-1.
 - **UI-2, UI-10, TAB-1, TAB-2 are NOT formal rules.** If referenced in prompts or session handoffs, flag as fabrication. Colorblind mode (previously attributed to UI-10) is Sprint 10 scope per SPRINTS.md §Sprint 10 — see §3b accessibility note.
 

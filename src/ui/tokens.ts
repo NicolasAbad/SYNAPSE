@@ -40,7 +40,7 @@ export const COLORS = {
   rateCounter: '#22B07A', // success — per UI_MOCKUPS rate display
   consciousnessBar: '#8B7FE8', // primary violet — default per NARRATIVE:476
   consciousnessBarP26: '#FFF0C0', // white-gold — Era-3-final override only
-  focusBar: '#8B7FE8', // primary violet — matches UI_MOCKUPS
+  focusBar: '#40D0D0', // cyan — matches UI_MOCKUPS SVG top horizontal bar (distinct from violet Consciousness Bar, Phase 4.9 Finding #18)
   dischargeBtn: '#F0A030', // accent amber
 
   // ── Overlay + border utilities (from UI_MOCKUPS observed patterns) ──

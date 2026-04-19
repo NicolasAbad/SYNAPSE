@@ -214,8 +214,12 @@ patternCycleCap:        1.5
 bundleId:               app.synapsegame.mind
 ```
 
-## Glossary (Spanish ↔ English)
-In-game mechanic names stay Spanish (evocative, distinctive). Code identifiers use the English equivalent in camelCase. Player-facing strings use locale files.
+## Glossary (Spanish origin ↔ English display)
+Mechanic names are English for v1.0 (target audience: anglophone mobile idle players). All user-facing strings flow through `src/config/strings/en.ts` via `t('key')` per CODE-1.
+
+Internal TypeScript union-type string identifiers retain their Spanish origins (e.g., `'analitica'`, `'rapida'`, `'basica'`) — these are code-only, never shown to players, and refactoring them would have zero user impact while creating 15+ file churn. v1.1 multi-locale will add `es.ts` and other language files (see POSTLAUNCH.md §v1.1).
+
+The Spanish column below is preserved as historical reference for the design heritage. The English column is the canonical player-facing text.
 
 | Spanish (canonical) | English | Code identifier |
 |---|---|---|
@@ -239,6 +243,36 @@ In-game mechanic names stay Spanish (evocative, distinctive). Code identifiers u
 | Sueño / Sueño REM / Sueño Lúcido | Sleep / REM Sleep / Lucid Dream | `sleep`, `remSleep`, `lucidDream` |
 | Síntesis Cognitiva | Cognitive Synthesis | (upgrade) |
 | Cargas | Charges | `dischargeCharges` |
+
+## Language translation — sprint-level ownership
+
+Per Finding #17 (Phase 4.9 Sprint 2), v1.0 user-facing text is English. However, translation from the original Spanish design docs happens INCREMENTALLY — each sprint translates the GDD sections and docs it touches.
+
+**Phase 4.9 (Sprint 2) translated:**
+- GDD §29 (HUD layout) — full English
+- UI_MOCKUPS.html — all user-facing labels English
+- CLAUDE.md Glossary — intro reworded; table preserved as reference
+- SPRINTS.md — 2 local mentions
+
+**Sprints that still own translation of their sections:**
+- Sprint 3: GDD §5 (neuron types full descriptions), §7 (Discharge + Cascade), §8 (Spontaneous events — most compound names are here: Ráfaga Dopamínica, Polaridad Fluctuante, etc.), §24 (upgrades — ~35 compound names including Convergencia Sináptica, Mente Despierta, etc.)
+- Sprint 4a: §33 PRESTIGE_RESET prose references
+- Sprint 5: §13 Mutations (~15 compound names)
+- Sprint 6: GDD §9 (Era names: El Despertar → "The Awakening" etc.), §10 narrative prose
+- Sprint 7: §11 Mental States prose, §12 Micro-challenges
+- Sprint 8b: §15 Resonance upgrades, §17 Transcendence, §14 Run-exclusive upgrades
+- Sprint 10: §16 Regions prose
+
+**Translation discipline per sprint:**
+1. At sprint kickoff, grep sprint's GDD sections for Spanish compound names still untranslated
+2. For each compound name, propose an English equivalent in the sprint kickoff prompt to Nico (not auto-translate)
+3. Nico approves per-name before code implementation begins
+4. PROGRESS.md logs the translations applied in that sprint
+5. Internal TS union-type identifiers (`'basica'`, `'rapida'`, etc.) NEVER translate — internal only, never player-facing
+
+**Anti-pattern to avoid:** mass find-and-replace of Spanish compound names without per-name approval. Many names are creative gameplay decisions (Mente Despierta, Modo Ascensión, Cascada Eterna) with no neuroscientific equivalent to look up. Inventing English versions = silent naming invention, violates anti-invention rules.
+
+**Exception:** Spanish bare terms that already have CLAUDE.md Glossary equivalents (Despertar→Awakening, Disparo→Discharge, Mutación→Mutation, etc.) can be find-and-replaced safely IF the context is bare-term (not inside a compound name). Compound names always require full-name translation with approval.
 
 ## Common commands
 - `npm install` — install deps
