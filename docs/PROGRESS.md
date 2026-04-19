@@ -613,6 +613,47 @@ Cumulative Sprint 1+2 findings: **20** (Sprint 1: 4, Sprint 2 Phases 1-4: 12, Ph
 
 ---
 
+### 2026-04-18 — Sprint 2 Phase 4.9.3: reviewer accountability framework formalized
+
+**Meta-decision:** Throughout Sprint 1+2, Claude Opus (reviewer) generated 8 fabrications in phase/decision prompts:
+
+1. GDD §3 misattribution (Sprint 2 kickoff) — caught by Nico
+2. Palette invention ignoring UI_MOCKUPS (Sprint 2 kickoff) — caught by Nico audit request
+3. "Mental flag para Sprint 11a" anti-pattern — caught by Nico
+4. Scope creep Sprint 3 → Phase 3 — auto-caught with grep
+5. Proposing `nebula` theme without catalog audit (Phase 4) — caught by Claude Code
+6. Suggesting `performance.now()` violating CODE-9 (Phase 3.5) — caught by Claude Code
+7. Naive find-and-replace GDD table (Phase 4.9) — caught by Claude Code
+8. Stage 2 approval prompt generated assuming pre-Commit-1 state despite explicit checkpoint report showing commits `18c10b6` and `3457d2c` already landed — caught by Claude Code (Phase 4.9.3 meta). Classic instance of reviewer operating from memory without verifying state reported explicitly in current context. Recursion: the framework prevented its own authoring from introducing the error it's designed to prevent.
+
+Pattern: reviewer operating from memory instead of grep-verifying, trusting mental model after long sessions, optimizing for prompt speed over rigor. Error rate 8 in ~10 phases = unacceptable baseline for remaining 11 sprints.
+
+**Resolution:** CLAUDE.md now contains 4 new sections (added across Phase 4.9.1 + 4.9.3):
+- "Language translation — sprint-level ownership" (4.9.1)
+- "Reviewer evidence discipline" (4.9.3) — mandatory block in reviewer prompts
+- "Instructions for Claude Opus (reviewer) at session start" (4.9.3) — explicit first-message checklist
+- "If this session was compacted" (4.9.3) — anti-pattern recovery
+
+**Metrics to track per phase starting Phase 5:**
+- Reviewer errors caught by Claude Code (target: ≤1)
+- Reviewer errors caught by Nico (target: 0)
+- Unverified assumptions flagged (target: ≥1 honest flag better than 0 and lying)
+- Of flagged assumptions, how many were actually wrong
+
+**Threshold:** consistent >2 errors caught by Claude Code per phase → new session mandated (compaction/degradation signal).
+
+**Rationale for anchoring in CLAUDE.md:** Opus conversational memory is lost on compaction. Rules in CLAUDE.md + PROGRESS.md survive and are re-read at every session start. Single point of failure: Nico must upload CLAUDE.md in new sessions. Mitigation: kickoff template (held by Nico, pasted at session start) enforces this.
+
+**Files modified (Phase 4.9.3):**
+- `CLAUDE.md` — 3 new sections appended after "Language translation — sprint-level ownership"
+- `docs/PROGRESS.md` — this entry
+
+No src/, tests/, or other code changes. Docs-only commit. Gates expected unchanged (constants ratio 0.88, tests 280/54).
+
+**Next action:** Phase 5 — HUD (5 sub-components per GDD §29): thoughts TL, rate TR, charges TC, Focus Bar (top horizontal cyan), Consciousness Bar (right vertical violet). `wrapText()` utility + Vitest Browser Mode real-Chromium HUD test in Phase 5 scope. Strings consumed via `t('hud.thoughts_label')`, `t('tabs.mind')`, etc. from `src/config/strings/index.ts` (shipped Phase 4.9.2).
+
+---
+
 ### 2026-04-17 — Sprint 2 Phase 4: theme architecture (3 Era themes + 4-slot cosmetic override system)
 
 Theme system ships with zero visual regression. Bioluminescent Era is the composed default; Eras 2/3 are `isInterim` stubs inheriting the bioluminescent palette until Sprint 9+ tunes them.
