@@ -189,6 +189,19 @@ export function createDefaultState(): GameState {
   };
 }
 
+/**
+ * UI-local state (Sprint 2 Phase 5) — NOT part of GameState, NOT persisted,
+ * NOT counted in the 110-field invariant. Lives alongside GameState in the
+ * same Zustand store for selector convenience but is semantically distinct.
+ * Per PROGRESS.md Sprint 2 handoff: "may add UI-specific actions like
+ * setActiveTab at the end, but not modify existing state shape".
+ */
+export type TabId = 'mind' | 'neurons' | 'upgrades' | 'regions';
+
+export interface UIState {
+  activeTab: TabId;
+}
+
 /** Actions on the store. Sprint 1 ships INIT-1, reset, and Phase 7 save/load. */
 export interface GameStoreActions {
   /** INIT-1: populate the 4 impure timestamp fields with mount-time nowTimestamp. Idempotent. */
@@ -205,10 +218,13 @@ export interface GameStoreActions {
    * buffer + effectiveProductionPerSecond × baseTapThoughtPct).
    */
   incrementThoughtsByMinTap: () => void;
+  /** Sprint 2 Phase 5: UI-local tab selection. Default 'mind' per UI_MOCKUPS Screen 1. */
+  setActiveTab: (tab: TabId) => void;
 }
 
-export const useGameStore = create<GameState & GameStoreActions>((set, get) => ({
+export const useGameStore = create<GameState & UIState & GameStoreActions>((set, get) => ({
   ...createDefaultState(),
+  activeTab: 'mind',
   initSessionTimestamps: (nowTimestamp) => {
     set((state) => {
       // Per INIT-1: only populate if field is still at the pure default sentinel.
@@ -221,17 +237,25 @@ export const useGameStore = create<GameState & GameStoreActions>((set, get) => (
       return updates;
     });
   },
-  reset: () => set(() => createDefaultState()),
+  reset: () => set(() => ({ ...createDefaultState(), activeTab: 'mind' as TabId })),
   loadFromSave: async () => {
     const loaded = await loadGame();
     if (loaded === null) return false;
     // Merge mode (no `true` flag) — preserves action bindings per CLAUDE.md Zustand pitfall rule.
+    // activeTab intentionally NOT overwritten — it's UI-local, not part of saved GameState.
     set(loaded);
     return true;
   },
   saveToStorage: async () => {
-    await saveGame(get());
+    // Strip UI-local state before persistence. `activeTab` is transient per
+    // session (player starts at Mind tab on relaunch regardless of last tab);
+    // actions are dropped by JSON.stringify naturally. Keeps the persisted
+    // payload at exactly 110 GameState fields per §32 invariant.
+    const { activeTab: _omit, ...rest } = get();
+    void _omit;
+    await saveGame(rest as GameState);
   },
   incrementThoughtsByMinTap: () =>
     set((state) => ({ thoughts: state.thoughts + SYNAPSE_CONSTANTS.baseTapThoughtMin })),
+  setActiveTab: (tab) => set({ activeTab: tab }),
 }));

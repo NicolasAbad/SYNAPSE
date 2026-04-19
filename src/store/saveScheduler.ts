@@ -6,6 +6,7 @@ import { useEffect } from 'react';
 import { SYNAPSE_CONSTANTS } from '../config/constants';
 import { useGameStore } from './gameStore';
 import { saveGame } from './saveGame';
+import type { GameState } from '../types/GameState';
 
 // Module-scoped flag so concurrent scheduler mounts (e.g. StrictMode dev)
 // share the same in-flight marker rather than racing on instance state.
@@ -15,12 +16,17 @@ let saveInFlight = false;
  * Best-effort save. Silently skips if a prior save hasn't finished —
  * a 5KB JSON write every 30s is trivial; queueing would add failure
  * surface with no user-visible benefit.
+ *
+ * Strips UI-local state (activeTab) before persistence; see saveToStorage
+ * action in gameStore.ts for rationale.
  */
 export async function trySave(): Promise<void> {
   if (saveInFlight) return;
   saveInFlight = true;
   try {
-    await saveGame(useGameStore.getState());
+    const { activeTab: _omit, ...rest } = useGameStore.getState();
+    void _omit;
+    await saveGame(rest as GameState);
   } catch (e) {
     console.error('[saveScheduler] save failed:', e);
   } finally {

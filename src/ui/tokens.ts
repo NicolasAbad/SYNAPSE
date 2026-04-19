@@ -138,6 +138,23 @@ export const MOTION = {
   pulseOpacityMax: 1.0, // opacity at pulse peak
 } as const;
 
+// HUD layout constants (Sprint 2 Phase 5 — TS-only tokens).
+// All values derived from UI_MOCKUPS.html Screen 1 canonical SVG.
+// Per CLAUDE.md "Canonical storage file rule": this block keeps HUD
+// visual values as data (not logic) so the HUD components themselves
+// stay literal-free and CODE-1 compliant.
+export const HUD = {
+  pipSize: 10, // Discharge charge pip diameter (mockup r=5 → 10px)
+  pipGap: 6, // Space between adjacent pips
+  focusBarHeight: 4, // Focus Bar track height (mockup h=4)
+  consciousnessBarWidth: 3, // Consciousness Bar track width (mockup w=3)
+  dischargeButtonMinWidth: 120, // Mockup button w=120
+  touchTargetMin: 48, // CODE-4 minimum (Android 48dp / iOS 44pt)
+  dischargePipFadedOpacity: 0.4, // Empty pip visual weight
+  dischargeLabelOpacity: 0.6, // Countdown text subtlety (mockup #F0A03060)
+  dischargeButtonDisabledOpacity: 0.55, // Stub-state visual
+} as const;
+
 // Canvas-specific geometry + rendering primitives (TS-only tokens;
 // not emitted as CSS vars because canvas code reads them directly).
 export const CANVAS = {

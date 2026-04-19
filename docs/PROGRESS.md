@@ -547,7 +547,77 @@ Sprint 11a TODO for `ALL_RULE_IDS` constant must include all 16 (not 13 as state
 
 ## Session log
 
-### 2026-04-18 — Sprint 2 Phase 4.9: Sprint 1 i18n gap + language policy + HUD alignment
+### 2026-04-18 — Sprint 2 Phase 5: HUD + 4-tab TabBar (consumes i18n from 4.9.2)
+
+First phase under the reviewer-discipline framework (PROGRESS.md Phase 4.9.3). Reviewer delivered an evidence block with 10 greps + 5 unverified assumptions + 4 red flags. Claude Code verified all claims via pre-code research before writing code. No fabrications to log this phase — [U4] was an honest flag that resolved to a legitimate defer (below).
+
+**Deliverables (9 new files + 3 modifications):**
+
+Created:
+- `src/ui/util/wrapText.ts` — 35 lines — canvas text wrapping via `ctx.measureText()`, word-boundary splitting, single-word-wider-than-maxWidth handled by placing alone
+- `src/ui/hud/ThoughtsCounter.tsx` — TL amber counter via `formatNumber()` + `t('hud.thoughts_label')`
+- `src/ui/hud/RateCounter.tsx` — TR green "+{N}/s" via `t('hud.rate_prefix')` + `t('hud.rate_suffix')`
+- `src/ui/hud/DischargeCharges.tsx` — TC `dischargeMaxCharges` pips (filled up to `dischargeCharges`) + "Discharge ⚡" label. Live countdown DEFERRED to Sprint 3 (charge regen not yet wired).
+- `src/ui/hud/FocusBar.tsx` — top horizontal cyan (per Finding #18), empty at Phase 5 (Sprint 3 wires tap-fill)
+- `src/ui/hud/ConsciousnessBar.tsx` — right vertical violet, conditional on `consciousnessBarUnlocked`, hidden by default. P26 white-gold override deferred to Sprint 6.
+- `src/ui/hud/DischargeButton.tsx` — STUB DISABLED center-bottom button, tooltip "Unlocks in next update" on pointerDown via `t('buttons.discharge_locked_tooltip')`
+- `src/ui/hud/TabBar.tsx` — 4 tabs Mind/Neurons/Upgrades/Regions via `t('tabs.*')`, click → `setActiveTab` action, active highlight via `data-active` attribute, 48px touch targets (CODE-4)
+- `src/ui/hud/HUD.tsx` — composition overlay, `pointer-events: none` on wrapper, safe-area-inset aware
+- `tests/ui/hud/HUD.test.tsx` — 25 jsdom component tests
+- `tests/ui/util/wrapText.test.ts` — 8 unit tests
+
+Modified:
+- `src/store/gameStore.ts` — added `UIState` interface (`activeTab: TabId`), `setActiveTab` action, stripped `activeTab` from `saveToStorage` persistence (UI-local per session). Store now has 110 GameState + 1 UIState + 5 actions = 116 keys; persisted payload still 110 per §32 invariant.
+- `src/store/saveScheduler.ts` — `trySave` strips `activeTab` matching saveToStorage (scheduler calls loop the same persistence)
+- `src/App.tsx` — swapped Phase 3.5 placeholder thoughts div for `<HUD />` composition
+- `src/ui/tokens.ts` — new `HUD` block (9 layout values: pipSize, pipGap, focusBarHeight, consciousnessBarWidth, dischargeButtonMinWidth, touchTargetMin, 3 opacity values). Keeps HUD components literal-free per CODE-1.
+- `tests/store/saveGame.test.ts` — updated "114 store keys → 110 file keys" test to reflect new reality: store has 116 keys (110 + 1 UI + 5 actions), action path strips UI-local, result is still 110 persisted.
+
+**Reviewer discipline metrics (first phase under the framework):**
+
+| Metric | Target | Actual |
+|---|---|---|
+| Reviewer errors caught by Claude Code | ≤1 | **0** |
+| Reviewer errors caught by Nico | 0 | TBD (checkpoint pending) |
+| Unverified assumptions flagged | ≥1 | **9** ([U1–U5] + [R1–R4]) |
+| Of flagged assumptions, how many were wrong | — | **1** ([U4] partially wrong) |
+| Fabrications logged this phase | 0 | **0** |
+
+**[U4] resolution** — honest flag led to honest defer, not invention.
+Evidence block assumption: "Vitest Browser Mode with Playwright provider is configured and `npm run test:browser` works." Verification: `@vitest/browser` + `playwright` are in `devDependencies`, but package.json has NO `test:browser` script and no vitest config overriding environment. Browser mode is available-but-not-wired. Resolution: shipped jsdom + @testing-library/react component tests (same pattern as existing NeuronCanvas tests from Phase 3). Real-Chromium HUD test deferred to a later phase when setup cost is justified (probably Phase 7 perf spike or Sprint 11a test infra). This is NOT a fabrication — the reviewer flagged it explicitly; the honest path was to defer, not to invent a setup.
+
+**Mid-flight finding — save path UI-local filter.**
+First test run after adding `activeTab` revealed 7 failing save/load tests. Root cause: `saveGame()` / `loadGame()` enforce exactly 110 fields via `validateLoadedState`. With `activeTab` as a new non-function field, the persisted JSON had 111 fields (actions still dropped by JSON.stringify). Fix: `saveToStorage` action + `trySave` scheduler both destructure `activeTab` out of the snapshot before passing to `saveGame`. Per-session semantics: player returns to Mind tab on relaunch regardless of last active tab — acceptable UX and keeps §32 110-field invariant intact. Updated test at `tests/store/saveGame.test.ts:161` to use the action path rather than passing raw `useGameStore.getState()`. This is the kind of bug the Phase 5 full-test-run surfaces; flagged in reviewer "edge case audit" section of the framework retroactively — future phases with store extensions should grep `saveGame`/`trySave` for field-count invariants upfront.
+
+**Mid-flight finding — Gate 3 ratio regression.**
+Initial HUD implementation had ~29 numeric literals (PIP_SIZE constants + CSS percentages + opacity values). Gate 3 ratio dropped to 0.33 (target 0.80). Resolution in 2 passes: (1) extracted 9 layout values into new `HUD` block in `src/ui/tokens.ts` (canonical storage file, Gate 3 excluded per CLAUDE.md rule); (2) annotated CSS-value strings (`'50%'`, `'100%'`, stroke widths, animation durations) with `// CONST-OK: ... CODE-1 CSS exception` on each line; (3) replaced two `HUD.xxx / 2` radius computations with `'var(--radius-full)'` (equivalent pill shape, no division literal). Final ratio: 0.88 (unchanged from Phase 4 baseline). The HUD block follows the same pattern as the existing `CANVAS` block in tokens.ts.
+
+**Gate results at Phase 5 close:**
+- `npm run typecheck` — 0 errors
+- `npm run lint` — 0 warnings
+- `bash scripts/check-invention.sh` — 4/4 PASS, Gate 3 ratio **0.88** (14 constants, 2 literals; unchanged from Phase 4 baseline)
+- `npm test` — **313 passed / 54 skipped** (up from 280 — 33 new: 25 HUD + 8 wrapText)
+- `npm run build` — 177.63 KB JS (+7.30 KB vs Phase 4.9.2 baseline of 170.33, +1.93 KB gzipped) + 14.70 KB CSS (+0.94 KB, +0.26 KB gz)
+
+**Scope boundary confirmation (explicit, per reviewer evidence block):**
+- ❌ Focus Bar tap-fill — Sprint 3
+- ❌ Discharge mechanic (charge accumulation + cascade) — Sprint 3
+- ❌ Discharge button pulse-when-ready animation — Sprint 3
+- ❌ Live countdown numbers in DischargeCharges — Sprint 3
+- ❌ Panel content inside tab regions — Sprint 3+
+- ❌ CycleSetupScreen — later phase / Sprint 4a
+- ❌ First-open UI-9 splash + GDPR flow — later phase
+- ❌ Performance spike — Phase 7/8
+- ❌ Real-Chromium browser tests — deferred (setup cost unjustified for Phase 5)
+- ❌ P26 consciousness bar white-gold override — Sprint 6 narrative pass
+
+**Next action:** Phase 6 per SPRINTS.md §Sprint 2 — could be CycleSetupScreen layout shell (CYCLE-2), or performance spike, or UI-9 first-open sequence. Per the dependency graph at top of SPRINTS.md §Sprint 2 AI checks, CycleSetupScreen + UI-9 are next-in-line. Nico decides kickoff order.
+
+Cumulative Sprint 1+2 findings: **20** (Sprint 1: 4, Sprint 2 Phases 1-4: 12, Phase 4.9: 4, Phase 5: 2 mid-flight caught pre-commit). Cumulative reviewer fabrications: **8** (unchanged from Phase 4.9.3; Phase 5 contributed zero). Shipped bugs: **0**.
+
+---
+
+### 2026-04-18 — Sprint 2 Phase 4.9.3: reviewer accountability framework formalized
 
 Pre-Phase-5 checkpoint. Two commits: doc-alignment (Commit 1) + i18n foundation (Commit 2). Stage 1 audit (Phase 4.9.0) surfaced 4 additional findings beyond the 3 originally scoped; [A1] and [A2] partial-fix approved for inclusion, [A3] and [A4] deferred to consuming sprints.
 

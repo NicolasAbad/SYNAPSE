@@ -158,13 +158,16 @@ describe('round-trip type fidelity', () => {
     expect(loaded!.insightMultiplier).toBe(1);
   });
 
-  test('JSON.stringify drops action functions cleanly — 114 store keys become 110 file keys', async () => {
-    // Store has GameState (110) + GameStoreActions (4) = 114 accessible keys.
-    // But the serialized payload contains only the 110 data fields.
+  test('JSON.stringify drops actions + UI-local state is stripped → 110 file keys', async () => {
+    // Store has GameState (110) + UIState (1: activeTab) + GameStoreActions (5) = 116 accessible keys.
+    // Phase 5 added activeTab as UI-local state; saveToStorage action strips it before
+    // persisting (UI-local is transient per session). JSON.stringify drops the 5 functions.
+    // Result: persisted payload contains exactly the 110 GameState data fields.
     const storeSnapshot = useGameStore.getState();
     const storeKeyCount = Object.keys(storeSnapshot).length;
-    expect(storeKeyCount).toBeGreaterThanOrEqual(110); // at least the data fields
-    await saveGame(storeSnapshot);
+    expect(storeKeyCount).toBeGreaterThanOrEqual(110);
+    // Use the action (mirrors production code path) rather than passing the raw store.
+    await useGameStore.getState().saveToStorage();
     const loaded = await loadGame();
     expect(loaded).not.toBeNull();
     expect(Object.keys(loaded!).length).toBe(110);
