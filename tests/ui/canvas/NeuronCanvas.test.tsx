@@ -10,21 +10,11 @@ import { useGameStore } from '../../../src/store/gameStore';
 import { SYNAPSE_CONSTANTS } from '../../../src/config/constants';
 
 // jsdom doesn't implement ResizeObserver — stub it so NeuronCanvas mounts cleanly.
-// triggerResize() lets tap tests re-fire the callback after stubbing getBoundingClientRect.
-let lastRoCallback: ResizeObserverCallback | null = null;
-let lastRoTarget: Element | null = null;
-function triggerResize() {
-  if (lastRoCallback && lastRoTarget) {
-    lastRoCallback([{ target: lastRoTarget } as ResizeObserverEntry], {} as ResizeObserver);
-  }
-}
 beforeAll(() => {
   global.ResizeObserver = class {
     private cb: ResizeObserverCallback;
     constructor(cb: ResizeObserverCallback) { this.cb = cb; }
     observe(target: Element) {
-      lastRoCallback = this.cb;
-      lastRoTarget = target;
       this.cb([{ target } as ResizeObserverEntry], this as unknown as ResizeObserver);
     }
     unobserve() {}
@@ -72,23 +62,19 @@ describe('NeuronCanvas — mount + cleanup lifecycle', () => {
   });
 });
 
-// Sprint 2 Phase 3 — tap handler integration. jsdom's getBoundingClientRect
-// returns zeros by default; we stub it on the canvas to place the tap at the
-// centered Básica (index 0) position.
+// Sprint 2 Phase 3 — tap handler integration. setupHiDPICanvas now uses
+// window.innerWidth/innerHeight so we stub those before render.
 describe('NeuronCanvas — onPointerDown taps (Phase 3)', () => {
+  beforeAll(() => {
+    Object.defineProperty(window, 'innerWidth', { value: 400, writable: true });
+    Object.defineProperty(window, 'innerHeight', { value: 600, writable: true });
+  });
+
   test('tap on centered Básica increments thoughts by baseTapThoughtMin', () => {
     useGameStore.getState().reset();
     const before = useGameStore.getState().thoughts;
     const { getByTestId } = render(<NeuronCanvas />);
     const canvas = getByTestId('neuron-canvas') as HTMLCanvasElement;
-
-    // Stub bounding rect so dimsRef.current has real dimensions after effect.
-    // Then re-trigger setupHiDPICanvas via resize event so the ref updates.
-    canvas.getBoundingClientRect = vi.fn().mockReturnValue({
-      left: 0, top: 0, right: 400, bottom: 600, width: 400, height: 600,
-      x: 0, y: 0, toJSON: () => ({}),
-    });
-    triggerResize();
 
     // Tap the canvas centre — default scatter layout places index 0 at (200, 300).
     fireEvent.pointerDown(canvas, { clientX: 200, clientY: 300 });
@@ -102,11 +88,6 @@ describe('NeuronCanvas — onPointerDown taps (Phase 3)', () => {
     const before = useGameStore.getState().thoughts;
     const { getByTestId } = render(<NeuronCanvas />);
     const canvas = getByTestId('neuron-canvas') as HTMLCanvasElement;
-    canvas.getBoundingClientRect = vi.fn().mockReturnValue({
-      left: 0, top: 0, right: 400, bottom: 600, width: 400, height: 600,
-      x: 0, y: 0, toJSON: () => ({}),
-    });
-    triggerResize();
 
     // Corner tap — far outside any neuron hit area.
     fireEvent.pointerDown(canvas, { clientX: 5, clientY: 5 });
@@ -118,11 +99,6 @@ describe('NeuronCanvas — onPointerDown taps (Phase 3)', () => {
     const debugSpy = vi.spyOn(console, 'debug').mockImplementation(() => {});
     const { getByTestId } = render(<NeuronCanvas />);
     const canvas = getByTestId('neuron-canvas') as HTMLCanvasElement;
-    canvas.getBoundingClientRect = vi.fn().mockReturnValue({
-      left: 0, top: 0, right: 400, bottom: 600, width: 400, height: 600,
-      x: 0, y: 0, toJSON: () => ({}),
-    });
-    triggerResize();
 
     fireEvent.pointerDown(canvas, { clientX: 200, clientY: 300 });
     fireEvent.pointerDown(canvas, { clientX: 200, clientY: 300 });

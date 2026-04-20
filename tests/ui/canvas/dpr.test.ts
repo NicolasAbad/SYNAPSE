@@ -1,20 +1,18 @@
 // @vitest-environment jsdom
 // Tests for src/ui/canvas/dpr.ts — requires HTMLCanvasElement + window.
 
-import { describe, expect, test, vi } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import { setupHiDPICanvas } from '../../../src/ui/canvas/dpr';
 
 describe('setupHiDPICanvas', () => {
-  test('sets canvas pixel buffer to cssWidth × dpr', () => {
+  test('sets canvas pixel buffer to window.innerWidth × dpr', () => {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error('no 2d ctx');
 
-    // Stub getBoundingClientRect (jsdom returns zeros by default).
-    canvas.getBoundingClientRect = vi
-      .fn()
-      .mockReturnValue({ width: 400, height: 600, top: 0, left: 0, bottom: 0, right: 0, x: 0, y: 0, toJSON: () => ({}) });
     Object.defineProperty(window, 'devicePixelRatio', { value: 2, writable: true });
+    Object.defineProperty(window, 'innerWidth', { value: 400, writable: true });
+    Object.defineProperty(window, 'innerHeight', { value: 600, writable: true });
 
     const dims = setupHiDPICanvas(canvas, ctx);
     expect(dims.width).toBe(400);
@@ -29,10 +27,9 @@ describe('setupHiDPICanvas', () => {
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error('no 2d ctx');
 
-    canvas.getBoundingClientRect = vi
-      .fn()
-      .mockReturnValue({ width: 300, height: 200, top: 0, left: 0, bottom: 0, right: 0, x: 0, y: 0, toJSON: () => ({}) });
     Object.defineProperty(window, 'devicePixelRatio', { value: 0, writable: true });
+    Object.defineProperty(window, 'innerWidth', { value: 300, writable: true });
+    Object.defineProperty(window, 'innerHeight', { value: 200, writable: true });
 
     const dims = setupHiDPICanvas(canvas, ctx);
     expect(dims.dpr).toBe(1);

@@ -22,11 +22,13 @@ export function setupHiDPICanvas(
   ctx: CanvasRenderingContext2D,
 ): LogicalDims {
   const dpr = window.devicePixelRatio || 1;
-  const rect = canvas.getBoundingClientRect();
-  // Android WebView returns 0×0 for percentage-sized canvas at mount time —
-  // fall back to window.innerWidth/Height which is always reliable.
-  const width = rect.width || window.innerWidth;
-  const height = rect.height || window.innerHeight;
+  // Use window.innerWidth/Height as the authoritative source for full-screen
+  // canvas sizing. getBoundingClientRect() is unreliable for canvas elements
+  // because setting canvas.width/height resets the element's intrinsic size,
+  // fighting the CSS cascade. window.innerWidth/Height is always correct for
+  // a full-viewport game canvas, including Android WebView.
+  const width = window.innerWidth;
+  const height = window.innerHeight;
 
   canvas.width = Math.round(width * dpr);
   canvas.height = Math.round(height * dpr);
