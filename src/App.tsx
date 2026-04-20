@@ -30,7 +30,7 @@ export function App() {
       style={{
         margin: 0,
         padding: 0,
-        height: '100%',
+        height: '100%', // CONST-OK: CSS full-height idiom (CODE-1 exception)
         position: 'relative',
         background: 'var(--color-bg-deep)',
         color: 'var(--color-text-primary)',

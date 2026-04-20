@@ -31,7 +31,7 @@ export const HUD = memo(function HUD() {
       data-testid="hud-root"
       style={{
         position: 'absolute',
-        inset: 0,
+        top: 0, right: 0, bottom: 0, left: 0, // CONST-OK: CSS full-bleed — Chrome 83 lacks inset shorthand
         pointerEvents: 'none',
         paddingTop: 'env(safe-area-inset-top, 0)',
         paddingLeft: 'env(safe-area-inset-left, 0)',

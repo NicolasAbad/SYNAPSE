@@ -119,7 +119,10 @@ export function NeuronCanvas() {
       data-testid="neuron-canvas"
       style={{
         position: 'absolute', // CONST-OK: CSS layout (CODE-1 exception)
-        inset: 0, // CONST-OK: CSS full-bleed idiom (CODE-1 exception)
+        top: 0,    // CONST-OK: CSS full-bleed — inset shorthand unsupported in Chrome 83
+        right: 0,  // CONST-OK: CSS full-bleed (CODE-1 exception)
+        bottom: 0, // CONST-OK: CSS full-bleed (CODE-1 exception)
+        left: 0,   // CONST-OK: CSS full-bleed (CODE-1 exception)
         touchAction: 'manipulation',
       }}
       onPointerDown={handlePointerDown}
