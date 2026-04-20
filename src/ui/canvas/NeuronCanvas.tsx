@@ -82,7 +82,11 @@ export function NeuronCanvas() {
       }
       const elapsedMs = performance.now() - startTime;
       const state = useGameStore.getState();
-      draw(ctx, state, themeRef.current, dimsRef.current, elapsedMs);
+      try {
+        draw(ctx, state, themeRef.current, dimsRef.current, elapsedMs);
+      } catch {
+        // Swallow per-frame draw errors — rAF loop must never stop
+      }
       rafId = requestAnimationFrame(tick);
     };
 

@@ -45,7 +45,7 @@ function renderGlowSprite(color: string, neuronRadius: number): GlowSprite {
   spriteCanvas.height = size;
 
   const sctx = spriteCanvas.getContext('2d');
-  if (!sctx) throw new Error('getGlowSprite: failed to acquire 2D context for offscreen canvas');
+  if (!sctx) return { canvas: spriteCanvas, halfSize }; // GPU context unavailable — empty sprite, no glow
 
   const gradient = sctx.createRadialGradient(halfSize, halfSize, 0, halfSize, halfSize, glowRadius);
   gradient.addColorStop(0, color + 'AA'); // hex alpha suffix — visible at center
