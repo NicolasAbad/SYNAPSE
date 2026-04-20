@@ -6,10 +6,10 @@
 
 ## Current status
 
-**Phase:** Sprint 2 in progress — Phases 1–5 complete (Canvas, renderer, HUD, theme, i18n, TabBar)
-**Last updated:** 2026-04-20 after Android WebView debugging session 3
+**Phase:** Sprint 2 in progress — Phases 1–6 complete (Canvas, renderer, HUD, theme, i18n, TabBar, UI-9 first-open sequence + CycleSetupScreen shell)
+**Last updated:** 2026-04-20 after Sprint 2 Phase 6 (UI-9 modals + CycleSetupScreen shell)
 **Active sprint:** Sprint 2 (Canvas + HUD + Performance Spike)
-**Next action:** Sprint 2 Phase 6 — UI-9 first-open splash sequence + CycleSetupScreen layout shell per `docs/SPRINTS.md` §Sprint 2. Android WebView rendering now confirmed working on Mi A3 (Chrome 127). All 315 tests passing.
+**Next action:** Sprint 2 Phase 7 — performance spike per SPRINTS.md §Sprint 2 (100 nodes + full glow on Pixel 4a, ≥30 fps, <20 MB memory delta, <2%/30s battery). Phase 6 shipped 27 new tests; 342 passing / 54 skipped / 0 failing. Anti-invention ratio 0.90.
 
 ### Sprint 1 closing dashboard
 
@@ -546,6 +546,79 @@ Sprint 11a TODO for `ALL_RULE_IDS` constant must include all 16 (not 13 as state
 ---
 
 ## Session log
+
+### 2026-04-20 — Sprint 2 Phase 6: UI-9 first-open sequence + CycleSetupScreen shell
+
+**Scope:** Sprint 2 Phase 6 per SPRINTS.md §Sprint 2 AI checks "First-open sequence per UI-9" and "CycleSetupScreen layout per CYCLE-2". Per Phase 6 prompt [D1]–[D4]: GDPR modal built with isEU stub (false — TODO Sprint 9a); splash on every cold open (no GameState field); BASE-01 rendered as DOM stub (canvas narrative renderer deferred to Sprint 6); CycleSetupScreen tested in isolation (not wired to App — real trigger is Sprint 4c).
+
+**Pre-code blocker resolved:**
+Prompt explicitly required STOP if `narrativeFragmentDisplayMs` (or equivalent) was missing from `constants.ts`. Verified all three potential sources (`src/config/constants.ts`, `src/ui/tokens.ts`, `docs/GDD.md §29`, `docs/NARRATIVE.md`) — no such constant. Flagged to Nico with three candidate values and the BASE-01 reading-pace rationale (16 words ≈ 4s at 4 words/sec). Nico approved `narrativeFragmentDisplayMs = 4_000`, naming matches `narrativeFragmentsSeen` field. Fade-in/out reuse `TOKENS.MOTION.durSlow = 800ms` — no new fade constant needed.
+
+**Files created (6 source + 5 test):**
+- `src/ui/modals/SplashScreen.tsx` — UI-9 step 1 branded splash, auto-dismisses after `splashDurationMs + MOTION.durSlow`
+- `src/ui/modals/GdprModal.tsx` — UI-9 step 2 consent modal; exports `isEU = false` stub with TODO Sprint 9a comment
+- `src/ui/modals/TutorialHint.tsx` — UI-9 step 4 "Tap the neuron" hint, shows after `firstOpenTutorialHintIdleMs` idle, dismisses on first pointerdown
+- `src/ui/modals/FragmentOverlay.tsx` — UI-9 step 5 BASE-01 DOM stub (comment: `// STUB: replaced by canvas narrative renderer in Sprint 6`); fade-in → hold → fade-out state machine
+- `src/ui/modals/CycleSetupScreen.tsx` — CYCLE-1/CYCLE-2 layout shell; prestigeCount-driven slot unlocks (0 / 1 / 2 / 3 cols at P0-2 / P3-6 / P7-9 / P10+)
+- `src/ui/modals/cycleSetupSlots.ts` — split out per CODE-2 (main file was 204 lines before split); exports `Slot`, `unlockedSlotsFor()`, `useIsTabletWidth()`
+- `tests/ui/modals/SplashScreen.test.tsx` (3 tests)
+- `tests/ui/modals/GdprModal.test.tsx` (4 tests)
+- `tests/ui/modals/TutorialHint.test.tsx` (4 tests)
+- `tests/ui/modals/FragmentOverlay.test.tsx` (5 tests)
+- `tests/ui/modals/CycleSetupScreen.test.tsx` (11 tests)
+
+**Files modified:**
+- `src/config/constants.ts` — added `narrativeFragmentDisplayMs: 4_000` with UI-9 step 5 comment
+- `src/config/strings/en.ts` — added `app.name`, `gdpr.{title,body,accept,manage}`, `tutorial.hint_tap`, `narrative.base_01`, `cycle_setup.{slot_locked_*,same_as_last,next}` keys
+- `src/ui/tokens.ts` — added `BREAKPOINTS` block with `tablet: 600` (CYCLE-2 §29 canonical phone/tablet boundary)
+- `src/store/gameStore.ts` — added `setAnalyticsConsent(consent: boolean)` action (writes `GameState.analyticsConsent`, existing field — no new state)
+- `src/App.tsx` — wired SplashScreen overlay (`splashDone` local state) → conditional GdprModal (`isEU && !gdprDone`) → TutorialHint + FragmentOverlay rendered alongside Canvas+HUD underneath
+
+**Scope boundaries honored:**
+- GameState.ts FROZEN — no new fields (splash/fragment/tutorial-hint visibility all local React state). `analyticsConsent` is a pre-existing GDD §32 field; only the setter was new.
+- CycleSetupScreen NOT wired to App.tsx — test via prop injection only. Real trigger (Awakening → Pattern Tree → CycleSetupScreen) is Sprint 4c.
+- BASE-01 as DOM `<div>` stub with explicit `// STUB: replaced by canvas narrative renderer in Sprint 6` comment per [D3].
+
+**Implementation details worth recording:**
+- `FragmentOverlay.tsx` uses a 4-phase state machine (`idle → fading-in → visible → fading-out → done`). Each phase schedules its own timer in a single `useEffect` keyed on `phase`. Total lifecycle = `durSlow + narrativeFragmentDisplayMs + durSlow` = 5600ms.
+- FragmentOverlay test required multi-act() advances per phase because React flushes effects between renders — a single `advanceTimersByTime(total + 1)` only fires the first phase's timer. Pattern: one `act()` per `useEffect` tick.
+- `CycleSetupScreen.tsx` first-draft was 204 lines → split helpers into `cycleSetupSlots.ts` (49 lines) to respect CODE-2 200-line cap. Main file now 170 lines.
+- `useIsTabletWidth()` uses `window.matchMedia(min-width: BREAKPOINTS.tablet + 'px')` with a change listener. jsdom test uses a `matchMedia` mock per suite (`mockMatchMedia(true|false)`) rather than a global setup — lets tablet vs phone tests coexist in the same file.
+- `BREAKPOINTS.tablet = 600` added to `src/ui/tokens.ts`. This is a canonical UI token per the "Canonical storage file rule" and is already excluded from Gate 3 (`tokens.ts` was precedent-excluded in Sprint 2 Phase 1).
+
+**Verification (all green from clean cold state):**
+- `npm run typecheck` — 0 errors
+- `npm run lint` — 0 warnings
+- `npm test` — **342 passed / 54 skipped / 0 failing** (was 315 pre-Phase-6 → +27 new modal tests)
+- `bash scripts/check-invention.sh` — 4/4 PASS, ratio 0.90 (up from 0.88 pre-Phase-6)
+
+**Gate 3 drift and fix:**
+First pass of check-invention dropped the ratio to 0.47 because modal files used `'var(--spacing-N)'` inline-style idioms without `// CONST-OK: CSS custom property ref (CODE-1 exception)` markers. Existing HUD components (`ThoughtsCounter.tsx`, `TabBar.tsx`, etc.) all tag these lines — matched the existing convention. Added the marker to 19 lines across 4 modal files; ratio recovered to 0.90. No invention; purely marking a convention gap.
+
+**Changes applied this sprint (update discipline):**
+- `narrativeFragmentDisplayMs: 4_000` added to `src/config/constants.ts`. GDD §29 UI-9 step 5 mentions "fragment fades in" without a duration — this fills the spec gap. Nico approved the value 2026-04-20 in-session. GDD update is Sprint close (§29 UI-9 will add the `fade-in 800ms / hold 4000ms / fade-out 800ms` timing spec), but PROGRESS.md is the source of truth until then.
+- `BREAKPOINTS.tablet = 600` added to `src/ui/tokens.ts`. Value was already canonical in GDD §29 CYCLE-2 ("On screens <600px wide…"), just not yet promoted to a token. No new decision, just token materialization.
+
+**Pre-code research findings (anti-invention pattern per CLAUDE.md Sprint 1+2 precedent):**
+- **Finding #1 caught:** `narrativeFragmentDisplayMs` was needed but undefined. Correctly halted rather than inventing 4000ms. (This is the 5th cumulative pre-code finding across Sprints 1+2; ratio of caught-vs-committed silent inventions remains at 100%.)
+- **Finding #2 (minor):** 600px tablet breakpoint lives in GDD §29 CYCLE-2 but not yet in tokens.ts. Promoted in this phase as a new BREAKPOINTS block — no value decision, just token hoisting.
+
+**Sprint 2 remaining phases:**
+- Phase 7: performance spike (100 nodes + full glow, ≥30 fps on Pixel 4a per GDD §29 / CODE-4)
+- Phase 8: sprint close rollup + player test pass per SPRINTS.md §Sprint 2 Player tests
+
+**Gate results at session close:**
+- `npm test` — **342 passed / 54 skipped**
+- `npm run lint` — 0 warnings
+- `npm run typecheck` — 0 errors
+- Anti-invention gates — 4/4 PASS, ratio 0.90
+
+**Commit this session:**
+(pending — Nico authorizes commit at session close)
+
+**Next action:** Sprint 2 Phase 7 — performance spike (100 animated nodes + full glow stress test, 30s, measure fps/memory/battery per SPRINTS.md §Sprint 2 AI check line 238).
+
+---
 
 ### 2026-04-20 — Android WebView debugging session 3: canvas CSS size root cause fixed (Mi A3)
 

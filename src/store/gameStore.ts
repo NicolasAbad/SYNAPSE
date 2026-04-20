@@ -220,6 +220,8 @@ export interface GameStoreActions {
   incrementThoughtsByMinTap: () => void;
   /** Sprint 2 Phase 5: UI-local tab selection. Default 'mind' per UI_MOCKUPS Screen 1. */
   setActiveTab: (tab: TabId) => void;
+  /** Sprint 2 Phase 6: GDPR analytics opt-in. Writes GameState.analyticsConsent. */
+  setAnalyticsConsent: (consent: boolean) => void;
 }
 
 export const useGameStore = create<GameState & UIState & GameStoreActions>((set, get) => ({
@@ -258,4 +260,5 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
   incrementThoughtsByMinTap: () =>
     set((state) => ({ thoughts: state.thoughts + SYNAPSE_CONSTANTS.baseTapThoughtMin })),
   setActiveTab: (tab) => set({ activeTab: tab }),
+  setAnalyticsConsent: (consent) => set({ analyticsConsent: consent }),
 }));

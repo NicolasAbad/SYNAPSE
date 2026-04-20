@@ -1,9 +1,13 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useGameStore } from './store/gameStore';
 import { useSaveScheduler } from './store/saveScheduler';
 import { useTickScheduler } from './store/tickScheduler';
 import { NeuronCanvas } from './ui/canvas/NeuronCanvas';
 import { HUD } from './ui/hud/HUD';
+import { SplashScreen } from './ui/modals/SplashScreen';
+import { GdprModal, isEU } from './ui/modals/GdprModal';
+import { TutorialHint } from './ui/modals/TutorialHint';
+import { FragmentOverlay } from './ui/modals/FragmentOverlay';
 
 export function App() {
   // Sequential mount: load saved state first, then init timestamps ONLY if no
@@ -25,6 +29,12 @@ export function App() {
   useTickScheduler(); // game tick runtime (Phase 3.5 Finding #1 fix)
   useSaveScheduler();
 
+  // Sprint 2 Phase 6 — UI-9 first-open sequence. Splash shows on every cold
+  // open per [D2]; GDPR modal follows only if isEU (false in Sprint 2 per [D1]).
+  // Canvas + HUD render underneath so the GDPR modal overlays a live game.
+  const [splashDone, setSplashDone] = useState(false);
+  const [gdprDone, setGdprDone] = useState(false);
+
   return (
     <main
       style={{
@@ -40,6 +50,10 @@ export function App() {
     >
       <NeuronCanvas />
       <HUD />
+      <TutorialHint />
+      <FragmentOverlay />
+      {!splashDone && <SplashScreen onComplete={() => setSplashDone(true)} />}
+      {splashDone && isEU && !gdprDone && <GdprModal onComplete={() => setGdprDone(true)} />}
     </main>
   );
 }

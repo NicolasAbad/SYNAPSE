@@ -126,6 +126,13 @@ export const TOUCH = {
   minTarget: '48px', // Android 48dp, iOS 44pt
 } as const;
 
+// Responsive breakpoints (TS-only tokens; consumed via window.matchMedia).
+// Phase 6 addition: CYCLE-2 defines 600px as the phone/tablet boundary
+// for CycleSetupScreen column vs step-by-step layout (GDD §29).
+export const BREAKPOINTS = {
+  tablet: 600, // CYCLE-2 §29: <600px = phone stepper, ≥600px = columns
+} as const;
+
 export const MOTION = {
   durInstant: 100, // tap feedback
   durFast: 200, // tab switch, button press
