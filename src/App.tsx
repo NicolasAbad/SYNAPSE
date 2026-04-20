@@ -32,7 +32,7 @@ export function App() {
         padding: 0,
         height: '100%', // CONST-OK: CSS full-height idiom (CODE-1 exception)
         position: 'relative',
-        background: 'var(--color-bg-deep)',
+        background: 'var(--color-bg-deep, #05070d)', // CONST-OK: CSS fallback (CODE-1 exception)
         color: 'var(--color-text-primary)',
         fontFamily: 'var(--font-body)',
         overflow: 'hidden',

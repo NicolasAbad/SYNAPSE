@@ -14,10 +14,12 @@
   #root {
     height: 100%;
     margin: 0;
+    background-color: #05070d; /* CONST-OK: CSS fallback — var() below takes precedence once resolved */
     background-color: var(--color-bg-deep);
   }
 
   html {
+    background-color: #05070d; /* CONST-OK: CSS fallback for Android WebView pre-paint */
     background-color: var(--color-bg-deep);
     color: var(--color-text-primary);
     font-family: var(--font-body);

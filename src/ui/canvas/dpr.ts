@@ -30,6 +30,12 @@ function applyDPR(
   const dpr = window.devicePixelRatio || 1;
   canvas.width = Math.round(width * dpr);
   canvas.height = Math.round(height * dpr);
+  // Explicitly pin CSS display size so the canvas never uses its pixel-buffer
+  // as intrinsic CSS size — observed on Android WebView when parent height = 0
+  // (height chain: html→body→#root→main collapses), which caused the canvas to
+  // render at 2× the viewport in CSS pixels and cover the dark background.
+  canvas.style.width = `${width}px`;
+  canvas.style.height = `${height}px`;
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.scale(dpr, dpr);
   return { width, height, dpr };
@@ -39,10 +45,14 @@ export function setupHiDPICanvas(
   canvas: HTMLCanvasElement,
   ctx: CanvasRenderingContext2D,
 ): LogicalDims {
-  // Use window.innerWidth/Height at initial mount. ResizeObserver fires within
-  // the first frame and calls resizeHiDPICanvas with entry.contentRect to
-  // correct any nav-bar / safe-area mismatch on Android devices.
-  return applyDPR(canvas, ctx, window.innerWidth, window.innerHeight);
+  // window.innerWidth/Height can return 0 on Android WebView when the
+  // activity is in the background or the viewport hasn't been laid out yet
+  // (observed on Mi A3, Chrome 127). screen.width/height is always non-zero
+  // on real devices and serves as a valid fallback — ResizeObserver corrects
+  // to the exact contentRect within the first visible frame.
+  const width = window.innerWidth || screen.width;
+  const height = window.innerHeight || screen.height;
+  return applyDPR(canvas, ctx, width, height);
 }
 
 export function resizeHiDPICanvas(
