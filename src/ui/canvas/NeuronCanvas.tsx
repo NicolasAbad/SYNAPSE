@@ -107,6 +107,12 @@ export function NeuronCanvas() {
     const ro = new ResizeObserver((entries) => {
       const rect = entries[0]?.contentRect;
       if (rect && rect.width > 0 && rect.height > 0) {
+        // Guard: skip if CSS dims unchanged — prevents ResizeObserver loop error
+        // that fires when setting canvas.width inside the callback re-triggers the observer.
+        if (
+          Math.round(rect.width) === Math.round(dimsRef.current.width) &&
+          Math.round(rect.height) === Math.round(dimsRef.current.height)
+        ) return;
         dimsRef.current = resizeHiDPICanvas(canvas, ctx, rect.width, rect.height);
       } else {
         dimsRef.current = setupHiDPICanvas(canvas, ctx);

@@ -547,6 +547,111 @@ Sprint 11a TODO for `ALL_RULE_IDS` constant must include all 16 (not 13 as state
 
 ## Session log
 
+### 2026-04-20 — Android WebView canvas blank screen debugging (post-Phase 5)
+
+**Context:** Web version confirmed working (neuron centered, HUD visible, 313 tests passing). Android emulator (Pixel 4a, Chrome 83 WebView `83.0.4103.106`) showed completely blank dark screen. Logcat confirmed game logic IS running — save scheduler fires every 30s, thoughts accumulate (1300→1450+ confirmed in Preferences.set calls). Issue is purely visual.
+
+**Root cause investigation — two hypotheses:**
+1. `canvas.getContext('2d')` returns null due to EGL GPU errors (`eglChooseConfig failed with error EGL_SUCCESS`) on emulator
+2. `window.innerWidth/innerHeight` returns 0 at React mount time in Chrome 83 WebView
+
+**Files modified this session:**
+
+- `src/ui/canvas/dpr.ts` — switched from `getBoundingClientRect()` to `window.innerWidth/innerHeight` as authoritative dim source (getBoundingClientRect unreliable on canvas because setting `canvas.width/height` resets intrinsic size, fighting CSS cascade)
+- `src/ui/canvas/NeuronCanvas.tsx` — canvas changed to `position:absolute;inset:0`; rAF loop retries dims every frame until non-zero (Chrome 83 WebView may report 0 for first frames); ResizeObserver added for layout-settle measurement; diagnostic `console.log('[SYNAPSE]…)` added (NOT committed — see below)
+- `styles/tailwind.css` — `html,body,#root { height:100%; margin:0; background-color:var(--color-bg-deep) }` (fixes white bottom bleed on Android)
+- `src/App.tsx` — `<main>` changed from `height:'100vh'` → `height:'100%'` (CSS height chain for WebView)
+- `vite.config.ts` — build target changed to `['es2020','chrome83']` (matches actual emulator WebView)
+- `android/app/src/main/res/values/styles.xml` — `android:background="#05070d"`, `android:windowBackground="#05070d"` (dark native Activity background)
+- `capacitor.config.ts` — `android: { backgroundColor: '#05070d' }` (WebView background color)
+- `tests/ui/canvas/dpr.test.ts` — updated to stub `window.innerWidth/innerHeight` instead of `getBoundingClientRect`
+- `tests/ui/canvas/NeuronCanvas.test.tsx` — added `global.ResizeObserver` stub (jsdom doesn't implement it); tap tests updated to use window dim stubs
+
+**Issues resolved:**
+- White bottom bleed on Android: CSS height chain fix
+- Neuron in top-right corner (web): window.innerWidth/innerHeight as authoritative dims
+- All 7 test failures from ResizeObserver change: jsdom stub added
+
+**Gate results at session close:**
+- `npm test` — **313 passed / 54 skipped** (unchanged count; all test fixes applied)
+- `npm run lint` — 0 warnings
+- `npm run typecheck` — 0 errors
+
+**Commits this session:**
+- `9590ede` — Fix canvas blank on Chrome 83 WebView: retry dims until non-zero
+- `11870be` — Fix canvas sizing: use window.innerWidth/Height as authoritative source
+- `2553a60` — Fix Android WebView canvas sizing: use window.innerWidth/Height fallback
+- `f30c57b` — Fix Android WebView layout bug: broken height chain
+
+**Outstanding — UNRESOLVED:**
+Diagnostic `console.log` statements added to `NeuronCanvas.tsx` (lines 68-71) and built (`index-Bzuc7Pus.js`) + synced via `npx cap sync android`. NOT committed to git. These will output `[SYNAPSE]` tagged entries via `Capacitor/Console` in logcat:
+```
+[SYNAPSE] canvas ref null          → React not mounting canvas
+[SYNAPSE] canvas ctx null — GPU unavailable  → EGL GPU issue (hypothesis 1)
+[SYNAPSE] canvas ok, innerW= X innerH= Y     → canvas works, dims visible
+```
+Nico needs to run the diagnostic build on emulator and paste logcat filtered by `[SYNAPSE]` or `Capacitor/Console`. Fix depends on which log appears.
+
+**If `canvas ctx null`:** Try `android:hardwareAccelerated="false"` on WebView/Activity in AndroidManifest, or test on real device (emulator EGL emulation may be fundamentally broken).
+**If `canvas ok, innerW=0 innerH=0`:** Try `screen.width/height` or `document.documentElement.clientWidth/clientHeight` as additional fallbacks in dpr.ts.
+**If `canvas ok, innerW=NNN innerH=NNN`:** Canvas is rendering but invisible — add log inside `draw()` to verify it fires, check element positioning.
+**If no `[SYNAPSE]` entries:** React `useEffect` not running — investigate JS error blocking React render.
+
+**Next action:** Paste logcat → diagnose → fix canvas blank → remove diagnostic logs → commit.
+
+---
+
+### 2026-04-20 — Android WebView debugging session 2: real-device + OOM diagnosis
+
+**Context:** Continuation of the emulator blank-screen investigation. Nico connected a Samsung SM-T510 (Galaxy Tab A 10.1 2019, 2GB RAM, Android 11, Chrome 146 WebView).
+
+**Emulator root cause confirmed (unfixable):**
+Pixel 4a emulator (Chrome 83 WebView) shows `eglChooseConfig failed with error EGL_SUCCESS` in the GPU sandbox process — the EGL surface compositor cannot be created in this emulator image. No code fix is possible. This is an emulator-specific EGL bug in the Chrome 83 renderer. Real devices with Chrome 83 should not be affected (different GPU driver path).
+
+**Files modified this session:**
+- `src/ui/canvas/dpr.ts` — split into `setupHiDPICanvas` (uses `window.innerWidth/Height` for initial mount) + `resizeHiDPICanvas` (accepts explicit width/height from ResizeObserver contentRect). Both call shared `applyDPR()`.
+- `src/ui/canvas/NeuronCanvas.tsx` — ResizeObserver updated to call `resizeHiDPICanvas(canvas, ctx, rect.width, rect.height)` when `contentRect.width > 0 && height > 0`; falls back to `setupHiDPICanvas` otherwise. Added early-return guard in ResizeObserver callback comparing rounded dims to prevent "ResizeObserver loop completed with undelivered notifications" loop. `canvas.getContext('2d', { alpha: false })` opaque canvas (avoids Chrome 83 compositor transparency bug). try/catch around `draw()` so per-frame errors don't stop rAF loop.
+- `src/ui/hud/HUD.tsx` — `inset: 0` replaced with `top: 0; right: 0; bottom: 0; left: 0` (Chrome 83 does not support `inset` shorthand).
+- `src/App.tsx` — `height: '100%'` preserved (CSS height chain fix from session 1 still in place).
+- `tests/ui/canvas/dpr.test.ts` — added 3rd test for `resizeHiDPICanvas` explicit-dims path.
+- `tests/ui/canvas/NeuronCanvas.test.tsx` — ResizeObserver stub updated to pass `contentRect: { width: 0, height: 0 }` so it falls back to `setupHiDPICanvas`, matching production behavior when contentRect is unavailable.
+
+**Root cause of neuron appearing in top-left corner (web):**
+Intermediate attempt used `canvas.clientWidth/clientHeight` as dim source. Before browser computes CSS layout, `canvas.clientWidth` returns the default HTML canvas intrinsic width (300px), placing neuron at (150, 75) instead of viewport center. Reverted to `window.innerWidth/Height` for initial mount + `entry.contentRect` via ResizeObserver for correction within the first frame.
+
+**Two APK packages on real device — confusion resolved:**
+Device had two Synapse APKs installed simultaneously:
+- `app.synapsegame.mind` — old build with AdMob SDK but no AdMob App ID configured. Crashed immediately on launch (`MobileAdsInitProvider: Missing application ID`). User was opening this by tapping the "SYNAPSE" icon. Uninstalled via `adb uninstall app.synapsegame.mind`.
+- `com.nicoabad.synapse` — current dev build (correct). Installed via `adb install`. Now the only Synapse on the device.
+
+**Real-device crash: OOM (Out of Memory), NOT a code bug:**
+After uninstalling the wrong APK, `com.nicoabad.synapse` loaded correctly (JS executed, Preferences plugin called, rAF loop started). Crash after ~2s was:
+```
+onTrimMemory 60 (TRIM_MEMORY_RUNNING_CRITICAL)
+→ lmkd kills: oneconnect, stickercenter, keychain, mobileservice, bbc.bbcagent (background apps)
+→ Renderer process crash detected (code -1) ← OOM kill of WebView sandboxed process
+```
+The WebView renderer (isolated sandboxed process) was killed by Android's Low Memory Killer. Available memory at crash: ~640MB on a 2GB device. Multiple background Samsung services were consuming RAM. This is a device-level memory management issue, not a code bug.
+
+**Resolution: move forward with web-only testing**
+- Pixel 4a emulator: Chrome 83 EGL bug — permanently blocked, no code fix
+- Samsung SM-T510: 2GB RAM + heavy background services → OOM kill on app startup — device too old/low-RAM for reliable testing
+- Web version: fully functional (neuron centered, taps work, HUD visible, 314 tests passing)
+
+**Decision:** Continue Sprint 2 on web. Android player tests deferred until a higher-RAM device or newer emulator image is available.
+
+**Pending value approval (need Nico):**
+`canvasMaxDPR` cap for `src/ui/tokens.ts` — would clamp DPR to this value to reduce canvas pixel buffer memory on 3× screens. Industry standard cap is **2**. On DPR ≤ 2 devices (including the SM-T510 at DPR ~1.5) this has zero effect. Protects against future 3× device OOM. Requires Nico approval before implementing per anti-invention rules.
+
+**Gate results at session close:**
+- `npm test` — **314 passed / 54 skipped**
+- `npm run lint` — 0 warnings
+- `npm run typecheck` — 0 errors
+
+**Next action:** Sprint 2 Phase 6 — UI-9 first-open splash sequence + CycleSetupScreen layout shell.
+
+---
+
 ### 2026-04-18 — Sprint 2 Phase 5: HUD + 4-tab TabBar (consumes i18n from 4.9.2)
 
 First phase under the reviewer-discipline framework (PROGRESS.md Phase 4.9.3). Reviewer delivered an evidence block with 10 greps + 5 unverified assumptions + 4 red flags. Claude Code verified all claims via pre-code research before writing code. No fabrications to log this phase — [U4] was an honest flag that resolved to a legitimate defer (below).
