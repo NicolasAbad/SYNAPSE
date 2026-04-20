@@ -32,7 +32,7 @@ export function App() {
         padding: 0,
         height: '100%', // CONST-OK: CSS full-height idiom (CODE-1 exception)
         position: 'relative',
-        background: '#00CC44', /* DIAGNOSTIC: remove after Android fix confirmed */
+        background: 'var(--color-bg-deep)',
         color: 'var(--color-text-primary)',
         fontFamily: 'var(--font-body)',
         overflow: 'hidden',
