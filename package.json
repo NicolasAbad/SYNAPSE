@@ -17,6 +17,7 @@
     "prepare": "husky"
   },
   "dependencies": {
+    "@capacitor/android": "^6.2.1",
     "@capacitor/core": "^6.1.0",
     "@capacitor/preferences": "^6.0.0",
     "@fontsource-variable/jetbrains-mono": "^5.2.8",

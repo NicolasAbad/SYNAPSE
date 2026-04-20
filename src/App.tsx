@@ -30,7 +30,7 @@ export function App() {
       style={{
         margin: 0,
         padding: 0,
-        height: '100vh',
+        height: '100%',
         position: 'relative',
         background: 'var(--color-bg-deep)',
         color: 'var(--color-text-primary)',

@@ -5,6 +5,17 @@
 
 /* Custom base styles */
 @layer base {
+  /* Continuous height chain — required for Android WebView (Phase 5 WebView
+     layout bug): without this, #root collapses to 0px under viewport-fit=cover
+     and <main>'s 100% / 100vh produces a squashed canvas + white body bleed.
+     Desktop Chrome tolerates a broken chain; WebView does not. */
+  html,
+  body,
+  #root {
+    height: 100%;
+    margin: 0;
+  }
+
   html {
     background-color: var(--color-bg-deep);
     color: var(--color-text-primary);
