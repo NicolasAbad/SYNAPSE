@@ -66,7 +66,8 @@ export function NeuronCanvas() {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext('2d');
+    // alpha:false = opaque canvas; avoids Chrome 83 compositor transparency bug
+    const ctx = canvas.getContext('2d', { alpha: false });
     if (!ctx) return;
 
     const startTime = performance.now();
@@ -85,7 +86,7 @@ export function NeuronCanvas() {
       try {
         draw(ctx, state, themeRef.current, dimsRef.current, elapsedMs);
       } catch {
-        // Swallow per-frame draw errors — rAF loop must never stop
+        // swallow per-frame draw errors so rAF loop never stops
       }
       rafId = requestAnimationFrame(tick);
     };
