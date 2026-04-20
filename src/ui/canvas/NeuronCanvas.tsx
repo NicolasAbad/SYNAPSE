@@ -69,13 +69,17 @@ export function NeuronCanvas() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    dimsRef.current = setupHiDPICanvas(canvas, ctx);
     const startTime = performance.now();
     let rafId = 0;
     let paused = false;
 
     const tick = () => {
       if (paused) return;
+      // Chrome 83 WebView may report window.innerWidth=0 for the first few
+      // frames. Re-measure every frame until dims are valid, then draw.
+      if (dimsRef.current.width === 0 || dimsRef.current.height === 0) {
+        dimsRef.current = setupHiDPICanvas(canvas, ctx);
+      }
       const elapsedMs = performance.now() - startTime;
       const state = useGameStore.getState();
       draw(ctx, state, themeRef.current, dimsRef.current, elapsedMs);
@@ -93,12 +97,12 @@ export function NeuronCanvas() {
     };
 
     // ResizeObserver keeps dims fresh as WebView layout settles.
-    // dpr.ts falls back to window.innerWidth/Height so dims are never 0×0.
     const ro = new ResizeObserver(() => {
       dimsRef.current = setupHiDPICanvas(canvas, ctx);
     });
     ro.observe(canvas);
 
+    dimsRef.current = setupHiDPICanvas(canvas, ctx);
     rafId = requestAnimationFrame(tick);
     document.addEventListener('visibilitychange', handleVisibility);
 
