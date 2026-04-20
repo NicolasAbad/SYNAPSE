@@ -28,7 +28,7 @@ import { useEffect, useRef, type PointerEvent as ReactPointerEvent } from 'react
 import { useGameStore } from '../../store/gameStore';
 import { useActiveTheme } from '../theme/useActiveTheme';
 import { unlockAudioOnFirstTap } from './audioUnlock';
-import { setupHiDPICanvas } from './dpr';
+import { resizeHiDPICanvas, setupHiDPICanvas } from './dpr';
 import { draw } from './renderer';
 import { testHit } from './tapHandler';
 
@@ -102,8 +102,15 @@ export function NeuronCanvas() {
     };
 
     // ResizeObserver keeps dims fresh as WebView layout settles.
-    const ro = new ResizeObserver(() => {
-      dimsRef.current = setupHiDPICanvas(canvas, ctx);
+    // entry.contentRect is the exact CSS layout size — accounts for Android
+    // nav bars and safe areas that window.innerHeight does not exclude.
+    const ro = new ResizeObserver((entries) => {
+      const rect = entries[0]?.contentRect;
+      if (rect && rect.width > 0 && rect.height > 0) {
+        dimsRef.current = resizeHiDPICanvas(canvas, ctx, rect.width, rect.height);
+      } else {
+        dimsRef.current = setupHiDPICanvas(canvas, ctx);
+      }
     });
     ro.observe(canvas);
 

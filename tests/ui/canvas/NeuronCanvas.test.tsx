@@ -15,7 +15,10 @@ beforeAll(() => {
     private cb: ResizeObserverCallback;
     constructor(cb: ResizeObserverCallback) { this.cb = cb; }
     observe(target: Element) {
-      this.cb([{ target } as ResizeObserverEntry], this as unknown as ResizeObserver);
+      // contentRect: { width: 0, height: 0 } → falls back to setupHiDPICanvas
+      // (window.innerWidth/Height) so tap tests using those stubs stay correct.
+      const entry = { target, contentRect: { width: 0, height: 0 } } as unknown as ResizeObserverEntry;
+      this.cb([entry], this as unknown as ResizeObserver);
     }
     unobserve() {}
     disconnect() {}

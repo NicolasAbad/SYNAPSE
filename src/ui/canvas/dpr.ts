@@ -5,8 +5,12 @@
  * lines and circles render at device-native resolution. The 2D context
  * is scaled by dpr so draw calls continue to use CSS (logical) pixels.
  *
- * Call on mount and on window resize. Returns the logical dimensions
- * for draw code to use.
+ * Two entry points:
+ * - setupHiDPICanvas: uses window.innerWidth/Height for the initial mount
+ *   call (before layout has settled; ResizeObserver corrects within one frame).
+ * - resizeHiDPICanvas: accepts explicit width/height from a ResizeObserver
+ *   contentRect — the authoritative CSS layout size that accounts for Android
+ *   nav bars, safe areas, and other system UI that reduce the usable viewport.
  *
  * Implements CODE-4 "Canvas — rAF at 60fps... devicePixelRatio scaling".
  */
@@ -17,27 +21,37 @@ export interface LogicalDims {
   dpr: number;
 }
 
+function applyDPR(
+  canvas: HTMLCanvasElement,
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+): LogicalDims {
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = Math.round(width * dpr);
+  canvas.height = Math.round(height * dpr);
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.scale(dpr, dpr);
+  return { width, height, dpr };
+}
+
 export function setupHiDPICanvas(
   canvas: HTMLCanvasElement,
   ctx: CanvasRenderingContext2D,
 ): LogicalDims {
-  const dpr = window.devicePixelRatio || 1;
-  // canvas.clientWidth/Height is the authoritative CSS layout size — it reflects
-  // the actual rendered area after accounting for Android nav bars, safe areas,
-  // and any other system UI that reduces the WebView's usable height.
-  // window.innerHeight can be larger than the canvas on devices with soft nav bars,
-  // causing the neuron to draw at the wrong center and taps to miss.
-  // Fall back to window.inner* only in jsdom (clientWidth = 0, no layout engine).
-  const width = canvas.clientWidth > 0 ? canvas.clientWidth : window.innerWidth;
-  const height = canvas.clientHeight > 0 ? canvas.clientHeight : window.innerHeight;
+  // Use window.innerWidth/Height at initial mount. ResizeObserver fires within
+  // the first frame and calls resizeHiDPICanvas with entry.contentRect to
+  // correct any nav-bar / safe-area mismatch on Android devices.
+  return applyDPR(canvas, ctx, window.innerWidth, window.innerHeight);
+}
 
-  canvas.width = Math.round(width * dpr);
-  canvas.height = Math.round(height * dpr);
-
-  // Reset any prior scaling, then apply new dpr scale so draw calls
-  // stay in logical (CSS) pixel space.
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.scale(dpr, dpr);
-
-  return { width, height, dpr };
+export function resizeHiDPICanvas(
+  canvas: HTMLCanvasElement,
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+): LogicalDims {
+  // width/height come from ResizeObserver entry.contentRect — the exact CSS
+  // layout dimensions after accounting for all system UI insets.
+  return applyDPR(canvas, ctx, width, height);
 }
