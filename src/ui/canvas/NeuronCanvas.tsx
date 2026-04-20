@@ -92,18 +92,20 @@ export function NeuronCanvas() {
       }
     };
 
-    const handleResize = () => {
+    // ResizeObserver keeps dims fresh as WebView layout settles.
+    // dpr.ts falls back to window.innerWidth/Height so dims are never 0×0.
+    const ro = new ResizeObserver(() => {
       dimsRef.current = setupHiDPICanvas(canvas, ctx);
-    };
+    });
+    ro.observe(canvas);
 
-    document.addEventListener('visibilitychange', handleVisibility);
-    window.addEventListener('resize', handleResize);
     rafId = requestAnimationFrame(tick);
+    document.addEventListener('visibilitychange', handleVisibility);
 
     return () => {
       cancelAnimationFrame(rafId);
       document.removeEventListener('visibilitychange', handleVisibility);
-      window.removeEventListener('resize', handleResize);
+      ro.disconnect();
     };
   }, []);
 
@@ -111,8 +113,11 @@ export function NeuronCanvas() {
     <canvas
       ref={canvasRef}
       data-testid="neuron-canvas"
-      className="block w-full h-full"
-      style={{ touchAction: 'manipulation' }}
+      style={{
+        position: 'absolute', // CONST-OK: CSS layout (CODE-1 exception)
+        inset: 0, // CONST-OK: CSS full-bleed idiom (CODE-1 exception)
+        touchAction: 'manipulation',
+      }}
       onPointerDown={handlePointerDown}
     />
   );

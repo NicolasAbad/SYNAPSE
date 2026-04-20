@@ -4,10 +4,13 @@ const config: CapacitorConfig = {
   appId: 'com.nicoabad.synapse',
   appName: 'SYNAPSE',
   webDir: 'dist',
+  android: {
+    backgroundColor: '#05070d',
+  },
   plugins: {
     SplashScreen: {
       launchShowDuration: 2000,
-      backgroundColor: '#0A0E1A',
+      backgroundColor: '#05070d',
       showSpinner: false,
     },
   },

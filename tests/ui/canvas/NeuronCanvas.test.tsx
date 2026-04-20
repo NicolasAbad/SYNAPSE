@@ -3,11 +3,34 @@
 // Real-Chromium Vitest Browser Mode is deferred to Phase 5 when HUD arrives (per
 // Sprint 2 test checklist item 3 — HUD renders in real Chromium).
 
-import { afterEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeAll, describe, expect, test, vi } from 'vitest';
 import { cleanup, fireEvent, render } from '@testing-library/react';
 import { NeuronCanvas } from '../../../src/ui/canvas/NeuronCanvas';
 import { useGameStore } from '../../../src/store/gameStore';
 import { SYNAPSE_CONSTANTS } from '../../../src/config/constants';
+
+// jsdom doesn't implement ResizeObserver — stub it so NeuronCanvas mounts cleanly.
+// triggerResize() lets tap tests re-fire the callback after stubbing getBoundingClientRect.
+let lastRoCallback: ResizeObserverCallback | null = null;
+let lastRoTarget: Element | null = null;
+function triggerResize() {
+  if (lastRoCallback && lastRoTarget) {
+    lastRoCallback([{ target: lastRoTarget } as ResizeObserverEntry], {} as ResizeObserver);
+  }
+}
+beforeAll(() => {
+  global.ResizeObserver = class {
+    private cb: ResizeObserverCallback;
+    constructor(cb: ResizeObserverCallback) { this.cb = cb; }
+    observe(target: Element) {
+      lastRoCallback = this.cb;
+      lastRoTarget = target;
+      this.cb([{ target } as ResizeObserverEntry], this as unknown as ResizeObserver);
+    }
+    unobserve() {}
+    disconnect() {}
+  };
+});
 
 afterEach(() => {
   cleanup();
@@ -32,15 +55,13 @@ describe('NeuronCanvas — mount + cleanup lifecycle', () => {
     expect(removed.length).toBeGreaterThanOrEqual(1);
   });
 
-  test('attaches window resize listener and cleans up on unmount', () => {
-    const addSpy = vi.spyOn(window, 'addEventListener');
-    const removeSpy = vi.spyOn(window, 'removeEventListener');
+  test('uses ResizeObserver to re-measure canvas on layout change', () => {
+    const observeSpy = vi.spyOn(global.ResizeObserver.prototype, 'observe');
+    const disconnectSpy = vi.spyOn(global.ResizeObserver.prototype, 'disconnect');
     const { unmount } = render(<NeuronCanvas />);
-    const added = addSpy.mock.calls.filter(([event]) => event === 'resize');
-    expect(added.length).toBeGreaterThanOrEqual(1);
+    expect(observeSpy).toHaveBeenCalledTimes(1);
     unmount();
-    const removed = removeSpy.mock.calls.filter(([event]) => event === 'resize');
-    expect(removed.length).toBeGreaterThanOrEqual(1);
+    expect(disconnectSpy).toHaveBeenCalledTimes(1);
   });
 
   test('cancels rAF on unmount (no leaking animation frame)', () => {
@@ -67,7 +88,7 @@ describe('NeuronCanvas — onPointerDown taps (Phase 3)', () => {
       left: 0, top: 0, right: 400, bottom: 600, width: 400, height: 600,
       x: 0, y: 0, toJSON: () => ({}),
     });
-    fireEvent(window, new Event('resize'));
+    triggerResize();
 
     // Tap the canvas centre — default scatter layout places index 0 at (200, 300).
     fireEvent.pointerDown(canvas, { clientX: 200, clientY: 300 });
@@ -85,7 +106,7 @@ describe('NeuronCanvas — onPointerDown taps (Phase 3)', () => {
       left: 0, top: 0, right: 400, bottom: 600, width: 400, height: 600,
       x: 0, y: 0, toJSON: () => ({}),
     });
-    fireEvent(window, new Event('resize'));
+    triggerResize();
 
     // Corner tap — far outside any neuron hit area.
     fireEvent.pointerDown(canvas, { clientX: 5, clientY: 5 });
@@ -101,7 +122,7 @@ describe('NeuronCanvas — onPointerDown taps (Phase 3)', () => {
       left: 0, top: 0, right: 400, bottom: 600, width: 400, height: 600,
       x: 0, y: 0, toJSON: () => ({}),
     });
-    fireEvent(window, new Event('resize'));
+    triggerResize();
 
     fireEvent.pointerDown(canvas, { clientX: 200, clientY: 300 });
     fireEvent.pointerDown(canvas, { clientX: 200, clientY: 300 });

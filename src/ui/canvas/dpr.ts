@@ -23,8 +23,10 @@ export function setupHiDPICanvas(
 ): LogicalDims {
   const dpr = window.devicePixelRatio || 1;
   const rect = canvas.getBoundingClientRect();
-  const width = rect.width;
-  const height = rect.height;
+  // Android WebView returns 0×0 for percentage-sized canvas at mount time —
+  // fall back to window.innerWidth/Height which is always reliable.
+  const width = rect.width || window.innerWidth;
+  const height = rect.height || window.innerHeight;
 
   canvas.width = Math.round(width * dpr);
   canvas.height = Math.round(height * dpr);
