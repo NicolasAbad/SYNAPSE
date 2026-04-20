@@ -322,7 +322,51 @@ When Nico starts a new session with Claude Opus as reviewer (recognizable by: mu
 
 6. **Never claim memory of decisions not documented** in uploaded docs. This is exactly the fabrication class that evidence discipline prevents.
 
-## If this session was compacted
+## If this session was compacted (Claude Code — implementer)
+
+If you (Claude Code) see "NOTE: This conversation was successfully compacted..." anywhere in your context mid-task, the prior conversational memory is lost. Only the auto-generated compaction summary + this repo's canonical files remain. Recovery is possible because this project is designed for it — session state lives on disk in PROGRESS.md + git, not in the transcript.
+
+**Required behavior the moment you detect compaction:**
+
+1. **Stop implementing immediately.** Do not continue the current tool call, do not start new code. First reconstruct state, then resume.
+
+2. **Run the recovery sequence** (in this order, all independent calls in parallel):
+   - Read CLAUDE.md (this file, top to bottom) — re-load rules + current constants
+   - Read PROGRESS.md last ~20 entries of the "Session log" section (most recent work)
+   - `git status` — what files are dirty, what's uncommitted
+   - `git log --oneline -20` — resumption index; last commit = last confirmed-green checkpoint
+   - `git diff HEAD` (if there are uncommitted changes) — what work was in progress when compaction fired
+   - Read the active sprint section in SPRINTS.md (identified from PROGRESS.md "Current status" → Active sprint)
+
+3. **Reconstruct what was in flight.** Using the above, answer three questions before acting:
+   - **What phase/task was I on?** → PROGRESS.md "Next action" field + last session log entry
+   - **What did I already finish?** → last commit + any PROGRESS.md entry marked as "this session"
+   - **What was I in the middle of?** → uncommitted `git diff` + incomplete checkboxes in the active sprint
+
+4. **Verify green state before resuming.** Run `npm run typecheck`, `npm run lint`, `npm test` in parallel. If any fail, the compaction interrupted a broken state — fix the break before continuing the original task.
+
+5. **Report the reconstruction to Nico and WAIT for confirmation** before resuming implementation. Format:
+   ```
+   Post-compaction recovery:
+   - Active sprint: Sprint N
+   - Last completed: <phase or task, with commit hash>
+   - In progress: <task, with files touched>
+   - Uncommitted changes: <summary of git diff>
+   - Green state: typecheck/lint/test all passing
+   - Proposed next step: <resume X by doing Y>
+   Confirm to proceed.
+   ```
+   Nico may have context you cannot recover (e.g. a value approval given verbally in-session that didn't make it to PROGRESS.md). Do not guess — ask.
+
+6. **Do not trust the compaction summary for decisions.** It captures facts but loses in-session agreements, approved values, and micro-corrections. Anything not in PROGRESS.md + git must be re-confirmed.
+
+**Mid-task flush discipline (to make recovery possible):**
+
+- After each phase AI-check bundle completes green (typecheck + lint + test), append the outcome to PROGRESS.md immediately — don't wait for phase close
+- Commit at phase boundaries, not session end. Every green commit is a compaction recovery point
+- If a spec gap is found and a value is approved in-session, write it to PROGRESS.md "Changes applied this sprint" before writing any code that uses it — values die in transcripts but survive in files
+
+## If this session was compacted (Claude Opus — reviewer)
 
 If Claude Opus sees "NOTE: This conversation was successfully compacted..." at the start of its context, the prior conversational memory is lost. Only the auto-generated compaction summary + re-uploaded canonical docs remain.
 
