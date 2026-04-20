@@ -6,10 +6,10 @@
 
 ## Current status
 
-**Phase:** Sprint 1 complete — engine foundation in place
-**Last updated:** 2026-04-17 after Phase 8 completion
-**Active sprint:** None — Sprint 1 closed
-**Next action:** Begin Sprint 2 (Canvas + HUD + Performance Spike) per `docs/SPRINTS.md` §Sprint 2. Read CLAUDE.md (including new Zustand pitfall section + CODE-2 exception note) + PROGRESS.md §"Sprint 1 closing dashboard" at minimum.
+**Phase:** Sprint 2 in progress — Phases 1–5 complete (Canvas, renderer, HUD, theme, i18n, TabBar)
+**Last updated:** 2026-04-20 after Android WebView debugging session 3
+**Active sprint:** Sprint 2 (Canvas + HUD + Performance Spike)
+**Next action:** Sprint 2 Phase 6 — UI-9 first-open splash sequence + CycleSetupScreen layout shell per `docs/SPRINTS.md` §Sprint 2. Android WebView rendering now confirmed working on Mi A3 (Chrome 127). All 315 tests passing.
 
 ### Sprint 1 closing dashboard
 
@@ -546,6 +546,52 @@ Sprint 11a TODO for `ALL_RULE_IDS` constant must include all 16 (not 13 as state
 ---
 
 ## Session log
+
+### 2026-04-20 — Android WebView debugging session 3: canvas CSS size root cause fixed (Mi A3)
+
+**Context:** Continuation of Mi A3 (Xiaomi Mi A3, Android 10, Chrome 127 WebView) debugging. Previous session fixed `window.innerWidth = 0` via `screen.width/height` fallback and confirmed dims were non-zero (`dims w: 360 h: 780 dpr: 2`). But the app still showed white background and no neuron.
+
+**Root cause identified — canvas rendering at 2× viewport size:**
+The previous session's diagnostic log showed `css: 720 x 1560` from `getBoundingClientRect()` on the canvas. This meant the canvas was displaying at **720px wide in CSS space** on a 360px-wide viewport. Cause:
+
+- The `<main>` CSS height chain (`html→body→#root→main { height: 100% }`) collapses to 0 on Android WebView during initial render
+- The canvas has `position: absolute; top:0; right:0; bottom:0; left:0` but in a 0-height parent, the absolutely-positioned canvas also has 0 CSS height
+- When a canvas has 0 CSS size, the browser uses its **pixel-buffer intrinsic size** (720×1560) as the CSS display size
+- This makes the opaque canvas render at 2× the viewport, covering the dark background and placing the neuron far off-screen
+
+**Fix: explicit `canvas.style.width/height` in `applyDPR`:**
+Added two lines to `applyDPR()` in `dpr.ts`:
+```typescript
+canvas.style.width = `${width}px`;
+canvas.style.height = `${height}px`;
+```
+This pins the CSS display size explicitly, so it doesn't matter whether the parent has zero height or whether the CSS layout chain is broken. The initial value comes from `screen.width/height` (360×780 on Mi A3), then the ResizeObserver corrects to `contentRect` dims within the first frame. ResizeObserver loop guard prevents re-triggering.
+
+**Files modified:**
+- `src/ui/canvas/dpr.ts` — `applyDPR()` now sets `canvas.style.width/height` explicitly
+- `src/ui/canvas/NeuronCanvas.tsx` — removed diagnostic `console.debug` dims log and `console.error` draw error try/catch (both were diagnostic-only from session 2)
+- `tests/ui/canvas/dpr.test.ts` — added `screen.width/height` fallback test (confirmed `style.width/height` assertions); added `style.width/height` assertions to existing test
+- `.gitignore` — added `*.logcat` to exclude ADB logcat dumps
+- `android/` — initial commit of Capacitor Android project files (previously untracked)
+
+**Confirmed working on Mi A3:**
+Dark background visible, blue neuron visible, taps register, HUD working. All Android WebView issues from sessions 1–3 resolved.
+
+**Gate results at session close:**
+- `npm test` — **315 passed / 54 skipped** (up from 314 — new `screen.width` fallback test)
+- `npm run lint` — 0 warnings
+- `npm run typecheck` — 0 errors
+- Anti-invention gates — 4/4 PASS, ratio 0.88
+
+**Commit this session:**
+- `08aa01b` — Fix Android WebView canvas rendering: CSS size, background, and zero-dim fallback
+
+**Pending value approval (carry-forward from session 2):**
+`canvasMaxDPR` cap for `src/ui/tokens.ts` to clamp DPR on 3× screens. Industry standard = 2. Requires Nico approval before implementing per anti-invention rules.
+
+**Next action:** Sprint 2 Phase 6 — UI-9 first-open splash sequence + CycleSetupScreen layout shell per SPRINTS.md §Sprint 2.
+
+---
 
 ### 2026-04-20 — Android WebView canvas blank screen debugging (post-Phase 5)
 
