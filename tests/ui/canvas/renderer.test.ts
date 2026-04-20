@@ -90,6 +90,41 @@ describe('draw — neuron circle rendering', () => {
   });
 });
 
+describe('draw — max visible nodes cap (Sprint 2 Phase 7)', () => {
+  test('100 neurons in state → exactly maxVisibleNodes arcs drawn', () => {
+    const { ctx, calls } = makeMockCtx();
+    // 20 per type × 5 types = 100 total, capped to maxVisibleNodes (80)
+    const neurons: NeuronState[] = [
+      { type: 'basica', count: 20 },
+      { type: 'sensorial', count: 20 },
+      { type: 'piramidal', count: 20 },
+      { type: 'espejo', count: 20 },
+      { type: 'integradora', count: 20 },
+    ];
+    draw(ctx, stateWithNeurons(neurons), BIOLUMINESCENT_THEME, DIMS, 0);
+    // arcs === drawn neurons; drawImage mirrors it 1:1
+    expect(calls.filter((c) => c === 'arc')).toHaveLength(80);
+    expect(calls.filter((c) => c === 'drawImage')).toHaveLength(80);
+  });
+
+  test('below cap (50 total) draws all neurons', () => {
+    const { ctx, calls } = makeMockCtx();
+    const neurons: NeuronState[] = [
+      { type: 'basica', count: 25 },
+      { type: 'sensorial', count: 25 },
+    ];
+    draw(ctx, stateWithNeurons(neurons), BIOLUMINESCENT_THEME, DIMS, 0);
+    expect(calls.filter((c) => c === 'arc')).toHaveLength(50);
+  });
+
+  test('exactly at cap (80 total) draws all 80', () => {
+    const { ctx, calls } = makeMockCtx();
+    const neurons: NeuronState[] = [{ type: 'basica', count: 80 }];
+    draw(ctx, stateWithNeurons(neurons), BIOLUMINESCENT_THEME, DIMS, 0);
+    expect(calls.filter((c) => c === 'arc')).toHaveLength(80);
+  });
+});
+
 describe('draw — ambient pulse produces time-varying radius', () => {
   test('elapsedMs progression yields different arc radii', () => {
     const radii: number[] = [];

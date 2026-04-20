@@ -173,6 +173,20 @@ export const SYNAPSE_CONSTANTS = {
   firstOpenTutorialHintIdleMs: 2_000, // UI-9 step 4: 2s idle → "Tap the neuron" (Sprint 2 kickoff)
   narrativeFragmentDisplayMs: 4_000, // UI-9 step 5: BASE-01 hold duration (fade-in/out use TOKENS.MOTION.durSlow) — Sprint 2 Phase 6
 
+  // ── Canvas caps (Sprint 2 Phase 7, CODE-4 policy values) ──
+  maxVisibleNodes: 80, // CODE-4 "Max 80 visible nodes" + SPRINTS.md §Sprint 2 line 229; renderer clamps min(totalCount, maxVisibleNodes)
+  canvasMaxDPR: 2, // Phase 7 Nico-approved 2026-04-20: clamp DPR on 3× devices (Mi A3 DPR=2 unaffected; protects 1080×2340 buffers on 3× phones)
+
+  // ── Performance instrumentation (Sprint 2 Phase 7) ──
+  // These are diagnostic thresholds, not gameplay values — they control
+  // what the FPSMeter reports and what the perf-spike script asserts.
+  perfFpsWarmupFrames: 10, // FPSMeter discards first N frames (layout settle + GPU warmup)
+  perfStressNeuronsPerType: 20, // stress state populates 20 per type × 5 types = 100 total
+  perfSpikeDurationMs: 30_000, // 30s stress window per SPRINTS.md §Sprint 2 line 238
+  perfTargetFps: 30, // min average fps for spike to pass (CODE-4 canvas budget)
+  perfMemoryDeltaBudgetMB: 20, // max JS heap growth across 30s stress (SPRINTS.md line 238)
+  perfDroppedFramePctBudget: 0.1, // ≤10% of frames may exceed 33.33ms budget
+
   // ── Version ──
   gameVersion: '1.0.0',
 

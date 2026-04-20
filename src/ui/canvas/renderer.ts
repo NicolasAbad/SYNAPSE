@@ -17,6 +17,7 @@
  */
 
 import type { GameState } from '../../types/GameState';
+import { SYNAPSE_CONSTANTS } from '../../config/constants';
 import { CANVAS, MOTION } from '../tokens';
 import type { Theme } from '../theme/types';
 import { THEME_BIOLUMINESCENT } from '../theme/themes';
@@ -53,12 +54,19 @@ export function draw(
   const opacity =
     theme.glowPack.opacityMin + normalized * (theme.glowPack.opacityMax - theme.glowPack.opacityMin);
 
+  // Enforce the CODE-4 "Max 80 visible nodes" cap. State may contain more
+  // than 80 neurons (e.g. late-game or Phase 7 stress harness); we draw
+  // min(totalCount, maxVisibleNodes) and drop the overflow. Preserves
+  // deterministic placement — lower globalIndex draws first (type order:
+  // basica → sensorial → piramidal → espejo → integradora).
   let globalIndex = 0;
-  for (const neuron of state.neurons) {
+  const visibleCap = SYNAPSE_CONSTANTS.maxVisibleNodes;
+  outer: for (const neuron of state.neurons) {
     if (neuron.count <= 0) continue;
     const baseRadius = CANVAS.neuronRadii[neuron.type];
     const entry = theme.neurons[neuron.type];
     for (let i = 0; i < neuron.count; i++) {
+      if (globalIndex >= visibleCap) break outer;
       drawNeuron(ctx, entry.color, baseRadius, radiusMult, opacity, globalIndex, dims);
       globalIndex++;
     }

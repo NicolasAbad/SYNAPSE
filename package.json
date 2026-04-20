@@ -11,6 +11,8 @@
     "build:tokens": "tsx scripts/generate-tailwind-theme.ts",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:perf": "tsx scripts/perf-spike.ts",
+    "test:perf:mi-a3": "tsx scripts/perf-spike-mi-a3.ts",
     "typecheck": "tsc -b --noEmit",
     "lint": "eslint .",
     "check-invention": "bash scripts/check-invention.sh",

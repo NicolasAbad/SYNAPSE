@@ -60,6 +60,22 @@ describe('setupHiDPICanvas', () => {
     expect(canvas.style.height).toBe('780px');
   });
 
+  test('clamps dpr to CANVAS.canvasMaxDPR on 3× devices (Phase 7)', () => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('no 2d ctx');
+
+    Object.defineProperty(window, 'devicePixelRatio', { value: 3, writable: true });
+    Object.defineProperty(window, 'innerWidth', { value: 400, writable: true });
+    Object.defineProperty(window, 'innerHeight', { value: 600, writable: true });
+
+    const dims = setupHiDPICanvas(canvas, ctx);
+    // Raw device dpr is 3, but CANVAS.canvasMaxDPR = 2 clamps it.
+    expect(dims.dpr).toBe(2);
+    expect(canvas.width).toBe(800); // CONST-OK: 400 × clamped 2
+    expect(canvas.height).toBe(1200); // CONST-OK: 600 × clamped 2
+  });
+
   test('defaults dpr to 1 when devicePixelRatio is 0/undefined', () => {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');

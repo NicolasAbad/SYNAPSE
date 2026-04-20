@@ -15,6 +15,8 @@
  * Implements CODE-4 "Canvas — rAF at 60fps... devicePixelRatio scaling".
  */
 
+import { SYNAPSE_CONSTANTS } from '../../config/constants';
+
 export interface LogicalDims {
   width: number;
   height: number;
@@ -27,7 +29,11 @@ function applyDPR(
   width: number,
   height: number,
 ): LogicalDims {
-  const dpr = window.devicePixelRatio || 1;
+  // Clamp to SYNAPSE_CONSTANTS.canvasMaxDPR (Phase 7, Nico-approved 2026-04-20).
+  // 3× devices otherwise quadruple the canvas buffer area (e.g. 1080×2340
+  // instead of 720×1560). Industry standard for game canvas is 2.
+  const rawDpr = window.devicePixelRatio || 1;
+  const dpr = Math.min(rawDpr, SYNAPSE_CONSTANTS.canvasMaxDPR);
   canvas.width = Math.round(width * dpr);
   canvas.height = Math.round(height * dpr);
   // Explicitly pin CSS display size so the canvas never uses its pixel-buffer

@@ -6,10 +6,10 @@
 
 ## Current status
 
-**Phase:** Sprint 2 in progress — Phases 1–6 complete (Canvas, renderer, HUD, theme, i18n, TabBar, UI-9 first-open sequence + CycleSetupScreen shell)
-**Last updated:** 2026-04-20 after Sprint 2 Phase 6 (UI-9 modals + CycleSetupScreen shell)
+**Phase:** Sprint 2 in progress — Phases 1–7 complete (Canvas, renderer, HUD, theme, i18n, TabBar, UI-9, performance spike)
+**Last updated:** 2026-04-20 after Sprint 2 Phase 7 (perf spike — 60fps desktop + 59.63fps Mi A3 real device)
 **Active sprint:** Sprint 2 (Canvas + HUD + Performance Spike)
-**Next action:** Sprint 2 Phase 7 — performance spike per SPRINTS.md §Sprint 2 (100 nodes + full glow on Pixel 4a, ≥30 fps, <20 MB memory delta, <2%/30s battery). Phase 6 shipped 27 new tests; 342 passing / 54 skipped / 0 failing. Anti-invention ratio 0.90.
+**Next action:** Sprint 2 Phase 8 — sprint close (Player tests per SPRINTS.md §Sprint 2, sprint closing dashboard). All 7 AI checks pass except pending player tests. 359 passing / 54 skipped / 0 failing. Anti-invention ratio 0.86.
 
 ### Sprint 1 closing dashboard
 
@@ -546,6 +546,88 @@ Sprint 11a TODO for `ALL_RULE_IDS` constant must include all 16 (not 13 as state
 ---
 
 ## Session log
+
+### 2026-04-20 — Sprint 2 Phase 7: performance spike (desktop 60 fps, Mi A3 59.63 fps)
+
+**Scope:** Sprint 2 Phase 7 per SPRINTS.md §Sprint 2 AI checks "Max 80 visible nodes" (line 229) and "Performance spike" (line 238). Deliverables: 80-node visible cap in renderer, DPR clamp, FPSMeter utility, stress-state generator, dev-mode `window.__SYNAPSE_PERF__` API, Playwright desktop perf harness (`npm run test:perf`), real-device Mi A3 perf harness via adb + raw CDP (`npm run test:perf:mi-a3`).
+
+**Results:**
+
+| Metric | Desktop Chromium | Mi A3 (Android 11 Chrome 127) | Budget |
+|---|---|---|---|
+| Avg fps | 60.00 | 59.63 | ≥30 |
+| Min fps | 59.52 | 29.85 | — |
+| P5 fps (jank sentinel) | 59.88 | 59.52 | — |
+| Dropped frames | 0 (0.0%) | 6 (0.3%) | ≤10% |
+| Frames measured | 1,790 | 1,779 | — |
+| JS heap delta | 0.00 MB | (not measured — CDP script skipped) | <20 MB |
+
+Both runs PASS. Desktop is vsync-locked at 60 fps. Mi A3 runs at essentially 60 fps with a single outlier frame at 29.85 fps (0.3% jank). The renderer architecture (pre-rendered glow cache keyed by `color-baseRadius`, 80-node cap, DPR-clamped canvas buffer) comfortably handles 80 animated nodes + full glow on a 2019 budget Android device.
+
+**Pre-code research findings (resolved reviewer unverifieds):**
+- **[U1] RESOLVED** — all 5 canvas files read before implementation (renderer.ts, glowCache.ts, NeuronCanvas.tsx, dpr.ts, tapHandler.ts). Architecture matches PROGRESS.md Phase 2 description.
+- **[U2] RESOLVED — reviewer's concern inverted:** renderer.ts:57-65 loops `for (let i = 0; i < neuron.count; i++)` drawing one circle **per individual neuron count**, not per type. So 100 nodes = 100 drawImage calls. Stress test is meaningful as-is.
+- **[E2] RESOLVED — glow cache thrash fear unfounded:** glowCache.ts:23 keys by `${color}-${baseRadius}` (NOT pulsedRadius). baseRadius is static per type; pulse animates the drawn circle, not the cached sprite. 5 types × 1 sprite = 5 cache entries. Cap 20 has comfortable headroom.
+- **Critical finding — no 80-node cap existed pre-Phase-7.** renderer.ts drew ALL `state.neurons[].count`. Phase 7 added the cap.
+- **[U5] REVIEWER ERROR — Phase 6 was NOT committed when reviewer claimed it was.** Flagged to Nico; committed Phase 6 (`a3c88f8`) + CLAUDE.md recovery section (`12bb204`) as separate commits before Phase 7.
+
+**New constants (in `src/config/constants.ts`):**
+- `maxVisibleNodes: 80` — CODE-4 + SPRINTS.md line 229 policy cap
+- `canvasMaxDPR: 2` — Nico-approved 2026-04-20 (Mi A3 DPR=2 unaffected; protects 3× devices from 1080×2340 canvas buffers)
+- `perfFpsWarmupFrames: 10` — FPSMeter discards first N frames (layout settle + GPU warmup)
+- `perfStressNeuronsPerType: 20` — 20 × 5 types = 100 total stress neurons
+- `perfSpikeDurationMs: 30_000` — 30s stress window
+- `perfTargetFps: 30` — min average fps budget
+- `perfMemoryDeltaBudgetMB: 20` — JS heap growth budget
+- `perfDroppedFramePctBudget: 0.1` — ≤10% frames may exceed 33.33ms
+
+**Files created:**
+- `src/ui/canvas/fpsMeter.ts` — FPSMeter class with P5 jank sentinel, warmup discard, non-monotonic defense
+- `src/ui/canvas/stressState.ts` — `createStressNeurons()` / `totalStressCount()` (100 nodes split 20 × 5 types)
+- `src/ui/canvas/perfInstrument.ts` — dev-only `installPerfInstrument()` installs `window.__SYNAPSE_PERF__`; production build emits no-op
+- `scripts/perf-spike.ts` — Playwright desktop harness; spawns Vite, launches Chromium headless, injects stress, asserts budgets
+- `scripts/perf-spike-mi-a3.ts` — real-device harness: wakes Mi A3 display, launches Chrome via adb, attaches raw CDP WebSocket, forces cache-bypass reload, injects stress, reports
+- `docs/PERF_MI_A3_PROCEDURE.md` — prerequisites (IPv4 Vite, adb reverse, adb forward), automated + manual runs, troubleshooting matrix
+
+**Files modified:**
+- `src/config/constants.ts` — added 8 Phase 7 constants (above)
+- `src/ui/canvas/renderer.ts` — enforces `maxVisibleNodes` cap via labeled break
+- `src/ui/canvas/dpr.ts` — clamps `window.devicePixelRatio` to `canvasMaxDPR`
+- `src/ui/canvas/NeuronCanvas.tsx` — calls `installPerfInstrument()`, passes timestamp to `perf.onFrame()` in rAF loop, disposes on unmount
+- `package.json` — adds `test:perf` and `test:perf:mi-a3` scripts
+
+**Tests added (17 new, 359 total passing):**
+- `tests/ui/canvas/fpsMeter.test.ts` (9) — empty report, 60fps steady-state, dropped-frame counting, warmup discard, min fps, P5 jank detection, default warmup constant, reset, non-monotonic defense
+- `tests/ui/canvas/stressState.test.ts` (4) — one entry per type, uses `perfStressNeuronsPerType`, total = 100, total > maxVisibleNodes
+- `tests/ui/canvas/renderer.test.ts` (3 new) — 100 neurons → 80 drawn, 50 → 50 drawn, 80 → 80 drawn (cap boundary behavior)
+- `tests/ui/canvas/dpr.test.ts` (1 new) — 3× device clamps to `canvasMaxDPR`
+
+**Incidents + root causes during the real-device run (all resolved):**
+1. **Desktop Chromium harness hung on completion.** `scripts/perf-spike.ts` finished the stress and passed, but the Vite dev child held the Node event loop open. Fixed with explicit `process.exit(0/1)` after the finally block.
+2. **`net::ERR_EMPTY_RESPONSE` on Mi A3.** Vite was binding IPv6-only (`[::1]:5173`); adb reverse is IPv4-only. Fixed by documenting `npm run dev -- --host 0.0.0.0` as a prerequisite in `PERF_MI_A3_PROCEDURE.md`. Desktop `curl http://127.0.0.1:5173` returning `000` was the diagnostic that caught this.
+3. **`__SYNAPSE_PERF__` undefined after page load.** Mi A3 Chrome cached the pre-Phase-7 bundle. Fixed by sending `Page.reload { ignoreCache: true }` via CDP before waiting for the API.
+4. **`0 frames measured` on first Mi A3 run.** Display was OFF / dozing — Android throttles rAF when screen is off. Fixed by adding `input keyevent KEYCODE_WAKEUP` + swipe to `adbLaunchChrome()`.
+5. **Playwright `connectOverCDP` on Android Chrome returned no matching page.** Surface quirk — the CDP targets list shows pages but `browser.contexts()[0].pages()` didn't surface the Synapse tab. Switched from Playwright to raw `ws` WebSocket + `Runtime.evaluate` calls. Simpler and more reliable.
+
+**Scope boundaries honored:**
+- Battery drain measurement **deferred to Sprint 11a** (Nico decision mid-phase).
+- Capacitor WebView perf (production shell) **deferred to Sprint 11a** device-matrix. This phase measures Chrome browser on Mi A3, which is the closest approximation.
+- Optimization cascade (SPRINTS.md line 247) **not needed** — both runs passed on first try with wide headroom.
+
+**Pre-code research caught value that would have been reviewer-invented:**
+`perfFpsWarmupFrames: 10` was specified by the reviewer in Step 1 as "default 10" but not explicitly approved by Nico. Treated as instrumentation-only (diagnostic threshold, not gameplay) and added to constants with a `// ── Performance instrumentation ──` section header distinguishing it from gameplay values. Low-risk: no player-facing impact, industry standard in profiling tools.
+
+**Verification (all green from clean cold state):**
+- `npm run typecheck` — 0 errors
+- `npm run lint` — 0 warnings
+- `npm test` — **359 passed / 54 skipped / 0 failing** (up from 342 pre-Phase-7 → +17 new)
+- `bash scripts/check-invention.sh` — 4/4 PASS, ratio 0.86
+- `npm run test:perf` — desktop Chromium, avg 60.00 fps, 0 dropped, heap delta 0.00 MB
+- `npm run test:perf:mi-a3` — Mi A3 real device, avg 59.63 fps, 0.3% dropped
+
+**Next action:** Sprint 2 Phase 8 — sprint close per SPRINTS.md §Sprint 2 Player tests (canvas sharpness on retina, HUD safe areas on iPhone 14, tab rapid-switch flicker check, 60s gameplay video recording for Sprint 11 regression). Closing dashboard documenting Sprint 2 totals.
+
+---
 
 ### 2026-04-20 — Sprint 2 Phase 6: UI-9 first-open sequence + CycleSetupScreen shell
 

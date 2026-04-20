@@ -31,6 +31,7 @@ import { unlockAudioOnFirstTap } from './audioUnlock';
 import { resizeHiDPICanvas, setupHiDPICanvas } from './dpr';
 import { draw } from './renderer';
 import { testHit } from './tapHandler';
+import { installPerfInstrument } from './perfInstrument';
 
 export function NeuronCanvas() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -73,9 +74,11 @@ export function NeuronCanvas() {
     const startTime = performance.now();
     let rafId = 0;
     let paused = false;
+    const perf = installPerfInstrument();
 
-    const tick = () => {
+    const tick = (timestamp: number) => {
       if (paused) return;
+      perf.onFrame(timestamp);
       // Chrome 83 WebView may report window.innerWidth=0 for the first few
       // frames. Re-measure every frame until dims are valid, then draw.
       if (dimsRef.current.width === 0 || dimsRef.current.height === 0) {
@@ -124,6 +127,7 @@ export function NeuronCanvas() {
       cancelAnimationFrame(rafId);
       document.removeEventListener('visibilitychange', handleVisibility);
       ro.disconnect();
+      perf.dispose();
     };
   }, []);
 
