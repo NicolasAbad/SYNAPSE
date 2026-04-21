@@ -268,6 +268,20 @@ describe('Undo toast (UI-4) trigger + restore', () => {
     expect(after.undoToast).toBeNull();
     expect(after.thoughts).toBe(mid.thoughts); // unchanged — purchase stays
   });
+
+  test('undo snapshot includes time-accumulating fields (Phase 3.5 audit #3)', () => {
+    // Ensure cycleGenerated / totalGenerated / consciousnessBarUnlocked /
+    // piggyBankSparks are snapshotted so undo doesn't leak post-buy accumulation.
+    const state = { ...createDefaultState(), thoughts: 100, cycleGenerated: 500, totalGenerated: 12_345, piggyBankSparks: 7 };
+    const result = tryBuyNeuron(state, 'basica', 1000);
+    expect(result.ok).toBe(true);
+    if (!result.ok || !result.undoToast) throw new Error('expected undo toast');
+    const snap = result.undoToast.snapshot;
+    expect(snap.cycleGenerated).toBe(500);
+    expect(snap.totalGenerated).toBe(12_345);
+    expect(snap.piggyBankSparks).toBe(7);
+    expect(snap.consciousnessBarUnlocked).toBe(false);
+  });
 });
 
 describe('Store action integration (gameStore wiring)', () => {

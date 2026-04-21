@@ -6,10 +6,33 @@
 
 ## Current status
 
-**Phase:** Sprint 3 Phase 3 COMPLETE — buyNeuron + buyUpgrade store actions, COST-1 Funciones Ejecutivas discount, undo toast (UI-4), immediate state side-effects at purchase
-**Last updated:** 2026-04-20 after Sprint 3 Phase 3 close
-**Active sprint:** Sprint 3 (Phase 3/7 complete) → next: Sprint 3 Phase 4 (TAP-2 + TAP-1)
+**Phase:** Sprint 3 Phase 3.5 COMPLETE — audit-driven housekeeping (tick refactor, undo snapshot fix, per-ID upgrade tests, economy-sanity script, doc updates)
+**Last updated:** 2026-04-20 after Sprint 3 Phase 3.5 close
+**Active sprint:** Sprint 3 (Phases 1+2+3+3.5 complete) → next: Sprint 3 Phase 4 (TAP-2 + TAP-1)
 **Next action:** Phase 4 — replace `incrementThoughtsByMinTap` stub with full TAP-2 formula per GDD §6: `Math.max(baseTapThoughtMin, effectivePPS × baseTapThoughtPct)` thoughts per tap, `focusFillPerTap` fill on each tap, push to `lastTapTimestamps` circular buffer (size 20), consume TICK-1 step 12's `antiSpamActive` flag for ×0.10 effectiveness penalty. Wire Mielina upgrade (`tap_focus_fill_add: +2% focus on tap`) and Potencial Sináptico (`tap_replace_pct: replace base 0.05 with 0.10`) and Dopamina (`tap_bonus_mult: ×1.5` on final thought contribution).
+
+### Sprint 3 Phase 3.5 — accepted design decisions (owning phases inheriting)
+
+**Decision A — First-prestige dopamine gap mitigation (Option B+C):**
+- **Option B (Sprint 6, narrative event):** add a guaranteed-fire Spontaneous Event "First Spark" that triggers during the P1 cycle. Narrative beat ("A pulse answers the first") + small mechanical perk (e.g., one-time +1 Discharge charge OR 25% Focus Bar seed). NARRATIVE.md gets a new fragment entry. Sprint 6 owns delivery.
+- **Option C (Phase 7, preview card):** CycleSetupScreen shows a "Coming up" preview for locked slots — "Polarity unlocks in 2 prestiges". UI-only card. Phase 7 owns.
+- Rationale: first-prestige reset currently shows 3 LOCKED slots with no immediate reward beyond Memory + Spark. B+C gives authored-feeling moment + forward-looking motivation. Expected D1 retention lift: 5-15%.
+
+**Decision B — Connection-multiplier UX (both paths):**
+- **Phase 7 tutorial hint #4:** fires when player first has 10 Básicas owned + can afford Sensorial. Text: "Buy a different type for +5% production".
+- **Phase 5 HUD chip:** permanent readout next to rate counter. Format `×1.15 connections`. Visible always after player owns ≥2 types. Sprint 3 Phase 5 owns delivery (HUD work).
+- Rationale: current UI hides connectionMult entirely. Players will plateau without understanding why. Hint teaches; chip keeps knowledge actionable.
+
+### Sprint 3 Phase 3.5 — deferred risks (logged for owning phases)
+
+| Risk | Owning phase | Action |
+|---|---|---|
+| Part 2 Risk #1 — tutorial timing 7-9 min unverified | Phase 7 player test | Blind-play; re-tune `tutorialThreshold` if >10 min |
+| Part 2 Risk #3 — Emergencia cap tooltip | Phase 7 (UI polish) | Add en.ts string: "Max bonus reached — other upgrades keep scaling" |
+| Part 2 Risk #4 — save in-session telemetry | Phase 7 player test | Dump cycle times to console/file during playtest |
+| Deeper analysis — 7 ad placements density | Sprint 9 monetization | Audit placement spacing; if 4+/10min session → reduce |
+| Deeper analysis — Piggy Bank 500-cap + 48h offer cadence | Sprint 9 monetization | Verify offer cadence not spammy for free players |
+| Deeper analysis — P11-P15 "dead zone" mid-Era 2 | Sprint 8c TEST-5 | If tester zones out in this range, tighten thresholds or add Spontaneous spice |
 
 ### Sprint 2 closing dashboard
 
@@ -594,6 +617,41 @@ Sprint 11a TODO for `ALL_RULE_IDS` constant must include all 16 (not 13 as state
 ---
 
 ## Session log
+
+### 2026-04-20 — Sprint 3 Phase 3.5: audit-driven housekeeping
+
+**Scope:** in-session audit (expert idle-game designer + CODE-rule auditor pass) surfaced 6 code findings + 4 game-design risks. Phase 3.5 lands the P1/P2 code fixes, builds the economy-sanity projector, extends CLAUDE.md, and logs accepted design decisions + deferred risks so the owning phases inherit the work.
+
+**Audit summary (see chat transcript for full report):**
+- CODE-1/3/4/5/6/7/8/9: all clean. Zero `any`, zero `@ts-ignore`, zero `Math.random`/`Date.now` in engine, zero `localStorage`, React.memo on all components.
+- Gate 3 ratio 0.89 (up from 0.86 at Sprint 2). 4/4 gates green.
+- Two real CODE-2 violations found: `tick()` at 125 lines (FIXED this phase) + `createDefaultState()` at 166 lines (documented as new Exception B).
+- Undo toast was missing time-accumulating fields in its snapshot — tiny silent desync of consciousness bar + Piggy Bank (FIXED this phase).
+- 4 of 35 upgrades had no per-ID test coverage (FIXED this phase via new `§24 Meta + Tier-P10: scaling params match GDD` + per-tier tests).
+
+**Files modified:**
+- `src/engine/tick.ts` — **refactored `tick()` from 125 lines to 16** by extracting each of the 12 TICK-1 steps into its own `step*` function (≤25 lines each). Audit trail + Sprint-ref TODO comments moved onto each step. Zero behavior change — all 28 tick tests still pass. tick.ts file at 197 lines (under cap).
+- `src/store/purchases.ts` — expanded `buildNeuronUndoSnapshot` + `buildUpgradeUndoSnapshot` to include `cycleGenerated`, `totalGenerated`, `consciousnessBarUnlocked`, `piggyBankSparks`. Closes the 3-second silent-desync window (audit Finding #3).
+- `src/config/constants.ts` — removed orphan `saveDebounceMs: 2_000` (no consumer in code; mirrored fix to GDD §31).
+- `docs/GDD.md` §31 — removed `saveDebounceMs` from the constants reference block.
+- `CLAUDE.md` CODE-2 — added **Exception B** for object-literal constructors mirroring >100-field type interfaces. `createDefaultState()` cited as the precedent.
+- `tests/consistency.test.ts` — added 7 new per-tier spec-authority spot checks (Tap / Synapsis / Neurons / Regions / Consciousness-Offline / Meta-Tier-P10 / every-upgrade-structural). Catches data-entry drift the kind-level production-formula tests wouldn't surface.
+- `tests/store/purchases.test.ts` — added undo-snapshot invariant test covering the time-accumulating-field additions.
+
+**Files created:**
+- `scripts/economy-sanity.mjs` — analytical cycle-time projector walking P0-P25 with typical upgrade-adoption anchors. Outputs projected minutes per prestige, flags >25%-off-target. Self-calibrated `AVG_RATE_FRACTION = 0.4` factor approximates "mean rate during cycle" vs "end-of-cycle rate". Current output: total projected Run 1 = 7.17h (target 8.27h, 13% faster). Per-prestige flags: P0-P3 slow (pre-Discharge-wiring expected), P6-P23 fast (mid/late multipliers stack strongly). Actionable signal for TEST-5 tuning when Sprint 8c arrives.
+
+**Decisions accepted this phase (logged in Current status block above):**
+- **Decision A:** First-prestige dopamine gap → Option B (Sprint 6 narrative event) + Option C (Phase 7 preview card).
+- **Decision B:** Connection-multiplier UX → both paths (Phase 7 tutorial hint #4 + Phase 5 HUD chip).
+
+**Verification (all gates green):**
+- `npm run typecheck` — 0 errors
+- `npm run lint` — 0 warnings
+- `bash scripts/check-invention.sh` — 4/4 PASS, ratio 0.89
+- `npm test` — **440 passed / 49 skipped / 0 failing** (+9 from Phase 3: 6 per-tier spec checks + 2 every-upgrade-structural + 1 undo-snapshot invariant)
+
+**Phase 4 handoff:** unchanged from Phase 3 handoff below. Additionally: owning phases for Decisions A+B now know what to build when their phase lands.
 
 ### 2026-04-20 — Sprint 3 Phase 3: buyNeuron + buyUpgrade store actions
 

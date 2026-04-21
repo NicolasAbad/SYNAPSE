@@ -111,7 +111,12 @@ function shouldShowUndo(bankBefore: number, cost: number): boolean {
   return cost > bankBefore * SYNAPSE_CONSTANTS.undoExpensiveThresholdPct;
 }
 
-/** Build a snapshot of the fields the buy mutated; `set(snapshot)` restores pre-buy state. */
+/**
+ * Build a snapshot of the fields the buy mutated; `set(snapshot)` restores pre-buy state.
+ * Includes time-accumulating fields (cycleGenerated, totalGenerated, piggyBankSparks,
+ * consciousnessBarUnlocked) so the 3-second undo window doesn't silently skew
+ * progress meters. See Phase 3.5 audit Finding #3.
+ */
 function buildNeuronUndoSnapshot(state: GameState): Partial<GameState> {
   return {
     thoughts: state.thoughts,
@@ -120,6 +125,10 @@ function buildNeuronUndoSnapshot(state: GameState): Partial<GameState> {
     cycleNeuronPurchases: state.cycleNeuronPurchases,
     cycleNeuronsBought: state.cycleNeuronsBought,
     lastPurchaseTimestamp: state.lastPurchaseTimestamp,
+    cycleGenerated: state.cycleGenerated,
+    totalGenerated: state.totalGenerated,
+    consciousnessBarUnlocked: state.consciousnessBarUnlocked,
+    piggyBankSparks: state.piggyBankSparks,
   };
 }
 
@@ -146,7 +155,10 @@ export function tryBuyNeuron(state: GameState, type: NeuronType, nowTimestamp: n
   return { ok: true, updates, undoToast };
 }
 
-/** Build an upgrade-undo snapshot: capture every field the buyUpgrade side-effect touches. */
+/**
+ * Build an upgrade-undo snapshot: capture every field the buyUpgrade side-effect
+ * touches + time-accumulating progress meters (see buildNeuronUndoSnapshot).
+ */
 function buildUpgradeUndoSnapshot(state: GameState): Partial<GameState> {
   return {
     thoughts: state.thoughts,
@@ -159,6 +171,10 @@ function buildUpgradeUndoSnapshot(state: GameState): Partial<GameState> {
     focusFillRate: state.focusFillRate,
     cycleUpgradesBought: state.cycleUpgradesBought,
     lastPurchaseTimestamp: state.lastPurchaseTimestamp,
+    cycleGenerated: state.cycleGenerated,
+    totalGenerated: state.totalGenerated,
+    consciousnessBarUnlocked: state.consciousnessBarUnlocked,
+    piggyBankSparks: state.piggyBankSparks,
   };
 }
 

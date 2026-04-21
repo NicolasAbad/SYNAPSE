@@ -1,22 +1,9 @@
 // Implements docs/GDD.md §35 TICK-1 — 12-step pure reducer.
-// NOTE: Many Sprint 3-7 features are stubbed here with TODO comments.
-// See each stubbed step for the Sprint X that wires it in.
-// See §35 rules CODE-9 (determinism), TICK-1 (step order),
-// RP-1 (step 7), SPONT-1 (step 10), MICRO-1 (step 11), TAP-1 (step 12).
-//
-// cycleTime derivation: Sprint 1 Phase 5 resolved a spec gap — §35 TICK-1
-// earlier drafts referenced `state.cycleTime` but §32 never declared it.
-// Resolution (Option B): cycleTime is derived at each use site as
-// `(nowTimestamp - state.cycleStartTimestamp)`. Matches the Step 6 Discharge
-// pattern. `lastSpontaneousCheck` is now an absolute timestamp, not a
-// cycleTime offset. See PROGRESS.md Phase 5 Sprint 1.
-//
-// CODE-2 exception: this file approaches the 200-line cap due to 12
-// ordered steps, each with a stub + TODO comment tracing to its owning
-// sprint. The TODO/Sprint-ref pairs are load-bearing for Sprint 3-7
-// traceability; collapsing them would lose the audit trail that keeps
-// future sessions from silently implementing missing features. Logic
-// density (non-comment, non-blank lines) stays well under 200.
+// Rules: CODE-9 (determinism), TICK-1 (order), RP-1 (§22 step 7), SPONT-1 (step 10),
+// MICRO-1 (step 11), TAP-1 (step 12).
+// cycleTime derived per-site as `nowTimestamp - state.cycleStartTimestamp` (Phase 5
+// Sprint 1 Option B resolution). `lastSpontaneousCheck` is an absolute timestamp.
+// Phase 3.5: extracted each step into its own function (CODE-2 50-line rule).
 
 import { SYNAPSE_CONSTANTS } from '../config/constants';
 import { calculateProduction } from './production';
@@ -33,6 +20,8 @@ const RP_WINDOW_MS = 120_000; // CONST-OK (§22 RP-1 window)
 // CONST-OK: TAP-1 buffer size per §35 step 12 — structural size of the circular
 // buffer, not a designer-tunable value (derived from antiSpamTapWindow / antiSpamTapIntervalMs).
 const ANTI_SPAM_BUFFER_SIZE = 20; // CONST-OK (§35 TICK-1 step 12)
+// CONST-OK: Era 3 "first tick of the cycle" window per §35 TICK-1 step 9 post-Phase-5.
+const ERA3_FIRST_TICK_WINDOW_MS = 1_000; // CONST-OK (§35 TICK-1 step 9)
 
 /**
  * antiSpamActive is derived per-tick (TICK-1 step 12), not stored in GameState.
@@ -40,39 +29,8 @@ const ANTI_SPAM_BUFFER_SIZE = 20; // CONST-OK (§35 TICK-1 step 12)
  */
 export type TickResult = Readonly<{ state: GameState; antiSpamActive: boolean }>;
 
-// Production formula per GDD §4 — full stack (sum × softCap(multipliers)) lives in
-// engine/production.ts. This thin wrapper keeps TICK-1 step 3 (§35) as a single
-// line and leaves production.ts as the single source of truth for §4 wiring.
-// Sprint 5-7 extend calculateProduction() with archetype/region/mutation/mental
-// stubs; tick.ts doesn't need to change when those land.
-
-function computeAntiSpam(state: GameState, nowTimestamp: number): boolean {
-  const { antiSpamTapWindow, antiSpamTapIntervalMs, antiSpamVarianceThreshold } = SYNAPSE_CONSTANTS;
-  const stamps = state.lastTapTimestamps;
-  if (stamps.length < ANTI_SPAM_BUFFER_SIZE) return false;
-  if (nowTimestamp - stamps[0] < antiSpamTapWindow) return false;
-  const intervals: number[] = [];
-  for (let i = 1; i < stamps.length; i++) intervals.push(stamps[i] - stamps[i - 1]);
-  const avg = intervals.reduce((a, b) => a + b, 0) / intervals.length;
-  if (avg >= antiSpamTapIntervalMs) return false;
-  const variance = intervals.reduce((a, b) => a + (b - avg) ** 2, 0) / intervals.length; // CONST-OK (variance formula: power of 2)
-  const stddev = Math.sqrt(variance);
-  return stddev < antiSpamVarianceThreshold;
-}
-
-export function tick(state: GameState, nowTimestamp: number): TickResult {
-  // Shallow-clone so callers treat this as pure; nested arrays/objects are replaced only when modified.
-  const s: GameState = { ...state };
-
-  // Step 1: Timestamp advance (informational, no-op).
-  // Per Phase 5 Sprint 1 spec gap resolution (Option B): cycleTime is NOT a
-  // GameState field — it's derived at each use site as
-  // `(nowTimestamp - state.cycleStartTimestamp)`. This step is retained in the
-  // 12-step ordering for narrative continuity with §35 TICK-1 but executes no
-  // state mutation. dt is fixed at TICK_MS (100ms) and consumed in step 4.
-  // See PROGRESS.md Phase 5 Sprint 1 for resolution rationale.
-
-  // Step 2: Expire temporary modifiers.
+/** Step 2: Expire temporary modifiers that have passed their endTime. */
+function stepExpireModifiers(s: GameState, nowTimestamp: number): void {
   if (s.insightActive && s.insightEndTime !== null && nowTimestamp >= s.insightEndTime) {
     s.insightActive = false;
     s.insightEndTime = null;
@@ -96,15 +54,18 @@ export function tick(state: GameState, nowTimestamp: number): TickResult {
     s.pendingHyperfocusBonus = false;
   }
   // TODO Sprint 7: Mental State exit conditions per MENTAL-4 (§17) — set currentMentalState to null when exit triggers fire.
+}
 
-  // Step 3: Recalculate production (cache baseProductionPerSecond + effectiveProductionPerSecond).
+/** Step 3: Cache base/effective production-per-second for tick + UI consumers (production.ts owns the §4 formula). */
+function stepRecalcProduction(s: GameState): void {
   const { base, effective } = calculateProduction(s);
   s.baseProductionPerSecond = base;
   s.effectiveProductionPerSecond = effective;
+}
 
-  // Step 4: Produce. No rounding in engine (CODE-9); UI rounds on display.
-  // 1000 = ms→sec divisor (time-unit identity). CONST-OK.
-  const delta = effective * (TICK_MS / 1000); // CONST-OK (ms→sec)
+/** Step 4: Produce thoughts over dt. No rounding (CODE-9). Tracks Piggy Bank bucket crossings. */
+function stepProduce(s: GameState): void {
+  const delta = s.effectiveProductionPerSecond * (TICK_MS / 1000); // CONST-OK (ms→sec)
   const prevTotal = s.totalGenerated;
   s.thoughts = s.thoughts + delta;
   s.cycleGenerated = s.cycleGenerated + delta;
@@ -119,51 +80,68 @@ export function tick(state: GameState, nowTimestamp: number): TickResult {
       s.piggyBankSparks + increments,
     );
   }
+}
 
-  // Step 5: CORE-10 — flip consciousnessBarUnlocked once.
+/** Step 5: CORE-10 — flip consciousnessBarUnlocked once when cycleGenerated crosses 50% of the threshold. */
+function stepConsciousnessBarUnlock(s: GameState): void {
   if (
     !s.consciousnessBarUnlocked &&
     s.cycleGenerated >= SYNAPSE_CONSTANTS.consciousnessBarTriggerRatio * s.currentThreshold
   ) {
     s.consciousnessBarUnlocked = true;
   }
+}
 
-  // Step 6: Discharge charge accumulation.
+/** Step 6: Accumulate Discharge charges (1 per 20 min; capped at dischargeMaxCharges). */
+function stepDischargeChargeAccumulation(s: GameState, nowTimestamp: number): void {
   const chargeIntervalMs = SYNAPSE_CONSTANTS.chargeIntervalMinutes * 60_000;
   if (nowTimestamp - s.dischargeLastTimestamp >= chargeIntervalMs) {
     s.dischargeCharges = Math.min(s.dischargeMaxCharges, s.dischargeCharges + 1);
     s.dischargeLastTimestamp = nowTimestamp;
   }
+}
 
-  // Step 7: Resonant Pattern window prune (RP-1). Never evaluates success — that's Sprint 8c at prestige.
+/** Step 7: RP-1 — prune the 2-minute neuron-purchase window (evaluated at prestige in Sprint 8c). */
+function stepResonantPatternPrune(s: GameState, nowTimestamp: number): void {
   if (s.cycleNeuronPurchases.length > 0) {
     s.cycleNeuronPurchases = s.cycleNeuronPurchases.filter(
       (e) => nowTimestamp - e.timestamp <= RP_WINDOW_MS,
     );
   }
+}
 
-  // Step 8: Mental State triggers (priority: Eureka > Flow > Hyperfocus > Deep > Dormancy).
-  // TODO Sprint 7: evaluate trigger conditions per §17 and promote when newPriority > currentPriority.
-  // Framework placeholder — no-op until Sprint 7 wires trigger functions.
+/**
+ * Step 8: Mental State triggers (priority: Eureka > Flow > Hyperfocus > Deep > Dormancy).
+ * TODO Sprint 7: evaluate trigger conditions per §17; promote when newPriority > currentPriority.
+ */
+function stepMentalStateTriggers(_s: GameState, _nowTimestamp: number): void {
+  // Framework placeholder — no-op until Sprint 7 wires MENTAL-4 trigger functions.
+}
 
-  // Step 9: Era 3 event activation.
-  // "First tick of the cycle" per TICK-1 step 9 (post-Phase-5 resolution):
-  // (nowTimestamp - cycleStartTimestamp) < 1000 ms.
+/**
+ * Step 9: Era 3 event activation on the first tick of a cycle (cycleAge < 1s) when
+ * prestigeCount is in [era3StartPrestige, era3EndPrestige].
+ * TODO Sprint 6: fire Era 3 event per §23 (prestigeCount → event id → open modal).
+ */
+function stepEra3EventActivation(s: GameState, nowTimestamp: number): void {
   const cycleAgeMs = nowTimestamp - s.cycleStartTimestamp;
-  // 1_000ms "first tick" window — CONST-OK (§35 TICK-1 step 9 post-Phase-5 resolution).
   if (
     s.prestigeCount >= SYNAPSE_CONSTANTS.era3StartPrestige &&
     s.prestigeCount <= SYNAPSE_CONSTANTS.era3EndPrestige &&
     s.cycleStartTimestamp !== 0 &&
     cycleAgeMs >= 0 &&
-    cycleAgeMs < 1_000 // CONST-OK (first-tick window)
+    cycleAgeMs < ERA3_FIRST_TICK_WINDOW_MS
   ) {
-    // TODO Sprint 6: fire Era 3 event per §23 (prestigeCount → event id → open modal).
+    // TODO Sprint 6: modal dispatch goes here.
   }
+}
 
-  // Step 10: Spontaneous event trigger (SPONT-1), post-Phase-5 resolution.
-  // `lastSpontaneousCheck` stores an absolute timestamp (ms since epoch), not
-  // a cycleTime offset. See §32 field comment.
+/**
+ * Step 10: Spontaneous event scheduling (SPONT-1). `lastSpontaneousCheck` stores an
+ * absolute timestamp (ms since epoch), not a cycleTime offset. See §32 field comment.
+ * TODO Sprint 6: roll spontaneousTriggerChance; if success, pick weighted event + apply.
+ */
+function stepSpontaneousEventTrigger(s: GameState, nowTimestamp: number): void {
   const { spontaneousCheckIntervalMin, spontaneousCheckIntervalMax } = SYNAPSE_CONSTANTS;
   const nextCheckSeconds = randomInRange(
     spontaneousCheckIntervalMin,
@@ -173,15 +151,47 @@ export function tick(state: GameState, nowTimestamp: number): TickResult {
   const secondsSinceLastCheck = (nowTimestamp - s.lastSpontaneousCheck) / 1000; // CONST-OK (ms→sec)
   if (secondsSinceLastCheck >= nextCheckSeconds) {
     s.lastSpontaneousCheck = nowTimestamp;
-    // TODO Sprint 6: roll spontaneousTriggerChance; if success, pick weighted event and apply.
+    // Sprint 6 adds the roll + pick + apply here.
   }
+}
 
-  // Step 11: Micro-challenge trigger (MICRO-1).
-  // TODO Sprint 7: implement the cross-threshold check + cooldown + attempt cap + seeded pick per §18.
-  // Scaffolding: prestigeCount < 15 gate means this branch is inactive until late game.
+/**
+ * Step 11: Micro-challenge trigger (MICRO-1).
+ * TODO Sprint 7: cross-threshold check + cooldown + attempt cap + seeded pick per §18.
+ * Scaffolding: prestigeCount < 15 gate means this branch is inactive until late game.
+ */
+function stepMicroChallengeTrigger(_s: GameState, _nowTimestamp: number): void {
+  // Framework placeholder — no-op until Sprint 7 wires MICRO-1 trigger functions.
+}
 
-  // Step 12: Anti-spam TAP-1 evaluation (derived flag, not stored).
+/** Step 12: Anti-spam TAP-1 — derived per-tick flag, not stored. Consumed by the tap handler. */
+function computeAntiSpam(state: GameState, nowTimestamp: number): boolean {
+  const { antiSpamTapWindow, antiSpamTapIntervalMs, antiSpamVarianceThreshold } = SYNAPSE_CONSTANTS;
+  const stamps = state.lastTapTimestamps;
+  if (stamps.length < ANTI_SPAM_BUFFER_SIZE) return false;
+  if (nowTimestamp - stamps[0] < antiSpamTapWindow) return false;
+  const intervals: number[] = [];
+  for (let i = 1; i < stamps.length; i++) intervals.push(stamps[i] - stamps[i - 1]);
+  const avg = intervals.reduce((a, b) => a + b, 0) / intervals.length;
+  if (avg >= antiSpamTapIntervalMs) return false;
+  const variance = intervals.reduce((a, b) => a + (b - avg) ** 2, 0) / intervals.length; // CONST-OK (variance: power of 2)
+  const stddev = Math.sqrt(variance);
+  return stddev < antiSpamVarianceThreshold;
+}
+
+export function tick(state: GameState, nowTimestamp: number): TickResult {
+  const s: GameState = { ...state };
+  // Step 1: Timestamp advance — no-op (Phase 5 Sprint 1 spec gap resolution).
+  stepExpireModifiers(s, nowTimestamp);
+  stepRecalcProduction(s);
+  stepProduce(s);
+  stepConsciousnessBarUnlock(s);
+  stepDischargeChargeAccumulation(s, nowTimestamp);
+  stepResonantPatternPrune(s, nowTimestamp);
+  stepMentalStateTriggers(s, nowTimestamp);
+  stepEra3EventActivation(s, nowTimestamp);
+  stepSpontaneousEventTrigger(s, nowTimestamp);
+  stepMicroChallengeTrigger(s, nowTimestamp);
   const antiSpamActive = computeAntiSpam(s, nowTimestamp);
-
   return { state: s, antiSpamActive };
 }

@@ -166,7 +166,6 @@ export const SYNAPSE_CONSTANTS = {
 
   // ── Save ──
   saveIntervalMs: 30_000, // 30s auto-save during active
-  saveDebounceMs: 2_000, // debounce rapid saves
 
   // ── UI ──
   undoToastDurationMs: 3_000,

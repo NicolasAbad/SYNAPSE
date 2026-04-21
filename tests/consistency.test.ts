@@ -411,6 +411,82 @@ describe('Consistency: Upgrades (GDD §24)', () => {
       expect(u.costCurrency).toBe('thoughts');
     }
   });
+
+  // ── Per-ID spec-authority spot checks (Phase 3.5 audit #6) ──
+  // Guards every §24/§16 numeric in the data. Catches typos that the
+  // kind-level production-formula tests wouldn't surface.
+  test('§24 Tap tier: exact cost + effect params per GDD', () => {
+    const ps = UPGRADES.find((u) => u.id === 'potencial_sinaptico')!;
+    expect(ps.cost).toBe(5_000);
+    expect(ps.unlockPrestige).toBe(0);
+    expect(ps.effect).toEqual({ kind: 'tap_replace_pct', pct: 0.10 });
+    const mi = UPGRADES.find((u) => u.id === 'mielina')!;
+    expect(mi.cost).toBe(15_000);
+    expect(mi.effect).toEqual({ kind: 'tap_focus_fill_add', add: 0.02 });
+    const do_ = UPGRADES.find((u) => u.id === 'dopamina')!;
+    expect(do_.cost).toBe(80_000);
+    expect(do_.unlockPrestige).toBe(2);
+    expect(do_.effect).toEqual({ kind: 'tap_bonus_mult', mult: 1.5 });
+  });
+  test('§24 Synapsis/Discharge tier: exact cost + effect params', () => {
+    expect(UPGRADES.find((u) => u.id === 'descarga_neural')!.effect).toEqual({ kind: 'discharge_max_charges_add', add: 1 });
+    expect(UPGRADES.find((u) => u.id === 'amplificador_de_disparo')!.effect).toEqual({ kind: 'discharge_mult', mult: 1.5 });
+    expect(UPGRADES.find((u) => u.id === 'red_alta_velocidad')!.effect).toEqual({ kind: 'charge_rate_mult', mult: 1.25 });
+    expect(UPGRADES.find((u) => u.id === 'cascada_profunda')!.effect).toEqual({ kind: 'cascade_mult_double' });
+    expect(UPGRADES.find((u) => u.id === 'sincronizacion_total')!.effect).toEqual({ kind: 'post_cascade_focus_refund', amount: 0.18 });
+  });
+  test('§24 Neurons tier: per-type + all-neurons mults match GDD', () => {
+    expect(UPGRADES.find((u) => u.id === 'red_neuronal_densa')!.effect).toEqual({ kind: 'all_neurons_mult', mult: 1.25 });
+    expect(UPGRADES.find((u) => u.id === 'receptores_ampa')!.effect).toEqual({ kind: 'neuron_type_mult', neuronType: 'basica', mult: 2 });
+    expect(UPGRADES.find((u) => u.id === 'transduccion_sensorial')!.effect).toEqual({ kind: 'neuron_type_mult', neuronType: 'sensorial', mult: 3 });
+    expect(UPGRADES.find((u) => u.id === 'axones_proyeccion')!.effect).toEqual({ kind: 'neuron_type_mult', neuronType: 'piramidal', mult: 3 });
+    expect(UPGRADES.find((u) => u.id === 'espejo_resonantes')!.effect).toEqual({ kind: 'neuron_type_mult', neuronType: 'espejo', mult: 4 });
+    expect(UPGRADES.find((u) => u.id === 'sincronia_neural')!.effect).toEqual({ kind: 'connection_mult_double' });
+    expect(UPGRADES.find((u) => u.id === 'ltp_potenciacion_larga')!.effect).toEqual({ kind: 'all_neurons_mult', mult: 1.5 });
+    expect(UPGRADES.find((u) => u.id === 'neurogenesis')!.effect).toEqual({ kind: 'all_neurons_mult', mult: 1.10 });
+  });
+  test('§16 Regions tier: exact cost in Memorias + effect params', () => {
+    expect(UPGRADES.find((u) => u.id === 'consolidacion_memoria')!).toEqual(expect.objectContaining({ cost: 2, costCurrency: 'memorias', unlockPrestige: 0 }));
+    expect(UPGRADES.find((u) => u.id === 'consolidacion_memoria')!.effect).toEqual({ kind: 'basica_mult_and_memory_gain', basicaMult: 3, memoryGainAdd: 0.5 });
+    expect(UPGRADES.find((u) => u.id === 'regulacion_emocional')!.cost).toBe(5);
+    expect(UPGRADES.find((u) => u.id === 'procesamiento_visual')!.cost).toBe(8);
+    expect(UPGRADES.find((u) => u.id === 'funciones_ejecutivas')!).toEqual(expect.objectContaining({ cost: 3, unlockPrestige: 2 }));
+    expect(UPGRADES.find((u) => u.id === 'funciones_ejecutivas')!.effect).toEqual({ kind: 'upgrade_cost_reduction', pct: 0.20 });
+    expect(UPGRADES.find((u) => u.id === 'amplitud_banda')!.cost).toBe(15);
+  });
+  test('§24 Consciousness/Offline tier: offline cap + consciousness fill match', () => {
+    expect(UPGRADES.find((u) => u.id === 'sueno_rem')!.effect).toEqual({ kind: 'offline_cap_set', hours: 8 });
+    expect(UPGRADES.find((u) => u.id === 'consciencia_distribuida')!.effect).toEqual({ kind: 'offline_cap_set', hours: 12 });
+    expect(UPGRADES.find((u) => u.id === 'umbral_consciencia')!.effect).toEqual({ kind: 'consciousness_fill_mult', mult: 1.3 });
+    expect(UPGRADES.find((u) => u.id === 'hiperconciencia')!.effect).toEqual({ kind: 'consciousness_fill_mult', mult: 2 });
+    expect(UPGRADES.find((u) => u.id === 'ritmo_circadiano')!.effect).toEqual({ kind: 'offline_efficiency_and_autocharge', mult: 1.5 });
+  });
+  test('§24 Meta + Tier-P10: scaling params match GDD', () => {
+    expect(UPGRADES.find((u) => u.id === 'retroalimentacion_positiva')!.effect).toEqual({ kind: 'all_production_mult', mult: 2 });
+    expect(UPGRADES.find((u) => u.id === 'emergencia_cognitiva')!.effect).toEqual({ kind: 'upgrades_scaling_mult', perBucket: 1.5, bucketSize: 5, capMult: 5 });
+    expect(UPGRADES.find((u) => u.id === 'singularidad')!.effect).toEqual({ kind: 'prestige_scaling_mult', perPrestige: 1.01 });
+    expect(UPGRADES.find((u) => u.id === 'convergencia_sinaptica')!.effect).toEqual({ kind: 'lifetime_prestige_add', perLp: 0.015, capAdd: 0.40 });
+    expect(UPGRADES.find((u) => u.id === 'potencial_latente')!.effect).toEqual({ kind: 'discharge_prestige_bonus', base: 1000 });
+    expect(UPGRADES.find((u) => u.id === 'resonancia_acumulada')!.effect).toEqual({ kind: 'post_offline_discharge_bonus', perHour: 0.05, capAdd: 1.0 });
+    expect(UPGRADES.find((u) => u.id === 'sintesis_cognitiva')!.effect).toEqual({ kind: 'pattern_flat_mult', mult: 2 });
+    expect(UPGRADES.find((u) => u.id === 'focus_persistente')!.effect).toEqual({ kind: 'focus_persist', pct: 0.25 });
+  });
+  test('Every upgrade has positive cost + valid unlockPrestige', () => {
+    for (const u of UPGRADES) {
+      expect(u.cost).toBeGreaterThan(0);
+      expect(u.unlockPrestige).toBeGreaterThanOrEqual(0);
+      expect(u.unlockPrestige).toBeLessThanOrEqual(26);
+    }
+  });
+  test('Every neuron_type_mult effect targets a valid type', () => {
+    const valid = new Set(['basica', 'sensorial', 'piramidal', 'espejo', 'integradora']);
+    for (const u of UPGRADES) {
+      if (u.effect.kind === 'neuron_type_mult') {
+        expect(valid.has(u.effect.neuronType)).toBe(true);
+        expect(u.effect.mult).toBeGreaterThan(1);
+      }
+    }
+  });
 });
 
 describe('Consistency: Run-exclusive upgrades (GDD §21, 4 for v1.0)', () => {
