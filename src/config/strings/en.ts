@@ -63,6 +63,11 @@ export const en = {
     hint_discharge: 'Use Discharge',
     hint_variety: 'Buy a different type for +5% production',
   },
+  undo: {
+    prefix_neuron: 'Bought',
+    prefix_upgrade: 'Unlocked',
+    button: 'UNDO',
+  },
   narrative: {
     base_01: "A pulse. Then another. Something is beginning that doesn't yet know what it is.",
   },
