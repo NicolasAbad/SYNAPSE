@@ -64,6 +64,14 @@ describe('Consistency: GDD ↔ constants.ts invariants', () => {
     expect(SYNAPSE_CONSTANTS.softCapExponent).toBe(0.72);
   });
 
+  test('connectionMultPerPair = 0.05 (GDD §5)', () => {
+    expect(SYNAPSE_CONSTANTS.connectionMultPerPair).toBe(0.05);
+  });
+
+  test('sincroniaNeuralMult = 2 (GDD §24 sincronia_neural literal doubling)', () => {
+    expect(SYNAPSE_CONSTANTS.sincroniaNeuralMult).toBe(2);
+  });
+
   test('cascadeThreshold = 0.75 (GDD §31)', () => {
     expect(SYNAPSE_CONSTANTS.cascadeThreshold).toBe(0.75);
   });

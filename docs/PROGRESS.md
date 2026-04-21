@@ -6,10 +6,10 @@
 
 ## Current status
 
-**Phase:** Sprint 3 Phase 1 COMPLETE — neurons + upgrades data foundation shipped, 5 BLOCKED-SPRINT-3 consistency tests un-skipped
-**Last updated:** 2026-04-20 after Sprint 3 Phase 1 close
-**Active sprint:** Sprint 3 (Phase 1/7 complete) → next: Sprint 3 Phase 2 (production formula stack)
-**Next action:** Phase 2 — wire upgrade multipliers into `recalcProduction()` (per-type mults, connection mult via C(n,2), softCap authority check per GDD §5). Stubs for mutation/pathway/archetype remain no-op until Sprints 5-6.
+**Phase:** Sprint 3 Phase 2 COMPLETE — GDD §4 production formula wired; all-neurons/per-type/global-mult upgrades applied; softCap at authoritative site
+**Last updated:** 2026-04-20 after Sprint 3 Phase 2 close
+**Active sprint:** Sprint 3 (Phase 2/7 complete) → next: Sprint 3 Phase 3 (store actions: buy neuron + buy upgrade)
+**Next action:** Phase 3 — implement buy-neuron + buy-upgrade store actions. Cost validation via `neuronCost()`, connection-mult recompute via `computeConnectionMult(neurons, hasSincroniaNeural)`, undo-toast state (UI-4), cycle counters (`cycleUpgradesBought`, `cycleNeuronsBought`), RP-1 push (`cycleNeuronPurchases`).
 
 ### Sprint 2 closing dashboard
 
@@ -594,6 +594,40 @@ Sprint 11a TODO for `ALL_RULE_IDS` constant must include all 16 (not 13 as state
 ---
 
 ## Session log
+
+### 2026-04-20 — Sprint 3 Phase 2: production formula stack (GDD §4)
+
+**Scope:** Sprint 3 Phase 2/7. Wire the full §4 production formula into `calculateProduction()`: per-type + all-neurons upgrade mults stack on the sum; global mults + connectionMult stack on rawMult; softCap applies to rawMult (NOT to the sum) per §4 line 209-211. Stubs for Sprint 5-7 modifiers (archetype/region/mutation/polarity/mental state/spontaneous event) remain identity until those sprints ship.
+
+**Files modified:**
+- `src/engine/production.ts` (55 → 161 lines) — added `computeConnectionMult(neurons, hasSincroniaNeural)` (GDD §5 C(n,2) formula with Phase 1 literal-reading ×2 for Sincronía Neural), private helpers `computeAllNeuronsMult` / `computePerTypeMult` / `computeGlobalUpgradeMult`, and the full `calculateProduction(state)` entry point returning `{ base, effective }`.
+- `src/engine/tick.ts` (197 → 187 lines) — replaced the local `recalcProduction()` with a delegation to `calculateProduction()` from production.ts. Keeps TICK-1 step 3 as a single line; production.ts is now the sole source of §4 wiring so Sprint 5-7 extend calculateProduction, not tick.
+- `src/config/constants.ts` — added `connectionMultPerPair: 0.05` (GDD §5) and `sincroniaNeuralMult: 2` (GDD §24 literal doubling) per CODE-1 (zero hardcoded game values).
+- `tests/consistency.test.ts` — 2 new invariants pinning the new constants.
+
+**Files created:**
+- `tests/engine/production-formula.test.ts` (new, 25 tests) — connection-mult via C(n,2) from 1-5 owned types, Sincronía doubling, per-type + all-neurons mult stacking (AMPA × Red Neuronal Densa), `basica_mult_and_memory_gain` basicaMult component, `all_production_mult` + `prestige_scaling_mult` + `lifetime_prestige_add` on rawMult, **Emergencia Cognitiva Interpretation B** across 5 / 10 / 20-owned-upgrade scenarios (cap hits at 20 owned), softCap authority test (softCap applies to multiplier stack, NOT to sum — verified by 10k-Básica no-mult case yielding exact sum), Insight effective-vs-base separation, purity + non-purchased-upgrade defense.
+- `scripts/analyze-emergencia.mjs` (new, decision-reference) — Node analytical script comparing A (additive) vs B (multiplicative) across prestiges P0-P25, projecting Run 1 total playtime (A=3.12h, B=2.59h in the analyzed envelope), cap-engagement (B hits cap in 16/19 post-Emergencia cycles; A hits cap 0/19), per-prestige divergence (B is 67% faster than A at P10-P12 Era 1→Era 2 transition). Committed as design-decision evidence per Phase 2 Nico approval of Interpretation B.
+
+**Decisions applied this Phase (both Nico-approved in Phase 2 kickoff):**
+
+1. **`connection_mult_double` (Sincronía Neural) = literal doubling of whole `connectionMult`.** Implemented via `sincroniaNeuralMult: 2` constant + `computeConnectionMult` helper parameter. Phase 3 store action will call `computeConnectionMult(neurons, hasSincroniaNeural)` on neuron buy + on Sincronía Neural buy.
+
+2. **Emergencia Cognitiva interpretation B (multiplicative):** `mult = min(1.5^⌊ownedCount/5⌋, capMult)`. Decision backed by `scripts/analyze-emergencia.mjs` simulation showing: (a) interpretation A never reaches the advertised ×5 cap in Run 1, (b) B delivers 67% speed boost at P10-P12 supporting the Era 1→Era 2 power-spike moment, (c) late-game scaling is already covered by Singularidad (`1.01^prestigeCount`) and Convergencia (+40% via lifetimePrestiges), so Emergencia benefits from being a "hits cap then background" archetype.
+
+**softCap application site — resolved by §4 re-read:** §4 lines 209-211 are unambiguous: `softCap` applies to the multiplier stack (`rawMult = connectionMult × upgradeMult × archetypeMod × regionMult × mutationStaticMod × polarityMod`), NOT to the neuron sum. Implemented exactly per spec. Guarded by `tests/engine/production-formula.test.ts` 10k-Básica invariant.
+
+**Verification (all gates green from clean baseline):**
+- `npm run typecheck` — 0 errors
+- `npm run lint` — 0 warnings
+- `bash scripts/check-invention.sh` — 4/4 PASS, ratio 0.87 (up from 0.86 — new constants absorb literals)
+- `npm test` — **398 passed / 49 skipped / 0 failing** (+27 from Phase 1 total: 25 new production-formula tests + 2 new constants-coverage tests)
+
+**Phase 3 handoff:**
+- Store actions to add: `buyNeuron(type)`, `buyUpgrade(id)`. Both validate cost (`neuronCost()` + `UPGRADES_BY_ID[id].cost`), deduct currency, update `state.neurons` / `state.upgrades`, recompute `state.connectionMult` via `computeConnectionMult()`, push to `cycleNeuronPurchases` (RP-1), increment `cycleNeuronsBought` / `cycleUpgradesBought`, expose undo-toast state if `cost > 0.1 × thoughts` (UI-4).
+- Buy-upgrade for Sincronía Neural is a special case: also recompute `state.connectionMult` passing `hasSincroniaNeural=true`.
+- Buy-upgrade for `descarga_neural` should bump `state.dischargeMaxCharges` by 1 (the effect is `discharge_max_charges_add`). Other effects like `discharge_mult`, `charge_rate_mult`, `post_cascade_focus_refund` are consumed in Phase 6 Discharge — Phase 3 just records ownership, no state-side-effect at buy-time.
+- Offline-cap upgrades (`sueno_rem` → 8h, `consciencia_distribuida` → 12h): buy-upgrade action should update `state.currentOfflineCapHours` to the higher of the two if bought. Phase 3 should enumerate which kinds trigger immediate state changes on purchase vs which are consumed at event time (Discharge / Cascade / offline return).
 
 ### 2026-04-20 — Sprint 3 Phase 1: neurons + upgrades data foundation
 

@@ -19,7 +19,7 @@
 // density (non-comment, non-blank lines) stays well under 200.
 
 import { SYNAPSE_CONSTANTS } from '../config/constants';
-import { NEURON_BASE_RATES } from '../config/neurons';
+import { calculateProduction } from './production';
 import { hash, randomInRange } from './rng';
 import type { GameState } from '../types/GameState';
 
@@ -40,21 +40,11 @@ const ANTI_SPAM_BUFFER_SIZE = 20; // CONST-OK (§35 TICK-1 step 12)
  */
 export type TickResult = Readonly<{ state: GameState; antiSpamActive: boolean }>;
 
-function recalcProduction(state: GameState): { base: number; effective: number } {
-  // TODO Sprint 3: apply polarity, upgrade mults.
-  // TODO Sprint 5: apply mutation static mods, pathway restrictions.
-  // TODO Sprint 6: apply archetype bonuses, region multipliers.
-  // TODO Sprint 7: apply mental state mods, pending Hyperfocus bonus to next Insight.
-  let base = 0;
-  for (const neuron of state.neurons) {
-    base += neuron.count * NEURON_BASE_RATES[neuron.type];
-  }
-  base *= state.connectionMult;
-  // TODO Sprint 3-7: softCap the multiplier stack per §4; currently identity.
-  let effective = base;
-  if (state.insightActive) effective *= state.insightMultiplier;
-  return { base, effective };
-}
+// Production formula per GDD §4 — full stack (sum × softCap(multipliers)) lives in
+// engine/production.ts. This thin wrapper keeps TICK-1 step 3 (§35) as a single
+// line and leaves production.ts as the single source of truth for §4 wiring.
+// Sprint 5-7 extend calculateProduction() with archetype/region/mutation/mental
+// stubs; tick.ts doesn't need to change when those land.
 
 function computeAntiSpam(state: GameState, nowTimestamp: number): boolean {
   const { antiSpamTapWindow, antiSpamTapIntervalMs, antiSpamVarianceThreshold } = SYNAPSE_CONSTANTS;
@@ -108,7 +98,7 @@ export function tick(state: GameState, nowTimestamp: number): TickResult {
   // TODO Sprint 7: Mental State exit conditions per MENTAL-4 (§17) — set currentMentalState to null when exit triggers fire.
 
   // Step 3: Recalculate production (cache baseProductionPerSecond + effectiveProductionPerSecond).
-  const { base, effective } = recalcProduction(s);
+  const { base, effective } = calculateProduction(s);
   s.baseProductionPerSecond = base;
   s.effectiveProductionPerSecond = effective;
 

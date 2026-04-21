@@ -51,6 +51,8 @@ export const SYNAPSE_CONSTANTS = {
   // ── Production ──
   costMult: 1.28,
   softCapExponent: 0.72,
+  connectionMultPerPair: 0.05, // GDD §5: for every PAIR of owned neuron types, connectionMult += 0.05
+  sincroniaNeuralMult: 2, // GDD §24 `sincronia_neural`: "Connection multipliers ×2" (Phase 1 literal reading)
 
   // ── Cascade & Discharge ──
   cascadeThreshold: 0.75,
