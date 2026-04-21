@@ -6,10 +6,10 @@
 
 ## Current status
 
-**Phase:** Sprint 4a IN PROGRESS — Phase 4a.1 (field-set constants) shipped. 5 `BLOCKED-SPRINT-4a` consistency tests un-skipped; 1 remains (TUTOR-2 isTutorialCycle post-prestige flip) pending handlePrestige in Phase 4a.2.
-**Last updated:** 2026-04-21 after Sprint 4a Phase 4a.1 close.
-**Active sprint:** Sprint 4a — Prestige Core. 6 planned sub-phases: 4a.1 field-set constants (DONE) → 4a.2 pure `handlePrestige` in engine → 4a.3 CORE-8 Momentum cap + personal best → 4a.4 store wiring + TUTOR-2 flip + remaining un-skip → 4a.5 generic confirm modal + Awakening screen → 4a.6 integration + close.
-**Next action:** Phase 4a.2 — create `src/engine/prestige.ts` with pure `handlePrestige(state, timestamp)` following PREST-1 steps 1–10. Apply PRESTIGE_RESET (with override for `dischargeLastTimestamp = timestamp` per BUG-02 and `focusBar = prev * 0.25` when Focus Persistente owned per BUG-06), stub patterns/resonance/RPs for Sprint 4b/8b/8c, set `insightActive=false` (BUG-01), `dischargeCharges=0` (BUG-02). CODE-9 pure — timestamp as parameter, no Date.now.
+**Phase:** Sprint 4a IN PROGRESS — Phase 4a.2 (pure `handlePrestige`) shipped. All PREST-1 / BUG-01 / BUG-02 / BUG-04 / BUG-06 / CORE-8-cap / TUTOR-2 unit behavior covered. Only fast-check property test (4a.3) + store wiring (4a.4) + UI (4a.5) + integration (4a.6) remain.
+**Last updated:** 2026-04-21 after Sprint 4a Phase 4a.2 close.
+**Active sprint:** Sprint 4a — Prestige Core. 6 planned sub-phases: 4a.1 field-set constants (DONE) → 4a.2 pure `handlePrestige` (DONE) → 4a.3 property test + CORE-8 cap assertions → 4a.4 store wiring + TUTOR-2 flip + last BLOCKED-SPRINT-4a un-skip → 4a.5 generic confirm modal + Awakening screen → 4a.6 integration + close.
+**Next action:** Phase 4a.3 — add `tests/properties/prestige-invariants.test.ts` with fast-check coverage: for any valid pre-prestige state, `prestigeCount` strictly increments by 1, `isTutorialCycle` ends false, and `momentumBonus ≤ nextThreshold × maxMomentumPct`. Feeds the Sprint 4a TEST-3 requirement.
 
 ### Sprint 3 Phase 3.5 — accepted design decisions (owning phases inheriting)
 
@@ -743,6 +743,53 @@ Sprint 11a TODO for `ALL_RULE_IDS` constant must include all 16 (not 13 as state
 ---
 
 ## Session log
+
+### 2026-04-21 — Sprint 4a Phase 4a.2: pure handlePrestige in src/engine/prestige.ts
+
+**Scope:** Pure `handlePrestige(state, timestamp) → { state, outcome }` function plus two helpers: `computeMemoriesGained(state)` and `computeMomentumBonus(lastCycleEndProduction, nextThreshold)`. CODE-9 deterministic — timestamp as parameter, no Date.now.
+
+**PREST-1 coverage shipped:**
+- Step 1: capture `lastCycleEndProduction` from pre-reset `effectiveProductionPerSecond`.
+- Step 2: cycle duration = timestamp - cycleStartTimestamp.
+- Step 3: Personal best at PRE-increment prestigeCount (BUG-04), strict-<-faster guard, increments `personalBestsBeaten`.
+- Steps 4-6: Patterns (+0) / Resonance (+0) / RP checks — stubs for Sprint 4b/8b/8c.
+- Step 7: Memories gained. Base 2 (new constant `baseMemoriesPerPrestige`) × (1 + `memoryGainAdd`) if Consolidación de Memoria owned.
+- Step 8: PRESTIGE_RESET (45 fields) applied with 2 engine-side overrides: `dischargeLastTimestamp = timestamp` (BUG-02 fresh 20-min window), `focusBar = prev × 0.25` if `focus_persist` owned (BUG-06).
+- Step 9: PRESTIGE_UPDATE (4 fields) — prestigeCount+1, currentThreshold via `calculateThreshold`, cycleStartTimestamp=timestamp, isTutorialCycle=false (TUTOR-2 one-way flip).
+- Step 10: lifetimePrestiges += 1.
+- Step 11: Capped Momentum Bonus `min(raw × 30, nextThreshold × 0.1)` applied to thoughts + cycleGenerated.
+
+Also appends an `AwakeningEntry` to `awakeningLog` with the pre-reset cycle snapshot (polarity/mutation/pathway/duration/memoriesGained/wasPersonalBest). Fields filled correctly for the Awakening UI (Phase 4a.5) to consume.
+
+**BUG fixes verified in unit tests:**
+- BUG-01: `insightActive=false` post-prestige regardless of prior state (also `insightMultiplier=1`, `insightEndTime=null`).
+- BUG-02: `dischargeCharges=0` AND `dischargeLastTimestamp=timestamp`.
+- BUG-04: `personalBests` keyed at PRE-increment prestigeCount.
+- BUG-06: Focus Persistente 25% retention — property verified with and without upgrade owned.
+
+**CORE-8 amended clamp** (§35 CORE-8 + 2nd audit 4A-2): verified both no-clamp (small PPS early-game) and clamped (1M PPS late-game → cap 10% of next threshold) cases in `computeMomentumBonus` unit tests. Full fast-check property test lands in Phase 4a.3.
+
+**New constant shipped (Update Discipline applied):**
+- `baseMemoriesPerPrestige: 2` — GDD §2 Memory generation table baseline. `basica_mult_and_memory_gain.memoryGainAdd: 0.5` (Consolidación) now correctly applies as multiplicative +50%, yielding 3 Memorias per prestige. Replaces the ambiguous "+1 more" prose in §2 with a precise formula. PROGRESS.md logs the addition; GDD §2 table can be updated at sprint close to "Base ×(1 + memoryGainAdd)" form.
+
+**Scope deferred (by breakdown):**
+- Fast-check property test for prestige invariants → Phase 4a.3.
+- Zustand store action wiring + last BLOCKED-SPRINT-4a un-skip (isTutorialCycle flip integration) → Phase 4a.4.
+- Generic ConfirmModal component + Awakening screen UI → Phase 4a.5.
+- P0→P1 tick-by-tick integration → Phase 4a.6.
+
+**Scope intentionally NOT in Phase 4a.2 (Sprint boundaries):**
+- `patternsGained` / pattern side-effects (Sprint 4b owns Pattern Tree).
+- `resonanceGain` / Resonance currency (Sprint 8b owns Resonance at P13+).
+- Resonant Pattern checks on prestige (Sprint 8c owns RPs).
+
+**Verification (all gates green):**
+- `npm run typecheck` — 0 errors. `npm run lint` — 0 warnings.
+- `bash scripts/check-invention.sh` — 4/4 PASS, ratio **0.82** (45 constants / 10 literals — ratio went up because the new constant pulled in more references).
+- `npm test` — **722 passed / 44 skipped / 0 failing** (from 695 → +27 new prestige tests).
+- File size `src/engine/prestige.ts` = 190 lines (CODE-2 ≤200 satisfied).
+
+**Next:** Phase 4a.3 — fast-check property test covering prestige invariants.
 
 ### 2026-04-21 — Sprint 4a Phase 4a.1: prestige field-set constants
 

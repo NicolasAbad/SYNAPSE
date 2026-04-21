@@ -90,6 +90,9 @@ export const SYNAPSE_CONSTANTS = {
   maxOfflineEfficiencyRatio: 2.0,
   offlineMinMinutes: 1, // skip calc if <1 min
 
+  // ── Memories ──
+  baseMemoriesPerPrestige: 2, // GDD §2 Memory generation table: +2 per prestige baseline. Consolidación de Memoria upgrade adds +50% via `memoryGainAdd: 0.5` (§24).
+
   // ── Patterns ──
   patternsPerPrestige: 3,
   patternCycleBonusPerNode: 0.04,
