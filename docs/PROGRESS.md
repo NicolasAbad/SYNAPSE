@@ -6,10 +6,10 @@
 
 ## Current status
 
-**Phase:** Sprint 4a CLOSED — Prestige Core shipped. Pure engine function + Zustand action + full UI flow (ready button → confirm → Awakening screen) + 4 tests categories (unit / property / store / integration) all green. All 6 BLOCKED-SPRINT-4a tests un-skipped; genuinely playtest-able P0→P1 loop end-to-end.
-**Last updated:** 2026-04-21 after Sprint 4a close.
-**Active sprint:** Sprint 4b (not yet started) — Pattern Tree + Decisions. Scope-addition (from Sprint 3.6 audit) owns MindPanel subtab router + nav (deferred from 3.6).
-**Next action:** Sprint 4b kickoff per `docs/SPRINTS.md §Sprint 4b`. Read GDD §10 (Pattern Tree — 50 nodes, 5 decision nodes at indices [6, 15, 24, 36, 48], patternDecisions NEVER resets). Replace patternsGained=0 / resonanceGain=0 stubs in `handlePrestige` with real values. Implement PAT-3 reset (1000 Resonance cost) with the generic ConfirmModal from 4a.5. Build MindPanel subtab router with Pattern Tree visualization in the `patterns` slot.
+**Phase:** Sprint 4b IN PROGRESS — Phase 4b.1 (Pattern data + decision effect canon) shipped. `src/config/patterns.ts` defines the 10 decision effects with kind-tagged union distinct from UpgradeEffect; 9 new consistency tests cover per-node spec-authority spot checks.
+**Last updated:** 2026-04-21 after Sprint 4b Phase 4b.1 close.
+**Active sprint:** Sprint 4b — Pattern Tree + Decisions. 5 planned sub-phases: 4b.1 pattern data + constants (DONE) → 4b.2 engine stub replacement (patterns gained on prestige + flat/cycle production bonuses) → 4b.3 per-decision effect appliers (10 options wired) → 4b.4 PAT-3 reset action + MindPanel subtab router → 4b.5 decision modal + PAT-3 double-confirm UI + integration + close.
+**Next action:** Phase 4b.2 — replace `patternsGained = 0` stub in `handlePrestige` with 3 new `PatternNode` entries per prestige; wire `patternFlatBonusPerNode × totalPatterns` and cycle-bonus (derived from `patterns.filter(p => p.acquiredAt >= cycleStartTimestamp).length`) into `calculateProduction`. Cap cycle bonus at `patternCycleCap = 1.5`.
 
 ### Sprint 4a closing dashboard
 
@@ -804,6 +804,40 @@ Sprint 11a TODO for `ALL_RULE_IDS` constant must include all 16 (not 13 as state
 ---
 
 ## Session log
+
+### 2026-04-21 — Sprint 4b Phase 4b.1: pattern decision data + canon
+
+**Scope:** Canonical storage file `src/config/patterns.ts` with the 10 decision-option effects (5 nodes × A/B) copied verbatim from GDD §10 table. New `PatternDecisionEffect` discriminated union in `src/types/index.ts` with 10 distinct kinds so consumer sites can tell "effect from upgrade" vs "effect from pattern decision" by kind alone. Mirror of the UPGRADES canonical-storage pattern.
+
+**Values shipped per GDD §10 table:**
+- Node 6 A: +8% cycle bonus (`cycle_bonus_add: 0.08`)
+- Node 6 B: +1 max Discharge charge (`discharge_charges_plus_one`)
+- Node 15 A: +15% offline efficiency (`offline_efficiency_mult: 1.15`)
+- Node 15 B: Focus fills +20% faster (`focus_fill_rate_mult: 1.20`)
+- Node 24 A: Insight duration +3s (`insight_duration_add_s: 3`)
+- Node 24 B: +2 Memories per prestige (`memories_per_prestige_add: 2`)
+- Node 36 A: Cascade threshold 75%→65% (`cascade_threshold_set: 0.65`)
+- Node 36 B: +10% Discharge damage (`discharge_damage_mult: 1.10`) + INT-5 Resonance-on-Discharge at P13+ (`NODE_36_TIER_2_MIN_PRESTIGE = 13`, to be wired in Sprint 8b)
+- Node 48 A: Regions ×1.3 (`region_mult: 1.30`)
+- Node 48 B: +1 Mutation option (`mutation_options_add: 1`)
+
+**9 new consistency tests** (un-skip pressure 0 — no BLOCKED-SPRINT-4b markers):
+- Exactly 5 decision entries at [6, 15, 24, 36, 48]
+- Keys match `patternDecisionNodes` constant (data↔config cross-check)
+- Every decision has A + B options with typed effects + non-empty descriptions
+- Per-node spec-authority spot checks (5 tests, one per node)
+- `NODE_36_TIER_2_MIN_PRESTIGE = 13` (INT-5 gate)
+
+**Design discipline:**
+- Kind discriminants intentionally distinct from `UpgradeEffect`'s (e.g., `discharge_charges_plus_one` vs upgrade's `discharge_max_charges_add`). Consumer sites distinguish source cleanly.
+- `src/config/patterns.ts` is a canonical storage file per CLAUDE.md rule; `src/config/` is already auto-excluded from Gate 3 (Sprint 1 Phase 8 precedent), no scripts change needed.
+
+**Verification (all gates green):**
+- `npm run typecheck` — 0 errors. `npm run lint` — 0 warnings.
+- `bash scripts/check-invention.sh` — 4/4 PASS, ratio 0.81 (held).
+- `npm test` — all passing including the 9 new Pattern Tree consistency tests.
+
+**Next:** Phase 4b.2 — replace `patternsGained = 0` stub in handlePrestige; wire pattern flat/cycle bonuses into production formula.
 
 ### 2026-04-21 — Sprint 4a close: Prestige Core shipped
 

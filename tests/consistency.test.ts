@@ -28,6 +28,7 @@ import { hash, mulberry32, seededRandom } from '../src/engine/rng';
 import { tick } from '../src/engine/tick';
 import { NEURON_CONFIG, NEURON_TYPES, neuronCost } from '../src/config/neurons';
 import { UPGRADES } from '../src/config/upgrades';
+import { NODE_36_TIER_2_MIN_PRESTIGE, PATTERN_DECISIONS } from '../src/config/patterns';
 import {
   PRESTIGE_LIFETIME_FIELDS,
   PRESTIGE_PRESERVE_FIELDS,
@@ -536,6 +537,58 @@ describe('Consistency: Upgrades (GDD §24)', () => {
         expect(u.effect.mult).toBeGreaterThan(1);
       }
     }
+  });
+});
+
+describe('Consistency: Pattern Tree decisions (GDD §10)', () => {
+  // Sprint 4b Phase 4b.1: PATTERN_DECISIONS canonical data ships here.
+  test('exactly 5 decision entries at the canonical indices [6, 15, 24, 36, 48]', () => {
+    const keys = Object.keys(PATTERN_DECISIONS).map(Number).sort((a, b) => a - b);
+    expect(keys).toEqual([6, 15, 24, 36, 48]);
+  });
+
+  test('keys match patternDecisionNodes constant (§31)', () => {
+    const fromData = new Set(Object.keys(PATTERN_DECISIONS).map(Number));
+    const fromConst = new Set(SYNAPSE_CONSTANTS.patternDecisionNodes);
+    expect(fromData).toEqual(fromConst);
+  });
+
+  test('every decision has both A and B options with a typed effect', () => {
+    for (const [, def] of Object.entries(PATTERN_DECISIONS)) {
+      expect(def.A.effect.kind).toBeDefined();
+      expect(def.B.effect.kind).toBeDefined();
+      expect(def.A.description.length).toBeGreaterThan(0);
+      expect(def.B.description.length).toBeGreaterThan(0);
+    }
+  });
+
+  test('Node 6 effect values match GDD §10 (A: +8% cycle, B: +1 charge)', () => {
+    expect(PATTERN_DECISIONS[6].A.effect).toEqual({ kind: 'cycle_bonus_add', add: 0.08 });
+    expect(PATTERN_DECISIONS[6].B.effect).toEqual({ kind: 'discharge_charges_plus_one' });
+  });
+
+  test('Node 15 effect values match GDD §10 (A: +15% offline, B: +20% focus)', () => {
+    expect(PATTERN_DECISIONS[15].A.effect).toEqual({ kind: 'offline_efficiency_mult', mult: 1.15 });
+    expect(PATTERN_DECISIONS[15].B.effect).toEqual({ kind: 'focus_fill_rate_mult', mult: 1.20 });
+  });
+
+  test('Node 24 effect values match GDD §10 (A: +3s insight, B: +2 memories)', () => {
+    expect(PATTERN_DECISIONS[24].A.effect).toEqual({ kind: 'insight_duration_add_s', add: 3 });
+    expect(PATTERN_DECISIONS[24].B.effect).toEqual({ kind: 'memories_per_prestige_add', add: 2 });
+  });
+
+  test('Node 36 effect values match GDD §10 (A: cascade 0.65, B: +10% discharge)', () => {
+    expect(PATTERN_DECISIONS[36].A.effect).toEqual({ kind: 'cascade_threshold_set', threshold: 0.65 });
+    expect(PATTERN_DECISIONS[36].B.effect).toEqual({ kind: 'discharge_damage_mult', mult: 1.10 });
+  });
+
+  test('Node 48 effect values match GDD §10 (A: ×1.3 regions, B: +1 mutation)', () => {
+    expect(PATTERN_DECISIONS[48].A.effect).toEqual({ kind: 'region_mult', mult: 1.30 });
+    expect(PATTERN_DECISIONS[48].B.effect).toEqual({ kind: 'mutation_options_add', add: 1 });
+  });
+
+  test('NODE_36_TIER_2_MIN_PRESTIGE = 13 (INT-5 Resonance-on-Discharge gate)', () => {
+    expect(NODE_36_TIER_2_MIN_PRESTIGE).toBe(13);
   });
 });
 

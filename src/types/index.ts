@@ -99,6 +99,21 @@ export interface PatternNode {
   acquiredAt: number;
 }
 
+// Pattern Tree decision-option effects (GDD §10). Kind discriminants are
+// intentionally distinct from UpgradeEffect's so consumers can cleanly tell
+// "effect from upgrade" vs "effect from pattern decision". Sprint 4b Phase 4b.1.
+export type PatternDecisionEffect =
+  | { kind: 'cycle_bonus_add'; add: number }
+  | { kind: 'discharge_charges_plus_one' }
+  | { kind: 'offline_efficiency_mult'; mult: number }
+  | { kind: 'focus_fill_rate_mult'; mult: number }
+  | { kind: 'insight_duration_add_s'; add: number }
+  | { kind: 'memories_per_prestige_add'; add: number }
+  | { kind: 'cascade_threshold_set'; threshold: number }
+  | { kind: 'discharge_damage_mult'; mult: number }
+  | { kind: 'region_mult'; mult: number }
+  | { kind: 'mutation_options_add'; add: number };
+
 export interface WeeklyChallengeState {
   id: string;
   weekStartTimestamp: number;
