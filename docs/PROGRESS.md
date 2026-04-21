@@ -6,10 +6,10 @@
 
 ## Current status
 
-**Phase:** Sprint 4c IN PROGRESS — Phase 4c.2 (Polarity modifier wiring) shipped. `calculateProduction` now includes `polarityProdMult` in rawMult (pre-softCap); `computeDischargeMultiplier` stacks `polarityDischargeMult`; `effectiveCascadeThreshold` stacks Inhibitory × Node 36A via MIN (lower wins, more favorable to player).
-**Last updated:** 2026-04-21 after Sprint 4c Phase 4c.2 close.
-**Active sprint:** Sprint 4c — Polarity + CycleSetupScreen + Playtest. 5 planned sub-phases: 4c.1 constants + setPolarity + snapshot (DONE) → 4c.2 engine wiring (DONE) → 4c.3 CycleSetupScreen component (1/2/3-column) → 4c.4 post-prestige sequence + pre-P3 skip → 4c.5 integration tests + Sprint close + PLAYTEST-REQUIRED handoff.
-**Next action:** Phase 4c.3 — build `src/ui/modals/CycleSetupScreen.tsx` with 1/2/3-column Polarity-first layout. Refactor the existing stub (Sprint 2 Phase 6's CycleSetupScreen was shell-only). Columns: Polarity (always, P3+), Mutation placeholder (P7+), Pathway placeholder (P10+). SAME AS LAST button reads `state.lastCycleConfig`. Pre-P3 path skips the screen entirely — just exit to the new cycle.
+**Phase:** Sprint 4c IN PROGRESS — Phase 4c.3 (CycleSetupScreen Polarity interactive) shipped. Existing Sprint 2 shell upgraded: `PolaritySlot` component (A/B cards, click-to-select), SAME AS LAST wired to `lastCycleConfig.polarity`, Continue button gated on selection, POLAR-1 default pre-selects last cycle's polarity. Mutation / Pathway slots now show "Sprint 5" placeholders when unlocked.
+**Last updated:** 2026-04-21 after Sprint 4c Phase 4c.3 close.
+**Active sprint:** Sprint 4c — Polarity + CycleSetupScreen + Playtest. 5 planned sub-phases: 4c.1 constants + setPolarity + snapshot (DONE) → 4c.2 engine wiring (DONE) → 4c.3 CycleSetupScreen component (DONE) → 4c.4 post-prestige sequence + pre-P3 skip → 4c.5 integration tests + Sprint close + PLAYTEST-REQUIRED handoff.
+**Next action:** Phase 4c.4 — wire `CycleSetupScreen` into the post-prestige flow via `AwakeningFlow` (or a sibling orchestrator). Sequence: Awakening screen → Continue → (if P3+) CycleSetupScreen → Continue/Same-as-last → new cycle play. Pre-P3: skip CycleSetupScreen entirely (existing post-Awakening path with no interstitial). Orchestrator reads `state.prestigeCount` + `state.lastCycleConfig.polarity` and fires `setPolarity(chosen)` on commit.
 
 ### Sprint 4b closing dashboard
 
@@ -869,6 +869,43 @@ Sprint 11a TODO for `ALL_RULE_IDS` constant must include all 16 (not 13 as state
 ---
 
 ## Session log
+
+### 2026-04-21 — Sprint 4c Phase 4c.3: CycleSetupScreen Polarity interactive
+
+**Scope:** Upgrade the Sprint 2 shell CycleSetupScreen to an interactive Polarity picker. 3 new files + 1 refactor + 6 new i18n strings + 11 new tests.
+
+**Components:**
+- New `src/ui/modals/PolaritySlot.tsx` — two-card picker (Excitatory / Inhibitory). Click-to-select with visual highlight. Per-card `data-selected` attribute for test introspection. Card text reads from i18n (`cycle_setup.polarity_{type}_name` / `_desc`).
+- New `src/ui/modals/cycleSetupActionBar.tsx` — SAME AS LAST + Continue button pair. Split out per CODE-2 (parent was 239 lines → 185 after extract).
+- Refactored `src/ui/modals/CycleSetupScreen.tsx`:
+  - Added props `lastCyclePolarity?: Polarity | null` + `onChoose?: (polarity: Polarity) => void`. Defaults keep existing Sprint 2 call sites (0 props) working.
+  - Local state `selectedPolarity` pre-initialized from `lastCyclePolarity` — POLAR-1 default-to-last.
+  - Polarity slot now renders `PolaritySlot` (interactive) instead of locked placeholder when P3+.
+  - Mutation / Pathway slots switched from "unlocks P7/P10" to "Sprint 5" placeholder when their prestige gate is met (they're unlocked in §29 CYCLE-1 but not yet functional).
+  - SAME AS LAST: enabled iff polarity slot unlocked AND `lastCyclePolarity !== null`. Click → `onChoose(lastCyclePolarity)`.
+  - Continue: enabled iff polarity slot unlocked AND `selectedPolarity !== null`. Click → `onChoose(selectedPolarity)`.
+
+**i18n (en.ts cycle_setup block):**
+- `continue` — "Continue"
+- `polarity_title` — "Polarity"
+- `polarity_excitatory_name`, `polarity_excitatory_desc`
+- `polarity_inhibitory_name`, `polarity_inhibitory_desc`
+- `slot_placeholder_mutation`, `slot_placeholder_pathway` — "Sprint 5" copy (vs. the existing "unlocks P7/P10" locked-state copy).
+
+**11 new tests (22 total pass in the file, including 11 pre-existing Sprint 2 tests still green):**
+- Sprint 2 tests updated non-destructively — existing `SAME AS LAST disabled` test passes because the default-prop path still yields `disabled=true`.
+- New: SAME AS LAST enabled/disabled cases (pre-P3 lockout, lastCyclePolarity=null, P3+ with lastCyclePolarity, fires onChoose on click).
+- New: PolaritySlot cards render, click-to-select toggles `data-selected`, POLAR-1 pre-selection, switching between cards.
+- New: Continue button enabled/disabled cases (no selection, after selection, pre-P3 lockout, fires onChoose with selected polarity).
+
+**CODE-2 discipline:** CycleSetupScreen.tsx = 185 lines; cycleSetupActionBar.tsx = 80; PolaritySlot.tsx = 84. All under the 200-line cap.
+
+**Verification (all gates green):**
+- `npm run typecheck` — 0 errors. `npm run lint` — 0 warnings.
+- `bash scripts/check-invention.sh` — 4/4 PASS, ratio 0.83 (held).
+- `npm test` — **912 passed / 43 skipped / 0 failing** (from 901 → +11).
+
+**Next:** Phase 4c.4 — post-prestige sequence wiring (orchestrator mounts CycleSetupScreen between the Awakening screen and the new cycle for P3+).
 
 ### 2026-04-21 — Sprint 4c Phase 4c.2: Polarity modifiers in production + discharge
 

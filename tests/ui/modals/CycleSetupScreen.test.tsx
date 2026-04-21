@@ -110,16 +110,107 @@ describe('CycleSetupScreen — phone (<600px) step-by-step layout', () => {
   });
 });
 
-describe('CycleSetupScreen — SAME AS LAST button', () => {
+describe('CycleSetupScreen — SAME AS LAST button (Sprint 4c.3)', () => {
   beforeEach(() => {
     mockMatchMedia(true);
   });
 
-  test('is present and disabled (no prior choices in Sprint 2)', () => {
+  test('disabled when no lastCyclePolarity passed (default)', () => {
     const { getByTestId } = render(<CycleSetupScreen prestigeCount={10} />);
     const btn = getByTestId('cycle-setup-same-as-last') as HTMLButtonElement;
     expect(btn.disabled).toBe(true);
-    expect(btn.textContent).toBe('SAME AS LAST');
+  });
+
+  test('enabled when lastCyclePolarity provided + polarity slot unlocked', () => {
+    const { getByTestId } = render(
+      <CycleSetupScreen prestigeCount={3} lastCyclePolarity="excitatory" onChoose={() => {}} />,
+    );
+    const btn = getByTestId('cycle-setup-same-as-last') as HTMLButtonElement;
+    expect(btn.disabled).toBe(false);
+  });
+
+  test('disabled pre-P3 even with lastCyclePolarity', () => {
+    const { getByTestId } = render(
+      <CycleSetupScreen prestigeCount={0} lastCyclePolarity="excitatory" onChoose={() => {}} />,
+    );
+    const btn = getByTestId('cycle-setup-same-as-last') as HTMLButtonElement;
+    expect(btn.disabled).toBe(true);
+  });
+
+  test('onChoose fires with lastCyclePolarity when SAME AS LAST clicked', () => {
+    const onChoose = vi.fn();
+    const { getByTestId } = render(
+      <CycleSetupScreen prestigeCount={3} lastCyclePolarity="inhibitory" onChoose={onChoose} />,
+    );
+    fireEvent.pointerDown(getByTestId('cycle-setup-same-as-last'));
+    expect(onChoose).toHaveBeenCalledWith('inhibitory');
+  });
+});
+
+describe('CycleSetupScreen — Polarity slot interactive (Sprint 4c.3)', () => {
+  beforeEach(() => {
+    mockMatchMedia(true);
+  });
+
+  test('renders Excitatory + Inhibitory cards inside the polarity slot', () => {
+    const { getByTestId } = render(<CycleSetupScreen prestigeCount={3} onChoose={() => {}} />);
+    expect(getByTestId('cycle-setup-polarity-excitatory')).toBeTruthy();
+    expect(getByTestId('cycle-setup-polarity-inhibitory')).toBeTruthy();
+  });
+
+  test('clicking a polarity card selects it (data-selected=true)', () => {
+    const { getByTestId } = render(<CycleSetupScreen prestigeCount={3} onChoose={() => {}} />);
+    const card = getByTestId('cycle-setup-polarity-excitatory');
+    expect(card.dataset.selected).toBe('false');
+    fireEvent.pointerDown(card);
+    expect(card.dataset.selected).toBe('true');
+  });
+
+  test('POLAR-1 default: lastCyclePolarity pre-selects that card', () => {
+    const { getByTestId } = render(
+      <CycleSetupScreen prestigeCount={3} lastCyclePolarity="inhibitory" onChoose={() => {}} />,
+    );
+    expect(getByTestId('cycle-setup-polarity-inhibitory').dataset.selected).toBe('true');
+    expect(getByTestId('cycle-setup-polarity-excitatory').dataset.selected).toBe('false');
+  });
+
+  test('switching selection: click Inhibitory after Excitatory is selected', () => {
+    const { getByTestId } = render(
+      <CycleSetupScreen prestigeCount={3} lastCyclePolarity="excitatory" onChoose={() => {}} />,
+    );
+    fireEvent.pointerDown(getByTestId('cycle-setup-polarity-inhibitory'));
+    expect(getByTestId('cycle-setup-polarity-excitatory').dataset.selected).toBe('false');
+    expect(getByTestId('cycle-setup-polarity-inhibitory').dataset.selected).toBe('true');
+  });
+});
+
+describe('CycleSetupScreen — Continue button (Sprint 4c.3)', () => {
+  beforeEach(() => {
+    mockMatchMedia(true);
+  });
+
+  test('disabled when no polarity selected', () => {
+    const { getByTestId } = render(<CycleSetupScreen prestigeCount={3} onChoose={() => {}} />);
+    expect((getByTestId('cycle-setup-continue') as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  test('enabled once a polarity is selected', () => {
+    const { getByTestId } = render(<CycleSetupScreen prestigeCount={3} onChoose={() => {}} />);
+    fireEvent.pointerDown(getByTestId('cycle-setup-polarity-excitatory'));
+    expect((getByTestId('cycle-setup-continue') as HTMLButtonElement).disabled).toBe(false);
+  });
+
+  test('onChoose fires with selected polarity on Continue click', () => {
+    const onChoose = vi.fn();
+    const { getByTestId } = render(<CycleSetupScreen prestigeCount={3} onChoose={onChoose} />);
+    fireEvent.pointerDown(getByTestId('cycle-setup-polarity-inhibitory'));
+    fireEvent.pointerDown(getByTestId('cycle-setup-continue'));
+    expect(onChoose).toHaveBeenCalledWith('inhibitory');
+  });
+
+  test('disabled pre-P3 (polarity slot locked)', () => {
+    const { getByTestId } = render(<CycleSetupScreen prestigeCount={0} onChoose={() => {}} />);
+    expect((getByTestId('cycle-setup-continue') as HTMLButtonElement).disabled).toBe(true);
   });
 });
 

@@ -7,6 +7,9 @@ import {
   unlockedSlotsFor,
   useIsTabletWidth,
 } from './cycleSetupSlots';
+import { PolaritySlot } from './PolaritySlot';
+import { CycleSetupActionBar } from './cycleSetupActionBar';
+import type { Polarity } from '../../types';
 
 // CycleSetupScreen — LAYOUT SHELL ONLY (Sprint 2 Phase 6).
 // Responsive per CYCLE-2 (§29): ≥600px uses 1–3-column layout,
@@ -18,7 +21,17 @@ import {
 //
 // Unlock gates live in ./cycleSetupSlots.ts (helpers split per CODE-2).
 
-function SlotPlaceholder({ slot }: { slot: Slot }) {
+/**
+ * Label for non-polarity placeholder slots. Switch from the "unlocks at PN"
+ * copy (which fires when prestigeCount < unlock) to the "coming in Sprint 5"
+ * copy (which fires when the slot IS unlocked but not yet interactive).
+ */
+function placeholderLabelKey(slot: Slot): string {
+  if (slot === 'mutation') return 'cycle_setup.slot_placeholder_mutation';
+  return 'cycle_setup.slot_placeholder_pathway';
+}
+
+function SlotPlaceholder({ slot, mode }: { slot: Slot; mode: 'locked' | 'coming-soon' }) {
   return (
     <div
       data-testid={`cycle-setup-slot-${slot}`}
@@ -38,21 +51,40 @@ function SlotPlaceholder({ slot }: { slot: Slot }) {
         justifyContent: 'center',
       }}
     >
-      {t(SLOT_LOCKED_LABEL[slot])}
+      {t(mode === 'locked' ? SLOT_LOCKED_LABEL[slot] : placeholderLabelKey(slot))}
     </div>
   );
 }
 
 interface CycleSetupScreenProps {
   prestigeCount: number;
+  /** POLAR-1 default: pre-selected polarity from `lastCycleConfig.polarity`. */
+  lastCyclePolarity?: Polarity | null;
+  /** Fires when the player confirms (Continue or SAME AS LAST). Parent handles setPolarity + dismissal. */
+  onChoose?: (polarity: Polarity) => void;
 }
 
 export const CycleSetupScreen = memo(function CycleSetupScreen({
   prestigeCount,
+  lastCyclePolarity = null,
+  onChoose,
 }: CycleSetupScreenProps) {
   const isTablet = useIsTabletWidth();
   const slots = unlockedSlotsFor(prestigeCount);
   const [stepIndex, setStepIndex] = useState(0);
+  // POLAR-1 default — pre-select last cycle's polarity (if any).
+  const [selectedPolarity, setSelectedPolarity] = useState<Polarity | null>(lastCyclePolarity);
+
+  const polarityUnlocked = slots.includes('polarity');
+  const canSameAsLast = polarityUnlocked && lastCyclePolarity !== null;
+  const canContinue = polarityUnlocked && selectedPolarity !== null;
+
+  const renderSlot = (slot: Slot) => {
+    if (slot === 'polarity') {
+      return <PolaritySlot key={slot} selected={selectedPolarity} onSelect={setSelectedPolarity} />;
+    }
+    return <SlotPlaceholder key={slot} slot={slot} mode="coming-soon" />;
+  };
 
   const columnsLayout = (
     <div
@@ -64,9 +96,7 @@ export const CycleSetupScreen = memo(function CycleSetupScreen({
         alignItems: 'stretch',
       }}
     >
-      {slots.map((slot) => (
-        <SlotPlaceholder key={slot} slot={slot} />
-      ))}
+      {slots.map(renderSlot)}
     </div>
   );
 
@@ -80,7 +110,7 @@ export const CycleSetupScreen = memo(function CycleSetupScreen({
         gap: 'var(--spacing-5)', // CONST-OK: CSS custom property ref (CODE-1 exception)
       }}
     >
-      {slots.length > 0 && <SlotPlaceholder slot={slots[stepIndex] ?? slots[0]} />}
+      {slots.length > 0 && renderSlot(slots[stepIndex] ?? slots[0])}
       {slots.length > 1 && (
         <div
           data-testid="cycle-setup-progress-dots"
@@ -144,27 +174,12 @@ export const CycleSetupScreen = memo(function CycleSetupScreen({
       }}
     >
       {isTablet ? columnsLayout : stepperLayout}
-      <button
-        type="button"
-        data-testid="cycle-setup-same-as-last"
-        disabled
-        style={{
-          minHeight: HUD.touchTargetMin,
-          padding: 'var(--spacing-3) var(--spacing-6)', // CONST-OK: CSS custom property ref (CODE-1 exception)
-          background: 'transparent',
-          border: '1px solid var(--color-border-medium)',
-          borderRadius: 'var(--radius-md)',
-          color: 'var(--color-text-disabled)',
-          fontFamily: 'var(--font-body)',
-          fontSize: 'var(--text-sm)',
-          fontWeight: 'var(--font-weight-semibold)',
-          cursor: 'not-allowed',
-          opacity: HUD.dischargeButtonDisabledOpacity,
-          alignSelf: 'center',
-        }}
-      >
-        {t('cycle_setup.same_as_last')}
-      </button>
+      <CycleSetupActionBar
+        canSameAsLast={canSameAsLast}
+        canContinue={canContinue}
+        onSameAsLast={() => { if (lastCyclePolarity !== null) onChoose?.(lastCyclePolarity); }}
+        onContinue={() => { if (selectedPolarity !== null) onChoose?.(selectedPolarity); }}
+      />
     </div>
   );
 });

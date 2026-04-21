@@ -140,8 +140,16 @@ export const en = {
     slot_locked_polarity: 'Polarity — unlocks P3',
     slot_locked_mutation: 'Mutation — unlocks P7',
     slot_locked_pathway: 'Pathway — unlocks P10',
+    slot_placeholder_mutation: 'Mutation — Sprint 5',
+    slot_placeholder_pathway: 'Pathway — Sprint 5',
     same_as_last: 'SAME AS LAST',
     next: 'Next',
+    continue: 'Continue',
+    polarity_title: 'Polarity',
+    polarity_excitatory_name: 'Excitatory',
+    polarity_excitatory_desc: 'Production +10%, Discharge −15%',
+    polarity_inhibitory_name: 'Inhibitory',
+    polarity_inhibitory_desc: 'Production −6%, Discharge +30%, easier Cascade',
   },
   // Upgrade display names (Sprint 3 Phase 1 — approved English translations
   // of GDD §24 Spanish canonical names per CLAUDE.md translation discipline).
