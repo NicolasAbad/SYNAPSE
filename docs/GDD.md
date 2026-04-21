@@ -426,7 +426,7 @@ function calculateCurrentThreshold(state: GameState): number {
 }
 ```
 
-Verified values: `calculateThreshold(0, 0) === 800_000` (P0→P1 Run 1), `calculateThreshold(0, 1) === 2_800_000` (P0→P1 Run 2, 800K × 3.5), `calculateThreshold(25, 2) === 42_000_000_000` (P25→P26 Run 3, 7B × 6.0). With `isTutorialCycle: true`, `calculateCurrentThreshold` returns `50_000` instead of 800K for P0→P1.
+Verified values: `calculateThreshold(0, 0) === 800_000` (P0→P1 Run 1), `calculateThreshold(0, 1) === 2_800_000` (P0→P1 Run 2, 800K × 3.5), `calculateThreshold(25, 2) === 42_000_000_000` (P25→P26 Run 3, 7B × 6.0). With `isTutorialCycle: true`, `calculateCurrentThreshold` returns `25_000` instead of 800K for P0→P1 (Sprint 3 Phase 7.4b retune; was 50K).
 
 **Era 1 — El Despertar (P1-P9)**
 - Bioluminescent aesthetic
@@ -1715,7 +1715,7 @@ Sprint 6 (spontaneous events) will implement this composition in `src/engine/spo
 ```ts
 export const SYNAPSE_CONSTANTS = {
   // Tutorial
-  tutorialThreshold: 50_000,             // Used for P0 of first Run ONLY when isTutorialCycle=true (see TUTOR-2 §9). Overrides baseThresholdTable[0]. TUTOR-1 target: 7-9 min.
+  tutorialThreshold: 25_000,             // Used for P0 of first Run ONLY when isTutorialCycle=true (see TUTOR-2 §9). Overrides baseThresholdTable[0]. TUTOR-1 target: 7-9 min. Retuned 50K→25K in Sprint 3 Phase 7.4b (tutorial-timing simulator projected 50K → ~14.7 min at 5 taps/sec, well above target).
   tutorialDischargeMult: 3.0,
 
   // Thresholds
@@ -2156,8 +2156,8 @@ export function createDefaultState(): GameState {
     // currentThreshold is not in DEFAULT_STATE because it derives from isTutorialCycle + 
     // prestigeCount + transcendenceCount via calculateCurrentThreshold(state). The field 
     // IS in GameState (for save round-trip), but default is computed: 
-    //   createDefaultState() sets it to 50_000 (tutorial override, matches TUTOR-2).
-    currentThreshold: 50_000,                  // TUTOR-2: first-ever cycle uses tutorialThreshold
+    //   createDefaultState() sets it to 25_000 (tutorial override, matches TUTOR-2; Sprint 3 Phase 7.4b retune — was 50K).
+    currentThreshold: 25_000,                  // TUTOR-2: first-ever cycle uses tutorialThreshold
     
     // ── Weekly Challenge initial state ──
     weeklyChallenge: {                         // §25 default — inactive until first Monday crossing
@@ -2177,7 +2177,7 @@ const s = createDefaultState();
 expect(s.isTutorialCycle).toBe(true);
 expect(s.neurons[0]).toEqual({ type: 'basica', count: 1 });
 expect(s.neurons.slice(1).every(n => n.count === 0)).toBe(true);
-expect(s.currentThreshold).toBe(50_000);
+expect(s.currentThreshold).toBe(25_000);
 expect(s.currentOfflineCapHours).toBe(4);
 expect(s.currentOfflineEfficiency).toBe(0.50);
 expect(s.eraVisualTheme).toBe('bioluminescent');

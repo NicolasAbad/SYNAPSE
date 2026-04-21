@@ -618,6 +618,52 @@ Sprint 11a TODO for `ALL_RULE_IDS` constant must include all 16 (not 13 as state
 
 ## Session log
 
+### 2026-04-21 — Sprint 3 Phase 7.1–7.4b: Tutorial hints + Undo toast + Emergencia banner + tutorial retune
+
+**Scope:** Sprint 3 Phase 7 sub-phases 1–4b. Hint stack (tap/buy/discharge/variety), Undo toast UI, Emergencia Cognitiva cap banner (Option A — one-time HUD banner per cycle, React-local dismiss keyed on prestigeCount), tutorial-timing simulator (scripts/tutorial-timing.ts), and a Nico-approved retune of `tutorialThreshold` from 50_000 → 25_000.
+
+**Files created:**
+- `src/ui/modals/TutorialHints.tsx` (106 lines) — hint-stack replacing the single-hint scaffold. Priority: tap > buy > discharge > variety. Hints 2–4 auto-dismiss when their state predicate flips false; hint 1 still uses idle timer + pointerdown, but the listener now attaches from mount (fixed a test-detected race where the timer-attach effect flushed after the dispatch).
+- `src/ui/hud/UndoToast.tsx` (94 lines) — memoed subscriber on `undoToast`. Shows `{prefix} {name} · −{refund}` + UNDO button. Auto-dismisses at `expiresAt` via setTimeout; replaces-timer when a newer toast arrives mid-window.
+- `src/ui/hud/EmergenciaCapBanner.tsx` (75 lines) — Option A banner surfaces when `perBucket^⌊owned/bucketSize⌋ >= capMult`. Dismiss persists until next prestige (React-local useState keyed on prestigeCount). No GameState mutation — 110-field invariant preserved.
+- `scripts/tutorial-timing.ts` (165 lines) — player-test proxy. Runs real engine (tick + applyTap + tryBuyNeuron + tryBuyUpgrade) at constant tap rate with realistic purchase priority (red_neuronal_densa → potencial_sinaptico → Sensorial → Basica). Sweeps 2–7 taps/sec.
+- `tests/ui/modals/TutorialHints.test.tsx` (15 tests), `tests/ui/hud/UndoToast.test.tsx` (8 tests), `tests/ui/hud/EmergenciaCapBanner.test.tsx` (5 tests).
+
+**Files modified:**
+- `src/config/strings/en.ts` — added `tutorial.hint_buy`, `tutorial.hint_discharge`, `tutorial.hint_variety`, `undo.prefix_neuron`, `undo.prefix_upgrade`, `undo.button`, `upgrades.emergencia_cap_reached`.
+- `src/ui/hud/HUD.tsx` — mounts UndoToast + EmergenciaCapBanner.
+- `src/App.tsx` — renamed TutorialHint → TutorialHints import.
+
+**Files deleted:**
+- `src/ui/modals/TutorialHint.tsx`, `tests/ui/modals/TutorialHint.test.tsx` (superseded by hint-stack).
+
+**Changes applied this sprint (divergence log per CLAUDE.md update discipline):**
+- **`tutorialThreshold: 50_000 → 25_000`** (Phase 7.4b). Reason: the tutorial-timing sim (real-engine proxy for the blind-play gate) projected ~14.7 min at 5 taps/sec against a 7–9 min target. Every sampled tap rate (2–7) landed at 13–18 min. Root cause: P0 has no structural helpers (dopamina P2+, archetypes P5+, emergencia P6+, mutations P7+) — the tutorial is the most tool-starved version of the economy and does not accelerate in later sprints. Retuned per Nico approval 2026-04-21; sim post-retune shows 6–7 taps/sec in the 7–9 min window, 3–5 taps/sec at 9–11 min (acceptable for Sprint 3 close; Sprint 4c dedicated playtest owns refinement if needed). Locations updated in same commit: `src/config/constants.ts`, `src/store/gameStore.ts` (`createDefaultState().currentThreshold`), `tests/consistency.test.ts`, `tests/engine/production.test.ts`, `tests/store/gameStore.test.ts`, `docs/GDD.md` §9 + §31 + §32, `scripts/economy-sanity.mjs`. CLAUDE.md:198 "Key constants" quick-reference still shows 50_000 — Nico to update at sprint close.
+
+**Phase 7 design decisions:**
+1. **Hint priority (tap > buy > discharge > variety).** Only one hint visible at a time. Natural flow through the tutorial rarely creates collisions (discharge requires 20 min, variety requires 10 Basicas + 150 thoughts); when they collide, the earlier-in-sequence hint wins.
+2. **Variety threshold sourced from Sensorial's unlock config.** `NEURON_CONFIG.sensorial.unlock.count` is the "10 Basicas" value by construction — reusing it keeps the hint and the unlock in lock-step without a new constant.
+3. **Emergencia banner cap predicate matches engine.** Uses `perBucket^buckets >= capMult` (same computation as production.ts stacks). Pulls all three values from UPGRADES_BY_ID — no new constants.
+4. **Simulator over-buys early, under-models human variance.** Sim is conservative on reaction delay (greedy purchases, no dithering) and pessimistic on anti-spam (constant tap rate at 7/sec triggers TAP-1). Human blind-play expected to refine ±1 min around the projection.
+
+**Phase 7 deferred / flagged for later sprints:**
+- **Tutorial Discharge climax (GDD §7 spec contradiction).** Tutorial ×3 Discharge multiplier exists but the 20-min base charge interval means the first charge never arrives during a 7–9 min tutorial. The tutorial as shipped does not actually showcase Discharge — it introduces it in P1. Consider a `tutorialChargeIntervalMs` (e.g., 3 min) in Sprint 4c playtest tuning if D1 retention suffers. Not a Sprint 3 scope item.
+- **Emergencia cap tooltip-on-card.** Full surface (hover tooltip on the Emergencia upgrade card) waits on Upgrades tab panel. Banner is the minimum-viable now.
+- **tutorialThreshold fine-tuning.** 25K is sim-approved ≥6 taps/sec. Human blind-play may show 5 taps/sec is the typical rate, implying 20–22K would be tighter. Sprint 4c owns.
+
+**Verification (all gates green post-retune):**
+- `npm run typecheck` — 0 errors
+- `npm run lint` — 0 warnings
+- `bash scripts/check-invention.sh` — 4/4 PASS, ratio 0.82 (42 constants / 9 literals; drop from Phase 6's 0.89 is from 3 HUD surfaces adding CONST-OK-annotated CSS values — all within threshold)
+- `npm test` — **652 passed / 49 skipped / 0 failing** (+24 from Phase 6: 15 TutorialHints + 8 UndoToast + 5 EmergenciaCapBanner − 4 old TutorialHint tests)
+
+**Commits landed this phase:**
+- `bf2a3ff` Phase 7.1 — Tutorial hints 2/3/4 (hint-stack refactor)
+- `afe9441` Phase 7.2 — Undo toast UI (UI-4)
+- `3a09803` Phase 7.3 — Emergencia Cognitiva cap banner (Option A)
+- `b58ac52` Phase 7.4 — tutorial-timing simulator (player-test proxy)
+- `(this commit)` Phase 7.4b — tutorialThreshold 50K → 25K retune
+
 ### 2026-04-20 — Sprint 3 Phase 6: Discharge + Cascade + Tutorial ×3
 
 **Scope:** Sprint 3 Phase 6/7. Wire GDD §7 Discharge mechanic with BUG-07 order (Cascade check BEFORE consuming bar), tutorial ×3 override on first cycle first Discharge, Amplificador de Disparo ×1.5 stack, Cascade multiplier stacking (base 2.5 → 3.0 with cascada_eterna resonance → ×2 with Cascada Profunda, max 6.0), Sincronización Total +0.18 post-Cascade focus refund, Potencial Latente flat bonus (+1000 × prestigeCount per Discharge), Red de Alta Velocidad shortened charge interval (×1.25 speed = interval/1.25), haptic feedback (medium/heavy).

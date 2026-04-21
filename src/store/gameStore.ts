@@ -71,9 +71,10 @@ export function createDefaultState(): GameState {
     sessionStartTimestamp: null, // INIT-1 impure — mount effect populates
     // === Prestige & progression (11) ===
     prestigeCount: 0,
-    // 50_000 = TUTOR-2 tutorial threshold; matches calculateCurrentThreshold
+    // 25_000 = TUTOR-2 tutorial threshold (retuned Sprint 3 Phase 7.4b from
+    // 50_000 per tutorial-timing sim finding). Matches calculateCurrentThreshold
     // for a tutorial-cycle state. Recomputed by prestige to regular values.
-    currentThreshold: 50_000,
+    currentThreshold: 25_000,
     consciousnessBarUnlocked: false,
     patterns: [],
     totalPatterns: 0,

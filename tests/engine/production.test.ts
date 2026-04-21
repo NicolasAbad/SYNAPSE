@@ -93,24 +93,24 @@ describe('calculateThreshold (THRES-1, GDD §9)', () => {
 });
 
 describe('calculateCurrentThreshold (TUTOR-2, GDD §9)', () => {
-  test('tutorial cycle returns tutorialThreshold (50K) regardless of prestigeCount', () => {
+  test('tutorial cycle returns tutorialThreshold (25K) regardless of prestigeCount', () => {
     expect(
       calculateCurrentThreshold({
         isTutorialCycle: true,
         prestigeCount: 0,
         transcendenceCount: 0,
       }),
-    ).toBe(50_000);
+    ).toBe(25_000);
   });
 
-  test('tutorial cycle on Run 2 uses runThresholdMult: 50K × 3.5 = 175K', () => {
+  test('tutorial cycle on Run 2 uses runThresholdMult: 25K × 3.5 = 87.5K', () => {
     expect(
       calculateCurrentThreshold({
         isTutorialCycle: true,
         prestigeCount: 0,
         transcendenceCount: 1,
       }),
-    ).toBe(175_000);
+    ).toBe(87_500);
   });
 
   test('normal path at P0/Run 1 returns 800_000 (not 50K)', () => {

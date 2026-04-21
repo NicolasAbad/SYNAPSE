@@ -48,8 +48,8 @@ import type { UpgradeCategory } from '../src/types';
  */
 
 describe('Consistency: GDD ↔ constants.ts invariants', () => {
-  test('tutorialThreshold = 50000 (GDD §31)', () => {
-    expect(SYNAPSE_CONSTANTS.tutorialThreshold).toBe(50_000);
+  test('tutorialThreshold = 25000 (Sprint 3 Phase 7.4b retune; GDD §31 pending Nico update)', () => {
+    expect(SYNAPSE_CONSTANTS.tutorialThreshold).toBe(25_000);
   });
 
   test('tutorialDischargeMult = 3.0 (GDD §31)', () => {
@@ -223,7 +223,7 @@ describe('Consistency: Threshold scaling (GDD §9, THRES-1)', () => {
       prestigeCount: 0,
       transcendenceCount: 0,
     } as GameState;
-    expect(calculateCurrentThreshold(tutorialState)).toBe(50_000);
+    expect(calculateCurrentThreshold(tutorialState)).toBe(25_000);
     const normalState = { ...tutorialState, isTutorialCycle: false };
     expect(calculateCurrentThreshold(normalState)).toBe(800_000);
   });

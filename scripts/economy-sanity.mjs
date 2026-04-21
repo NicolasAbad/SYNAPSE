@@ -32,7 +32,7 @@ const THRESHOLDS = [
   1_100_000_000, 1_500_000_000, 2_000_000_000, 2_800_000_000, 3_800_000_000,
   5_200_000_000, 7_000_000_000,
 ];
-const TUTORIAL_THRESHOLD = 50_000;
+const TUTORIAL_THRESHOLD = 25_000; // Sprint 3 Phase 7.4b retune (was 50_000)
 
 // ── Upgrade adoption anchors (prestige → total upgrades owned by cycle end) ──
 const ANCHORS = [[0, 0], [1, 3], [3, 7], [6, 13], [9, 18], [10, 20], [13, 26], [18, 30], [26, 35]];

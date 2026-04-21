@@ -39,7 +39,7 @@ describe('createDefaultState — 12 non-trivial initial values (§32 2B-1b + Pha
     expect(s.currentOfflineEfficiency).toBe(0.5);
     expect(s.eraVisualTheme).toBe('bioluminescent');
     expect(s.gameVersion).toBe('1.0.0');
-    expect(s.currentThreshold).toBe(50_000); // TUTOR-2
+    expect(s.currentThreshold).toBe(25_000); // TUTOR-2 (retuned Sprint 3 Phase 7.4b)
     expect(s.insightMultiplier).toBe(1); // 12th (Phase 6)
     expect(s.weeklyChallenge).toEqual({
       id: '',
