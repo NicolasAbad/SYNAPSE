@@ -6,10 +6,10 @@
 
 ## Current status
 
-**Phase:** Sprint 4c IN PROGRESS — Phase 4c.1 (Polarity constants + `setPolarity` action + POLAR-1 snapshot in handlePrestige) shipped. 6 new constants including Nico-approved `inhibitoryCascadeThresholdMult: 0.90` (spec-gap resolution, Option A).
-**Last updated:** 2026-04-21 after Sprint 4c Phase 4c.1 close.
-**Active sprint:** Sprint 4c — Polarity + CycleSetupScreen + Playtest. 5 planned sub-phases: 4c.1 constants + setPolarity action + lastCycleConfig snapshot (DONE) → 4c.2 Polarity modifiers in production/discharge → 4c.3 CycleSetupScreen component (1/2/3-column) → 4c.4 post-prestige sequence + pre-P3 skip → 4c.5 integration tests + Sprint close + PLAYTEST-REQUIRED handoff.
-**Next action:** Phase 4c.2 — integrate `excitatoryProdMult`/`inhibitoryProdMult` into `calculateProduction` (replace the stub comment `polarityMod (all identity until wired)`); `excitatoryDischargeMult`/`inhibitoryDischargeMult` into `computeDischargeMultiplier`; `inhibitoryCascadeThresholdMult` into `effectiveCascadeThreshold` (min-stack with Node 36A if both apply — pick the LOWER, easier-to-Cascade threshold).
+**Phase:** Sprint 4c IN PROGRESS — Phase 4c.2 (Polarity modifier wiring) shipped. `calculateProduction` now includes `polarityProdMult` in rawMult (pre-softCap); `computeDischargeMultiplier` stacks `polarityDischargeMult`; `effectiveCascadeThreshold` stacks Inhibitory × Node 36A via MIN (lower wins, more favorable to player).
+**Last updated:** 2026-04-21 after Sprint 4c Phase 4c.2 close.
+**Active sprint:** Sprint 4c — Polarity + CycleSetupScreen + Playtest. 5 planned sub-phases: 4c.1 constants + setPolarity + snapshot (DONE) → 4c.2 engine wiring (DONE) → 4c.3 CycleSetupScreen component (1/2/3-column) → 4c.4 post-prestige sequence + pre-P3 skip → 4c.5 integration tests + Sprint close + PLAYTEST-REQUIRED handoff.
+**Next action:** Phase 4c.3 — build `src/ui/modals/CycleSetupScreen.tsx` with 1/2/3-column Polarity-first layout. Refactor the existing stub (Sprint 2 Phase 6's CycleSetupScreen was shell-only). Columns: Polarity (always, P3+), Mutation placeholder (P7+), Pathway placeholder (P10+). SAME AS LAST button reads `state.lastCycleConfig`. Pre-P3 path skips the screen entirely — just exit to the new cycle.
 
 ### Sprint 4b closing dashboard
 
@@ -869,6 +869,36 @@ Sprint 11a TODO for `ALL_RULE_IDS` constant must include all 16 (not 13 as state
 ---
 
 ## Session log
+
+### 2026-04-21 — Sprint 4c Phase 4c.2: Polarity modifiers in production + discharge
+
+**Scope:** Wire the 3 Polarity modifiers into their engine consumers per GDD §11. No new state fields — helpers read `state.currentPolarity` directly.
+
+**Wiring:**
+- **`calculateProduction`** — new helper `polarityProdMult(polarity)` returns `excitatoryProdMult (1.10)` / `inhibitoryProdMult (0.94)` / `1`. Multiplied into `rawMult` (pre-softCap) alongside `connectionMult × globalMult`. Replaces the stub comment `polarityMod (all identity until wired)`.
+- **`computeDischargeMultiplier`** — new helper `polarityDischargeMult(polarity)` returns `excitatoryDischargeMult (0.85)` / `inhibitoryDischargeMult (1.30)` / `1`. Stacks with base × amp × cascade × Node 36B decision mult.
+- **`effectiveCascadeThreshold`** — new helper `polarityCascadeThresholdMult(polarity)` returns `inhibitoryCascadeThresholdMult (0.90)` / `1`. Threshold computation now:
+  ```
+  withPolarity = base(0.75) × polarityMult  → 0.675 under Inhibitory
+  override = Node 36 A's 0.65 set | null
+  effective = override === null ? withPolarity : MIN(withPolarity, override)
+  ```
+  Both → 0.65 (Node 36A wins); Inhibitory only → 0.675; Node 36A only → 0.65; neither → 0.75.
+
+**Design discipline:**
+- Polarity modifiers applied multiplicatively (all three) — matches UpgradeEffect patterns, stacks predictably.
+- No state-cache field for derived Cascade threshold — compute on read, consistent with the 9 non-mutating pattern-decision helpers in Phase 4b.3.
+- `effectiveCascadeThreshold` signature updated to accept `Pick<GameState, 'patternDecisions' | 'currentPolarity'>`; existing call sites already passed full `GameState`, no breakage.
+
+**21 new tests** — 3 × 3 identity + per-polarity value checks on all 3 helpers, production-level composition (excit × identity × inhib ratio preserved), discharge multiplier composition, full threshold stack (no polarity / inhibitory / Node 36A / both / excitatory-no-effect), and a `performDischarge` real-state check that Inhibitory actually enables a Cascade at focusBar 0.70 that wouldn't fire otherwise.
+
+**Verification (all gates green):**
+- `npm run typecheck` — 0 errors. `npm run lint` — 0 warnings.
+- `bash scripts/check-invention.sh` — 4/4 PASS, ratio **0.83** (up from 0.82 — 5 new constants × multiple consumer refs).
+- `npm test` — **901 passed / 43 skipped / 0 failing** (from 880 → +21).
+- `src/engine/discharge.ts` = 158 lines, `src/engine/production.ts` = 194 lines (CODE-2 ≤200).
+
+**Next:** Phase 4c.3 — CycleSetupScreen UI.
 
 ### 2026-04-21 — Sprint 4c Phase 4c.1: Polarity constants + setPolarity + POLAR-1 snapshot
 

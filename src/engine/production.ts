@@ -25,7 +25,7 @@ import { NEURON_BASE_RATES } from '../config/neurons';
 import { UPGRADES_BY_ID } from '../config/upgrades';
 import { patternCycleBonusAdd } from './patternDecisions';
 import type { GameState } from '../types/GameState';
-import type { NeuronState, NeuronType, UpgradeEffect } from '../types';
+import type { NeuronState, NeuronType, Polarity, UpgradeEffect } from '../types';
 
 /**
  * Soft cap per GDD §4. Pass-through below 100; diminishing-returns power curve above.
@@ -149,6 +149,13 @@ export function patternCycleBonus(cyclePatterns: number, decisionAdd = 0): numbe
   return Math.min(1 + cyclePatterns * patternCycleBonusPerNode + decisionAdd, patternCycleCap);
 }
 
+/** GDD §11 production modifier by cycle-selected Polarity (identity when null). */
+export function polarityProdMult(polarity: Polarity | null): number {
+  if (polarity === 'excitatory') return SYNAPSE_CONSTANTS.excitatoryProdMult;
+  if (polarity === 'inhibitory') return SYNAPSE_CONSTANTS.inhibitoryProdMult;
+  return 1;
+}
+
 /**
  * Full production formula per GDD §4. Returns both the softCap-tempered
  * `baseProductionPerSecond` (pre-temporary-modifier) and `effectiveProductionPerSecond`
@@ -172,8 +179,9 @@ export function calculateProduction(state: GameState): { base: number; effective
   sum += state.totalPatterns * SYNAPSE_CONSTANTS.patternFlatBonusPerNode;
 
   const globalMult = computeGlobalUpgradeMult(state, ownedIds);
-  // Stubs for Sprint 5-7: archetypeMod × regionMult × mutationStaticMod × polarityMod (all identity until wired).
-  const rawMult = state.connectionMult * globalMult;
+  // Stubs for Sprint 5-7: archetypeMod × regionMult × mutationStaticMod (all identity until wired).
+  // GDD §11 polarityMod wired Sprint 4c Phase 4c.2.
+  const rawMult = state.connectionMult * globalMult * polarityProdMult(state.currentPolarity);
   const finalMult = softCap(rawMult);
   // Pattern cycle bonus: multiplicative post-softCap, capped at patternCycleCap.
   // Node 6 A decision (if chosen) contributes an extra +0.08 addend (GDD §10).

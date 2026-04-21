@@ -15,6 +15,20 @@ import { SYNAPSE_CONSTANTS } from '../config/constants';
 import { UPGRADES_BY_ID } from '../config/upgrades';
 import { cascadeThresholdOverride, dischargeDamageDecisionMult } from './patternDecisions';
 import type { GameState } from '../types/GameState';
+import type { Polarity } from '../types';
+
+/** GDD §11 Discharge multiplier by Polarity (Excit −15%, Inhib +30%, null = identity). */
+export function polarityDischargeMult(polarity: Polarity | null): number {
+  if (polarity === 'excitatory') return SYNAPSE_CONSTANTS.excitatoryDischargeMult;
+  if (polarity === 'inhibitory') return SYNAPSE_CONSTANTS.inhibitoryDischargeMult;
+  return 1;
+}
+
+/** GDD §11 Cascade threshold multiplier from Inhibitory Polarity (Option A). */
+export function polarityCascadeThresholdMult(polarity: Polarity | null): number {
+  if (polarity === 'inhibitory') return SYNAPSE_CONSTANTS.inhibitoryCascadeThresholdMult;
+  return 1;
+}
 
 function ownedUpgradeIds(state: Pick<GameState, 'upgrades'>): Set<string> {
   const out = new Set<string>();
@@ -65,12 +79,20 @@ export function computeDischargeMultiplier(state: GameState, isCascade: boolean)
   const cascade = isCascade ? computeCascadeMultiplier(state) : 1;
   // GDD §10 Node 36 B: +10 % Discharge damage (always applied when chosen).
   const decisionMult = dischargeDamageDecisionMult(state);
-  return base * amp * cascade * decisionMult;
+  // GDD §11 Polarity Discharge mult (Excit −15%, Inhib +30%).
+  const polMult = polarityDischargeMult(state.currentPolarity);
+  return base * amp * cascade * decisionMult * polMult;
 }
 
-/** Effective Cascade threshold: 0.65 if Node 36 A chosen, else base (0.75). */
-export function effectiveCascadeThreshold(state: Pick<GameState, 'patternDecisions'>): number {
-  return cascadeThresholdOverride(state) ?? SYNAPSE_CONSTANTS.cascadeThreshold;
+/**
+ * Effective Cascade threshold: stacks Node 36 A set-override with Inhibitory's
+ * multiplicative shift. When BOTH apply, pick MIN (lower = easier to Cascade,
+ * more favorable to player). Without either, base `cascadeThreshold` (0.75).
+ */
+export function effectiveCascadeThreshold(state: Pick<GameState, 'patternDecisions' | 'currentPolarity'>): number {
+  const withPolarity = SYNAPSE_CONSTANTS.cascadeThreshold * polarityCascadeThresholdMult(state.currentPolarity);
+  const override = cascadeThresholdOverride(state);
+  return override === null ? withPolarity : Math.min(withPolarity, override);
 }
 
 /** Potencial Latente flat bonus (GDD §24: "+1,000 × prestigeCount per Discharge"). */
