@@ -1,4 +1,6 @@
-import { memo, useState } from 'react';
+import { memo } from 'react';
+import { useGameStore } from '../../store/gameStore';
+import type { MindSubtabId } from '../../store/gameStore';
 import { t } from '../../config/strings';
 import { PatternTreeView } from './PatternTreeView';
 
@@ -15,12 +17,13 @@ import { PatternTreeView } from './PatternTreeView';
  * Patterns subtab (this sprint): basic Pattern Tree viz + PAT-3 reset. Other
  * subtabs render "Unlocks in Sprint X" placeholders until Sprint 5/6/7/8b.
  */
-type MindSubtab = 'home' | 'patterns' | 'archetypes' | 'diary' | 'achievements' | 'resonance';
-
-const NON_HOME_SUBTABS: MindSubtab[] = ['patterns', 'archetypes', 'diary', 'achievements', 'resonance'];
+const NON_HOME_SUBTABS: MindSubtabId[] = ['patterns', 'archetypes', 'diary', 'achievements', 'resonance'];
 
 export const MindPanel = memo(function MindPanel() {
-  const [subtab, setSubtab] = useState<MindSubtab>('home');
+  // Subtab state lifted to Zustand (Sprint 4c Phase 4c.6.5) so sibling HUD
+  // components can gate on it. See `UIState.activeMindSubtab` in gameStore.ts.
+  const subtab = useGameStore((s) => s.activeMindSubtab);
+  const setSubtab = useGameStore((s) => s.setActiveMindSubtab);
   const showBody = subtab !== 'home';
 
   return (
@@ -31,7 +34,7 @@ export const MindPanel = memo(function MindPanel() {
   );
 });
 
-function MindSubtabBar({ subtab, onChange }: { subtab: MindSubtab; onChange: (s: MindSubtab) => void }) {
+function MindSubtabBar({ subtab, onChange }: { subtab: MindSubtabId; onChange: (s: MindSubtabId) => void }) {
   return (
     <div
       data-testid="mind-subtab-bar"
@@ -59,7 +62,7 @@ function MindSubtabBar({ subtab, onChange }: { subtab: MindSubtab; onChange: (s:
         zIndex: 880, // CONST-OK: above HUD, below modals
       }}
     >
-      {(['home', ...NON_HOME_SUBTABS] as MindSubtab[]).map((s) => (
+      {(['home', ...NON_HOME_SUBTABS] as MindSubtabId[]).map((s) => (
         <SubtabButton key={s} value={s} active={subtab === s} onSelect={onChange} />
       ))}
     </div>
@@ -71,9 +74,9 @@ function SubtabButton({
   active,
   onSelect,
 }: {
-  value: MindSubtab;
+  value: MindSubtabId;
   active: boolean;
-  onSelect: (s: MindSubtab) => void;
+  onSelect: (s: MindSubtabId) => void;
 }) {
   return (
     <button
@@ -102,7 +105,7 @@ function SubtabButton({
   );
 }
 
-function MindSubtabBody({ subtab }: { subtab: MindSubtab }) {
+function MindSubtabBody({ subtab }: { subtab: MindSubtabId }) {
   return (
     <div
       data-testid={`mind-subtab-body-${subtab}`}

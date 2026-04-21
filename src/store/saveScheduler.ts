@@ -24,8 +24,9 @@ export async function trySave(): Promise<void> {
   if (saveInFlight) return;
   saveInFlight = true;
   try {
-    const { activeTab: _a, undoToast: _u, antiSpamActive: _s, ...rest } = useGameStore.getState();
+    const { activeTab: _a, activeMindSubtab: _m, undoToast: _u, antiSpamActive: _s, ...rest } = useGameStore.getState();
     void _a;
+    void _m;
     void _u;
     void _s;
     await saveGame(rest as GameState);

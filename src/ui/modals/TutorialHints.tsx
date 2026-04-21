@@ -60,7 +60,9 @@ export const TutorialHints = memo(function TutorialHints() {
   // Sprint 4c Phase 4c.6 — hide tutorial hint overlay when a non-Mind panel
   // is open. Hints should only appear over the canvas, not over a management
   // panel the player intentionally opened (audit bug).
+  // Phase 4c.6.5 — also hide on non-home Mind subtabs (same reason as Discharge).
   const activeTab = useGameStore((s) => s.activeTab);
+  const activeMindSubtab = useGameStore((s) => s.activeMindSubtab);
 
   const [idleTimerFired, setIdleTimerFired] = useState(false);
   const [firstTapDone, setFirstTapDone] = useState(false);
@@ -85,22 +87,30 @@ export const TutorialHints = memo(function TutorialHints() {
     return () => document.removeEventListener('pointerdown', onTap);
   }, [firstTapDone]);
 
-  if (!isTutorialCycle) return null;
-  if (activeTab !== 'mind') return null;
+  if (activeTab !== 'mind' || activeMindSubtab !== 'home') return null;
 
   let active: HintId | null = null;
-  if (idleTimerFired && !firstTapDone) {
-    active = 'tap';
-  } else if (basicaCount === 1 && thoughts >= neuronCost('basica', basicaCount)) {
+  if (isTutorialCycle) {
+    // First-cycle tutorial hints (fire only during isTutorialCycle).
+    if (idleTimerFired && !firstTapDone) {
+      active = 'tap';
+    } else if (basicaCount === 1 && thoughts >= neuronCost('basica', basicaCount)) {
+      active = 'buy';
+    } else if (dischargeCharges > 0 && cycleDischargesUsed === 0) {
+      active = 'discharge';
+    } else if (
+      basicaCount >= varietyBasicaThreshold() &&
+      sensorialCount === 0 &&
+      thoughts >= neuronCost('sensorial', sensorialCount)
+    ) {
+      active = 'variety';
+    }
+  } else if (basicaCount === 0 && thoughts >= neuronCost('basica', 0)) {
+    // Post-prestige "buy first neuron" hint — PRESTIGE_RESET zeroes every
+    // neuron count while the Momentum Bonus gives starting thoughts. New
+    // players get stuck on "why isn't my rate going up?" without this cue.
+    // Added Sprint 4c Phase 4c.6.5 after Nico's playtest feedback.
     active = 'buy';
-  } else if (dischargeCharges > 0 && cycleDischargesUsed === 0) {
-    active = 'discharge';
-  } else if (
-    basicaCount >= varietyBasicaThreshold() &&
-    sensorialCount === 0 &&
-    thoughts >= neuronCost('sensorial', sensorialCount)
-  ) {
-    active = 'variety';
   }
 
   if (active === null) return null;

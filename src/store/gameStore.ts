@@ -204,9 +204,17 @@ export function createDefaultState(): GameState {
  * setActiveTab at the end, but not modify existing state shape".
  */
 export type TabId = 'mind' | 'neurons' | 'upgrades' | 'regions';
+export type MindSubtabId = 'home' | 'patterns' | 'archetypes' | 'diary' | 'achievements' | 'resonance';
 
 export interface UIState {
   activeTab: TabId;
+  /**
+   * Current Mind-tab subtab. Lifted from React-local (MindPanel) to the store
+   * in Sprint 4c Phase 4c.6.5 so sibling HUD components (DischargeButton,
+   * TutorialHints, FragmentOverlay) can gate on it. Resets to 'home' when
+   * `activeTab` changes to 'mind' (default first-open behavior).
+   */
+  activeMindSubtab: MindSubtabId;
   /**
    * Undo toast for expensive purchases (UI-4, §24 Sprint 3). Null when no
    * toast active. UI-local — never persisted (transient 3s window). Set by
@@ -242,6 +250,8 @@ export interface GameStoreActions {
   onTap: (nowTimestamp: number) => void;
   /** Sprint 2 Phase 5: UI-local tab selection. Default 'mind' per UI_MOCKUPS Screen 1. */
   setActiveTab: (tab: TabId) => void;
+  /** Sprint 4c Phase 4c.6.5: Mind subtab selector. Lets sibling HUD components gate visibility. */
+  setActiveMindSubtab: (subtab: MindSubtabId) => void;
   /** Sprint 2 Phase 6: GDPR analytics opt-in. Writes GameState.analyticsConsent. */
   setAnalyticsConsent: (consent: boolean) => void;
   /**
@@ -305,6 +315,7 @@ export interface GameStoreActions {
 export const useGameStore = create<GameState & UIState & GameStoreActions>((set, get) => ({
   ...createDefaultState(),
   activeTab: 'mind',
+  activeMindSubtab: 'home',
   undoToast: null,
   antiSpamActive: false,
   initSessionTimestamps: (nowTimestamp) => {
@@ -319,7 +330,7 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
       return updates;
     });
   },
-  reset: () => set(() => ({ ...createDefaultState(), activeTab: 'mind' as TabId, undoToast: null, antiSpamActive: false })),
+  reset: () => set(() => ({ ...createDefaultState(), activeTab: 'mind' as TabId, activeMindSubtab: 'home' as MindSubtabId, undoToast: null, antiSpamActive: false })),
   loadFromSave: async () => {
     const loaded = await loadGame();
     if (loaded === null) return false;
@@ -333,15 +344,17 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
     // `antiSpamActive` are all transient per session; actions are dropped by
     // JSON.stringify naturally. Keeps the persisted payload at exactly
     // 110 GameState fields per §32 invariant.
-    const { activeTab: _a, undoToast: _u, antiSpamActive: _s, ...rest } = get();
+    const { activeTab: _a, activeMindSubtab: _m, undoToast: _u, antiSpamActive: _s, ...rest } = get();
     void _a;
+    void _m;
     void _u;
     void _s;
     await saveGame(rest as GameState);
   },
   onTap: (nowTimestamp) =>
     set((state) => applyTap(state, state.antiSpamActive, nowTimestamp)),
-  setActiveTab: (tab) => set({ activeTab: tab }),
+  setActiveTab: (tab) => set({ activeTab: tab, activeMindSubtab: 'home' }),
+  setActiveMindSubtab: (subtab) => set({ activeMindSubtab: subtab }),
   setAnalyticsConsent: (consent) => set({ analyticsConsent: consent }),
   buyNeuron: (type, nowTimestamp) => {
     const result = tryBuyNeuron(get(), type, nowTimestamp);

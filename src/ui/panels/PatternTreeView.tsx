@@ -84,6 +84,22 @@ function TreeHeader({ totalPatterns }: { totalPatterns: number }) {
       <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', marginTop: 'var(--spacing-1)' /* CONST-OK: CSS custom property ref */ }}>
         {totalPatterns} / {SYNAPSE_CONSTANTS.patternTreeSize} {t('mind_subtabs.patterns_progress')}
       </div>
+      {/* Pattern Tree explanation — fills the content gap Nico flagged during
+          playtest. Previously the grid had no in-game explanation of what
+          patterns DO or what decision nodes are. */}
+      <div
+        data-testid="pattern-tree-explain"
+        style={{
+          fontSize: 'var(--text-xs)',
+          color: 'var(--color-text-secondary)',
+          marginTop: 'var(--spacing-2)' /* CONST-OK: CSS custom property ref */,
+          lineHeight: 1.5 /* CONST-OK: CSS readability idiom */,
+          opacity: 0.85 /* CONST-OK: CSS secondary-info opacity */,
+          padding: '0 var(--spacing-3)' /* CONST-OK: CSS custom property ref */,
+        }}
+      >
+        {t('mind_subtabs.patterns_explain')}
+      </div>
     </div>
   );
 }

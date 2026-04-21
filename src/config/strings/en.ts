@@ -13,6 +13,7 @@ export const en = {
     // counter so the player always understands what each number means.
     connection_chip: '+5% per pair of different neuron types owned',
     awakening_progress: 'to Awakening',
+    memories_label: 'memories',
   },
   hud: {
     thoughts_label: 'thoughts',
@@ -106,6 +107,7 @@ export const en = {
     resonance_placeholder: 'Unlocks in Sprint 8b',
     patterns_title: 'Pattern Tree',
     patterns_progress: 'patterns',
+    patterns_explain: 'Every prestige earns 3 patterns. Each gives +2 thoughts/sec permanent, and +4% cycle production per pattern earned this cycle (cap ×1.5). Squares at 6 / 15 / 24 / 36 / 48 are permanent A/B decisions.',
     reset_button: 'Reset All Decisions',
     reset_confirm_1_title: 'Reset Pattern Decisions?',
     reset_confirm_1_body: 'This costs 1000 Resonance and clears every decision locked in so far. You can pick them again as patterns are re-earned.',

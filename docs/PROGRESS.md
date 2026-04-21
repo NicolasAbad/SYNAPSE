@@ -6,8 +6,8 @@
 
 ## Current status
 
-**Phase:** Sprint 4c Phase 4c.6 CLOSED — pre-playtest visual hotfix + gap-fill audit. 7 issues addressed: cost flooring (CODE-5), z-index / overlay gating, MindPanel subtab layout, Spanish→English region names, upgrade effect descriptions, ConnectionChip explanation, progress-to-Awakening indicator. All caught by Playwright smoke test + screenshot review; unit tests couldn't surface them (layout composition, not component logic).
-**Last updated:** 2026-04-21 after Sprint 4c Phase 4c.6 close.
+**Phase:** Sprint 4c Phase 4c.6.5 CLOSED — second playtest-feedback pass. Added post-prestige "buy first neuron" hint (fires outside tutorial cycle), Pattern Tree in-game explanation, persistent HUD Memories counter (hidden at 0), and stricter gating of DischargeButton / TutorialHints / FragmentOverlay to `home` subtab only. Subtab state lifted from React-local to Zustand (`UIState.activeMindSubtab`) so sibling HUD components can gate on it.
+**Last updated:** 2026-04-21 after Sprint 4c Phase 4c.6.5 close.
 **Active sprint:** Buffer 1 (2 days, MANDATORY per SCHED-1) — Prestige Integration. Re-run full 110-field assertion suite + PRESTIGE_RESET integrity tests; simulate 5-10 manual prestige cycles; verify Focus Persistente 25% edge case on device. Any bugs → fixed here, not pushed into Sprint 5.
 **Next action:** Run the mandatory Sprint 4c human playtest (blind-play P0→P4, see PLAYTEST-REQUIRED block below). Visual bugs are now fixed; playtest should focus on feel + pacing + mechanic comprehension, not rendering. If times land in the 7-9 min TUTOR-1 window, enter Buffer 1. If P1 > 10 min or P2 > 8 min, retune `tutorialThreshold` or boost tap before Buffer 1. Then Sprint 5 (Mutations + Pathways + Regions).
 
@@ -969,6 +969,31 @@ Sprint 11a TODO for `ALL_RULE_IDS` constant must include all 16 (not 13 as state
 ---
 
 ## Session log
+
+### 2026-04-21 — Sprint 4c Phase 4c.6.5: second playtest pass (post-prestige hint + Pattern Tree explain + Memories HUD + subtab gating)
+
+**Scope:** Follow-up to Phase 4c.6 after Nico identified 4 issues during hands-on play:
+
+1. **Post-prestige "empiezo con muchos thoughts, no aumenta, sin neurona"** — confirmed BY DESIGN per GDD §33 PRESTIGE_RESET (neurons reset to 0, Momentum gives starting thoughts). Added a tutorial-cycle-independent "buy first neuron" hint: fires whenever `basicaCount === 0 && thoughts >= cost && activeTab === 'mind' && activeMindSubtab === 'home'`. Dismisses when the player buys.
+
+2. **Discharge button on non-home Mind subtabs** — previous fix gated on `activeTab === 'mind'` only; DISCHARGE still overlapped PatternTreeView's "Reset All Decisions". Lifted Mind subtab state from React-local (MindPanel `useState`) to Zustand (`UIState.activeMindSubtab` + `setActiveMindSubtab` action, stripped from save payload alongside `activeTab`). DischargeButton + TutorialHints + FragmentOverlay now additionally gate on `activeMindSubtab === 'home'`.
+
+3. **Pattern Tree had no in-game explanation (GENUINE GAP)** — added `mind_subtabs.patterns_explain` rendered in PatternTreeView header: "Every prestige earns 3 patterns. Each gives +2 thoughts/sec permanent, and +4% cycle production per pattern earned this cycle (cap ×1.5). Squares at 6 / 15 / 24 / 36 / 48 are permanent A/B decisions."
+
+4. **Memorias not displayed in HUD (GENUINE GAP)** — GDD §29 HUD layout omits the Memorias counter. Only Awakening screen shows them. New `MemoriesCounter` component in left column below ThoughtsCounter; hidden when `memories <= 0` (pre-first-prestige).
+
+**Design notes:**
+- `setActiveTab(tab)` now resets `activeMindSubtab` to 'home' — standard first-open UX when switching main tabs.
+- Both strip lists updated (store `saveToStorage` action + `trySave` scheduler) with `activeMindSubtab`. Saved payload remains 110 fields (§32 invariant holds).
+
+**Verification (all gates green):**
+- `npm run typecheck` — 0. `npm run lint` — 0. Gates 4/4 PASS, ratio 0.82.
+- `npm test` — 927 passed / 43 skipped / 0 failing.
+- Playwright smoke test — 0 errors. Patterns subtab now clean (no DISCHARGE overlap; tree explanation visible).
+
+**Files touched (9):** `src/store/gameStore.ts`, `src/store/saveScheduler.ts`, `src/ui/panels/MindPanel.tsx` (store-backed subtab), `src/ui/panels/PatternTreeView.tsx` (+ explain), `src/ui/hud/DischargeButton.tsx` + `src/ui/modals/TutorialHints.tsx` + `src/ui/modals/FragmentOverlay.tsx` (subtab gate), `src/ui/modals/TutorialHints.tsx` (post-prestige hint), `src/ui/hud/MemoriesCounter.tsx` (new), `src/ui/hud/HUD.tsx` (mount), `src/config/strings/en.ts` (+3 strings).
+
+**OPEN QUESTION for Nico:** Is this the behavior you want for Discharge button? Current: visible ONLY on Mind/home. Alternative: visible on any Mind subtab. Let me know if you want to broaden.
 
 ### 2026-04-21 — Sprint 4c Phase 4c.6: pre-playtest hotfix + gap-fill
 

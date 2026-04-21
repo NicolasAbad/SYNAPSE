@@ -25,7 +25,9 @@ export const FragmentOverlay = memo(function FragmentOverlay() {
   // Fragment auto-dismisses after narrativeFragmentDisplayMs (4s), but the
   // player might open a tab during those 4s and the overlay covers panel
   // content (audit bug).
+  // Phase 4c.6.5 — also hide on non-home Mind subtabs.
   const activeTab = useGameStore((s) => s.activeTab);
+  const activeMindSubtab = useGameStore((s) => s.activeMindSubtab);
   const [phase, setPhase] = useState<Phase>('idle');
   const [shownOnce, setShownOnce] = useState(false);
 
@@ -63,7 +65,7 @@ export const FragmentOverlay = memo(function FragmentOverlay() {
   }, [phase]);
 
   if (phase === 'idle' || phase === 'done' || !isTutorialCycle) return null;
-  if (activeTab !== 'mind') return null;
+  if (activeTab !== 'mind' || activeMindSubtab !== 'home') return null;
 
   // Visible while holding; 0 during fade-out. Fade-in relies on CSS transition
   // — rendered opacity is 1 but the CSS transition duration animates from 0.

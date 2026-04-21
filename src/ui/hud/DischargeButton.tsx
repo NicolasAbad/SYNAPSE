@@ -15,9 +15,12 @@ export const DischargeButton = memo(function DischargeButton() {
   // Sprint 4c Phase 4c.6 — hide Discharge button when a non-Mind panel is
   // open. The overlay panel covers the canvas area; the Discharge button
   // previously leaked through and covered panel content (audit bug).
+  // Phase 4c.6.5 — also hide on non-home Mind subtabs (Nico playtest feedback:
+  // DISCHARGE overlapped PatternTreeView's Reset button).
   const activeTab = useGameStore((s) => s.activeTab);
+  const activeMindSubtab = useGameStore((s) => s.activeMindSubtab);
   const enabled = charges > 0;
-  if (activeTab !== 'mind') return null;
+  if (activeTab !== 'mind' || activeMindSubtab !== 'home') return null;
 
   const onTap = () => {
     if (!enabled) return;
