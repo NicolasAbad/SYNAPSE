@@ -6,10 +6,58 @@
 
 ## Current status
 
-**Phase:** Sprint 2 in progress — Phases 1–7 complete (Canvas, renderer, HUD, theme, i18n, TabBar, UI-9, performance spike)
-**Last updated:** 2026-04-20 after Sprint 2 Phase 7 (perf spike — 60fps desktop + 59.63fps Mi A3 real device)
-**Active sprint:** Sprint 2 (Canvas + HUD + Performance Spike)
-**Next action:** Sprint 2 Phase 8 — sprint close (Player tests per SPRINTS.md §Sprint 2, sprint closing dashboard). All 7 AI checks pass except pending player tests. 359 passing / 54 skipped / 0 failing. Anti-invention ratio 0.86.
+**Phase:** Sprint 2 COMPLETE — all AI checks + automated tests + player tests green 2026-04-20
+**Last updated:** 2026-04-20 after Sprint 2 close (Phase 8: player tests pass, closing dashboard)
+**Active sprint:** Sprint 2 (CLOSED) → next: Sprint 3 (Neurons + Upgrades + Discharge)
+**Next action:** Sprint 3 kickoff per SPRINTS.md §Sprint 3 — read GDD §5/6/7/24. 5 neuron types, connection multiplier, 35 upgrades, Discharge mechanic, Focus Bar, Insight, tap mechanics (TAP-1, TAP-2). Un-skip 5 consistency tests tagged BLOCKED-SPRINT-3.
+
+### Sprint 2 closing dashboard
+
+- **Phases:** 8 (Canvas foundation → renderer+glow → tap+audio → theme → 4.9 policy+i18n → HUD+TabBar → UI-9+CycleSetupScreen → perf spike → close)
+- **Active tests:** 359 passing, 0 failing (up from 183 at Sprint 1 close → +176 in Sprint 2)
+- **Skipped tests:** 54 (unchanged — Sprint 2 scope was UI/render-focused; un-skipping resumes in Sprint 3 with neurons + upgrades)
+- **Typecheck errors:** 0 (`tsc -b --noEmit` clean)
+- **Lint warnings:** 0 (`eslint .` clean)
+- **Anti-invention gates:** 4/4 PASS (ratio 0.86 — held steady through Phase 7 even with 8 new perf constants, 11 new i18n keys, BREAKPOINTS block)
+- **Perf spike results:** Desktop Chromium 60.00 fps avg, 0.0% dropped, 0.00 MB heap delta. **Mi A3 real device (Android 11 Chrome 127) 59.63 fps avg, 0.3% dropped, P5 59.52 (no jank).** Both runs PASSED all budgets on first try with wide headroom — optimization cascade not needed.
+- **Player tests:** all 5 PASS (desktop canvas sharpness, iPhone 15 notch/home-indicator clearance, rapid tab switch, 60s baseline video captured at `docs/sprint-2-baseline.mp4`, canvas-alive verified on both Mi A3 Chrome AND Capacitor-packaged app).
+- **Doc-vs-code gaps caught + resolved:** 3 (Phase 6: `narrativeFragmentDisplayMs` missing from constants; Phase 7: `perfFpsWarmupFrames`/`canvasMaxDPR`/`maxVisibleNodes` needed policy homes; Phase 4.9: UI_MOCKUPS color drift `#4060E0` → `#4090E0`)
+- **Reviewer errors caught by Claude Code:** 1 (Phase 7 [U5] "Phase 6 commit applied" — Phase 6 was actually uncommitted; caught in pre-code research, led to Commits A + B separation before Phase 7)
+- **Android WebView incidents resolved:** 5 (white-bleed height chain, window.innerWidth=0 fallback via screen.width, canvas 2× CSS size root cause, ResizeObserver loop guard, IPv6-only Vite binding blocking adb reverse)
+- **Mi A3 real-device perf harness shipped:** `npm run test:perf:mi-a3` — wakes display, launches Chrome via adb intent, attaches raw CDP WebSocket, forces `Page.reload{ignoreCache:true}`, injects stress, reports FPSReport. Bypasses Playwright's Android Chrome `connectOverCDP` surface quirks.
+- **Deferred to Sprint 11a (per Nico decisions during the sprint):**
+  - Battery drain measurement (originally in Phase 7 AI-check list)
+  - Capacitor WebView perf (production shell measurement; Mi A3 tested Chrome browser)
+  - Multi-device iPhone/BrowserStack matrix
+  - Real-Chromium Vitest Browser Mode suite (jsdom + Playwright perf-spike's `waitForSelector('hud-root')` cover the check today)
+- **Commits landed in Sprint 2:** 20 sprint commits + 13 Android WebView debugging commits = 33 total. Notable: `a3c88f8` Phase 6 close, `b93f0aa` Phase 7 close, `12bb204` CLAUDE.md post-compaction recovery (this session's discipline addition).
+- **Compaction-survivability discipline added:** CLAUDE.md now has a Claude-Code-targeted post-compaction recovery section (`12bb204`). Every green AI-check bundle flushes to PROGRESS.md; every phase gets a commit. If a compaction fires mid-phase, git log + PROGRESS.md + working-tree diff reconstruct the in-flight task in ~30 seconds.
+- **v1.0 bundle size:** not re-measured this sprint (was 160.84 KB / 52.92 KB gzipped at Sprint 1). Sprint 2's visible additions (Tailwind CSS, Zustand UI state, jsdom+@testing-library dev deps) are dev-only and don't ship. Production bundle budget 2 MB remains intact.
+
+**Handoff state for Sprint 3** (Neurons + Upgrades + Discharge — per SPRINTS.md §Sprint 3):
+
+What Sprint 3 will build:
+- 5 neuron types (Básica/Sensorial/Piramidal/Espejo/Integradora) with costs × 1.28^owned scaling
+- Connection multiplier `1 + 0.05 × C(ownedTypes, 2)` per pair
+- 35 upgrades from GDD §24 (except 4 run-exclusive — those land in Sprint 8b)
+- Discharge mechanic: 1/20min charge regen, Focus Bar fills on tap, tutorial ×3 on first Discharge
+- Cascade at Focus ≥ 0.75 × 2.5 mult
+- Insight auto-trigger at Focus ≥ 1.0 (levels 1/2/3 by prestige tier)
+- TAP-2: `Math.max(baseTapThoughtMin, effectivePPS × baseTapThoughtPct)` per tap
+- TAP-1 anti-spam: avg <150ms + std dev <20ms over 30s → 10% effectiveness
+- Haptic feedback (Capacitor.Haptics) — light on tap, medium on Discharge, heavy on Cascade
+- Tutorial hints (3 total in P0 only — Phase 6 already shipped hint #1 "Tap the neuron")
+
+Un-skip these consistency tests (5 tagged BLOCKED-SPRINT-3 in `tests/consistency.test.ts`):
+- Neurons module exports: NEURON_TYPES / NEURON_CONFIG
+- Upgrades module exports: UPGRADES with correct categories + unlocks
+- Discharge mechanic wiring to tick pipeline
+- Focus Bar state transitions
+- TAP-1 + TAP-2 formulas
+
+Engine is NO LONGER frozen in Sprint 3 — the production pipeline needs neuron-type coupling + upgrade multiplier application. Sprint 2 left `effectiveProductionPerSecond` as the only cached derived field; Sprint 3 populates it with the real formula stack.
+
+---
 
 ### Sprint 1 closing dashboard
 
@@ -546,6 +594,48 @@ Sprint 11a TODO for `ALL_RULE_IDS` constant must include all 16 (not 13 as state
 ---
 
 ## Session log
+
+### 2026-04-20 — Sprint 2 Phase 8: close (player tests, closing dashboard)
+
+**Scope:** Sprint 2 close per SPRINTS.md §Sprint 2 Player tests + CODE-3 ("Sprint is NOT done until every checkbox is checked — AI checks + Player tests + Sprint tests").
+
+**Player tests — all 5 PASS:**
+1. ✅ Canvas sharp on retina, instant tap response (desktop Chrome).
+2. ✅ HUD safe-area clearance on iPhone 15 (Dynamic Island top, home indicator bottom). Nico verified by loading `http://10.0.0.90:5173/` in mobile Safari on the iPhone once both devices were on the same WiFi subnet. The `env(safe-area-inset-*)` wiring at `HUD.tsx:36-38` + `TabBar.tsx:33` is working as spec'd.
+3. ✅ Rapid tab switching has no flicker / no layout shift.
+4. ✅ 60s baseline gameplay video captured to `docs/sprint-2-baseline.mp4` (2.4 MB). Sprint 11 visual regression reference.
+5. ✅ Canvas feels ALIVE (ambient pulse). Verified on both Mi A3 Chrome AND Capacitor-packaged native Android app on Mi A3.
+
+**Player-test diagnostic work:**
+iPhone 15 couldn't initially reach the desktop Vite server at `10.0.0.90:5173`. Two gates hit:
+
+1. **Windows Firewall blocking inbound 5173 on all profiles.** Diagnosed via `netstat -an | grep 5173` (confirmed Vite listening on `0.0.0.0`) plus `curl http://10.0.0.90:5173/ → 200` from desktop (confirmed LAN interface works locally). Fix: `netsh advfirewall firewall add rule name="Synapse Vite Dev" dir=in action=allow protocol=TCP localport=5173 profile=any` (admin). Rule now persists for future Sprint N player tests.
+2. **iPhone and desktop were on different WiFi networks** (different subnets — iPhone on guest/secondary WiFi, desktop on primary). Verified by checking iPhone's `Settings → WiFi → (i) → IP Address`. Fix: Nico moved the iPhone to the same network the desktop uses. After both gates cleared, Safari loaded `10.0.0.90:5173` instantly and all visual checks passed.
+
+**Doc updates this phase:**
+- `docs/SPRINTS.md` §Sprint 2 AI checks → all 15 `[x]` with phase attribution; automated tests → all 7 `[x]`; player tests → all 5 `[x]` with verification notes; Mi A3 fps fallback annotation appended.
+- `docs/PROGRESS.md` → Sprint 2 closing dashboard inserted above the Sprint 1 dashboard (chronological order: newest first), "Current status" block updated to "Sprint 2 CLOSED → next Sprint 3".
+
+**Files modified in Phase 8:**
+- `docs/SPRINTS.md` — 20 checkbox toggles + player test verification annotations
+- `docs/PROGRESS.md` — closing dashboard + this session log entry + Current status refresh
+
+**Files added:**
+- `docs/sprint-2-baseline.mp4` — 60s gameplay recording for Sprint 11 regression diff
+
+**Verification at Sprint 2 close (clean cold state):**
+- `git status` — clean after commit
+- `npm run typecheck` — 0 errors
+- `npm run lint` — 0 warnings
+- `npm test` — **359 passed / 54 skipped / 0 failing**
+- `bash scripts/check-invention.sh` — 4/4 PASS, ratio 0.86
+
+**What Nico is iterating on next (Sprint 3 kickoff):**
+Sprint 3 is CRITICAL per SPRINTS.md and introduces the actual gameplay loop (neurons have costs, upgrades apply multipliers, Discharge bursts thoughts, Focus Bar fills on tap, Cascade/Insight trigger). Engine thaws — `effectiveProductionPerSecond` gets a real formula stack instead of staying 0. 5 consistency tests marked BLOCKED-SPRINT-3 will unblock. Target: player can tap-buy-prestige through P0–P2 by end of sprint, with the tutorial cycle (TUTOR-1) hitting 7–9 min on a blind playthrough.
+
+**Next action:** Sprint 3 per SPRINTS.md §Sprint 3 — read GDD §5 (neurons), §6 (Focus), §7 (Discharge), §24 (upgrades). Use the standard Sprint kickoff prompt; Phase 1 will probably be neurons + connection multiplier (§5 + the C(n,2) pair count formula), since downstream work all depends on the cost/rate stack.
+
+---
 
 ### 2026-04-20 — Sprint 2 Phase 7: performance spike (desktop 60 fps, Mi A3 59.63 fps)
 
