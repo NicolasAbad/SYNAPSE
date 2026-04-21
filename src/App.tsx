@@ -6,7 +6,7 @@ import { NeuronCanvas } from './ui/canvas/NeuronCanvas';
 import { HUD } from './ui/hud/HUD';
 import { SplashScreen } from './ui/modals/SplashScreen';
 import { GdprModal, isEU } from './ui/modals/GdprModal';
-import { TutorialHint } from './ui/modals/TutorialHint';
+import { TutorialHints } from './ui/modals/TutorialHints';
 import { FragmentOverlay } from './ui/modals/FragmentOverlay';
 
 export function App() {
@@ -50,7 +50,7 @@ export function App() {
     >
       <NeuronCanvas />
       <HUD />
-      <TutorialHint />
+      <TutorialHints />
       <FragmentOverlay />
       {!splashDone && <SplashScreen onComplete={() => setSplashDone(true)} />}
       {splashDone && isEU && !gdprDone && <GdprModal onComplete={() => setGdprDone(true)} />}

@@ -59,6 +59,9 @@ export const en = {
   },
   tutorial: {
     hint_tap: 'Tap the neuron',
+    hint_buy: 'Buy your first neuron',
+    hint_discharge: 'Use Discharge',
+    hint_variety: 'Buy a different type for +5% production',
   },
   narrative: {
     base_01: "A pulse. Then another. Something is beginning that doesn't yet know what it is.",
