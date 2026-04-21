@@ -12,7 +12,12 @@ import { hapticHeavy, hapticMedium } from '../haptics';
  */
 export const DischargeButton = memo(function DischargeButton() {
   const charges = useGameStore((s) => s.dischargeCharges);
+  // Sprint 4c Phase 4c.6 — hide Discharge button when a non-Mind panel is
+  // open. The overlay panel covers the canvas area; the Discharge button
+  // previously leaked through and covered panel content (audit bug).
+  const activeTab = useGameStore((s) => s.activeTab);
   const enabled = charges > 0;
+  if (activeTab !== 'mind') return null;
 
   const onTap = () => {
     if (!enabled) return;

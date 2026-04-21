@@ -2,7 +2,7 @@ import { memo, useCallback, useState } from 'react';
 import { useGameStore } from '../../store/gameStore';
 import { SYNAPSE_CONSTANTS } from '../../config/constants';
 import { t } from '../../config/strings';
-import { formatNumber } from '../util/formatNumber';
+import { formatCurrency } from '../util/formatNumber';
 import { ConfirmModal } from '../modals/ConfirmModal';
 import { HUD } from '../tokens';
 
@@ -198,7 +198,7 @@ function ResetRow({
         {t('mind_subtabs.reset_button')}
       </button>
       <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)' }}>
-        {formatNumber(resonance)} / {formatNumber(cost)} {disabled ? t('mind_subtabs.reset_blocked_tooltip') : ''}
+        {formatCurrency(resonance)} / {formatCurrency(cost)} {disabled ? t('mind_subtabs.reset_blocked_tooltip') : ''}
       </div>
     </div>
   );

@@ -7,6 +7,13 @@
 // consume these; Sprint 3+ extends as new features ship.
 
 export const en = {
+  hud_explain: {
+    // Sprint 4c Phase 4c.6 — audit fix. Inline explanations for HUD elements
+    // that previously had zero context. Shown below the relevant HUD chip /
+    // counter so the player always understands what each number means.
+    connection_chip: '+5% per pair of different neuron types owned',
+    awakening_progress: 'to Awakening',
+  },
   hud: {
     thoughts_label: 'thoughts',
     rate_prefix: '+',
@@ -130,7 +137,7 @@ export const en = {
       section_locked: 'Locked',
     },
     regions: {
-      shell_description: 'Sprint 5 builds the brain-region panel (Hipocampo, Corteza Prefrontal, Sistema Límbico, Corteza Visual, Área de Broca).',
+      shell_description: 'Sprint 5 builds the brain-region panel (Hippocampus, Prefrontal Cortex, Limbic System, Visual Cortex, Broca\'s Area).',
     },
   },
   narrative: {
@@ -191,6 +198,55 @@ export const en = {
     resonancia_acumulada: 'Accumulated Resonance',
     sintesis_cognitiva: 'Cognitive Synthesis',
     focus_persistente: 'Persistent Focus',
+  },
+  // Upgrade effect descriptions — Sprint 4c Phase 4c.6 (pre-playtest audit
+  // flagged missing effect text as a usability gap). Sourced from GDD §24 +
+  // §16 effect columns. Short player-friendly wording — exact formulas live
+  // in the GDD. Every upgrade ID has a `{id}_desc` entry.
+  upgrades_desc: {
+    // Tap (3)
+    potencial_sinaptico: 'Tap gives 10% of rate instead of 5%',
+    mielina: 'Tap also fills +2% Focus',
+    dopamina: 'Tap bonus ×1.5',
+    // Focus (1)
+    concentracion_profunda: 'Focus fills ×2; Insight lasts +5s',
+    // Synapsis / Discharge (5)
+    descarga_neural: '+1 max Discharge charge',
+    amplificador_de_disparo: 'Discharge bonus ×1.5',
+    red_alta_velocidad: 'Charges accumulate 25% faster',
+    cascada_profunda: 'Cascade multiplier doubled',
+    sincronizacion_total: 'Cascade refunds +18% Focus',
+    // Neurons (8)
+    red_neuronal_densa: 'All neurons rate ×1.25',
+    receptores_ampa: 'Basic neurons ×2',
+    transduccion_sensorial: 'Sensory neurons ×3',
+    axones_proyeccion: 'Pyramidal neurons ×3',
+    sincronia_neural: 'Connection multipliers ×2',
+    ltp_potenciacion_larga: 'All neurons ×1.5',
+    espejo_resonantes: 'Mirror neurons ×4',
+    neurogenesis: 'All neurons ×1.10',
+    // Regions (5, Memorias)
+    consolidacion_memoria: 'Basic neurons ×3; Memories +50%',
+    regulacion_emocional: 'Offline efficiency ×2',
+    procesamiento_visual: 'Highlights best upgrade',
+    funciones_ejecutivas: 'Thought-cost upgrades −20%',
+    amplitud_banda: 'All region upgrades +50%',
+    // Consciousness & Offline (4)
+    sueno_rem: 'Offline cap 4h → 8h',
+    umbral_consciencia: 'Consciousness bar fills ×1.3',
+    ritmo_circadiano: 'Offline efficiency ×1.5 + auto-charge',
+    hiperconciencia: 'Consciousness bar fills ×2',
+    // Meta (3)
+    retroalimentacion_positiva: '×2 all production',
+    emergencia_cognitiva: '×1.5 per 5 upgrades owned (cap ×5)',
+    singularidad: '×1.01 per prestige (stacks)',
+    // Tier P10 (6)
+    convergencia_sinaptica: '+1.5% per lifetime prestige (cap +40%)',
+    consciencia_distribuida: 'Offline cap 8h → 12h',
+    potencial_latente: 'Discharge +1,000 × prestige count',
+    resonancia_acumulada: 'First post-offline Discharge +5%/hr (cap +100%)',
+    sintesis_cognitiva: 'Pattern flat bonus ×2',
+    focus_persistente: 'Keep 25% Focus across prestige',
   },
   // Sprint 3+ adds keys as new features ship — do NOT preload
   // empty keys for future features (CODE-1 anti-pattern is

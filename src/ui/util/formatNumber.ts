@@ -10,6 +10,10 @@
  * Values above 999Q show "999Q+" (prevents 4-digit suffix displays
  * that would overflow the HUD counter width).
  *
+ * Preserves fractions below 1000 — used for RATE displays (e.g. "0.5/s").
+ * For CURRENCY displays (thoughts/memories/costs), use `formatCurrency`
+ * instead (CODE-5 compliance: integer-floored).
+ *
  * SPRINTS.md §Sprint 2 test expectations:
  *   formatNumber(1234)    === "1.23K"
  *   formatNumber(1.5e9)   === "1.5B"
@@ -50,4 +54,20 @@ function formatScaled(value: number): string {
 function trimTrailing(s: string): string {
   if (!s.includes('.')) return s;
   return s.replace(/0+$/, '').replace(/\.$/, '');
+}
+
+/**
+ * Currency display — CODE-5 "Math.floor() all displayed numbers" per CLAUDE.md.
+ * Floors the value BEFORE handing to formatNumber so small-value costs show
+ * as integers (cost 12.8 → "12") while large values keep K/M/B/T/Q scaling.
+ *
+ * Use for: thoughts, memories, sparks, purchase costs, refund amounts.
+ * NOT for: production rates (use `formatNumber` — "0.5/s" is correct).
+ *
+ * Sprint 4c Phase 4c.6 — added after blind-playtest audit flagged "12.8" cost
+ * display as reading broken to idle-genre players. `formatNumber` stayed
+ * decimal-preserving for rate displays that legitimately need fractions.
+ */
+export function formatCurrency(n: number): string {
+  return formatNumber(Math.floor(n));
 }

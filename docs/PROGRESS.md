@@ -6,10 +6,10 @@
 
 ## Current status
 
-**Phase:** Sprint 4c CLOSED — Polarity + CycleSetupScreen shipped. Full 5-step post-prestige flow functional P3+. Nico-approved Option A `inhibitoryCascadeThresholdMult` spec resolution wired. ⚠️ **PLAYTEST REQUIRED** (see handoff block below) — Sprint 4c's mandatory human blind-play P0→P4 can't be automated; Nico or a friend to run.
-**Last updated:** 2026-04-21 after Sprint 4c close.
+**Phase:** Sprint 4c Phase 4c.6 CLOSED — pre-playtest visual hotfix + gap-fill audit. 7 issues addressed: cost flooring (CODE-5), z-index / overlay gating, MindPanel subtab layout, Spanish→English region names, upgrade effect descriptions, ConnectionChip explanation, progress-to-Awakening indicator. All caught by Playwright smoke test + screenshot review; unit tests couldn't surface them (layout composition, not component logic).
+**Last updated:** 2026-04-21 after Sprint 4c Phase 4c.6 close.
 **Active sprint:** Buffer 1 (2 days, MANDATORY per SCHED-1) — Prestige Integration. Re-run full 110-field assertion suite + PRESTIGE_RESET integrity tests; simulate 5-10 manual prestige cycles; verify Focus Persistente 25% edge case on device. Any bugs → fixed here, not pushed into Sprint 5.
-**Next action:** Run the mandatory Sprint 4c human playtest (blind-play P0→P4, see PLAYTEST-REQUIRED block). If times land in the 7-9 min TUTOR-1 window, enter Buffer 1. If P1 > 10 min or P2 > 8 min, retune `tutorialThreshold` or boost tap before Buffer 1. Then Sprint 5 (Mutations + Pathways + Regions).
+**Next action:** Run the mandatory Sprint 4c human playtest (blind-play P0→P4, see PLAYTEST-REQUIRED block below). Visual bugs are now fixed; playtest should focus on feel + pacing + mechanic comprehension, not rendering. If times land in the 7-9 min TUTOR-1 window, enter Buffer 1. If P1 > 10 min or P2 > 8 min, retune `tutorialThreshold` or boost tap before Buffer 1. Then Sprint 5 (Mutations + Pathways + Regions).
 
 ### Sprint 4c closing dashboard
 
@@ -969,6 +969,43 @@ Sprint 11a TODO for `ALL_RULE_IDS` constant must include all 16 (not 13 as state
 ---
 
 ## Session log
+
+### 2026-04-21 — Sprint 4c Phase 4c.6: pre-playtest hotfix + gap-fill
+
+**Scope:** Audit-driven hotfix before mandatory playtest. Screenshot review of the Playwright smoke test (`scripts/smoke-playtest.mjs`) surfaced 4 critical visual bugs + 3 genuine content gaps that unit tests had not caught (unit tests exercise component logic; layout composition requires actual rendering).
+
+**7 issues addressed:**
+1. **Cost display flooring (CODE-5 compliance)** — `formatNumber(12.8) === "12.8"` was displaying cost as decimal. New `formatCurrency()` helper floors before formatting; `formatNumber` preserves decimals for rate displays ("0.5/s"). NeuronsPanel, UndoToast, UpgradesPanel, PatternTreeView, AwakeningScreen updated.
+2. **DischargeButton / TutorialHints / FragmentOverlay overlay panels** — all 3 gated on `activeTab === 'mind'`. Panels opened via Neurons/Upgrades/Regions tabs no longer obscured.
+3. **MindPanel subtab bar overlapping HUD thoughts counter** — top offset increased from `spacing-12` (48 px) to `calc(spacing-16 + spacing-8)` = 96 px. Clears the thoughts counter + Discharge charges row.
+4. **MindPanel subtab bar overflow on narrow viewport (420 px)** — `justify-content: flex-start` + `flexShrink: 0` on buttons + tighter padding + hidden scrollbar. 6 subtabs now scroll horizontally instead of being clipped center.
+5. **Spanish region names leaked into i18n** — `panels.regions.shell_description` now lists English names (Hippocampus, Prefrontal Cortex, Limbic System, Visual Cortex, Broca's Area). Phase 4.9 Sprint 2 translation discipline honored.
+6. **Upgrade effect descriptions missing (GENUINE GAP — not in any future sprint)** — 35 new `upgrades_desc.{id}` keys added to en.ts, sourced verbatim from GDD §24 + §16 effect columns. UpgradeCard renders description below name (hidden for locked "???" cards).
+7. **ConnectionChip + progress-to-Awakening context gaps** — ConnectionChip now has an inline explain subtitle "+5% per pair of different neuron types owned" so the `×1.30 conns` display is self-explanatory. ThoughtsCounter gains a `N% to Awakening` progress line — previously players had ZERO progress indicator until the Consciousness Bar unlocked at 50 % threshold (CORE-10), leaving the first half of every cycle feeling blind.
+
+**Playwright smoke test infrastructure shipped** (`scripts/smoke-playtest.mjs`): loads dev server, drives 30 touch-taps on canvas, cycles all 4 tabs, opens a neuron purchase, traverses MindPanel subtabs, captures screenshots + console errors. Caught all 4 critical visual bugs in its first run that 927 unit tests never surfaced. 420 × 820 viewport with `isMobile + hasTouch` matches iPhone SE target. Report in `.playtest-report.json`, screenshots in `.playtest-screens/`.
+
+**Android real-device capability confirmed:** `adb` installed at `C:\Users\abadn\AppData\Local\Android\Sdk\platform-tools\adb.exe`. No device currently connected. When a device is plugged in with USB debugging enabled, the existing `scripts/perf-spike-mi-a3.ts` infrastructure (adb reverse `:5173` + CDP WebSocket attach) can be adapted to mirror the localhost smoke test on a real Android Chrome browser or Capacitor-packaged APK.
+
+**Verification (all gates green):**
+- `npm run typecheck` — 0 errors. `npm run lint` — 0 warnings.
+- `bash scripts/check-invention.sh` — 4/4 PASS, ratio **0.82** (down from 0.84 — 6 Polarity constants now distributed across more UI components, pushing literals +1).
+- `npm test` — **927 passed / 43 skipped / 0 failing** (+4 new `formatCurrency` tests, +1 adjusted ConnectionChip test).
+- Playwright smoke test: 0 errors, all 6 screenshots show clean post-fix layout.
+
+**Files touched (13):**
+- `src/ui/util/formatNumber.ts` (+ `formatCurrency` export)
+- `src/ui/hud/DischargeButton.tsx`, `src/ui/modals/TutorialHints.tsx`, `src/ui/modals/FragmentOverlay.tsx` (activeTab gates)
+- `src/ui/panels/MindPanel.tsx` (subtab bar layout)
+- `src/config/strings/en.ts` (English regions, 35 upgrade descriptions, 2 hud-explain keys)
+- `src/ui/panels/UpgradesPanel.tsx` (render description)
+- `src/ui/hud/ConnectionChip.tsx` (inline explain)
+- `src/ui/hud/ThoughtsCounter.tsx` (progress-to-Awakening subtitle)
+- `src/ui/hud/UndoToast.tsx`, `src/ui/panels/NeuronsPanel.tsx`, `src/ui/panels/PatternTreeView.tsx`, `src/ui/modals/AwakeningScreen.tsx` (formatCurrency usage)
+- New: `scripts/smoke-playtest.mjs` (Playwright smoke test harness)
+- Test: `tests/ui/util/formatNumber.test.ts` (+ formatCurrency block), `tests/ui/hud/ConnectionChip.test.tsx` (adjusted for new subtitle)
+
+**Next:** Run the mandatory Sprint 4c human playtest. All visual bugs fixed; playtest should focus on feel + pacing + mechanic comprehension.
 
 ### 2026-04-21 — Sprint 4c close: Polarity + CycleSetupScreen shipped
 

@@ -1,7 +1,7 @@
 // Tests for src/ui/util/formatNumber.ts — Sprint 2 test checklist items 1-2.
 
 import { describe, expect, test } from 'vitest';
-import { formatNumber } from '../../../src/ui/util/formatNumber';
+import { formatCurrency, formatNumber } from '../../../src/ui/util/formatNumber';
 
 describe('formatNumber — SPRINTS.md explicit examples', () => {
   test('formatNumber(1234) === "1.23K"', () => {
@@ -93,5 +93,34 @@ describe('formatNumber — determinism (no Date.now / Math.random usage)', () =>
     for (let i = 0; i < 100; i++) {
       expect(formatNumber(1234.5678)).toBe('1.23K');
     }
+  });
+});
+
+// Sprint 4c Phase 4c.6 — CODE-5 compliant currency formatter.
+// Flooring was added after blind-playtest audit flagged "12.8" cost display
+// as reading broken to idle-genre players.
+describe('formatCurrency — CODE-5 flooring for currency displays', () => {
+  test('floors decimal costs below 1K (12.8 → "12")', () => {
+    expect(formatCurrency(12.8)).toBe('12');
+    expect(formatCurrency(16.384)).toBe('16');
+    expect(formatCurrency(10)).toBe('10');
+    expect(formatCurrency(0.5)).toBe('0');
+    expect(formatCurrency(0.99)).toBe('0');
+  });
+
+  test('preserves scaled suffix for large values (1.5K and above)', () => {
+    expect(formatCurrency(1234)).toBe('1.23K');
+    expect(formatCurrency(1_500_000)).toBe('1.5M');
+    expect(formatCurrency(2.5e9)).toBe('2.5B');
+  });
+
+  test('0 stays "0"', () => {
+    expect(formatCurrency(0)).toBe('0');
+  });
+
+  test('negative values floor toward negative infinity', () => {
+    // Math.floor(-12.8) === -13, so formatCurrency(-12.8) === "-13".
+    expect(formatCurrency(-12.8)).toBe('-13');
+    expect(formatCurrency(-10)).toBe('-10');
   });
 });

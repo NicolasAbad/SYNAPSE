@@ -47,7 +47,10 @@ describe('ConnectionChip — Decision B visibility gate', () => {
       connectionMult: 1.5,
     });
     const { getByTestId } = render(<ConnectionChip />);
-    expect(getByTestId('hud-connection-chip').textContent).toBe('×1.50 conns');
+    // Chip text includes the inline "+5% per pair" explain subtitle shipped
+    // in Sprint 4c Phase 4c.6 — assert the scaled value is present.
+    expect(getByTestId('hud-connection-chip').textContent).toContain('×1.50 conns');
+    expect(getByTestId('hud-connection-chip-explain')).toBeTruthy();
   });
 
   test('hides again if counts drop (e.g. after undo)', () => {

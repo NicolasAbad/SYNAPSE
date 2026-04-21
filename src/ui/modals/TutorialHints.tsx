@@ -57,6 +57,10 @@ export const TutorialHints = memo(function TutorialHints() {
   const sensorialCount = useGameStore((s) => s.neurons.find((n) => n.type === 'sensorial')?.count ?? 0);
   const dischargeCharges = useGameStore((s) => s.dischargeCharges);
   const cycleDischargesUsed = useGameStore((s) => s.cycleDischargesUsed);
+  // Sprint 4c Phase 4c.6 — hide tutorial hint overlay when a non-Mind panel
+  // is open. Hints should only appear over the canvas, not over a management
+  // panel the player intentionally opened (audit bug).
+  const activeTab = useGameStore((s) => s.activeTab);
 
   const [idleTimerFired, setIdleTimerFired] = useState(false);
   const [firstTapDone, setFirstTapDone] = useState(false);
@@ -82,6 +86,7 @@ export const TutorialHints = memo(function TutorialHints() {
   }, [firstTapDone]);
 
   if (!isTutorialCycle) return null;
+  if (activeTab !== 'mind') return null;
 
   let active: HintId | null = null;
   if (idleTimerFired && !firstTapDone) {

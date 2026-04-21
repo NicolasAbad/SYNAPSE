@@ -1,6 +1,6 @@
 import { memo, useEffect } from 'react';
 import { useGameStore } from '../../store/gameStore';
-import { formatNumber } from '../util/formatNumber';
+import { formatCurrency } from '../util/formatNumber';
 import { t } from '../../config/strings';
 
 /**
@@ -57,7 +57,7 @@ export const UndoToast = memo(function UndoToast() {
       }}
     >
       <span data-testid="hud-undo-toast-label">
-        {`${t(prefixKey)} ${t(nameKey)} · −${formatNumber(undoToast.refund)}`}
+        {`${t(prefixKey)} ${t(nameKey)} · −${formatCurrency(undoToast.refund)}`}
       </span>
       <button
         data-testid="hud-undo-toast-button"

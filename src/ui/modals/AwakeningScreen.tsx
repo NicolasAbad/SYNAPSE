@@ -3,7 +3,7 @@ import type { PrestigeOutcome } from '../../engine/prestige';
 import { SYNAPSE_CONSTANTS } from '../../config/constants';
 import { t } from '../../config/strings';
 import { HUD } from '../tokens';
-import { formatNumber } from '../util/formatNumber';
+import { formatCurrency } from '../util/formatNumber';
 
 /**
  * Awakening screen — full-bleed post-prestige summary per GDD §9 / SPRINTS.md
@@ -86,12 +86,12 @@ export const AwakeningScreen = memo(function AwakeningScreen({ outcome, onContin
           <Row label={t('awakening.duration_label')} value={minutesLabel} testid="awakening-screen-duration" />
           <Row
             label={t('awakening.memories_label')}
-            value={`+${formatNumber(outcome.memoriesGained)}`}
+            value={`+${formatCurrency(outcome.memoriesGained)}`}
             testid="awakening-screen-memories"
           />
           <Row
             label={t('awakening.momentum_label')}
-            value={`+${formatNumber(outcome.momentumBonus)} · ${SYNAPSE_CONSTANTS.momentumBonusSeconds}${t('awakening.momentum_suffix_seconds')}`}
+            value={`+${formatCurrency(outcome.momentumBonus)} · ${SYNAPSE_CONSTANTS.momentumBonusSeconds}${t('awakening.momentum_suffix_seconds')}`}
             testid="awakening-screen-momentum"
           />
         </div>

@@ -2,7 +2,7 @@ import { memo, useMemo } from 'react';
 import { useGameStore } from '../../store/gameStore';
 import { UPGRADES } from '../../config/upgrades';
 import { canBuyUpgrade } from '../../store/purchases';
-import { formatNumber } from '../util/formatNumber';
+import { formatCurrency } from '../util/formatNumber';
 import { t } from '../../config/strings';
 import type { GameState } from '../../types/GameState';
 
@@ -172,10 +172,32 @@ function UpgradeCard({ info, onBuy }: { info: ClassifiedUpgrade; onBuy: () => vo
         <div style={{ color: 'var(--color-text-primary)', fontWeight: 'var(--font-weight-semibold)' }}>
           {isLocked ? '???' : name}
         </div>
-        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)' }}>
+        {/* Effect description — audit fix. Previously the card showed only
+            the upgrade name + cost, leaving players guessing what each
+            upgrade did. Hidden for locked (???) rows. */}
+        {!isLocked && (
+          <div
+            data-testid={`panel-upgrades-desc-${info.id}`}
+            style={{
+              fontSize: 'var(--text-xs)',
+              color: 'var(--color-text-secondary)',
+              marginTop: 2, // CONST-OK: tight spacing between title + desc
+            }}
+          >
+            {t(`upgrades_desc.${info.id}`)}
+          </div>
+        )}
+        <div
+          style={{
+            fontSize: 'var(--text-xs)',
+            color: 'var(--color-text-secondary)',
+            marginTop: 2, // CONST-OK: tight spacing
+            fontFamily: 'var(--font-mono)',
+          }}
+        >
           {isLocked
             ? `${t('panels.upgrades.locked_prefix')}${info.unlockPrestige}`
-            : `${formatNumber(info.cost)}${currencySuffix}`}
+            : `${formatCurrency(info.cost)}${currencySuffix}`}
         </div>
       </div>
       {!isLocked ? (

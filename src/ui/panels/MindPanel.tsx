@@ -37,16 +37,25 @@ function MindSubtabBar({ subtab, onChange }: { subtab: MindSubtab; onChange: (s:
       data-testid="mind-subtab-bar"
       style={{
         position: 'absolute',
-        top: 'calc(env(safe-area-inset-top, 0) + var(--spacing-12))', // CONST-OK: CSS custom property ref
-        left: 0, // CONST-OK: CSS full-bleed
-        right: 0, // CONST-OK: CSS full-bleed
+        // Positioned BELOW the HUD thoughts counter + Discharge charges row
+        // (top HUD bar occupies ~100px: spacing-5 + text-3xl + label + progress
+        // subtitle). Max defined spacing var is spacing-16 (64px) — we add
+        // spacing-8 (32px) via calc to reach 96px. Also offset from the left
+        // to clear the thoughts counter column.
+        top: 'calc(env(safe-area-inset-top, 0) + var(--spacing-16) + var(--spacing-8))', // CONST-OK: CSS custom property math — below HUD bar
+        left: 'var(--spacing-4)', // CONST-OK: CSS custom property ref — indent past thoughts column
+        right: 'var(--spacing-4)', // CONST-OK: CSS custom property ref
         display: 'flex',
         flexDirection: 'row',
-        justifyContent: 'center',
-        gap: 'var(--spacing-2)', // CONST-OK: CSS custom property ref
-        padding: 'var(--spacing-2) var(--spacing-4)', // CONST-OK: CSS custom property ref
+        // Sprint 4c Phase 4c.6 — flex-start + overflow-x: auto lets the 6
+        // subtab buttons scroll horizontally on narrow viewports (420 px).
+        // Previously center-justified which clipped edges.
+        justifyContent: 'flex-start',
+        gap: 'var(--spacing-1)', // CONST-OK: CSS custom property ref — tighter gap for fit
+        padding: 'var(--spacing-2) var(--spacing-3)', // CONST-OK: CSS custom property ref
         pointerEvents: 'auto',
         overflowX: 'auto',
+        scrollbarWidth: 'none', // CONST-OK: Firefox hide-scrollbar
         zIndex: 880, // CONST-OK: above HUD, below modals
       }}
     >
@@ -72,7 +81,9 @@ function SubtabButton({
       data-testid={`mind-subtab-${value}`}
       onPointerDown={() => onSelect(value)}
       style={{
-        padding: 'var(--spacing-1) var(--spacing-3)', // CONST-OK: CSS custom property ref
+        // Sprint 4c Phase 4c.6 — tighter padding so 6 buttons fit more comfortably
+        // on 420px-wide viewports (iPhone SE / older Android baseline).
+        padding: 'var(--spacing-1) var(--spacing-2)', // CONST-OK: CSS custom property ref
         background: active ? 'var(--color-primary)' : 'transparent',
         color: active ? 'var(--color-bg-deep)' : 'var(--color-text-secondary)',
         border: '1px solid var(--color-border-subtle)',
@@ -83,6 +94,7 @@ function SubtabButton({
         cursor: 'pointer',
         touchAction: 'manipulation',
         whiteSpace: 'nowrap',
+        flexShrink: 0, // CONST-OK: preserve button width inside the scrollable flex row
       }}
     >
       {t(`mind_subtabs.${value}`)}

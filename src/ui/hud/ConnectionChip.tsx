@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import { useGameStore } from '../../store/gameStore';
+import { t } from '../../config/strings';
 
 /**
  * Connection-multiplier HUD chip (Sprint 3 Phase 5 — Decision B).
@@ -35,6 +36,22 @@ export const ConnectionChip = memo(function ConnectionChip() {
       }}
     >
       {`×${connectionMult.toFixed(2) /* CONST-OK: 2-decimal display precision */} conns`}
+      {/* Inline explanation — audit fix. Previously the chip appeared at
+          first multi-type ownership with no context; new players had no
+          way to learn what the scaled-value text meant. */}
+      <div
+        data-testid="hud-connection-chip-explain"
+        style={{
+          fontSize: 'var(--text-xs)',
+          fontWeight: 'var(--font-weight-regular)',
+          color: 'var(--color-text-secondary)',
+          marginTop: 2, // CONST-OK: tight spacing
+          textAlign: 'right',
+          maxWidth: 180, // CONST-OK: keep caption narrow so it stays right-aligned
+        }}
+      >
+        {t('hud_explain.connection_chip')}
+      </div>
     </div>
   );
 });

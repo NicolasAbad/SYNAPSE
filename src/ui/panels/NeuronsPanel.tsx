@@ -2,7 +2,7 @@ import { memo, useState } from 'react';
 import { useGameStore } from '../../store/gameStore';
 import { NEURON_CONFIG, NEURON_TYPES } from '../../config/neurons';
 import { isNeuronUnlocked, neuronBuyCost } from '../../store/purchases';
-import { formatNumber } from '../util/formatNumber';
+import { formatCurrency, formatNumber } from '../util/formatNumber';
 import { t } from '../../config/strings';
 import type { NeuronType } from '../../types';
 
@@ -206,7 +206,7 @@ function NeuronRow({ type, count, thoughts, prestigeCount, neurons, onBuy }: Neu
             minWidth: 72, // CONST-OK: touch-target minimum width
           }}
         >
-          <div>{formatNumber(cost)}</div>
+          <div>{formatCurrency(cost)}</div>
           <div style={{ fontSize: 'var(--text-xs)', fontWeight: 'var(--font-weight-regular)' }}>
             {t('panels.neurons.buy')}
           </div>
