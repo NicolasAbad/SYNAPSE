@@ -57,8 +57,10 @@ export const SYNAPSE_CONSTANTS = {
   // ── Cascade & Discharge ──
   cascadeThreshold: 0.75,
   cascadeMultiplier: 2.5,
+  cascadaEternaMult: 3.0, // GDD §15 Resonance: sets cascadeMult base 2.5 → 3.0 (Sprint 8b owns set)
   dischargeMultiplier: 1.5, // base, pre-P3
   dischargeMultiplierP3Plus: 2.0,
+  dischargeMultBoostMinPrestige: 3, // GDD §7: dischargeMultiplier bumps at P3+
   chargeIntervalMinutes: 20,
 
   // ── Momentum ──

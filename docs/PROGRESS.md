@@ -6,9 +6,9 @@
 
 ## Current status
 
-**Phase:** Sprint 3 Phase 5 COMPLETE — Insight auto-activation (level 1/2/3 by prestige, FOCUS-2 pre-charge, Hyperfocus consumption) + Decision B ConnectionChip
-**Last updated:** 2026-04-20 after Sprint 3 Phase 5 close
-**Active sprint:** Sprint 3 (Phases 1+2+3+3.5+4+4.5+5 complete) → next: Sprint 3 Phase 6 (Discharge + Cascade + Tutorial ×3)
+**Phase:** Sprint 3 Phase 6 COMPLETE — Discharge + Cascade (BUG-07 order) + Tutorial ×3 + Amplificador / Cascada Profunda / Sincronización Total / Potencial Latente / Red de Alta Velocidad upgrade effects wired
+**Last updated:** 2026-04-20 after Sprint 3 Phase 6 close
+**Active sprint:** Sprint 3 (Phases 1+2+3+3.5+4+4.5+5+6 complete) → next: Sprint 3 Phase 7 (Tutorial hints 2/3 + Undo toast UI + sprint close + player test)
 **Next action:** Phase 5 — auto-activate Insight when `focusBar >= 1.0`, level determined by prestigeCount (P0-9 = Claro/1, P10-18 = Profundo/2, P19+ = Trascendente/3) per GDD §6 table. Multipliers `[3.0, 8.0, 18.0]`, durations `[15, 12, 8]`s (from SYNAPSE_CONSTANTS). Concentración Profunda extends duration by +5s. FOCUS-2: Focus Bar does NOT reset on Insight activation (can pre-charge next). Also: implement Decision B HUD chip showing `×{connectionMult} connections` next to rate counter (permanent after player owns ≥2 types).
 
 ### Sprint 3 Phase 3.5 — accepted design decisions (owning phases inheriting)
@@ -617,6 +617,48 @@ Sprint 11a TODO for `ALL_RULE_IDS` constant must include all 16 (not 13 as state
 ---
 
 ## Session log
+
+### 2026-04-20 — Sprint 3 Phase 6: Discharge + Cascade + Tutorial ×3
+
+**Scope:** Sprint 3 Phase 6/7. Wire GDD §7 Discharge mechanic with BUG-07 order (Cascade check BEFORE consuming bar), tutorial ×3 override on first cycle first Discharge, Amplificador de Disparo ×1.5 stack, Cascade multiplier stacking (base 2.5 → 3.0 with cascada_eterna resonance → ×2 with Cascada Profunda, max 6.0), Sincronización Total +0.18 post-Cascade focus refund, Potencial Latente flat bonus (+1000 × prestigeCount per Discharge), Red de Alta Velocidad shortened charge interval (×1.25 speed = interval/1.25), haptic feedback (medium/heavy).
+
+**Files created:**
+- `src/engine/discharge.ts` (97 lines) — pure helpers:
+  - `computeCascadeMultiplier(state)` — handles cascada_eterna + Cascada Profunda stacking (max 6.0)
+  - `computeDischargeMultiplier(state, isCascade)` — base × Amplificador × Cascade-if-active
+  - `performDischarge(state, nowTimestamp)` — full BUG-07 pipeline, returns `{updates, outcome: {fired, isCascade, burst}}`
+  - Tutorial override: `isTutorialCycle && cycleDischargesUsed === 0 → tutorialDischargeMult (3.0)`
+  - Non-Cascade Discharge does NOT consume Focus Bar (§7 text is Cascade-specific)
+- `tests/engine/discharge.test.ts` (32 tests) — BUG-07 order, tutorial override scoping, Amplificador stack, Cascade threshold edge (0.74 vs 0.75), Cascade mult stacking variants (base 2.5, +eterna 3.0, +Profunda 5.0, +both 6.0), Sincronización refund (+0.18), Potencial Latente flat bonus, counter increments (cycleDischargesUsed, cycleCascades, lifetimeDischarges), spec-authority spot checks (P0 tutorial Cascade 7.5, P10 max-stack 18.0).
+
+**Files modified:**
+- `src/config/constants.ts` — added `cascadaEternaMult: 3.0` (§15 Resonance) + `dischargeMultBoostMinPrestige: 3` (§7 P3+ base bump).
+- `src/engine/tick.ts` — step 6 (discharge charge accumulation) now reads `charge_rate_mult` effect from owned upgrades; interval shrinks by 1/mult if Red de Alta Velocidad is owned (1.25× faster → interval/1.25).
+- `src/store/gameStore.ts` — added `discharge(nowTimestamp): DischargeOutcome` action. Wraps `performDischarge`; UI consumes the outcome for haptic selection.
+- `src/ui/hud/DischargeButton.tsx` — full rewrite. Was a Phase 5 stub with locked tooltip; now reads `dischargeCharges` for enabled state, fires `discharge(Date.now())` on pointerDown, triggers `hapticMedium` for plain Discharge or `hapticHeavy` for Cascade.
+- `tests/ui/hud/HUD.test.tsx` — replaced the old "tooltip on disabled" test suite with three new tests: disabled-when-no-charges, enabled-when-charges, fires-discharge-consumes-charge integration.
+
+**Phase 6 decisions:**
+1. **BUG-07 enforced.** `const isCascade = state.focusBar >= cascadeThreshold;` evaluated BEFORE `updates.focusBar = 0`. Sincronización Total refund is a set-to-0.18 (not +0.18 on top of post-consume 0). Second consecutive Discharge cannot Cascade until bar refills past 0.75 (enforced by the 0-set).
+2. **Tutorial override scoping.** Only applies when `isTutorialCycle === true` AND `cycleDischargesUsed === 0`. After first tutorial Discharge, falls back to base (1.5 at P0). Applies BEFORE Amplificador stack (so tutorial ×3 × Amp ×1.5 would be ×4.5 if player somehow had both — theoretically impossible since Amplificador unlocks P2+ and tutorial is P0-only, but the stack order is consistent).
+3. **Non-Cascade preserves Focus Bar.** GDD §7 says "Consumes Focus Bar entirely" under the Cascade section only. Non-Cascade Discharge leaves the bar alone, so player can top-up toward Cascade without losing progress.
+4. **Red de Alta Velocidad interval math.** Spec says "25% faster". I interpret as interval = base/1.25 = 16 min (instead of 20 min), not interval * 0.75 (which would be 15 min). The upgrade effect `charge_rate_mult: 1.25` is used as a rate, so dividing interval by mult matches "charges/hour goes up 25%".
+5. **outcome return type.** `DischargeOutcome = {fired, isCascade, burst}` lets UI select haptic tier, drive visual glow, and later fire analytics events without re-reading state.
+
+**Verification (all gates green):**
+- `npm run typecheck` — 0 errors
+- `npm run lint` — 0 warnings
+- `bash scripts/check-invention.sh` — 4/4 PASS, ratio 0.89 (down from 0.91 due to new `cascada_profunda` effect mult literal `* 2`, marked CONST-OK per §24 authoritative text)
+- `npm test` — **628 passed / 49 skipped / 0 failing** (+33 from Phase 5: 32 discharge.test.ts + 1 net HUD refactor)
+
+**Phase 7 handoff (tutorial hints + undo UI + sprint close):**
+- Tutorial hint #2: "Buy your first neuron" when `isTutorialCycle && thoughts >= NEURON_CONFIG.basica.baseCost && neurons[0].count === 1`. Fires on first eligibility, dismisses on first buy.
+- Tutorial hint #3: "Use Discharge" when `isTutorialCycle && dischargeCharges > 0 && cycleDischargesUsed === 0`. Fires on first charge available, dismisses on first Discharge.
+- Tutorial hint #4 (Decision B reinforcement): "Buy a different type for +5% production bonus" when player owns 10 Básicas + can afford Sensorial + isTutorialCycle. Decision B HUD chip already ships the passive visibility.
+- Undo toast UI component: reads `undoToast` from UIState, renders when non-null, shows "Undo" button calling `undoLastPurchase`, auto-dismisses at `expiresAt`.
+- Emergencia Cognitiva cap tooltip (Phase 3.5 audit deferred): add "Max bonus reached — other upgrades keep scaling" string to en.ts + surface when player hits 5× cap.
+- Player test: blind-play P0→P2, measure tutorial min. Target 7-9 min. If >10 min, reduce tutorialThreshold before sprint close.
+- Sprint close: checkbox every SPRINTS.md §Sprint 3 item, close dashboard.
 
 ### 2026-04-20 — Sprint 3 Phase 5: Insight auto-activation + Decision B ConnectionChip
 

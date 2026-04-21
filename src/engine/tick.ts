@@ -7,6 +7,7 @@ import { SYNAPSE_CONSTANTS } from '../config/constants';
 import { calculateProduction } from './production';
 import { tryActivateInsight } from './insight';
 import { hash, randomInRange } from './rng';
+import { UPGRADES_BY_ID } from '../config/upgrades';
 import type { GameState } from '../types/GameState';
 
 // Structural intrinsics (not designer-tunable). Changing breaks determinism / spec.
@@ -93,10 +94,15 @@ function stepConsciousnessBarUnlock(s: GameState): void {
   }
 }
 
-/** Step 6: Accumulate Discharge charges (1 per 20 min; capped at dischargeMaxCharges). */
+/** Step 6: accumulate Discharge charges. Red de Alta Velocidad shortens interval by 1/mult. */
 function stepDischargeChargeAccumulation(s: GameState, nowTimestamp: number): void {
-  const chargeIntervalMs = SYNAPSE_CONSTANTS.chargeIntervalMinutes * 60_000;
-  if (nowTimestamp - s.dischargeLastTimestamp >= chargeIntervalMs) {
+  let intervalMs = SYNAPSE_CONSTANTS.chargeIntervalMinutes * 60_000; // CONST-OK (min→ms)
+  for (const u of s.upgrades) {
+    if (!u.purchased) continue;
+    const e = UPGRADES_BY_ID[u.id]?.effect;
+    if (e?.kind === 'charge_rate_mult') intervalMs = intervalMs / e.mult;
+  }
+  if (nowTimestamp - s.dischargeLastTimestamp >= intervalMs) {
     s.dischargeCharges = Math.min(s.dischargeMaxCharges, s.dischargeCharges + 1);
     s.dischargeLastTimestamp = nowTimestamp;
   }
@@ -119,11 +125,7 @@ function stepMentalStateTriggers(_s: GameState, _nowTimestamp: number): void {
   // Framework placeholder — no-op until Sprint 7 wires MENTAL-4 trigger functions.
 }
 
-/**
- * Step 9: Era 3 event activation on the first tick of a cycle (cycleAge < 1s) when
- * prestigeCount is in [era3StartPrestige, era3EndPrestige].
- * TODO Sprint 6: fire Era 3 event per §23 (prestigeCount → event id → open modal).
- */
+/** Step 9: Era 3 event activation on first tick of cycle. TODO Sprint 6: modal dispatch per §23. */
 function stepEra3EventActivation(s: GameState, nowTimestamp: number): void {
   const cycleAgeMs = nowTimestamp - s.cycleStartTimestamp;
   if (
@@ -137,11 +139,7 @@ function stepEra3EventActivation(s: GameState, nowTimestamp: number): void {
   }
 }
 
-/**
- * Step 10: Spontaneous event scheduling (SPONT-1). `lastSpontaneousCheck` stores an
- * absolute timestamp (ms since epoch), not a cycleTime offset. See §32 field comment.
- * TODO Sprint 6: roll spontaneousTriggerChance; if success, pick weighted event + apply.
- */
+/** Step 10: Spontaneous event scheduling (SPONT-1). TODO Sprint 6: roll + pick + apply. */
 function stepSpontaneousEventTrigger(s: GameState, nowTimestamp: number): void {
   const { spontaneousCheckIntervalMin, spontaneousCheckIntervalMax } = SYNAPSE_CONSTANTS;
   const nextCheckSeconds = randomInRange(

@@ -18,6 +18,7 @@ import type { NeuronType } from '../types';
 import { loadGame, saveGame } from './saveGame';
 import { tryBuyNeuron, tryBuyUpgrade, type BuyReason, type UndoToast } from './purchases';
 import { applyTap } from './tap';
+import { performDischarge, type DischargeOutcome } from '../engine/discharge';
 
 /**
  * Pure default state. Matches GDD §32 100-field enumeration exactly.
@@ -259,6 +260,12 @@ export interface GameStoreActions {
   undoLastPurchase: () => void;
   /** Dismiss the undo toast without reversing the purchase (player tapped elsewhere or timer elapsed). */
   dismissUndoToast: () => void;
+  /**
+   * Sprint 3 Phase 6: fire a Discharge (§7). Returns the outcome so the UI can
+   * trigger haptics + visual glow (medium on Discharge, heavy on Cascade).
+   * No-op (returns fired=false) if dischargeCharges === 0.
+   */
+  discharge: (nowTimestamp: number) => DischargeOutcome;
 }
 
 export const useGameStore = create<GameState & UIState & GameStoreActions>((set, get) => ({
@@ -320,4 +327,9 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
     set({ ...toast.snapshot, undoToast: null });
   },
   dismissUndoToast: () => set({ undoToast: null }),
+  discharge: (nowTimestamp) => {
+    const { updates, outcome } = performDischarge(get(), nowTimestamp);
+    if (outcome.fired) set(updates);
+    return outcome;
+  },
 }));

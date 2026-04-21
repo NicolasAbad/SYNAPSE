@@ -148,22 +148,36 @@ describe('ConsciousnessBar', () => {
   });
 });
 
-describe('DischargeButton', () => {
-  test('renders disabled button with translated label', () => {
+describe('DischargeButton (Sprint 3 Phase 6 wiring)', () => {
+  test('renders disabled button with translated label when no charges', () => {
+    useGameStore.setState({ dischargeCharges: 0 });
     const { getByTestId } = render(<DischargeButton />);
     const btn = getByTestId('hud-discharge-button') as HTMLButtonElement;
     expect(btn.disabled).toBe(true);
     expect(btn.textContent).toContain('DISCHARGE');
   });
 
-  test('shows tooltip on pointerDown, hides on pointerUp', () => {
-    const { getByTestId, queryByTestId } = render(<DischargeButton />);
-    const btn = getByTestId('hud-discharge-button');
-    expect(queryByTestId('hud-discharge-tooltip')).toBeNull();
-    fireEvent.pointerDown(btn);
-    expect(getByTestId('hud-discharge-tooltip').textContent).toContain('Unlocks');
-    fireEvent.pointerUp(btn);
-    expect(queryByTestId('hud-discharge-tooltip')).toBeNull();
+  test('renders enabled button when charges > 0', () => {
+    useGameStore.setState({ dischargeCharges: 1 });
+    const { getByTestId } = render(<DischargeButton />);
+    const btn = getByTestId('hud-discharge-button') as HTMLButtonElement;
+    expect(btn.disabled).toBe(false);
+  });
+
+  test('firing Discharge consumes a charge and increments counters', () => {
+    useGameStore.setState({
+      dischargeCharges: 2,
+      effectiveProductionPerSecond: 100,
+      isTutorialCycle: false,
+      cycleDischargesUsed: 0,
+      lifetimeDischarges: 0,
+    });
+    const { getByTestId } = render(<DischargeButton />);
+    fireEvent.pointerDown(getByTestId('hud-discharge-button'));
+    const s = useGameStore.getState();
+    expect(s.dischargeCharges).toBe(1);
+    expect(s.cycleDischargesUsed).toBe(1);
+    expect(s.lifetimeDischarges).toBe(1);
   });
 });
 
