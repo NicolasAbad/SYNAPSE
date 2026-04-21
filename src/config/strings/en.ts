@@ -90,6 +90,9 @@ export const en = {
       section_blocked: 'Blocked',
       section_locked: 'Locked',
     },
+    regions: {
+      shell_description: 'Sprint 5 builds the brain-region panel (Hipocampo, Corteza Prefrontal, Sistema Límbico, Corteza Visual, Área de Broca).',
+    },
   },
   narrative: {
     base_01: "A pulse. Then another. Something is beginning that doesn't yet know what it is.",

@@ -314,7 +314,7 @@ Post-close addendum per Sprint 3 gap audit (2026-04-21). Builds the panel-contai
 - [ ] `src/ui/panels/NeuronsPanel.tsx` — 5 rows (one per neuron type), each showing: name + icon color, owned count, rate/sec contribution, next-cost. Buy buttons: ×1 always; ×10 + Max when basica.count > 5 (reduce friction). Locked types show silhouette + unlock requirement text. Unaffordable shown greyed.
 - [ ] `src/ui/panels/UpgradesPanel.tsx` — 35 cards sorted per GDD §29: (1) Affordable green, (2) Teaser (next affordable) grey with unlock text, (3) Blocked-by-Pathway (empty pre-Sprint-5), (4) Locked silhouette. Unlock text for Locked includes `unlockPrestige` threshold.
 - [ ] `src/ui/panels/RegionsPanel.tsx` — shell only. Shows "Regions unlock at P5" placeholder. Sprint 5 replaces with real content.
-- [ ] `src/ui/panels/MindPanel.tsx` — shell with 5-subtab secondary row (Patterns / Archetypes / Diary / Achievements / Resonance). Each subtab shows "Unlocks in Sprint X" placeholder. Sprints 4b / 5 / 6 / 7 / 8b replace each subtab's content.
+- [-] `src/ui/panels/MindPanel.tsx` — **deferred to Sprint 4b.** Shell was originally scoped to include a 5-subtab secondary row (Patterns / Archetypes / Diary / Achievements / Resonance) with "Unlocks in Sprint X" placeholders. Implementing this in Sprint 3.6 would cover the canvas when the player opens the app (Mind is the default `activeTab` and shows on first render) and provide zero real value since every subtab would be a placeholder. MindPanel ships as a null-renderer; Sprint 4b adds the subtab infrastructure alongside Pattern Tree content (the first subtab that actually has content to render).
 - [ ] `src/ui/hud/TabBadge.tsx` — rendering layer for UI-3 badges keyed on `tabBadgesDismissed[]`. Ships with EMPTY priority-feed; Sprint 6+ populates.
 - [ ] `src/ui/hud/NetworkErrorToast.tsx` — generic toast matching UI-8 pattern. Used later by cloud-save fail, ad-load fail, store-unavailable banner. Currently not fired by any flow (infrastructure only).
 - [ ] HUD.tsx mounts TabPanelContainer. `pointerEvents: auto` on panels so Buy buttons work; canvas still reachable when activeTab falls through (Neurons tab overlays the lower 55% of the screen, not full-bleed).
@@ -417,6 +417,9 @@ Pattern Tree with 50 nodes + 5 binary decisions at nodes 6/15/24/36/48. patternD
 
 **Prompt to Claude Code:**
 > Implementá Sprint 4b per docs/SPRINTS.md §Sprint 4b. Lee GDD §10 (Pattern Tree completo). Prestige core ya está implementado (Sprint 4a) — este sprint agrega patterns. handlePrestige() ya fue implementado con stubs para patterns — reemplazá los stubs con lógica real. Pattern Tree tiene 50 nodes, decision nodes en indices exactos [6, 15, 24, 36, 48]. patternDecisions NUNCA se resetea (ni prestige, ni transcendence). Reset button costs 1000 Resonance — funcional aunque Resonance currency no exista todavía (usar stub de resonance balance en GameState).
+
+**Scope addition (deferred from Sprint 3.6.4):**
+- **MindPanel subtab router + nav bar** — build the 5-subtab secondary navigation row (Patterns / Archetypes / Diary / Achievements / Resonance) that was originally scoped to Sprint 3.6. Default subtab `'home'` renders nothing (canvas visible behind — standard first-open behavior). Non-home subtabs fully overlay the bottom-sheet area with their content. Sprint 4b's Pattern Tree content lives inside the `patterns` subtab. Archetypes / Diary / Achievements / Resonance remain `"Unlocks in Sprint X"` placeholders until their respective sprints (5 / 6 / 7 / 8b) populate them.
 
 **AI checks ✅:**
 - [ ] Pattern Tree with 50 nodes + 5 decision nodes at indices 6, 15, 24, 36, 48
