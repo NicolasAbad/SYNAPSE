@@ -36,14 +36,13 @@ export const TabPanelContainer = memo(function TabPanelContainer() {
       data-testid="tab-panel-container"
       style={{
         position: 'absolute',
-        top: 'calc(var(--spacing-16) + var(--spacing-5))', // CONST-OK: CSS layout offset below top HUD row
-        bottom: 'calc(var(--spacing-16) * 2)', // CONST-OK: CSS layout reserving Discharge + TabBar row
+        top: '45%', // CONST-OK: bottom-sheet idiom — leaves upper 45% for canvas tap area
+        bottom: 'calc(var(--spacing-16) * 2)', // CONST-OK: above Discharge button + TabBar
         left: 0, // CONST-OK: CSS full-bleed
         right: 0, // CONST-OK: CSS full-bleed
         padding: 'var(--spacing-4)', // CONST-OK: CSS custom property ref (CODE-1 exception)
         background: 'var(--color-bg-deep)',
         borderTop: '1px solid var(--color-border-subtle)',
-        borderBottom: '1px solid var(--color-border-subtle)',
         overflowY: 'auto',
         pointerEvents: 'auto',
       }}
