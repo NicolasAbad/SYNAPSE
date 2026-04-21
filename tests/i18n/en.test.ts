@@ -1,5 +1,6 @@
 import { describe, test, expect } from 'vitest';
 import { t } from '../../src/config/strings';
+import { UPGRADES } from '../../src/config/upgrades';
 
 describe('i18n t() function — en.ts contract', () => {
   test('hud.thoughts_label returns "thoughts"', () => {
@@ -51,5 +52,16 @@ describe('i18n t() function — en.ts contract', () => {
     expect(() => t('')).not.toThrow();
     expect(() => t('..')).not.toThrow();
     expect(() => t('deeply.nested.nonexistent.path.many.levels')).not.toThrow();
+  });
+
+  test('every UPGRADE id resolves to a non-empty display name via t()', () => {
+    // CODE-1 invariant: adding an upgrade without its string would break
+    // the UI silently. This test binds UPGRADES ↔ en.ts.
+    for (const u of UPGRADES) {
+      const key = `upgrades.${u.id}`;
+      const name = t(key);
+      expect(name).not.toBe(key);
+      expect(name.length).toBeGreaterThan(0);
+    }
   });
 });

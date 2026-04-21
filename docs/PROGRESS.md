@@ -6,10 +6,10 @@
 
 ## Current status
 
-**Phase:** Sprint 2 COMPLETE — all AI checks + automated tests + player tests green 2026-04-20
-**Last updated:** 2026-04-20 after Sprint 2 close (Phase 8: player tests pass, closing dashboard)
-**Active sprint:** Sprint 2 (CLOSED) → next: Sprint 3 (Neurons + Upgrades + Discharge)
-**Next action:** Sprint 3 kickoff per SPRINTS.md §Sprint 3 — read GDD §5/6/7/24. 5 neuron types, connection multiplier, 35 upgrades, Discharge mechanic, Focus Bar, Insight, tap mechanics (TAP-1, TAP-2). Un-skip 5 consistency tests tagged BLOCKED-SPRINT-3.
+**Phase:** Sprint 3 Phase 1 COMPLETE — neurons + upgrades data foundation shipped, 5 BLOCKED-SPRINT-3 consistency tests un-skipped
+**Last updated:** 2026-04-20 after Sprint 3 Phase 1 close
+**Active sprint:** Sprint 3 (Phase 1/7 complete) → next: Sprint 3 Phase 2 (production formula stack)
+**Next action:** Phase 2 — wire upgrade multipliers into `recalcProduction()` (per-type mults, connection mult via C(n,2), softCap authority check per GDD §5). Stubs for mutation/pathway/archetype remain no-op until Sprints 5-6.
 
 ### Sprint 2 closing dashboard
 
@@ -594,6 +594,44 @@ Sprint 11a TODO for `ALL_RULE_IDS` constant must include all 16 (not 13 as state
 ---
 
 ## Session log
+
+### 2026-04-20 — Sprint 3 Phase 1: neurons + upgrades data foundation
+
+**Scope:** Sprint 3 Phase 1/7 per SPRINTS.md §Sprint 3 AI checks. Ship the spec data that downstream phases (production formula, store actions, TAP-2, Discharge) consume. No behavior change — data + helpers + un-skipped consistency tests only. Engine/tick/store untouched.
+
+**Files created:**
+- `src/config/upgrades.ts` (88 lines) — canonical `UPGRADES` array (35 entries from GDD §24), `UPGRADES_BY_ID` index. Counts: tap=3, foc=1, syn=5, neu=8, reg=5, con=4, met=3, new=6. Region upgrades priced in Memorias per §16; all others in Thoughts. Covered by existing `src/config/` exclusion in Gate 3.
+
+**Files modified:**
+- `src/types/index.ts` (121 → 165 lines) — `UpgradeDef` interface + `UpgradeEffect` discriminated union (28 `kind` variants for 35 upgrades; `all_neurons_mult` + `neuron_type_mult` are shared kinds). `UpgradeCostCurrency = 'thoughts' | 'memorias'`.
+- `src/config/neurons.ts` (36 → 88 lines) — `NEURON_TYPES` (canonical ordering), `NEURON_CONFIG` (full per-type config with `NeuronUnlock` discriminated union), `neuronCost(type, owned)` helper applying `costMult^owned` per §4.
+- `src/config/strings/en.ts` (78 → 117 lines) — `upgrades.{id}` domain with 35 approved English translations (see Pre-Phase translation approval below).
+- `tests/consistency.test.ts` — un-skipped 5 BLOCKED-SPRINT-3 tests; added 6 additional invariants (unlock conditions, neuron cost scaling, upgrade category counts, ID uniqueness, region-currency check, non-region-currency check).
+- `tests/i18n/en.test.ts` — added invariant: every `UPGRADES[i].id` resolves to a non-empty `t('upgrades.${id}')` display name (binds UPGRADES ↔ en.ts against silent drift).
+
+**Translation approval (CLAUDE.md "Language translation — sprint-level ownership"):** 35 upgrade display names proposed in Phase 1 kickoff message, approved verbatim by Nico including: LTP (chose "Long-Term Potentiation" over "LTP Long Potentiation" to remove Spanish redundancy), Executive Function (singular), and all other standard translations. Internal snake_case Spanish IDs preserved per Glossary discipline.
+
+**Pre-code research findings surfaced (4):**
+1. §24 count verified: 35 (3+1+5+8+5+4+3+6). Matches existing `UpgradeCategory` union.
+2. Regions priced in Memorias (GDD §16), not Thoughts. Required `costCurrency` field on `UpgradeDef`.
+3. "Sincronía Neural: Connection multipliers ×2" ambiguity — per-pair 0.05→0.10 OR whole connectionMult doubles? Flagged for Phase 2 resolution; Phase 1 encodes as `kind: 'connection_mult_double'` (no parameter — Phase 2 picks the interpretation).
+4. No ID collisions between §24, §15 Resonance (cascada_eterna), §21 Run-exclusive (eco_ancestral, sueno_profundo, neurona_pionera, despertar_acelerado).
+
+**Changes applied this sprint (Update Discipline):** none — no constants changed, no GDD values disagreed with. Phase 1 is pure spec-transcription.
+
+**Verification (all gates green from clean baseline):**
+- `npm run typecheck` — 0 errors
+- `npm run lint` — 0 warnings
+- `bash scripts/check-invention.sh` — 4/4 PASS, ratio 0.86 (constants: 25, literals: 4; ratio held from 0.86 despite new `upgrades.ts` because the file is canonical-storage and Gate 3 excludes `src/config/`)
+- `npm test` — **371 passed / 49 skipped / 0 failing** (+12 tests: 5 un-skipped + 6 new consistency invariants + 1 new i18n invariant)
+
+**Sprint 3 un-skip progress:** 5 of 5 BLOCKED-SPRINT-3 tests un-skipped in Phase 1. Remaining Sprint-3 un-skips will be tracked in later phases (Discharge wiring, Focus Bar transitions, TAP-1 + TAP-2 formulas — those land Phase 4-6 as implementation). Skip count: 54 → 49.
+
+**Phase 2 handoff:**
+- `recalcProduction()` in `src/engine/tick.ts` currently applies `base × connectionMult × insightMult`. Phase 2 layers upgrade mults (per-type, all-neurons, connection-double, all-production) on top.
+- Phase 2 resolves the `connection_mult_double` ambiguity (per-pair vs whole). Proposal: double the whole cached `connectionMult` at the time the upgrade is owned (simpler, matches "Connection multipliers ×2" literal reading). STOP gate at Phase 2 kickoff.
+- `neuronCost()` helper is ready for the buy-neuron action in Phase 3. `UPGRADES_BY_ID` is ready for the buy-upgrade action in Phase 3.
+- softCap application site: GDD §5 says connections are "passive multipliers"; §4 softCap is the raw production tempering. Phase 2 will grep §4+§5 carefully to confirm softCap applies to the post-upgrade `effective` OR only to the `base` pre-insight. STOP gate.
 
 ### 2026-04-20 — Sprint 2 Phase 8: close (player tests, closing dashboard)
 

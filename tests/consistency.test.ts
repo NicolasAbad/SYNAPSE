@@ -26,7 +26,10 @@ import {
 } from '../src/engine/production';
 import { hash, mulberry32, seededRandom } from '../src/engine/rng';
 import { tick } from '../src/engine/tick';
+import { NEURON_CONFIG, NEURON_TYPES, neuronCost } from '../src/config/neurons';
+import { UPGRADES } from '../src/config/upgrades';
 import type { GameState } from '../src/types/GameState';
+import type { UpgradeCategory } from '../src/types';
 
 /**
  * Rule coverage matrix (second audit Batches 1-5 + Sprint 1 Phase 8 un-skip):
@@ -296,12 +299,41 @@ describe('Consistency: PRESTIGE_RESET / PRESERVE / UPDATE split (GDD §33)', () 
 });
 
 describe('Consistency: Neuron configuration (GDD §5)', () => {
-  // BLOCKED-SPRINT-3: Sprint 3 adds NEURON_TYPES + NEURON_CONFIG exports
-  // with unlock conditions, display metadata, cost helpers. Sprint 1's
-  // src/config/neurons.ts ships NEURON_BASE_RATES + NEURON_BASE_COSTS only.
-  test.skip('BLOCKED-SPRINT-3: exactly 5 neuron types via NEURON_TYPES export', () => {});
-  test.skip('BLOCKED-SPRINT-3: Neuron base costs match GDD table via NEURON_CONFIG', () => {});
-  test.skip('BLOCKED-SPRINT-3: Neuron base rates match GDD table via NEURON_CONFIG', () => {});
+  // Un-skipped Sprint 3 Phase 1: NEURON_TYPES + NEURON_CONFIG + neuronCost() ship here.
+  test('exactly 5 neuron types via NEURON_TYPES export', () => {
+    expect(NEURON_TYPES.length).toBe(5);
+    expect([...NEURON_TYPES].sort()).toEqual(
+      ['basica', 'espejo', 'integradora', 'piramidal', 'sensorial'].sort(),
+    );
+  });
+  test('Neuron base costs match GDD §5 table via NEURON_CONFIG', () => {
+    expect(NEURON_CONFIG.basica.baseCost).toBe(10);
+    expect(NEURON_CONFIG.sensorial.baseCost).toBe(150);
+    expect(NEURON_CONFIG.piramidal.baseCost).toBe(2_200);
+    expect(NEURON_CONFIG.espejo.baseCost).toBe(35_000);
+    expect(NEURON_CONFIG.integradora.baseCost).toBe(600_000);
+  });
+  test('Neuron base rates match GDD §5 table via NEURON_CONFIG', () => {
+    expect(NEURON_CONFIG.basica.baseRate).toBe(0.5);
+    expect(NEURON_CONFIG.sensorial.baseRate).toBe(4.5);
+    expect(NEURON_CONFIG.piramidal.baseRate).toBe(32);
+    expect(NEURON_CONFIG.espejo.baseRate).toBe(220);
+    expect(NEURON_CONFIG.integradora.baseRate).toBe(1_800);
+  });
+  test('Neuron unlock conditions match GDD §5 Unlock column', () => {
+    expect(NEURON_CONFIG.basica.unlock).toEqual({ kind: 'start' });
+    expect(NEURON_CONFIG.sensorial.unlock).toEqual({ kind: 'neuron_count', type: 'basica', count: 10 });
+    expect(NEURON_CONFIG.piramidal.unlock).toEqual({ kind: 'neuron_count', type: 'sensorial', count: 5 });
+    expect(NEURON_CONFIG.espejo.unlock).toEqual({ kind: 'neuron_count', type: 'piramidal', count: 5 });
+    expect(NEURON_CONFIG.integradora.unlock).toEqual({ kind: 'prestige', min: 10 });
+  });
+  test('neuronCost() applies costMult^owned scaling (GDD §4)', () => {
+    // baseCost × 1.28^owned; tolerate fp noise.
+    expect(neuronCost('basica', 0)).toBeCloseTo(10, 6);
+    expect(neuronCost('basica', 10)).toBeCloseTo(10 * Math.pow(1.28, 10), 3);
+    expect(neuronCost('sensorial', 25)).toBeCloseTo(150 * Math.pow(1.28, 25), 0);
+    expect(neuronCost('integradora', 50)).toBeCloseTo(600_000 * Math.pow(1.28, 50), -6);
+  });
 });
 
 describe('Consistency: Mutation pool (GDD §13)', () => {
@@ -327,9 +359,50 @@ describe('Consistency: Pathways (GDD §14)', () => {
 });
 
 describe('Consistency: Upgrades (GDD §24)', () => {
-  // BLOCKED-SPRINT-3: UPGRADES export lands in Sprint 3.
-  test.skip('BLOCKED-SPRINT-3: Total 35 upgrades (not counting run-exclusive or resonance)', () => {});
-  test.skip('BLOCKED-SPRINT-3: Each upgrade has a valid category', () => {});
+  // Un-skipped Sprint 3 Phase 1: UPGRADES data ships here.
+  test('Total 35 upgrades (not counting run-exclusive or resonance)', () => {
+    expect(UPGRADES.length).toBe(35);
+  });
+  test('Each upgrade has a valid category', () => {
+    const validCategories: ReadonlySet<UpgradeCategory> = new Set<UpgradeCategory>([
+      'tap', 'foc', 'syn', 'neu', 'reg', 'con', 'met', 'new',
+    ]);
+    for (const u of UPGRADES) {
+      expect(validCategories.has(u.category)).toBe(true);
+    }
+  });
+  test('Upgrade category counts match GDD §24 (tap=3, foc=1, syn=5, neu=8, reg=5, con=4, met=3, new=6)', () => {
+    const counts = UPGRADES.reduce<Record<string, number>>((acc, u) => {
+      acc[u.category] = (acc[u.category] ?? 0) + 1;
+      return acc;
+    }, {});
+    expect(counts.tap).toBe(3);
+    expect(counts.foc).toBe(1);
+    expect(counts.syn).toBe(5);
+    expect(counts.neu).toBe(8);
+    expect(counts.reg).toBe(5);
+    expect(counts.con).toBe(4);
+    expect(counts.met).toBe(3);
+    expect(counts.new).toBe(6);
+  });
+  test('Upgrade IDs are unique', () => {
+    const ids = UPGRADES.map((u) => u.id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+  test('Region upgrades are priced in Memorias (GDD §16)', () => {
+    const regionUpgrades = UPGRADES.filter((u) => u.category === 'reg');
+    expect(regionUpgrades.length).toBe(5);
+    for (const u of regionUpgrades) {
+      expect(u.costCurrency).toBe('memorias');
+    }
+  });
+  test('Non-region upgrades are priced in Thoughts', () => {
+    const nonRegion = UPGRADES.filter((u) => u.category !== 'reg');
+    expect(nonRegion.length).toBe(30);
+    for (const u of nonRegion) {
+      expect(u.costCurrency).toBe('thoughts');
+    }
+  });
 });
 
 describe('Consistency: Run-exclusive upgrades (GDD §21, 4 for v1.0)', () => {
