@@ -82,9 +82,9 @@ describe('useTickScheduler — tick execution', () => {
       dischargeLastTimestamp: now,
     });
     renderHook(() => useTickScheduler());
-    const beforeRef = useGameStore.getState().incrementThoughtsByMinTap;
+    const beforeRef = useGameStore.getState().onTap;
     vi.advanceTimersByTime(INTERVAL_MS * 3); // CONST-OK: 3-tick fast-forward
-    const afterRef = useGameStore.getState().incrementThoughtsByMinTap;
+    const afterRef = useGameStore.getState().onTap;
     expect(afterRef).toBe(beforeRef);
     expect(useGameStore.getState().reset).toBeTypeOf('function');
     expect(useGameStore.getState().initSessionTimestamps).toBeTypeOf('function');

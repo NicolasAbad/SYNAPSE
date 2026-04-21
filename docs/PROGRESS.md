@@ -6,10 +6,10 @@
 
 ## Current status
 
-**Phase:** Sprint 3 Phase 3.5 COMPLETE — audit-driven housekeeping (tick refactor, undo snapshot fix, per-ID upgrade tests, economy-sanity script, doc updates)
-**Last updated:** 2026-04-20 after Sprint 3 Phase 3.5 close
-**Active sprint:** Sprint 3 (Phases 1+2+3+3.5 complete) → next: Sprint 3 Phase 4 (TAP-2 + TAP-1)
-**Next action:** Phase 4 — replace `incrementThoughtsByMinTap` stub with full TAP-2 formula per GDD §6: `Math.max(baseTapThoughtMin, effectivePPS × baseTapThoughtPct)` thoughts per tap, `focusFillPerTap` fill on each tap, push to `lastTapTimestamps` circular buffer (size 20), consume TICK-1 step 12's `antiSpamActive` flag for ×0.10 effectiveness penalty. Wire Mielina upgrade (`tap_focus_fill_add: +2% focus on tap`) and Potencial Sináptico (`tap_replace_pct: replace base 0.05 with 0.10`) and Dopamina (`tap_bonus_mult: ×1.5` on final thought contribution).
+**Phase:** Sprint 3 Phase 4 COMPLETE — TAP-2 formula + TAP-1 anti-spam + Mielina/Potencial/Dopamina wiring + Capacitor Haptics light feedback on tap
+**Last updated:** 2026-04-20 after Sprint 3 Phase 4 close
+**Active sprint:** Sprint 3 (Phases 1+2+3+3.5+4 complete) → next: Sprint 3 Phase 5 (Focus Bar + Insight auto-activate + HUD chip for Decision B)
+**Next action:** Phase 5 — auto-activate Insight when `focusBar >= 1.0`, level determined by prestigeCount (P0-9 = Claro/1, P10-18 = Profundo/2, P19+ = Trascendente/3) per GDD §6 table. Multipliers `[3.0, 8.0, 18.0]`, durations `[15, 12, 8]`s (from SYNAPSE_CONSTANTS). Concentración Profunda extends duration by +5s. FOCUS-2: Focus Bar does NOT reset on Insight activation (can pre-charge next). Also: implement Decision B HUD chip showing `×{connectionMult} connections` next to rate counter (permanent after player owns ≥2 types).
 
 ### Sprint 3 Phase 3.5 — accepted design decisions (owning phases inheriting)
 
@@ -617,6 +617,49 @@ Sprint 11a TODO for `ALL_RULE_IDS` constant must include all 16 (not 13 as state
 ---
 
 ## Session log
+
+### 2026-04-20 — Sprint 3 Phase 4: TAP-2 + TAP-1 + Haptics
+
+**Scope:** Sprint 3 Phase 4/7. Ship the full TAP-2 formula replacing the Sprint 2 `incrementThoughtsByMinTap` stub. Integrate Mielina / Potencial Sináptico / Dopamina upgrades into the tap pipeline. Consume TICK-1 step 12's `antiSpamActive` flag for ×0.10 effectiveness penalty. Wire Capacitor Haptics light-impact on every tap with graceful fallback on web/dev/test.
+
+**Files created:**
+- `src/store/tap.ts` (73 lines) — pure helpers `computeTapThought(state, antiSpamActive)`, `computeFocusFillPerTap(state)`, `applyTap(state, antiSpamActive, nowTimestamp)`. Implements TAP-2 with stacking Potencial Sináptico (replaces `baseTapThoughtPct` 0.05 → 0.10), Dopamina (×1.5 via `tap_bonus_mult` kind iteration), Sinestesia Mutation (×0.4 defensive check for Sprint 5), anti-spam (×0.10). Focus fill = `state.focusFillRate` (Concentración-affected) + Mielina's +0.02 add — order-independent.
+- `src/ui/haptics.ts` (46 lines) — Capacitor Haptics wrapper with try/catch fallback. Exposes `hapticLight` / `hapticMedium` / `hapticHeavy` / `hapticSuccess` / `hapticWarning`. Silent no-op on web/dev/jsdom/plugin-missing per CODE-8 try/catch policy.
+- `tests/store/tap.test.ts` (23 tests) — TAP-2 formula coverage: base + floor, Potencial replacement, Dopamina mult, Sinestesia mult, anti-spam penalty ordering, focus fill + Mielina stacking + Concentración integration, circular buffer push/drop at capacity 20, cycleGenerated + totalGenerated parity with thoughts, GDD §6 spec-authority worked examples (1 Básica → 1, Potencial+100pps → 10, Potencial+Sinestesia → 4).
+
+**Files modified:**
+- `src/config/constants.ts` — added `antiSpamBufferSize: 20` (MENTAL-2 §17 canonical buffer size).
+- `src/engine/tick.ts` — `computeAntiSpam` now consumes `SYNAPSE_CONSTANTS.antiSpamBufferSize` instead of local `ANTI_SPAM_BUFFER_SIZE` CONST-OK (one less inline literal).
+- `src/store/gameStore.ts` — replaced `incrementThoughtsByMinTap` with `onTap(nowTimestamp)` action; added `antiSpamActive: boolean` to UIState; reset clears it; saveToStorage strips it.
+- `src/store/tickScheduler.ts` — tick result's `antiSpamActive` surfaced to UIState each tick (enables tap handler to consume without recomputing).
+- `src/store/saveScheduler.ts` — strip `antiSpamActive` alongside `activeTab` + `undoToast` before persistence.
+- `src/ui/canvas/NeuronCanvas.tsx` — tap handler calls `onTap(Date.now())` + `hapticLight()` (fire-and-forget). Retains AudioContext unlock + hit-test + first-tap console stub.
+- `tests/consistency.test.ts` — added `antiSpamBufferSize = 20` invariant.
+- `tests/store/gameStore.test.ts` — renamed `incrementThoughtsByMinTap` tests to `onTap`; asserts baseTapThoughtMin floor behavior at default state + lastTapTimestamps buffer push + focusBar fill + action-binding preservation.
+- `tests/store/tickScheduler.test.ts` — trivial rename of stub action reference (`incrementThoughtsByMinTap` → `onTap`).
+
+**Dependencies added:**
+- `@capacitor/haptics@^6.0.3` — matches existing Capacitor 6.x plugins (preferences, android, core, cli).
+
+**Key Phase 4 decisions:**
+1. **Order-independent focus fill for Mielina + Concentración Profunda.** `state.focusFillRate` stores the Concentración-affected value (multiplied ×2 at buy time per Phase 3). Mielina's +0.02 is computed from ownership at tap time, not baked into state. Result: player can buy Mielina before OR after Concentración and get the same per-tap focus fill.
+2. **`antiSpamActive` as UIState, not GameState.** The flag is tick-derived (recomputed every 100ms by TICK-1 step 12). Storing in GameState would bloat the 110-field invariant; storing in UIState makes it transient-by-design and matches the `undoToast` precedent from Phase 3. saveScheduler strips it.
+3. **Haptics silently no-op on web/dev/test.** Each wrapper wraps the Capacitor call in try/catch. Tests don't need to mock `@capacitor/haptics` — the plugin import doesn't throw on jsdom, and the native call silently fails.
+4. **Sinestesia Mutation check is defensive, not invention.** `state.currentMutation?.id === 'sinestesia'` checks a GameState field that Sprint 5 will populate. Phase 4 ships the check so Sprint 5 can wire Mutations without touching the tap pipeline.
+
+**Verification (all gates green):**
+- `npm run typecheck` — 0 errors
+- `npm run lint` — 0 warnings
+- `bash scripts/check-invention.sh` — 4/4 PASS, ratio 0.89 (held steady — new antiSpamBufferSize constant absorbs literal)
+- `npm test` — **466 passed / 49 skipped / 0 failing** (+26 from Phase 3.5: 23 tap.test.ts + 2 onTap refactor tests in gameStore.test.ts + 1 antiSpamBufferSize consistency)
+
+**Phase 5 handoff:**
+- Insight auto-activation: when `focusBar >= 1.0` crosses in a tick (or inline after tap), set `insightActive=true`, `insightMultiplier` from `SYNAPSE_CONSTANTS.insightMultiplier[level-1]`, `insightEndTime = nowTimestamp + insightDuration[level-1] × 1000`. Level derived from `prestigeCount`: 0-9 = 1, 10-18 = 2, 19+ = 3.
+- Concentración Profunda extends Insight duration by +5s at activation time (read ownership).
+- FOCUS-2: do NOT reset `focusBar` on Insight activation — the bar can overflow 1.0 / 2.0 / 3.0 to pre-charge.
+- HUD: add connection-mult chip next to rate counter (Decision B). Show only when ownedTypes ≥ 2. Format `×{connectionMult.toFixed(2)} connections`.
+- `insightTimestamps` buffer (size 3 per MENTAL-2 §17) needs push on each Insight activation for Flow-Eureka Mental State trigger (Sprint 7).
+- Hyperfocus Mental State (Sprint 7): if `focusBar > 0.5` continuously for 30s → `pendingHyperfocusBonus = true` → next Insight gets +1 level. Phase 4 scaffolding left `focusAbove50Since` + `pendingHyperfocusBonus` untouched.
 
 ### 2026-04-20 — Sprint 3 Phase 3.5: audit-driven housekeeping
 

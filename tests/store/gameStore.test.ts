@@ -179,41 +179,56 @@ describe('useGameStore — reset action', () => {
   });
 });
 
-// Sprint 2 Phase 3: minimum-floor tap action (stub; Sprint 3 replaces with TAP-2).
-describe('useGameStore — incrementThoughtsByMinTap action', () => {
+// Sprint 3 Phase 4: full TAP-2 action replaces Phase 3 stub. P0 no-upgrade
+// state hits the baseTapThoughtMin floor (1 thought), matching the prior
+// stub behavior for backwards-compat with these invariants. Phase 4's
+// tap.test.ts covers the richer TAP-2 formula + TAP-1 + Focus Bar fill.
+describe('useGameStore — onTap action (TAP-2 default-state behavior)', () => {
   beforeEach(() => {
     useGameStore.getState().reset();
   });
 
-  test('adds exactly SYNAPSE_CONSTANTS.baseTapThoughtMin to thoughts', () => {
+  test('default-state tap hits baseTapThoughtMin floor (1 thought)', () => {
     const before = useGameStore.getState().thoughts;
-    useGameStore.getState().incrementThoughtsByMinTap();
+    useGameStore.getState().onTap(1000);
     const after = useGameStore.getState().thoughts;
     expect(after - before).toBe(SYNAPSE_CONSTANTS.baseTapThoughtMin);
   });
 
-  test('two taps add 2 × baseTapThoughtMin', () => {
-    useGameStore.getState().incrementThoughtsByMinTap();
-    useGameStore.getState().incrementThoughtsByMinTap();
-    expect(useGameStore.getState().thoughts).toBe(SYNAPSE_CONSTANTS.baseTapThoughtMin * 2); // CONST-OK: arithmetic intrinsic
+  test('two taps add 2 × baseTapThoughtMin at default state', () => {
+    useGameStore.getState().onTap(1000);
+    useGameStore.getState().onTap(2000);
+    expect(useGameStore.getState().thoughts).toBe(SYNAPSE_CONSTANTS.baseTapThoughtMin * 2);
   });
 
-  test('does not mutate unrelated fields', () => {
+  test('does not mutate memories / prestigeCount', () => {
     const before = useGameStore.getState();
     const memBefore = before.memories;
-    const focusBefore = before.focusBar;
     const prestigeBefore = before.prestigeCount;
-    useGameStore.getState().incrementThoughtsByMinTap();
+    useGameStore.getState().onTap(1000);
     const after = useGameStore.getState();
     expect(after.memories).toBe(memBefore);
-    expect(after.focusBar).toBe(focusBefore);
     expect(after.prestigeCount).toBe(prestigeBefore);
   });
 
+  test('fills focus bar by focusFillRate on tap (FOCUS-2)', () => {
+    const before = useGameStore.getState().focusBar;
+    useGameStore.getState().onTap(1000);
+    const after = useGameStore.getState().focusBar;
+    expect(after - before).toBeCloseTo(SYNAPSE_CONSTANTS.focusFillPerTap, 6);
+  });
+
+  test('pushes timestamp to lastTapTimestamps buffer', () => {
+    useGameStore.getState().onTap(1234);
+    expect(useGameStore.getState().lastTapTimestamps).toEqual([1234]);
+    useGameStore.getState().onTap(5678);
+    expect(useGameStore.getState().lastTapTimestamps).toEqual([1234, 5678]);
+  });
+
   test('action references preserved after call (Zustand pitfall per CLAUDE.md)', () => {
-    const beforeRef = useGameStore.getState().incrementThoughtsByMinTap;
-    useGameStore.getState().incrementThoughtsByMinTap();
-    const afterRef = useGameStore.getState().incrementThoughtsByMinTap;
+    const beforeRef = useGameStore.getState().onTap;
+    useGameStore.getState().onTap(1000);
+    const afterRef = useGameStore.getState().onTap;
     expect(afterRef).toBe(beforeRef);
     expect(useGameStore.getState().reset).toBeTypeOf('function');
     expect(useGameStore.getState().initSessionTimestamps).toBeTypeOf('function');

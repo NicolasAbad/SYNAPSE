@@ -136,6 +136,7 @@ export const SYNAPSE_CONSTANTS = {
   antiSpamTapIntervalMs: 150, // <150ms avg triggers (was <200ms)
   antiSpamVarianceThreshold: 20, // std dev < 20ms = machine-like
   antiSpamPenaltyMultiplier: 0.1,
+  antiSpamBufferSize: 20, // MENTAL-2 §17: circular buffer size for lastTapTimestamps
 
   // ── Era 3 ──
   era3StartPrestige: 19, // §23: Era 3 first cycle

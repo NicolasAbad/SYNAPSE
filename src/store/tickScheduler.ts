@@ -38,8 +38,11 @@ export function useTickScheduler(): void {
       const current = useGameStore.getState();
       if (current.cycleStartTimestamp === 0) return; // INIT-1 not yet run
       const now = Date.now();
-      const { state: next } = tick(current, now);
-      useGameStore.setState(next);
+      const { state: next, antiSpamActive } = tick(current, now);
+      // antiSpamActive is derived each tick (TAP-1 §35 step 12); surface it to
+      // UIState so the tap handler can consume the ×0.10 penalty without
+      // recomputing. UI-local — saveScheduler strips it before persistence.
+      useGameStore.setState({ ...next, antiSpamActive });
     }, SYNAPSE_CONSTANTS.tickIntervalMs);
 
     return () => window.clearInterval(intervalId);

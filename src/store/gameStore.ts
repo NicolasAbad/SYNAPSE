@@ -17,6 +17,7 @@ import type { GameState } from '../types/GameState';
 import type { NeuronType } from '../types';
 import { loadGame, saveGame } from './saveGame';
 import { tryBuyNeuron, tryBuyUpgrade, type BuyReason, type UndoToast } from './purchases';
+import { applyTap } from './tap';
 
 /**
  * Pure default state. Matches GDD §32 100-field enumeration exactly.
@@ -210,6 +211,12 @@ export interface UIState {
    * src/store/purchases.ts for the UndoToast shape.
    */
   undoToast: UndoToast | null;
+  /**
+   * TAP-1 anti-spam flag (Sprint 3 Phase 4). Derived per-tick by the engine
+   * (tick.ts step 12) and cached here so the tap handler can apply the ×0.10
+   * effectiveness penalty without recomputing. UI-local — not persisted.
+   */
+  antiSpamActive: boolean;
 }
 
 /** Actions on the store. Sprint 1 ships INIT-1, reset, and Phase 7 save/load. */
@@ -223,11 +230,12 @@ export interface GameStoreActions {
   /** Phase 7: manual save trigger (used by scheduler + tests). */
   saveToStorage: () => Promise<void>;
   /**
-   * Sprint 2 Phase 3 stub: adds the minimum tap floor (baseTapThoughtMin = 1).
-   * Sprint 3 replaces with the full TAP-2 formula (focus fill + anti-spam
-   * buffer + effectiveProductionPerSecond × baseTapThoughtPct).
+   * Sprint 3 Phase 4: full TAP-2 formula per GDD §6. Replaces the Sprint 2
+   * `incrementThoughtsByMinTap` stub. Applies Potencial Sináptico / Dopamina /
+   * Sinestesia / anti-spam penalty stacks; fills Focus Bar (+ Mielina); pushes
+   * timestamp to `lastTapTimestamps` circular buffer.
    */
-  incrementThoughtsByMinTap: () => void;
+  onTap: (nowTimestamp: number) => void;
   /** Sprint 2 Phase 5: UI-local tab selection. Default 'mind' per UI_MOCKUPS Screen 1. */
   setActiveTab: (tab: TabId) => void;
   /** Sprint 2 Phase 6: GDPR analytics opt-in. Writes GameState.analyticsConsent. */
@@ -257,6 +265,7 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
   ...createDefaultState(),
   activeTab: 'mind',
   undoToast: null,
+  antiSpamActive: false,
   initSessionTimestamps: (nowTimestamp) => {
     set((state) => {
       // Per INIT-1: only populate if field is still at the pure default sentinel.
@@ -269,7 +278,7 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
       return updates;
     });
   },
-  reset: () => set(() => ({ ...createDefaultState(), activeTab: 'mind' as TabId, undoToast: null })),
+  reset: () => set(() => ({ ...createDefaultState(), activeTab: 'mind' as TabId, undoToast: null, antiSpamActive: false })),
   loadFromSave: async () => {
     const loaded = await loadGame();
     if (loaded === null) return false;
@@ -279,17 +288,18 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
     return true;
   },
   saveToStorage: async () => {
-    // Strip UI-local state before persistence. `activeTab` + `undoToast` are
-    // transient per session (player starts at Mind tab on relaunch, no toast);
-    // actions are dropped by JSON.stringify naturally. Keeps the persisted
-    // payload at exactly 110 GameState fields per §32 invariant.
-    const { activeTab: _a, undoToast: _u, ...rest } = get();
+    // Strip UI-local state before persistence: `activeTab`, `undoToast`, and
+    // `antiSpamActive` are all transient per session; actions are dropped by
+    // JSON.stringify naturally. Keeps the persisted payload at exactly
+    // 110 GameState fields per §32 invariant.
+    const { activeTab: _a, undoToast: _u, antiSpamActive: _s, ...rest } = get();
     void _a;
     void _u;
+    void _s;
     await saveGame(rest as GameState);
   },
-  incrementThoughtsByMinTap: () =>
-    set((state) => ({ thoughts: state.thoughts + SYNAPSE_CONSTANTS.baseTapThoughtMin })),
+  onTap: (nowTimestamp) =>
+    set((state) => applyTap(state, state.antiSpamActive, nowTimestamp)),
   setActiveTab: (tab) => set({ activeTab: tab }),
   setAnalyticsConsent: (consent) => set({ analyticsConsent: consent }),
   buyNeuron: (type, nowTimestamp) => {

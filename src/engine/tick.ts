@@ -17,9 +17,6 @@ const TICK_MS = 100; // CONST-OK (§35 TICK-1 fixed dt)
 const HYPERFOCUS_BONUS_WINDOW_MS = 5_000; // CONST-OK (§35 TICK-1 step 2 / MENTAL-5)
 // CONST-OK: RP-1 2-minute purchase window per §22; purging beyond keeps state bounded.
 const RP_WINDOW_MS = 120_000; // CONST-OK (§22 RP-1 window)
-// CONST-OK: TAP-1 buffer size per §35 step 12 — structural size of the circular
-// buffer, not a designer-tunable value (derived from antiSpamTapWindow / antiSpamTapIntervalMs).
-const ANTI_SPAM_BUFFER_SIZE = 20; // CONST-OK (§35 TICK-1 step 12)
 // CONST-OK: Era 3 "first tick of the cycle" window per §35 TICK-1 step 9 post-Phase-5.
 const ERA3_FIRST_TICK_WINDOW_MS = 1_000; // CONST-OK (§35 TICK-1 step 9)
 
@@ -166,9 +163,9 @@ function stepMicroChallengeTrigger(_s: GameState, _nowTimestamp: number): void {
 
 /** Step 12: Anti-spam TAP-1 — derived per-tick flag, not stored. Consumed by the tap handler. */
 function computeAntiSpam(state: GameState, nowTimestamp: number): boolean {
-  const { antiSpamTapWindow, antiSpamTapIntervalMs, antiSpamVarianceThreshold } = SYNAPSE_CONSTANTS;
+  const { antiSpamTapWindow, antiSpamTapIntervalMs, antiSpamVarianceThreshold, antiSpamBufferSize } = SYNAPSE_CONSTANTS;
   const stamps = state.lastTapTimestamps;
-  if (stamps.length < ANTI_SPAM_BUFFER_SIZE) return false;
+  if (stamps.length < antiSpamBufferSize) return false;
   if (nowTimestamp - stamps[0] < antiSpamTapWindow) return false;
   const intervals: number[] = [];
   for (let i = 1; i < stamps.length; i++) intervals.push(stamps[i] - stamps[i - 1]);

@@ -17,16 +17,17 @@ let saveInFlight = false;
  * a 5KB JSON write every 30s is trivial; queueing would add failure
  * surface with no user-visible benefit.
  *
- * Strips UI-local state (activeTab, undoToast) before persistence; see
- * saveToStorage action in gameStore.ts for rationale.
+ * Strips UI-local state (activeTab, undoToast, antiSpamActive) before
+ * persistence; see saveToStorage action in gameStore.ts for rationale.
  */
 export async function trySave(): Promise<void> {
   if (saveInFlight) return;
   saveInFlight = true;
   try {
-    const { activeTab: _a, undoToast: _u, ...rest } = useGameStore.getState();
+    const { activeTab: _a, undoToast: _u, antiSpamActive: _s, ...rest } = useGameStore.getState();
     void _a;
     void _u;
+    void _s;
     await saveGame(rest as GameState);
   } catch (e) {
     console.error('[saveScheduler] save failed:', e);

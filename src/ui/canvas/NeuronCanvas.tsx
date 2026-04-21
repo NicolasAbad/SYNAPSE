@@ -27,6 +27,7 @@
 import { useEffect, useRef, type PointerEvent as ReactPointerEvent } from 'react';
 import { useGameStore } from '../../store/gameStore';
 import { useActiveTheme } from '../theme/useActiveTheme';
+import { hapticLight } from '../haptics';
 import { unlockAudioOnFirstTap } from './audioUnlock';
 import { resizeHiDPICanvas, setupHiDPICanvas } from './dpr';
 import { draw } from './renderer';
@@ -61,7 +62,10 @@ export function NeuronCanvas() {
       console.debug('tap:first-tap');
     }
 
-    useGameStore.getState().incrementThoughtsByMinTap();
+    // Sprint 3 Phase 4: full TAP-2 via store action + light haptic feedback.
+    // hapticLight() silently no-ops on web/dev/jsdom (see src/ui/haptics.ts).
+    useGameStore.getState().onTap(Date.now());
+    void hapticLight();
   };
 
   useEffect(() => {

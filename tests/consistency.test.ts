@@ -140,6 +140,9 @@ describe('Consistency: GDD ↔ constants.ts invariants', () => {
     expect(SYNAPSE_CONSTANTS.spontaneousTriggerChance).toBe(0.4);
   });
 
+  test('antiSpamBufferSize = 20 (MENTAL-2 §17 circular buffer size for lastTapTimestamps)', () => {
+    expect(SYNAPSE_CONSTANTS.antiSpamBufferSize).toBe(20);
+  });
   test('antiSpamTapWindow = 30000ms (GDD §35 TAP-1)', () => {
     expect(SYNAPSE_CONSTANTS.antiSpamTapWindow).toBe(30_000);
   });
