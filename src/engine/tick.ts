@@ -1,23 +1,18 @@
-// Implements docs/GDD.md §35 TICK-1 — 12-step pure reducer.
-// Rules: CODE-9 (determinism), TICK-1 (order), RP-1 (§22 step 7), SPONT-1 (step 10),
-// MICRO-1 (step 11), TAP-1 (step 12).
-// cycleTime derived per-site as `nowTimestamp - state.cycleStartTimestamp` (Phase 5
-// Sprint 1 Option B resolution). `lastSpontaneousCheck` is an absolute timestamp.
-// Phase 3.5: extracted each step into its own function (CODE-2 50-line rule).
+// Implements docs/GDD.md §35 TICK-1 — 12-step pure reducer. Rules: CODE-9,
+// TICK-1, RP-1 (step 7), SPONT-1 (step 10), MICRO-1 (step 11), TAP-1 (step 12).
+// cycleTime derived per-site (Phase 5 Sprint 1 Option B). Phase 3.5 split
+// steps into functions; Phase 5 added step 2.5 stepInsightActivation.
 
 import { SYNAPSE_CONSTANTS } from '../config/constants';
 import { calculateProduction } from './production';
+import { tryActivateInsight } from './insight';
 import { hash, randomInRange } from './rng';
 import type { GameState } from '../types/GameState';
 
-// CONST-OK: TICK_MS is the fixed game-loop dt per §35 TICK-1 step 1 (implementation
-// detail, not a designer-tunable balance value; changing it would break determinism).
+// Structural intrinsics (not designer-tunable). Changing breaks determinism / spec.
 const TICK_MS = 100; // CONST-OK (§35 TICK-1 fixed dt)
-// CONST-OK: 5-second Hyperfocus-bonus expiry window per §35 TICK-1 step 2 (MENTAL-5).
-const HYPERFOCUS_BONUS_WINDOW_MS = 5_000; // CONST-OK (§35 TICK-1 step 2 / MENTAL-5)
-// CONST-OK: RP-1 2-minute purchase window per §22; purging beyond keeps state bounded.
+const HYPERFOCUS_BONUS_WINDOW_MS = 5_000; // CONST-OK (§35 MENTAL-5)
 const RP_WINDOW_MS = 120_000; // CONST-OK (§22 RP-1 window)
-// CONST-OK: Era 3 "first tick of the cycle" window per §35 TICK-1 step 9 post-Phase-5.
 const ERA3_FIRST_TICK_WINDOW_MS = 1_000; // CONST-OK (§35 TICK-1 step 9)
 
 /**
@@ -51,6 +46,15 @@ function stepExpireModifiers(s: GameState, nowTimestamp: number): void {
     s.pendingHyperfocusBonus = false;
   }
   // TODO Sprint 7: Mental State exit conditions per MENTAL-4 (§17) — set currentMentalState to null when exit triggers fire.
+}
+
+/**
+ * Step 2.5 (Phase 5): auto-activate Insight after expiry + before recalc so
+ * this tick's effectiveProductionPerSecond reflects any new multiplier.
+ * FOCUS-2: bar is pre-charged — a just-expired Insight re-fires immediately.
+ */
+function stepInsightActivation(s: GameState, nowTimestamp: number): void {
+  Object.assign(s, tryActivateInsight(s, nowTimestamp));
 }
 
 /** Step 3: Cache base/effective production-per-second for tick + UI consumers (production.ts owns the §4 formula). */
@@ -180,6 +184,7 @@ export function tick(state: GameState, nowTimestamp: number): TickResult {
   const s: GameState = { ...state };
   // Step 1: Timestamp advance — no-op (Phase 5 Sprint 1 spec gap resolution).
   stepExpireModifiers(s, nowTimestamp);
+  stepInsightActivation(s, nowTimestamp);
   stepRecalcProduction(s);
   stepProduce(s);
   stepConsciousnessBarUnlock(s);

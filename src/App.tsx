@@ -26,7 +26,7 @@ export function App() {
     void initialize();
   }, []);
 
-  useTickScheduler(); // game tick runtime (Phase 3.5 Finding #1 fix)
+  useTickScheduler(); // game tick runtime
   useSaveScheduler();
 
   // Sprint 2 Phase 6 — UI-9 first-open sequence. Splash shows on every cold

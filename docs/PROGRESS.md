@@ -6,9 +6,9 @@
 
 ## Current status
 
-**Phase:** Sprint 3 Phase 4.5 COMPLETE — test-quality uplift (property-based tests + GDD parser cross-check + golden snapshots)
-**Last updated:** 2026-04-20 after Sprint 3 Phase 4.5 close
-**Active sprint:** Sprint 3 (Phases 1+2+3+3.5+4+4.5 complete) → next: Sprint 3 Phase 5 (Focus Bar + Insight auto-activate + HUD chip for Decision B)
+**Phase:** Sprint 3 Phase 5 COMPLETE — Insight auto-activation (level 1/2/3 by prestige, FOCUS-2 pre-charge, Hyperfocus consumption) + Decision B ConnectionChip
+**Last updated:** 2026-04-20 after Sprint 3 Phase 5 close
+**Active sprint:** Sprint 3 (Phases 1+2+3+3.5+4+4.5+5 complete) → next: Sprint 3 Phase 6 (Discharge + Cascade + Tutorial ×3)
 **Next action:** Phase 5 — auto-activate Insight when `focusBar >= 1.0`, level determined by prestigeCount (P0-9 = Claro/1, P10-18 = Profundo/2, P19+ = Trascendente/3) per GDD §6 table. Multipliers `[3.0, 8.0, 18.0]`, durations `[15, 12, 8]`s (from SYNAPSE_CONSTANTS). Concentración Profunda extends duration by +5s. FOCUS-2: Focus Bar does NOT reset on Insight activation (can pre-charge next). Also: implement Decision B HUD chip showing `×{connectionMult} connections` next to rate counter (permanent after player owns ≥2 types).
 
 ### Sprint 3 Phase 3.5 — accepted design decisions (owning phases inheriting)
@@ -617,6 +617,48 @@ Sprint 11a TODO for `ALL_RULE_IDS` constant must include all 16 (not 13 as state
 ---
 
 ## Session log
+
+### 2026-04-20 — Sprint 3 Phase 5: Insight auto-activation + Decision B ConnectionChip
+
+**Scope:** Sprint 3 Phase 5/7. Wire GDD §6 Insight auto-activation with tier-specific fire thresholds (1.0 / 2.0 / 3.0) by prestige level (1 / 2 / 3), Concentración Profunda +5s duration extension, Hyperfocus bonus consumption (level+1 or ×1.5 duration at max), FOCUS-2 no-reset pre-charge behavior. Ship Decision B HUD ConnectionChip that displays `×{connectionMult} conns` when player owns ≥ 2 neuron types.
+
+**Files created:**
+- `src/engine/insight.ts` (97 lines) — pure helpers: `getInsightLevel(prestigeCount)` → 1/2/3 by tier boundaries, `getInsightFireThreshold(level)` → 1.0/2.0/3.0, `shouldActivateInsight(state)` → precondition check, `activateInsight(state, nowTimestamp)` → full update partial (mult, endTime, lifetimeInsights++, insightTimestamps push, pendingHyperfocusBonus consume), `tryActivateInsight(state, nowTimestamp)` → composite guard + activate.
+- `src/ui/hud/ConnectionChip.tsx` (39 lines) — memoed HUD component. Renders only when ≥ 2 types owned. Format `×{connectionMult.toFixed(2)} conns`. Positioned below RateCounter in top-right stack. Decision B delivery.
+- `tests/engine/insight.test.ts` (28 tests) — tier boundary selection, threshold values, prereqs (insightActive blocks, below threshold blocks), level 1/2/3 activation, lifetimeInsights increment, insightTimestamps circular buffer (size 3, drops oldest), FOCUS-2 (partial does NOT include focusBar reset), Concentración Profunda +5s at all levels, Hyperfocus level-bumping (L1→L2→L3) + level-3 duration ×1.5, composite tryActivateInsight, GDD §6 constant invariants.
+- `tests/ui/hud/ConnectionChip.test.tsx` (4 tests) — visibility gate (hidden at 1 type, shown at ≥2), formatting (2 decimals), hide-on-count-drop after undo.
+
+**Files modified:**
+- `src/config/constants.ts` — added `insightThresholds: [1.0, 2.0, 3.0]`, `insightLevel2MinPrestige: 10`, `insightLevel3MinPrestige: 19`, `concentracionInsightDurationAddS: 5`, `hyperfocusLevel3DurationBoost: 0.5`, `insightBufferSize: 3`.
+- `src/engine/tick.ts` — added `stepInsightActivation` between step 2 (expire) and step 3 (recalc) so the new insightMultiplier applies to this tick's effectiveProductionPerSecond. Trimmed header + const docstrings to keep file ≤200 lines (199 final).
+- `src/store/tap.ts` — `applyTap` now chains `tryActivateInsight` so tap-driven crossings fire Insight immediately (no 100ms tick delay). Engine step 2.5 still handles post-expiry re-fires when bar is pre-charged.
+- `src/ui/hud/HUD.tsx` — mount ConnectionChip between RateCounter and DischargeCharges.
+- `tests/store/tap.test.ts` — added 3 tests: tap-driven activation, below-threshold no-op, no re-trigger while active.
+
+**Key Phase 5 decisions:**
+1. **Tier-specific fire thresholds (1.0 / 2.0 / 3.0).** GDD §6 has apparent tension between "Insight trigger: when focusBar >= 1.0" and "Bar max = 1.0/2.0/3.0 per level". Resolved by reading bar max as the fire threshold. P10+ player must fill bar to 2.0 for level-2 Insight (harder to reach, bigger multiplier × shorter duration — matches "rewarding focused burst play").
+2. **Dual activation site (tap + tick).** Tap handler fires immediately for UX responsiveness; tick step 2.5 catches the post-expiry re-fire case (bar overflowed previous threshold, insight expired, bar is still pre-charged). Both go through the same `tryActivateInsight` helper — no drift risk.
+3. **Hyperfocus consumption in Phase 5 (not Sprint 7).** The `pendingHyperfocusBonus` flag is SET by Sprint 7's Hyperfocus Mental State machinery, but CONSUMED at Insight activation. Phase 5 handles the consume side defensively — Sprint 7 plugs in without touching insight.ts.
+4. **Derived `maxLevel` from `insightMultiplier.length`.** Avoids adding a new `insightMaxLevel: 3` constant — length of the tier table IS the max level by construction.
+
+**Verification (all gates green, best ratio yet):**
+- `npm run typecheck` — 0 errors
+- `npm run lint` — 0 warnings
+- `bash scripts/check-invention.sh` — 4/4 PASS, **ratio 0.91** (up from 0.89 — 9 new constants vs 0 new literals after CONST-OK annotations)
+- `npm test` — **595 passed / 49 skipped / 0 failing** (+35: 28 insight + 4 ConnectionChip + 3 tap-activation integration)
+
+**Phase 6 handoff (Discharge + Cascade + Tutorial ×3):**
+- Discharge action: `effectivePPS × dischargeMultiplier × 60` burst. P0-P2 mult = 1.5; P3+ = 2.0. Tutorial (isTutorialCycle) first-ever Discharge overrides to tutorialDischargeMult = 3.0.
+- Cascade: if `focusBar >= cascadeThreshold (0.75)` AT TIME of Discharge → multiply by `cascadeMultiplier (2.5)`. Consume focus bar to 0. BUG-07 order: check BEFORE applying Discharge burst.
+- Cascada Profunda owned: `cascadeMult` 2.5 → 5.0 (replaces base). cascada_eterna resonance (Sprint 8b) sets base 3.0 → final 6.0 with Cascada Profunda doubling.
+- Sincronización Total owned: after Cascade, Focus regains +0.18 (post-Discharge refund).
+- Amplificador de Disparo owned: `dischargeMultiplier` bumped ×1.5.
+- Red de Alta Velocidad owned: charges accumulate 25% faster (modify the 20min interval).
+- Potencial Latente (P10+): each Discharge adds +1000 × prestigeCount flat bonus to burst.
+- Resonancia Acumulada (P10+): post-offline first Discharge gets +5% per hour offline (max +100%).
+- Haptic feedback: `hapticMedium()` on Discharge, `hapticHeavy()` on Cascade (already wired in haptics.ts).
+- cycleDischargesUsed++ on every Discharge. cycleCascades++ on every Cascade.
+- Handler consumes 1 charge; if no charges, button is disabled.
 
 ### 2026-04-20 — Sprint 3 Phase 4.5: test-quality uplift
 

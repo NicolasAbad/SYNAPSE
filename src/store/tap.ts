@@ -16,6 +16,7 @@
 
 import { SYNAPSE_CONSTANTS } from '../config/constants';
 import { UPGRADES_BY_ID } from '../config/upgrades';
+import { tryActivateInsight } from '../engine/insight';
 import type { GameState } from '../types/GameState';
 
 function ownedUpgradeIds(state: Pick<GameState, 'upgrades'>): Set<string> {
@@ -75,11 +76,19 @@ function pushTapTimestamp(stamps: readonly number[], nowTimestamp: number): numb
 export function applyTap(state: GameState, antiSpamActive: boolean, nowTimestamp: number): Partial<GameState> {
   const thoughtGain = computeTapThought(state, antiSpamActive);
   const focusGain = computeFocusFillPerTap(state);
-  return {
+  const newFocusBar = state.focusBar + focusGain;
+  const base: Partial<GameState> = {
     thoughts: state.thoughts + thoughtGain,
     cycleGenerated: state.cycleGenerated + thoughtGain,
     totalGenerated: state.totalGenerated + thoughtGain,
-    focusBar: state.focusBar + focusGain,
+    focusBar: newFocusBar,
     lastTapTimestamps: pushTapTimestamp(state.lastTapTimestamps, nowTimestamp),
   };
+  // Immediate tap-driven Insight activation (Phase 5) — players feel the
+  // payoff on the tap that crosses the threshold rather than waiting up to
+  // 100ms for the next tick. The engine step 2.5 still handles post-expiry
+  // re-fires when bar is already pre-charged (FOCUS-2).
+  const probeState = { ...state, focusBar: newFocusBar };
+  const insightUpdates = tryActivateInsight(probeState, nowTimestamp);
+  return { ...base, ...insightUpdates };
 }

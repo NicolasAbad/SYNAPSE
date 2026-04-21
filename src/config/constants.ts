@@ -69,6 +69,11 @@ export const SYNAPSE_CONSTANTS = {
   focusFillPerTap: 0.01,
   insightMultiplier: [3.0, 8.0, 18.0] as const,
   insightDuration: [15, 12, 8] as const, // seconds
+  insightThresholds: [1.0, 2.0, 3.0] as const, // bar fill required to auto-fire per level (GDD §6)
+  insightLevel2MinPrestige: 10, // P10+ → level 2 Insight (Profundo)
+  insightLevel3MinPrestige: 19, // P19+ → level 3 Insight (Trascendente, Era 3)
+  concentracionInsightDurationAddS: 5, // Concentración Profunda adds +5s (GDD §24)
+  hyperfocusLevel3DurationBoost: 0.5, // +50% duration at level 3 with pendingHyperfocusBonus (MENTAL-4/5)
 
   // ── Tap thought contribution (TAP-2, §6) ──
   baseTapThoughtPct: 0.05, // 5% of effectiveProductionPerSecond per tap (P0 base, replaced by Potencial Sináptico → 0.10)
@@ -137,6 +142,7 @@ export const SYNAPSE_CONSTANTS = {
   antiSpamVarianceThreshold: 20, // std dev < 20ms = machine-like
   antiSpamPenaltyMultiplier: 0.1,
   antiSpamBufferSize: 20, // MENTAL-2 §17: circular buffer size for lastTapTimestamps
+  insightBufferSize: 3, // MENTAL-2 §17: circular buffer size for insightTimestamps (Eureka trigger)
 
   // ── Era 3 ──
   era3StartPrestige: 19, // §23: Era 3 first cycle

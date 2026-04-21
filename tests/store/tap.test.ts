@@ -144,6 +144,28 @@ describe('applyTap — updates thoughts, cycleGenerated, totalGenerated, focusBa
   });
 });
 
+describe('applyTap — immediate Insight activation when focusBar crosses threshold (Phase 5)', () => {
+  test('Tap that pushes focusBar to 1.0 activates Insight in same update', () => {
+    // focusBar at 0.995 + focusFillPerTap (0.01) = 1.005 ≥ 1.0 → fire level 1
+    const state = { ...createDefaultState(), focusBar: 0.995 };
+    const partial = applyTap(state, false, 1000);
+    expect(partial.insightActive).toBe(true);
+    expect(partial.insightMultiplier).toBe(3.0);
+    expect(partial.insightEndTime).toBe(1000 + 15_000);
+  });
+  test('Tap below threshold does NOT activate', () => {
+    const state = { ...createDefaultState(), focusBar: 0.5 };
+    const partial = applyTap(state, false, 1000);
+    expect(partial.insightActive).toBeUndefined();
+  });
+  test('Tap while Insight already active does NOT re-trigger', () => {
+    const state = { ...createDefaultState(), focusBar: 1.5, insightActive: true, insightMultiplier: 3.0, insightEndTime: 9999 };
+    const partial = applyTap(state, false, 1000);
+    expect(partial.insightActive).toBeUndefined();
+    expect(partial.insightEndTime).toBeUndefined();
+  });
+});
+
 describe('GDD §6 TAP-2 worked examples (spec-authority spot checks)', () => {
   test('P0, 1 Básica (effectivePPS=0.5), no upgrades → tap yields 1 thought (floor)', () => {
     const state = { ...createDefaultState(), effectiveProductionPerSecond: 0.5 };
