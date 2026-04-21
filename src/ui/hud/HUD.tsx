@@ -8,6 +8,7 @@ import { ConsciousnessBar } from './ConsciousnessBar';
 import { DischargeButton } from './DischargeButton';
 import { TabBar } from './TabBar';
 import { UndoToast } from './UndoToast';
+import { EmergenciaCapBanner } from './EmergenciaCapBanner';
 
 /**
  * HUD composition overlay. Absolute-positioned sibling of NeuronCanvas
@@ -48,6 +49,7 @@ export const HUD = memo(function HUD() {
       <ConsciousnessBar />
       <DischargeButton />
       <UndoToast />
+      <EmergenciaCapBanner />
       <TabBar />
     </div>
   );

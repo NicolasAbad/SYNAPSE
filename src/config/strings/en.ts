@@ -110,6 +110,7 @@ export const en = {
     hiperconciencia: 'Hyperconsciousness',
     retroalimentacion_positiva: 'Positive Feedback',
     emergencia_cognitiva: 'Cognitive Emergence',
+    emergencia_cap_reached: 'Max bonus reached — other upgrades keep scaling',
     singularidad: 'Singularity',
     convergencia_sinaptica: 'Synaptic Convergence',
     consciencia_distribuida: 'Distributed Consciousness',
