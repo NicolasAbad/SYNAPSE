@@ -6,10 +6,110 @@
 
 ## Current status
 
-**Phase:** Sprint 4c IN PROGRESS — Phase 4c.4 (post-prestige sequence wiring) shipped. `AwakeningFlow` now orchestrates the full 5-step prestige loop: ready button → confirm → prestige action → Awakening screen → (if P3+) CycleSetupScreen → setPolarity → resume play. Pre-P3 path skips CycleSetupScreen entirely.
-**Last updated:** 2026-04-21 after Sprint 4c Phase 4c.4 close.
-**Active sprint:** Sprint 4c — Polarity + CycleSetupScreen + Playtest. 5 planned sub-phases: 4c.1 constants + setPolarity + snapshot (DONE) → 4c.2 engine wiring (DONE) → 4c.3 CycleSetupScreen component (DONE) → 4c.4 post-prestige sequence (DONE) → 4c.5 integration tests + Sprint close + PLAYTEST-REQUIRED handoff.
-**Next action:** Phase 4c.5 — integration tests for the end-to-end P0→P3 → Polarity pick → new cycle flow, and P0→P5 multi-polarity chain. Sprint 4c close with PLAYTEST-REQUIRED block in PROGRESS.md (blind-play P0→P4 — Nico-owned human test, can't be automated).
+**Phase:** Sprint 4c CLOSED — Polarity + CycleSetupScreen shipped. Full 5-step post-prestige flow functional P3+. Nico-approved Option A `inhibitoryCascadeThresholdMult` spec resolution wired. ⚠️ **PLAYTEST REQUIRED** (see handoff block below) — Sprint 4c's mandatory human blind-play P0→P4 can't be automated; Nico or a friend to run.
+**Last updated:** 2026-04-21 after Sprint 4c close.
+**Active sprint:** Buffer 1 (2 days, MANDATORY per SCHED-1) — Prestige Integration. Re-run full 110-field assertion suite + PRESTIGE_RESET integrity tests; simulate 5-10 manual prestige cycles; verify Focus Persistente 25% edge case on device. Any bugs → fixed here, not pushed into Sprint 5.
+**Next action:** Run the mandatory Sprint 4c human playtest (blind-play P0→P4, see PLAYTEST-REQUIRED block). If times land in the 7-9 min TUTOR-1 window, enter Buffer 1. If P1 > 10 min or P2 > 8 min, retune `tutorialThreshold` or boost tap before Buffer 1. Then Sprint 5 (Mutations + Pathways + Regions).
+
+### Sprint 4c closing dashboard
+
+- **Phases:** 5 sub-phases (4c.1 constants + setPolarity + lastCycleConfig snapshot → 4c.2 polarity modifiers in production/discharge/cascade-threshold → 4c.3 CycleSetupScreen polarity picker → 4c.4 post-prestige sequence wiring → 4c.5 integration tests + close) + this close commit = 6 total.
+- **Active tests:** **923 passed**, 0 failing (up from 871 at Sprint 4b close → **+52 in Sprint 4c**). Breakdown: 9 setPolarity + 4 handlePrestige lastCycleConfig snapshot (4c.1) + 21 polarity modifiers (4c.2) + 11 CycleSetupScreen (4c.3) + 5 AwakeningFlow post-prestige (4c.4) + 6 integration (4c.5) = 56. (4 existing tests were adjusted non-destructively — one AwakeningFlow beforeAll matchMedia stub, no assertion weakening.)
+- **Skipped tests:** **43** (unchanged — no `BLOCKED-SPRINT-4c` markers existed).
+- **Typecheck errors:** 0. **Lint warnings:** 0.
+- **Anti-invention gates:** 4/4 PASS, **ratio 0.84** (up from 0.82 at Sprint 4b close — 6 new polarity constants pulled in multiple consumer refs across production/discharge/CycleSetupScreen/AwakeningFlow).
+- **Scope delivered vs. scope deferred:**
+  - ✅ Polarity (P3+) — Excitatoria (+10% prod, −15% Discharge), Inhibitoria (−6% prod, +30% Discharge, multiplicative Cascade-threshold shift per Nico-approved Option A)
+  - ✅ All polarity modifiers wired into production + discharge + cascade-threshold stack (Inhibitory × Node 36A → MIN resolution)
+  - ✅ POLAR-1 default-to-last via `lastCycleConfig` snapshot in `handlePrestige`
+  - ✅ `CycleSetupScreen` unified (1/2/3 columns by prestige) — Polarity interactive, Mutation/Pathway "Sprint 5" placeholders
+  - ✅ SAME AS LAST button — 1-tap skip reading `lastCycleConfig.polarity`
+  - ✅ Post-prestige sequence: Awakening → (P3+) CycleSetupScreen → new cycle
+  - ✅ Pre-P3 path: CycleSetupScreen skipped entirely
+  - ⏭ "Awakening animation → 3s → Pattern Tree view" interstitial animation — Sprint 10 polish (functional 2-step flow ships now)
+- **Spec gap resolved (Nico approval 2026-04-21):** GDD §11 "Inhibitoria Cascade chance +10%" vs. §7 deterministic Cascade was a spec ambiguity. Nico approved Option A (multiplicative threshold shift `inhibitoryCascadeThresholdMult: 0.90` → 0.75 × 0.90 = 0.675). Implemented in 4c.2; proposed alternatives (RNG trigger, fixed subtract) flagged in commit 9cd9218 for audit. Stacks with Node 36A by picking MIN (lower = more favorable).
+- **Design decisions:**
+  - **`lastCycleConfig` writes in handlePrestige:** snapshot all 3 cycle choices (polarity/mutation/pathway). Preserves type invariants (string, not null) by using empty-string fallbacks. Sprint 5 will populate mutation + pathway slots in the same mechanism.
+  - **`currentPolarity` stays in PRESTIGE_RESET:** POLAR-1 achieved via `lastCycleConfig` snapshot rather than keeping `currentPolarity` across prestige. Cleaner separation — cycle-scoped state resets, preserved choice lives in its dedicated snapshot field.
+  - **Polarity applied multiplicatively in rawMult (pre-softCap):** same class as archetype/region/mutation/pathway modifiers. SoftCap appropriately dampens compound stacks.
+  - **Cascade threshold MIN-stack (Inhibitory × Node 36A):** easier-to-Cascade wins. Documented design alternative (multiply both) would produce 0.675 × 0.90 = 0.608 — rejected because it makes Node 36A less impactful when stacked.
+- **Doc-vs-code corrections applied this sprint:**
+  - Added 6 Polarity constants to `src/config/constants.ts` (GDD §11 values + Option A resolution).
+  - `handlePrestige` PRESERVE_UPDATED set now includes `lastCycleConfig` alongside `memories` / `awakeningLog` / `patterns`.
+- **Commits landed in Sprint 4c:** 6 total.
+  - `9cd9218` Phase 4c.1 Polarity constants + setPolarity + POLAR-1 snapshot
+  - `b29c3aa` Phase 4c.2 Polarity modifiers in production + discharge
+  - `b552c6f` Phase 4c.3 CycleSetupScreen Polarity interactive
+  - `f6166c4` Phase 4c.4 post-prestige sequence wiring
+  - `(this commit)` Phase 4c.5 integration tests + Sprint 4c close
+- **Reviewer fabrications tracked:** 0 this sprint. 7+ sprints clean.
+
+---
+
+### ⚠️ PLAYTEST REQUIRED — Sprint 4c mandatory human playtest (owner: Nico)
+
+Per SPRINTS.md §Sprint 4c, Sprint 4c is NOT complete until a human runs a blind P0→P4 playtest and records the timings. Claude cannot execute this step. The checklist below is owned by Nico or a friend.
+
+**Pre-playtest verification (automated, green now):**
+- Sprint 1-4 integration: create new game, P0→P3 via taps + neuron/upgrade purchases, prestige, pick Polarity → verified in `tests/integration/polarity-flow.test.ts`.
+- `tutorialThreshold` = 25_000 — sim at 5 taps/sec projects 9.21 min (from Sprint 3 Phase 7.4b retune).
+
+**Playtest checklist (Nico):**
+- [ ] Cold start (reset state or fresh install). Play P0→P4 with NO instructions.
+- [ ] Record time-to-prestige for P1, P2, P3, P4.
+- [ ] **P1 MUST land in 7-9 min** (TUTOR-1 target). If >10 min → reduce `tutorialThreshold` or boost tap bonus before Sprint 5. **Do not skip this step.**
+- [ ] P2, P3 MUST be FASTER than P1 (better upgrades + Momentum Bonus available).
+- [ ] At P3 prestige: does the Polarity choice appear? Does the player understand what it does? (Excit prod +10% / Disch −15%; Inhib prod −6% / Disch +30% / easier Cascade).
+- [ ] SAME AS LAST discoverable? Obvious by P5?
+- [ ] Pattern Tree visible in Mind tab → Patterns subtab. Decision modal fires at 6 patterns (reached ~P2) and 15 patterns (~P5).
+- [ ] Record any UX confusion in PROGRESS.md under a new session log entry with "Sprint 10 polish backlog" tag.
+- [ ] Overall: does the Sprint 1→2→3→3.6→4a→4b→4c flow feel cohesive?
+
+**If all checks pass:** log results in PROGRESS.md, enter Buffer 1 (2-day Prestige Integration pass), then Sprint 5.
+
+**If P1 > 10 min OR P2 > 8 min:** STOP, retune (constant change in `src/config/constants.ts` + update this PROGRESS.md + GDD §31 + re-run `scripts/tutorial-timing.ts`) before Sprint 5.
+
+---
+
+**Handoff state for Buffer 1:**
+
+What Buffer 1 will do (per SPRINTS.md §Buffer 1, 2 days MANDATORY):
+- Re-run the full 110-field assertion suite + PRESTIGE_RESET integrity tests.
+- Simulate 5-10 manual prestige cycles in dev and watch for state drift.
+- Verify Focus Persistente 25% retention edge case (BUG-06) on a device, not just emulator.
+- Cold-open the app after a prestige to catch save-format regressions.
+- Any bugs found → fixed here, not pushed into Sprint 5.
+
+If 4a-4c finished cleanly and Buffer 1 isn't needed, it absorbs into the Sprint 9a-9b platform delay contingency. DO NOT start Sprint 5 early.
+
+What Sprint 5 will build (per SPRINTS.md §Sprint 5):
+- 15 Mutations with seeded selection (MUT-2), first-cycle-of-Run filter (MUT-3), weekly challenge filter (MUT-4).
+- 3 Pathways with enable/block category lists + `pathwayCostMod`.
+- 5 Regions (Hipocampo, Prefrontal, Límbico, Visual, Broca P14) + 5 region upgrades in Memorias.
+- What-if Preview on CycleSetupScreen (estimates cycle time per choice).
+- Populates the Sprint 4c Mutation / Pathway CycleSetupScreen placeholders.
+- Fills 3 Sprint 4b decision stubs: Node 15 A offline_efficiency_mult (8a), Node 48 A region_mult (here), Node 48 B mutation_options_add (here).
+
+What Sprint 5 does NOT touch — **Sprint 4c exports are frozen** unless a bug is found:
+- `src/config/constants.ts` Polarity block (frozen)
+- `src/engine/production.ts` `polarityProdMult` (frozen)
+- `src/engine/discharge.ts` `polarityDischargeMult` + `polarityCascadeThresholdMult` + `effectiveCascadeThreshold` stack (frozen)
+- `src/engine/prestige.ts` lastCycleConfig snapshot (frozen)
+- `src/store/gameStore.ts` `setPolarity` action (frozen)
+- `src/ui/modals/CycleSetupScreen.tsx` layout + `PolaritySlot.tsx` + `cycleSetupActionBar.tsx` (frozen; Sprint 5 replaces Mutation + Pathway slot contents, not the container)
+- `src/ui/hud/AwakeningFlow.tsx` orchestrator (frozen)
+
+**Clean-baseline verification for Sprint 5 kickoff** (run from cold state):
+- `git status` — clean
+- `npm run typecheck` — 0 errors
+- `npm run lint` — 0 warnings
+- `bash scripts/check-invention.sh` — 4/4 PASS, ratio 0.84
+- `npm test` — 923 passed / 43 skipped / 0 failing
+- `grep "BLOCKED-SPRINT-4c" tests/` — 0 matches (none existed)
+
+Sprint 5 un-skip targets: any `BLOCKED-SPRINT-5` test in `tests/consistency.test.ts` — grep on sprint kickoff.
+
+---
 
 ### Sprint 4b closing dashboard
 
@@ -869,6 +969,29 @@ Sprint 11a TODO for `ALL_RULE_IDS` constant must include all 16 (not 13 as state
 ---
 
 ## Session log
+
+### 2026-04-21 — Sprint 4c close: Polarity + CycleSetupScreen shipped
+
+**Scope:** Phase 4c.5 (integration tests) + Sprint 4c close. ⚠️ Sprint 4c's mandatory human playtest (blind P0→P4) is now Nico-owned — see PLAYTEST-REQUIRED block in Current status.
+
+**Phase 4c.5 content:**
+- New `tests/integration/polarity-flow.test.ts` (6 tests): P0→P3 multi-prestige end-to-end with polarity application; Discharge multiplier stacks Polarity × Node 36 B; Inhibitory × Node 36 A MIN-stack verification (0.65 wins over 0.675, matches Option A spec resolution); POLAR-1 lastCycleConfig persistence across multi-prestige chains (5-prestige sequence with alternating choices → final snapshot reflects last); mid-cycle polarity flip updates production immediately.
+
+**Sprint 4c total — 56 new tests across 5 categories:**
+1. Data + state (13 = 9 setPolarity + 4 handlePrestige lastCycleConfig snapshot) — 4c.1.
+2. Engine polarity modifiers (21) — 4c.2.
+3. CycleSetupScreen component (11) — 4c.3.
+4. AwakeningFlow post-prestige sequence (5) — 4c.4.
+5. Integration (6) — 4c.5.
+
+**Sprint-level verification (all gates green):**
+- `npm run typecheck` — 0 errors. `npm run lint` — 0 warnings.
+- `bash scripts/check-invention.sh` — 4/4 PASS, ratio **0.84** (up from 0.82 at Sprint 4b close).
+- `npm test` — **923 passed / 43 skipped / 0 failing** (from 871 → +52 in Sprint 4c).
+
+**Commits landed:** `9cd9218` (4c.1), `b29c3aa` (4c.2), `b552c6f` (4c.3), `f6166c4` (4c.4), (this) Phase 4c.5 + Sprint 4c close.
+
+**Next:** Sprint 4c mandatory human playtest (see PLAYTEST-REQUIRED in Current status) → Buffer 1 (2-day Prestige Integration) → Sprint 5 (Mutations + Pathways + Regions).
 
 ### 2026-04-21 — Sprint 4c Phase 4c.4: post-prestige sequence wiring
 
