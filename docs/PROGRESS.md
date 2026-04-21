@@ -6,10 +6,10 @@
 
 ## Current status
 
-**Phase:** Sprint 3 Phase 2 COMPLETE — GDD §4 production formula wired; all-neurons/per-type/global-mult upgrades applied; softCap at authoritative site
-**Last updated:** 2026-04-20 after Sprint 3 Phase 2 close
-**Active sprint:** Sprint 3 (Phase 2/7 complete) → next: Sprint 3 Phase 3 (store actions: buy neuron + buy upgrade)
-**Next action:** Phase 3 — implement buy-neuron + buy-upgrade store actions. Cost validation via `neuronCost()`, connection-mult recompute via `computeConnectionMult(neurons, hasSincroniaNeural)`, undo-toast state (UI-4), cycle counters (`cycleUpgradesBought`, `cycleNeuronsBought`), RP-1 push (`cycleNeuronPurchases`).
+**Phase:** Sprint 3 Phase 3 COMPLETE — buyNeuron + buyUpgrade store actions, COST-1 Funciones Ejecutivas discount, undo toast (UI-4), immediate state side-effects at purchase
+**Last updated:** 2026-04-20 after Sprint 3 Phase 3 close
+**Active sprint:** Sprint 3 (Phase 3/7 complete) → next: Sprint 3 Phase 4 (TAP-2 + TAP-1)
+**Next action:** Phase 4 — replace `incrementThoughtsByMinTap` stub with full TAP-2 formula per GDD §6: `Math.max(baseTapThoughtMin, effectivePPS × baseTapThoughtPct)` thoughts per tap, `focusFillPerTap` fill on each tap, push to `lastTapTimestamps` circular buffer (size 20), consume TICK-1 step 12's `antiSpamActive` flag for ×0.10 effectiveness penalty. Wire Mielina upgrade (`tap_focus_fill_add: +2% focus on tap`) and Potencial Sináptico (`tap_replace_pct: replace base 0.05 with 0.10`) and Dopamina (`tap_bonus_mult: ×1.5` on final thought contribution).
 
 ### Sprint 2 closing dashboard
 
@@ -594,6 +594,49 @@ Sprint 11a TODO for `ALL_RULE_IDS` constant must include all 16 (not 13 as state
 ---
 
 ## Session log
+
+### 2026-04-20 — Sprint 3 Phase 3: buyNeuron + buyUpgrade store actions
+
+**Scope:** Sprint 3 Phase 3/7. Ship the purchase pipeline that glues Phase 1's data (UPGRADES, NEURON_CONFIG, neuronCost) and Phase 2's formula (computeConnectionMult) to the Zustand store via clean pure helpers. Keeps the store thin (CODE-2) and lets Phase 4+ hooks/UI call typed actions with reason-coded failures.
+
+**Files created:**
+- `src/store/purchases.ts` (199 lines) — pure helpers for canBuy/tryBuy:
+  - `neuronBuyCost(type, owned)` — GDD §4 `baseCost × costMult^owned`
+  - `isNeuronUnlocked(state, type)` — §5 Unlock-column dispatch (start / neuron_count / prestige)
+  - `canBuyNeuron(state, type)` + `canBuyUpgrade(state, id)` — reason-coded guards (locked / insufficient_funds / already_owned / unknown / ok) so UI can tooltip without attempting a buy
+  - `tryBuyNeuron(state, type, nowTimestamp)` — deducts thoughts, increments count, recomputes `connectionMult` via `computeConnectionMult()` when a new type enters the owned set (respects Sincronía Neural), pushes to `cycleNeuronPurchases` (RP-1), increments `cycleNeuronsBought`, sets undo toast if cost > 10% of thoughts
+  - `tryBuyUpgrade(state, id, nowTimestamp)` — applies COST-1 Funciones Ejecutivas −20% discount on thought-cost upgrades, deducts correct currency (thoughts vs memorias), records ownership, applies immediate state side-effects (discharge_max_charges_add / offline_cap_set / focus_fill_mult / connection_mult_double / offline_efficiency_mult / offline_efficiency_and_autocharge), sets undo toast if expensive
+  - `UndoToast` shape with snapshot-based restore — `set(snapshot)` on undo restores pre-buy state
+- `tests/store/purchases.test.ts` (33 tests) — neuron unlock gates (start/neuron_count/prestige), cost scaling, affordability, connection-mult recompute on new-type entry, Sincronía interaction, upgrade locked-by-prestige, already_owned double-buy rejection, COST-1 discount (applies to thought-cost, NOT memoria-cost), immediate state side-effects (Descarga Neural, Sueño REM, Concentración Profunda, Sincronía Neural, Regulación Emocional), non-immediate effects recording ownership only (Dopamina), undo-toast threshold (UI-4 10% rule), end-to-end store-action integration (reason codes, reset clears toast, dismissUndoToast leaves purchase intact).
+
+**Files modified:**
+- `src/store/gameStore.ts` — added `undoToast: UndoToast | null` to UIState, actions `buyNeuron(type, nowTimestamp)`, `buyUpgrade(id, nowTimestamp)`, `undoLastPurchase()`, `dismissUndoToast()`. All buy actions return a `BuyReason` code so UI can differentiate failure modes. `reset` clears undoToast. `saveToStorage` strips both `activeTab` and `undoToast` before persistence (keeps 110-field invariant).
+- `src/store/saveScheduler.ts` — mirror `saveToStorage` strip: also strip `undoToast` before calling `saveGame`. Fixed 5 previously-passing tests that broke after adding `undoToast` to the UIState (validateLoadedState expected 110 fields, got 111).
+
+**Key decisions made this Phase:**
+
+1. **Amplitud de Banda's `region_upgrades_boost` effect deferred to Sprint 10.** Its scope — "All region upgrades +50%" — requires parameterizing region-upgrade effect magnitudes. Phase 3 records ownership; no effect application. Acceptable because all region upgrades are memoria-cost (player can't buy Amplitud de Banda until later cycles anyway).
+
+2. **COST-1 applied only to THOUGHT-cost upgrades.** GDD §24 says Funciones Ejecutivas is "Thought-cost upgrades −20%". Region upgrades (memoria-cost) are unaffected. Mutation + Pathway cost modifiers deferred to Sprint 5.
+
+3. **Undo toast threshold uses the costed currency's bank.** For thoughts-cost purchases, `cost > 0.10 × thoughts` triggers. For memoria-cost upgrades, `cost > 0.10 × memories`. Zero-bank denominator is skipped (no toast — cost threshold meaningless).
+
+4. **connectionMult storage = fully-applied (post-Sincronía) value.** Store actions maintain this invariant by calling `computeConnectionMult(neurons, hasSincroniaNeural)` after neuron buy (only when a new type enters the owned set — existing-type additions don't change pair count) and after Sincronía Neural buy.
+
+**Verification (all gates green):**
+- `npm run typecheck` — 0 errors
+- `npm run lint` — 0 warnings
+- `bash scripts/check-invention.sh` — 4/4 PASS, ratio **0.89** (up from 0.87 — `undoExpensiveThresholdPct` + `undoToastDurationMs` usage bumps constants)
+- `npm test` — **431 passed / 49 skipped / 0 failing** (+33 from Phase 2 total; +5 saveScheduler restored after strip fix)
+
+**Phase 4 handoff:**
+- TAP-2 replaces `incrementThoughtsByMinTap` with full formula: `Math.max(baseTapThoughtMin, effectiveProductionPerSecond × baseTapThoughtPct)` per tap.
+- Potencial Sináptico ownership → replace `baseTapThoughtPct` (0.05) with `potencialSinapticoTapPct` (0.10). Sinestesia Mutation (§13) not yet implemented; skip its `sinestesiaTapMult` (0.40) until Sprint 5.
+- Mielina ownership → `focusFillPerTap` increment += 0.02 on tap (ADDITIVE on top of base 0.01).
+- Dopamina ownership → multiply final tap thought contribution by 1.5.
+- TAP-1 anti-spam: tick.ts already computes `antiSpamActive` per step 12; Phase 4's tap handler consumes it → `effectiveness *= antiSpamPenaltyMultiplier (0.10)`.
+- Mental State Flow (§17): if 10+ taps in 15s → Flow Mental State (Sprint 7 territory; Phase 4 just populates the `lastTapTimestamps` buffer Sprint 7 reads).
+- Haptic feedback: Capacitor.Haptics light impact on each tap. Phase 4 wires the call at the action boundary (UI already has `tapHandler.ts` from Sprint 2 — extends or replaces).
 
 ### 2026-04-20 — Sprint 3 Phase 2: production formula stack (GDD §4)
 

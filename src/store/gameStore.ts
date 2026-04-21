@@ -14,7 +14,9 @@
 import { create } from 'zustand';
 import { SYNAPSE_CONSTANTS } from '../config/constants';
 import type { GameState } from '../types/GameState';
+import type { NeuronType } from '../types';
 import { loadGame, saveGame } from './saveGame';
+import { tryBuyNeuron, tryBuyUpgrade, type BuyReason, type UndoToast } from './purchases';
 
 /**
  * Pure default state. Matches GDD §32 100-field enumeration exactly.
@@ -200,6 +202,14 @@ export type TabId = 'mind' | 'neurons' | 'upgrades' | 'regions';
 
 export interface UIState {
   activeTab: TabId;
+  /**
+   * Undo toast for expensive purchases (UI-4, §24 Sprint 3). Null when no
+   * toast active. UI-local — never persisted (transient 3s window). Set by
+   * buyNeuron/buyUpgrade when cost > 10% of the currency bank; cleared by
+   * undoLastPurchase, dismissUndoToast, or natural expiry. See
+   * src/store/purchases.ts for the UndoToast shape.
+   */
+  undoToast: UndoToast | null;
 }
 
 /** Actions on the store. Sprint 1 ships INIT-1, reset, and Phase 7 save/load. */
@@ -222,11 +232,31 @@ export interface GameStoreActions {
   setActiveTab: (tab: TabId) => void;
   /** Sprint 2 Phase 6: GDPR analytics opt-in. Writes GameState.analyticsConsent. */
   setAnalyticsConsent: (consent: boolean) => void;
+  /**
+   * Sprint 3 Phase 3: purchase a neuron of `type` at the current scaled cost
+   * (GDD §4 `baseCost × 1.28^owned`). Returns 'ok' on success or a reason
+   * code on failure. Recomputes connectionMult on new-type entry (C(n,2)),
+   * pushes to cycleNeuronPurchases (RP-1), sets undoToast if expensive.
+   */
+  buyNeuron: (type: NeuronType, nowTimestamp: number) => BuyReason;
+  /**
+   * Sprint 3 Phase 3: purchase an upgrade by id from UPGRADES (§24 + §16).
+   * Applies COST-1 (Funciones Ejecutivas −20% on thought-cost upgrades)
+   * and immediate state side-effects (discharge_max_charges_add,
+   * offline_cap_set, focus_fill_mult, connection_mult_double,
+   * offline_efficiency_mult). Other effects consumed at event time.
+   */
+  buyUpgrade: (id: string, nowTimestamp: number) => BuyReason;
+  /** Restore pre-purchase state from the active undo toast's snapshot. No-op if none active. */
+  undoLastPurchase: () => void;
+  /** Dismiss the undo toast without reversing the purchase (player tapped elsewhere or timer elapsed). */
+  dismissUndoToast: () => void;
 }
 
 export const useGameStore = create<GameState & UIState & GameStoreActions>((set, get) => ({
   ...createDefaultState(),
   activeTab: 'mind',
+  undoToast: null,
   initSessionTimestamps: (nowTimestamp) => {
     set((state) => {
       // Per INIT-1: only populate if field is still at the pure default sentinel.
@@ -239,7 +269,7 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
       return updates;
     });
   },
-  reset: () => set(() => ({ ...createDefaultState(), activeTab: 'mind' as TabId })),
+  reset: () => set(() => ({ ...createDefaultState(), activeTab: 'mind' as TabId, undoToast: null })),
   loadFromSave: async () => {
     const loaded = await loadGame();
     if (loaded === null) return false;
@@ -249,16 +279,35 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
     return true;
   },
   saveToStorage: async () => {
-    // Strip UI-local state before persistence. `activeTab` is transient per
-    // session (player starts at Mind tab on relaunch regardless of last tab);
+    // Strip UI-local state before persistence. `activeTab` + `undoToast` are
+    // transient per session (player starts at Mind tab on relaunch, no toast);
     // actions are dropped by JSON.stringify naturally. Keeps the persisted
     // payload at exactly 110 GameState fields per §32 invariant.
-    const { activeTab: _omit, ...rest } = get();
-    void _omit;
+    const { activeTab: _a, undoToast: _u, ...rest } = get();
+    void _a;
+    void _u;
     await saveGame(rest as GameState);
   },
   incrementThoughtsByMinTap: () =>
     set((state) => ({ thoughts: state.thoughts + SYNAPSE_CONSTANTS.baseTapThoughtMin })),
   setActiveTab: (tab) => set({ activeTab: tab }),
   setAnalyticsConsent: (consent) => set({ analyticsConsent: consent }),
+  buyNeuron: (type, nowTimestamp) => {
+    const result = tryBuyNeuron(get(), type, nowTimestamp);
+    if (!result.ok) return result.reason;
+    set({ ...result.updates, undoToast: result.undoToast });
+    return 'ok';
+  },
+  buyUpgrade: (id, nowTimestamp) => {
+    const result = tryBuyUpgrade(get(), id, nowTimestamp);
+    if (!result.ok) return result.reason;
+    set({ ...result.updates, undoToast: result.undoToast });
+    return 'ok';
+  },
+  undoLastPurchase: () => {
+    const toast = get().undoToast;
+    if (!toast) return;
+    set({ ...toast.snapshot, undoToast: null });
+  },
+  dismissUndoToast: () => set({ undoToast: null }),
 }));
