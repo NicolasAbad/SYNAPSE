@@ -6,10 +6,10 @@
 
 ## Current status
 
-**Phase:** Sprint 4b CLOSED — Pattern Tree + Decisions shipped. Patterns grant on prestige; production formula applies flat+cycle bonuses; 10 decision-option effects wired (7 now, 3 stubs for Sprint 5/8a); A/B decision modal fires when player crosses a decision node; PAT-3 double-confirm reset returns full state to default; MindPanel 6-subtab router replaces the 3.6 null stub.
-**Last updated:** 2026-04-21 after Sprint 4b close.
-**Active sprint:** Sprint 4c (not yet started) — Polarity + CycleSetupScreen + mandatory human playtest. Replaces the Sprint 4a `patternsGained=0` stub's remaining cousin on the polarity side; unifies the CycleSetupScreen (1/2/3 columns by prestige); ends with P0→P4 blind-play tuning.
-**Next action:** Sprint 4c kickoff per `docs/SPRINTS.md §Sprint 4c`. Read GDD §11 (Polarity — Excitatoria / Inhibitoria, P3+), §29 (UI/CycleSetupScreen layout 1/2/3 columns). Polarity defaults to last choice (POLAR-1). SAME AS LAST button 1-tap skip. End: blind-play P0→P4 — if P1 > 10 min, adjust `tutorialThreshold` before Sprint 5.
+**Phase:** Sprint 4c IN PROGRESS — Phase 4c.1 (Polarity constants + `setPolarity` action + POLAR-1 snapshot in handlePrestige) shipped. 6 new constants including Nico-approved `inhibitoryCascadeThresholdMult: 0.90` (spec-gap resolution, Option A).
+**Last updated:** 2026-04-21 after Sprint 4c Phase 4c.1 close.
+**Active sprint:** Sprint 4c — Polarity + CycleSetupScreen + Playtest. 5 planned sub-phases: 4c.1 constants + setPolarity action + lastCycleConfig snapshot (DONE) → 4c.2 Polarity modifiers in production/discharge → 4c.3 CycleSetupScreen component (1/2/3-column) → 4c.4 post-prestige sequence + pre-P3 skip → 4c.5 integration tests + Sprint close + PLAYTEST-REQUIRED handoff.
+**Next action:** Phase 4c.2 — integrate `excitatoryProdMult`/`inhibitoryProdMult` into `calculateProduction` (replace the stub comment `polarityMod (all identity until wired)`); `excitatoryDischargeMult`/`inhibitoryDischargeMult` into `computeDischargeMultiplier`; `inhibitoryCascadeThresholdMult` into `effectiveCascadeThreshold` (min-stack with Node 36A if both apply — pick the LOWER, easier-to-Cascade threshold).
 
 ### Sprint 4b closing dashboard
 
@@ -869,6 +869,42 @@ Sprint 11a TODO for `ALL_RULE_IDS` constant must include all 16 (not 13 as state
 ---
 
 ## Session log
+
+### 2026-04-21 — Sprint 4c Phase 4c.1: Polarity constants + setPolarity + POLAR-1 snapshot
+
+**Spec gap resolved (Nico-approved Option A, 2026-04-21):** GDD §11 "Cascade chance +10%" for Inhibitory Polarity is semantically incompatible with §7's deterministic threshold-based Cascade. Nico approved **Option A — multiplicative threshold shift**: new constant `inhibitoryCascadeThresholdMult: 0.90` → threshold becomes `0.75 × 0.90 = 0.675` when Inhibitory is active. Stacks with Node 36A by picking the lower value (easier-to-Cascade). Wired in Phase 4c.2.
+
+**Scope:**
+- 6 new constants in `src/config/constants.ts` under "Polarity (GDD §11, P3+)":
+  - `polarityUnlockPrestige: 3`
+  - `excitatoryProdMult: 1.10`
+  - `excitatoryDischargeMult: 0.85`
+  - `inhibitoryProdMult: 0.94`
+  - `inhibitoryDischargeMult: 1.30`
+  - `inhibitoryCascadeThresholdMult: 0.90` (resolution per above)
+- Zustand action `setPolarity(polarity: Polarity)` gated on `prestigeCount >= polarityUnlockPrestige`. Returns `{ fired: false }` pre-P3.
+- `handlePrestige` now snapshots `{ polarity, mutation: id, pathway }` into `lastCycleConfig` BEFORE RESET zeroes `currentPolarity`/`currentMutation`/`currentPathway`. This feeds POLAR-1 default-to-last and SAME AS LAST on the next CycleSetupScreen (Phase 4c.3 will read it).
+
+**Design decisions:**
+- `lastCycleConfig.polarity` is typed as `string`, so we snapshot `state.currentPolarity ?? ''` (empty string when pre-P3). Preserves the 110-field invariant.
+- `currentPolarity` remains in PRESTIGE_RESET (RESETs to null every cycle). POLAR-1 is achieved via the `lastCycleConfig` snapshot, not by preserving `currentPolarity` itself — cleaner separation.
+- `setPolarity` uses merge-mode setState per CLAUDE.md Zustand pitfall rule.
+
+**9 new tests:**
+- `setPolarity` P3-gate (rejected P0/P1/P2, fires exactly at P3 and above).
+- Polarity-flipping within cycle (excitatory → inhibitory mid-cycle).
+- Zustand action-reference stability.
+- `handlePrestige` lastCycleConfig snapshot (excitatory / inhibitory / null → empty strings / currentPolarity post-RESET is null while lastCycleConfig retains).
+
+**Updated:** PRESERVE_UPDATED_BY_HANDLEPRESTIGE set now includes `lastCycleConfig` — legitimately updated by POLAR-1 snapshot, same pattern as `memories` / `awakeningLog` / `patterns`.
+
+**Verification (all gates green):**
+- `npm run typecheck` — 0 errors. `npm run lint` — 0 warnings.
+- `bash scripts/check-invention.sh` — 4/4 PASS, ratio 0.82.
+- `npm test` — **880 passed / 43 skipped / 0 failing** (from 871 → +9).
+- `src/engine/prestige.ts` = 197 lines (CODE-2 ≤200).
+
+**Next:** Phase 4c.2 — wire the 3 Polarity modifiers into their engine consumers.
 
 ### 2026-04-21 — Sprint 4b close: Pattern Tree + Decisions shipped
 

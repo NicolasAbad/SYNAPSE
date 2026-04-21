@@ -14,7 +14,7 @@
 import { create } from 'zustand';
 import { SYNAPSE_CONSTANTS } from '../config/constants';
 import type { GameState } from '../types/GameState';
-import type { NeuronType } from '../types';
+import type { NeuronType, Polarity } from '../types';
 import { loadGame, saveGame } from './saveGame';
 import { tryBuyNeuron, tryBuyUpgrade, type BuyReason, type UndoToast } from './purchases';
 import { applyTap } from './tap';
@@ -293,6 +293,13 @@ export interface GameStoreActions {
    *   - the decision has already been locked in (requires PAT-3 reset to re-choose).
    */
   choosePatternDecision: (nodeIndex: number, choice: 'A' | 'B') => { fired: boolean };
+  /**
+   * Sprint 4c Phase 4c.1: pick a Polarity for the current cycle (GDD §11 POLAR-1).
+   * Gated on `prestigeCount >= polarityUnlockPrestige (3)`. Pre-P3 returns fired=false.
+   * Player calls this from CycleSetupScreen; production/discharge modifiers (4c.2)
+   * read `state.currentPolarity` directly — no state-cache propagation needed.
+   */
+  setPolarity: (polarity: Polarity) => { fired: boolean };
 }
 
 export const useGameStore = create<GameState & UIState & GameStoreActions>((set, get) => ({
@@ -396,6 +403,14 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
       dischargeMaxCharges: state.dischargeMaxCharges,
     });
     set({ patternDecisions: nextDecisions, ...permUpdates });
+    return { fired: true };
+  },
+  setPolarity: (polarity) => {
+    const state = get();
+    if (state.prestigeCount < SYNAPSE_CONSTANTS.polarityUnlockPrestige) {
+      return { fired: false };
+    }
+    set({ currentPolarity: polarity });
     return { fired: true };
   },
 }));

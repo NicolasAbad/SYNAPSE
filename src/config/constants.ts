@@ -63,6 +63,14 @@ export const SYNAPSE_CONSTANTS = {
   dischargeMultBoostMinPrestige: 3, // GDD §7: dischargeMultiplier bumps at P3+
   chargeIntervalMinutes: 20,
 
+  // ── Polarity (GDD §11, P3+) ──
+  polarityUnlockPrestige: 3, // GDD §11 POLAR-1: Polarity stays null until P3 reached.
+  excitatoryProdMult: 1.10, // GDD §11: Excitatoria production +10%.
+  excitatoryDischargeMult: 0.85, // GDD §11: Excitatoria Discharge bonus −15%.
+  inhibitoryProdMult: 0.94, // GDD §11: Inhibitoria production −6%.
+  inhibitoryDischargeMult: 1.30, // GDD §11: Inhibitoria Discharge bonus +30%.
+  inhibitoryCascadeThresholdMult: 0.90, // GDD §11 "Cascade chance +10%" — Nico-approved Option A (multiplicative threshold shift, 2026-04-21). Sprint 4c interpretation: threshold × 0.90 when Inhibitoria active. Min-with-Node-36A when both apply.
+
   // ── Momentum ──
   momentumBonusSeconds: 30,
   maxMomentumPct: 0.1, // CORE-8 cap (second audit 4A-2): momentumBonus ≤ 10% of upcoming threshold

@@ -44,6 +44,7 @@ const PRESERVE_UPDATED_BY_HANDLEPRESTIGE = new Set<keyof GameState>([
   'resonance',
   'patterns',        // 4b.2: +patternsPerPrestige nodes appended.
   'totalPatterns',   // 4b.2: incremented by patternsPerPrestige.
+  'lastCycleConfig', // 4c.1: POLAR-1 / SAME AS LAST snapshot of just-ended cycle.
 ]);
 
 describe('handlePrestige — PRESTIGE_RESET field-level behavior (§33)', () => {
@@ -183,6 +184,39 @@ describe('handlePrestige — PRESTIGE_PRESERVE pass-through (§33)', () => {
     };
     const { state: next } = handlePrestige(before, 1_000_000);
     expect(next.patternDecisions).toEqual({ 6: 'A', 15: 'B', 24: 'A' });
+  });
+});
+
+// Sprint 4c Phase 4c.1 — POLAR-1 lastCycleConfig snapshot.
+describe('handlePrestige — lastCycleConfig snapshot for POLAR-1 / SAME AS LAST', () => {
+  test('writes polarity from currentPolarity into lastCycleConfig before RESET', () => {
+    const before: GameState = { ...createDefaultState(), currentPolarity: 'excitatory' };
+    const { state: next } = handlePrestige(before, 1_000_000);
+    expect(next.lastCycleConfig).toEqual({ polarity: 'excitatory', mutation: '', pathway: '' });
+  });
+
+  test('snapshots inhibitory too', () => {
+    const before: GameState = { ...createDefaultState(), currentPolarity: 'inhibitory' };
+    const { state: next } = handlePrestige(before, 1_000_000);
+    expect(next.lastCycleConfig?.polarity).toBe('inhibitory');
+  });
+
+  test('snapshots empty strings when fields are null (pre-P3 first prestige)', () => {
+    const before: GameState = {
+      ...createDefaultState(),
+      currentPolarity: null,
+      currentMutation: null,
+      currentPathway: null,
+    };
+    const { state: next } = handlePrestige(before, 1_000_000);
+    expect(next.lastCycleConfig).toEqual({ polarity: '', mutation: '', pathway: '' });
+  });
+
+  test('currentPolarity itself RESETs to null (cycle-scoped) — only lastCycleConfig preserves the choice', () => {
+    const before: GameState = { ...createDefaultState(), currentPolarity: 'excitatory' };
+    const { state: next } = handlePrestige(before, 1_000_000);
+    expect(next.currentPolarity).toBeNull();
+    expect(next.lastCycleConfig?.polarity).toBe('excitatory');
   });
 });
 

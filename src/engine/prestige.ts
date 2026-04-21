@@ -117,6 +117,8 @@ export function handlePrestige(state: GameState, timestamp: number): { state: Ga
   const memoriesGained = computeMemoriesGained(state);
   // Step 8 — capture Focus Persistente retention BEFORE applying RESET defaults.
   const focusBarRetained = focusBarAfterReset(state);
+  // POLAR-1 / SAME AS LAST snapshot — cycle choices captured before RESET zeroes them.
+  const lastCycleConfig = { polarity: state.currentPolarity ?? '', mutation: state.currentMutation?.id ?? '', pathway: state.currentPathway ?? '' };
   // Step 9 — compute UPDATE values (new prestigeCount, threshold, timestamp, tutorial flip).
   const newPrestigeCount = state.prestigeCount + 1;
   const nextThreshold = calculateThreshold(newPrestigeCount, state.transcendenceCount);
@@ -161,6 +163,8 @@ export function handlePrestige(state: GameState, timestamp: number): { state: Ga
     // patterns list; totalPatterns counter bumped by the same amount.
     patterns: [...state.patterns, ...newPatterns],
     totalPatterns: state.totalPatterns + patternsGained,
+    // POLAR-1: next cycle's CycleSetupScreen reads this to default-select last.
+    lastCycleConfig,
     // UPDATE (4 fields).
     prestigeCount: newPrestigeCount,
     currentThreshold: nextThreshold,
