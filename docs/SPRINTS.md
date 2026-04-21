@@ -310,34 +310,34 @@ Post-close addendum per Sprint 3 gap audit (2026-04-21). Builds the panel-contai
 > Implement Sprint 3.6 per docs/SPRINTS.md §Sprint 3.6. Read GDD §29 (HUD/Tabs/Upgrades ordering rule) and docs/UI_MOCKUPS.html (Screen 6 — Neurons panel with ×1/×10/Max + green/orange/red color coding). No new mechanics — wire existing `buyNeuron` / `buyUpgrade` / `state.upgrades` / `state.neurons` into user-visible panels. Follow the 4-category Upgrades sort rule from GDD §29 (Affordable → Teaser → Blocked-by-Pathway → Locked). "Blocked by Pathway" category will be empty until Sprint 5 — render the rule in code but no real entries populate pre-Sprint-5.
 
 **AI checks ✅:**
-- [ ] `src/ui/panels/TabPanelContainer.tsx` — renders content based on `activeTab`; default renders nothing (canvas + HUD overlay remain visible "behind" for Neurons tab so player can still tap)
-- [ ] `src/ui/panels/NeuronsPanel.tsx` — 5 rows (one per neuron type), each showing: name + icon color, owned count, rate/sec contribution, next-cost. Buy buttons: ×1 always; ×10 + Max when basica.count > 5 (reduce friction). Locked types show silhouette + unlock requirement text. Unaffordable shown greyed.
-- [ ] `src/ui/panels/UpgradesPanel.tsx` — 35 cards sorted per GDD §29: (1) Affordable green, (2) Teaser (next affordable) grey with unlock text, (3) Blocked-by-Pathway (empty pre-Sprint-5), (4) Locked silhouette. Unlock text for Locked includes `unlockPrestige` threshold.
-- [ ] `src/ui/panels/RegionsPanel.tsx` — shell only. Shows "Regions unlock at P5" placeholder. Sprint 5 replaces with real content.
-- [-] `src/ui/panels/MindPanel.tsx` — **deferred to Sprint 4b.** Shell was originally scoped to include a 5-subtab secondary row (Patterns / Archetypes / Diary / Achievements / Resonance) with "Unlocks in Sprint X" placeholders. Implementing this in Sprint 3.6 would cover the canvas when the player opens the app (Mind is the default `activeTab` and shows on first render) and provide zero real value since every subtab would be a placeholder. MindPanel ships as a null-renderer; Sprint 4b adds the subtab infrastructure alongside Pattern Tree content (the first subtab that actually has content to render).
-- [ ] `src/ui/hud/TabBadge.tsx` — rendering layer for UI-3 badges keyed on `tabBadgesDismissed[]`. Ships with EMPTY priority-feed; Sprint 6+ populates.
-- [ ] `src/ui/hud/NetworkErrorToast.tsx` — generic toast matching UI-8 pattern. Used later by cloud-save fail, ad-load fail, store-unavailable banner. Currently not fired by any flow (infrastructure only).
-- [ ] HUD.tsx mounts TabPanelContainer. `pointerEvents: auto` on panels so Buy buttons work; canvas still reachable when activeTab falls through (Neurons tab overlays the lower 55% of the screen, not full-bleed).
+- [x] `src/ui/panels/TabPanelContainer.tsx` — renders content based on `activeTab`; bottom-sheet at `top: 45 %` so upper-45 % canvas area stays tappable.
+- [x] `src/ui/panels/NeuronsPanel.tsx` — 5 rows (icon / count × rate / next-cost / Buy), `×1 / ×10 / Max` mode selector, locked rows silhouette + unlock text.
+- [x] `src/ui/panels/UpgradesPanel.tsx` — 35 cards sorted Affordable → Teaser → Locked per GDD §29. Blocked-by-Pathway section is pre-Sprint-5-empty by design.
+- [x] `src/ui/panels/RegionsPanel.tsx` — shell renders Sprint-5-placeholder via i18n. (Text corrected during sprint — original "Regions unlock at P5" was inaccurate; per GDD §16 REG-1, 4/5 regions auto-unlock at P0.)
+- [-] `src/ui/panels/MindPanel.tsx` — **deferred to Sprint 4b.** Shell originally scoped a 5-subtab secondary row; implementing in Sprint 3.6 would cover the canvas on first open with only empty placeholders. Sprint 4b builds the subtab nav alongside Pattern Tree content.
+- [x] `src/ui/hud/TabBadge.tsx` — dot renderer + smoke tests. Priority-feed wiring lives in Sprint 7.
+- [x] `src/ui/hud/NetworkErrorToast.tsx` — controlled generic toast. Not mounted; Sprint 9a/9b/8a wire it to ad / store / cloud-save failures.
+- [x] HUD.tsx mounts TabPanelContainer.
 
 **Sprint 3.6 tests 🧪:**
-- [ ] Component: NeuronsPanel Buy ×1 increments count, decrements thoughts, toast fires on expensive buy
-- [ ] Component: NeuronsPanel Buy ×10 loops until affordability fails
-- [ ] Component: NeuronsPanel Max purchases until cannot afford
-- [ ] Component: NeuronsPanel locked row renders unlock requirement, no Buy button
-- [ ] Component: UpgradesPanel Affordable rows sort first, Teaser next, Locked last
-- [ ] Component: UpgradesPanel unaffordable click is no-op; affordable click calls buyUpgrade
-- [ ] Component: UpgradesPanel with Funciones Ejecutivas owned shows −20% cost display
-- [ ] Component: TabPanelContainer switches content when activeTab changes
-- [ ] Component: Regions/Mind shells render "Unlocks in..." placeholders
-- [ ] Component: TabBadge renders nothing with empty feed (smoke test for the infrastructure)
-- [ ] Component: NetworkErrorToast renders when passed a message prop (smoke; real wiring in later sprints)
+- [x] Component: NeuronsPanel Buy ×1 increments count, decrements thoughts
+- [x] Component: NeuronsPanel Buy ×10 loops until affordability fails
+- [x] Component: NeuronsPanel Max purchases until cannot afford
+- [x] Component: NeuronsPanel locked row renders unlock requirement, no Buy button
+- [x] Component: UpgradesPanel Affordable rows sort first, Teaser next, Locked last
+- [x] Component: UpgradesPanel unaffordable click is no-op; affordable click calls buyUpgrade
+- [x] Component: UpgradesPanel with Funciones Ejecutivas owned shows −20 % cost display
+- [x] Component: TabPanelContainer switches content when activeTab changes
+- [x] Component: Regions shell renders "Sprint 5 builds..." placeholder. *(Mind shell intentionally null-rendering; see MindPanel deferral above.)*
+- [x] Component: TabBadge renders nothing at visible=false; renders with aria-label at visible=true
+- [x] Component: NetworkErrorToast renders when passed a message; auto-dismiss at durationMs; pointerdown → onDismiss
 
-**Player tests 🎮 (the ones Sprint 3 couldn't execute without this):**
-- [ ] Open app → Neurons tab → buy Basicas → counter goes up, rate rises
-- [ ] Buy 10 Basicas → Sensorial row un-greys, hint #4 appears, buy first Sensorial
-- [ ] Open Upgrades tab → red_neuronal_densa visible + affordable → buy → production +25%
-- [ ] Switch tabs rapidly → no crashes, state preserved
-- [ ] Expensive upgrade purchase → Undo toast appears with correct name
+**Player tests 🎮 (the ones Sprint 3 couldn't execute without this — now unblocked):**
+- [-] Open app → Neurons tab → buy Basicas → counter goes up, rate rises *(Sprint 4c playtest — mechanics + UI both ready)*
+- [-] Buy 10 Basicas → Sensorial row un-greys, hint #4 appears, buy first Sensorial *(Sprint 4c playtest)*
+- [-] Open Upgrades tab → red_neuronal_densa visible + affordable → buy → production +25 % *(Sprint 4c playtest)*
+- [-] Switch tabs rapidly → no crashes, state preserved *(verified via TabPanelContainer switch test; hand-verification in Sprint 4c)*
+- [-] Expensive upgrade purchase → Undo toast appears with correct name *(Sprint 4c playtest)*
 
 **Deliverables:**
 - 7 new files under `src/ui/panels/` + `src/ui/hud/TabBadge.tsx` + `src/ui/hud/NetworkErrorToast.tsx`

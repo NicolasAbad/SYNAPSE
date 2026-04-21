@@ -6,16 +6,10 @@
 
 ## Current status
 
-**Phase:** Sprint 3 CLOSED → Sprint 3.6 gap-audit addendum in flight (post-close UI backfill for orphan tab panels).
-**Last updated:** 2026-04-21 after full docs-vs-sprints gap audit.
-**Active sprint:** Sprint 3.6 — Tab panel backfill + UX foundation (see SPRINTS.md §Sprint 3.6).
-**Next action:** Sprint 3.6 implementation in 5 sub-phases. Start with 3.6.1 — `src/ui/panels/TabPanelContainer.tsx` + 4 shell panels (NeuronsPanel / UpgradesPanel / RegionsPanel / MindPanel) wired into HUD.tsx. Gate-check + commit at each sub-phase boundary. After Sprint 3.6 closes, Sprint 4a (Prestige Core) is the next sprint.
-
-### Sprint 3.6 handoff context
-
-Sprint 3 shipped every mechanic green but had no UI to *use* them — tab panels were orphaned from the sprint plan (specified in GDD §29 + UI_MOCKUPS.html:193-232, owned by no sprint). Sprint 3.6 is the post-close backfill that unblocks Sprint 4a prestige testing + Sprint 4c playtest. It also scaffolds TabBadge + NetworkErrorToast infrastructure that later sprints fill in.
-
-Scope additions were also inserted into Sprint 4a (confirm-modal component), Sprint 6 (Diary UI, Archetype confirm, TabBadge hook), Sprint 7 (achievement celebration + viewing + badge-priority feed), Sprint 8a (Welcome-back offline modal), Sprint 8b (Transcendence confirm, ending share-frame), Sprint 10 (tap polish + gear icon + loading indicator + aria pass + push infra). All logged in their respective sprint prompts.
+**Phase:** Sprint 3.6 CLOSED — tab panel backfill shipped; the player can now buy neurons + upgrades through the UI.
+**Last updated:** 2026-04-21 after Sprint 3.6 close.
+**Active sprint:** Sprint 4a (not yet started) — Prestige Core (PREST-1 order, 45/60/4 reset/preserve/update split, CORE-8 Momentum Bonus, Awakening screen). Now genuinely playtest-able end-to-end thanks to 3.6.
+**Next action:** Sprint 4a kickoff per `docs/SPRINTS.md §Sprint 4a`. Read GDD §9 (prestige + THRES-1), §20 (Transcendence context), §33 (PRESTIGE_RESET/PRESERVE/UPDATE field split). Implement `handlePrestige()` following PREST-1 step order; enforce CORE-8 amended Momentum cap. Sprint 4a's scope also now includes a **generic confirm-modal component** (per the Sprint 3.6 audit) that Sprint 8b Transcendence will reuse. Sprint 4b owns the deferred Mind-panel subtab nav.
 
 ### Sprint 3 Phase 3.5 — accepted design decisions (owning phases inheriting)
 
@@ -39,6 +33,64 @@ Scope additions were also inserted into Sprint 4a (confirm-modal component), Spr
 | Deeper analysis — 7 ad placements density | Sprint 9 monetization | Audit placement spacing; if 4+/10min session → reduce |
 | Deeper analysis — Piggy Bank 500-cap + 48h offer cadence | Sprint 9 monetization | Verify offer cadence not spammy for free players |
 | Deeper analysis — P11-P15 "dead zone" mid-Era 2 | Sprint 8c TEST-5 | If tester zones out in this range, tighten thresholds or add Spontaneous spice |
+
+### Sprint 3.6 closing dashboard
+
+- **Phases:** 5 sub-phases (3.6.1 TabPanelContainer + shells → 3.6.2 NeuronsPanel → 3.6.3 UpgradesPanel → 3.6.4 RegionsPanel text + MindPanel deferral → 3.6.5 TabBadge + NetworkErrorToast) + 1 integrity-cleanup commit + this close commit = 7 total.
+- **Active tests:** **685 passed**, 0 failing (up from 652 at Sprint 3 close → **+33 in Sprint 3.6**). Additions: 5 TabPanelContainer + 12 NeuronsPanel + 8 UpgradesPanel + 3 TabBadge + 5 NetworkErrorToast = 33.
+- **Skipped tests:** 49 (unchanged — no BLOCKED-SPRINT-3.6 tag exists; the un-skipping cadence resumes in Sprint 4a with 6 BLOCKED-SPRINT-4a tests).
+- **Typecheck errors:** 0. **Lint warnings:** 0.
+- **Anti-invention gates:** 4/4 PASS, **ratio 0.81** (42 constants / 10 literals — held above 0.80 through 3 CSS-literal scares that were fixed by CONST-OK annotation or i18n migration).
+- **Scope delivered vs. scope deferred:**
+  - ✅ TabPanelContainer (activeTab → correct panel switch)
+  - ✅ NeuronsPanel (5 rows × Buy ×1/×10/Max + locked silhouettes)
+  - ✅ UpgradesPanel (Affordable → Teaser → Locked sort + COST-1 reduction display)
+  - ✅ RegionsPanel shell (text corrected — regions are P0-available per REG-1; Sprint 5 builds the panel)
+  - ✅ TabBadge renderer (priority-feed lands in Sprint 7)
+  - ✅ NetworkErrorToast scaffold (wired by Sprint 9a/9b/8a)
+  - ⏭ MindPanel subtab nav — **deferred to Sprint 4b** (5 empty placeholders would cover canvas on first open; pairing with Pattern Tree content is better ROI)
+- **Player tests unblocked:** Sprint 3 marked 4 player-tests `[-]` "blocked by missing panel UI — Sprint 3.6 unblocks". All 4 are now executable end-to-end (Buy neuron, Buy upgrade, Undo toast, rapid tab switch). Hand-verification moves to Sprint 4c blind-play per the sprint plan.
+- **Doc-vs-code corrections applied:**
+  - RegionsPanel placeholder text: "Regions unlock at P5" → i18n key pointing to a correct description (P0 auto-unlock + Sprint 5 builds panel). Original text was based on SPRINTS.md audit wording that conflated the mechanic unlock with the UI panel.
+- **Commits landed in Sprint 3.6:** 7 total.
+  - `5dec382` integrity cleanup + Sprint 3.6 scope in SPRINTS.md + v1.1 additions
+  - `c5e0b2e` Sprint 3.6.1 TabPanelContainer + 4 panel shells
+  - `4e20182` Sprint 3.6.2 NeuronsPanel functional (Buy ×1/×10/Max)
+  - `2a6a04c` Sprint 3.6.3 UpgradesPanel functional (affordability sort)
+  - `7893505` Sprint 3.6.4 RegionsPanel text fix + MindPanel subtab-nav deferral
+  - `f563b5f` Sprint 3.6.5 TabBadge + NetworkErrorToast infrastructure
+  - `(this commit)` Sprint 3.6 close
+- **Reviewer fabrications tracked:** 0 this sprint.
+
+**Scope-addition reminders for future sprints (planted in SPRINTS.md prompts by the Sprint 3.6 audit):**
+- Sprint 4a: generic confirm-modal component (reused by 8b)
+- Sprint 4b: MindPanel subtab nav (`home` / `patterns` / `archetypes` / `diary` / `achievements` / `resonance`) + Pattern Tree content in the `patterns` slot
+- Sprint 6: Neural Diary read UI + Archetype-choice confirm modal + TabBadge archetype-unlock hook
+- Sprint 7: Achievement unlock celebration + Achievements viewing UI + TabBadge priority feed implementation
+- Sprint 8a: Welcome-back offline-rewards modal
+- Sprint 8b: Transcendence confirm + ending share-frame (on-screen)
+- Sprint 10: polish sweep (tap floaters, gear icon, loading indicator, empty states, aria pass, push infra, Discharge pulse animation, tab switch transitions)
+
+**Handoff state for Sprint 4a:**
+
+What Sprint 4a will build (per SPRINTS.md §Sprint 4a):
+- `handlePrestige()` action following PREST-1 10-step order
+- PRESTIGE_RESET (45 fields) / PRESTIGE_PRESERVE (60 fields) / PRESTIGE_UPDATE (4 fields) split per GDD §33
+- Momentum Bonus (CORE-8 amended, 4A-2)
+- Awakening screen (cycle duration, thoughts earned, Memories gained, Personal Best, Momentum counter animation)
+- **Generic confirm-modal component** (Sprint 3.6 audit addition) — used here for prestige confirm; reused by Sprint 8b Transcendence
+- Focus Persistente upgrade: 25 % Focus Bar retention on prestige (BUG-06)
+- Personal best tracking, BUG-02 / BUG-01 fixes, Reset-All placeholder button
+
+**Clean-baseline verification for Sprint 4a kickoff** (run from cold state):
+- `git status` — clean
+- `npm run typecheck` — 0 errors
+- `npm run lint` — 0 warnings
+- `bash scripts/check-invention.sh` — 4/4 PASS, ratio 0.81
+- `npm test` — 685 passed / 49 skipped / 0 failing
+- `npx tsx scripts/tutorial-timing.ts` — 5 taps/sec → 9.21 min (from Sprint 3 Phase 7.4b retune)
+
+---
 
 ### Sprint 3 closing dashboard
 
@@ -691,6 +743,37 @@ Sprint 11a TODO for `ALL_RULE_IDS` constant must include all 16 (not 13 as state
 ---
 
 ## Session log
+
+### 2026-04-21 — Sprint 3.6 close: tab panel backfill shipped
+
+**Scope:** Executed Sprint 3.6 per the gap-audit plan in the previous entry. 5 implementation sub-phases + 1 integrity-cleanup + 1 close commit = 7 commits total. 33 new tests. Gate ratio held at 0.81.
+
+**What landed:**
+- Core play-loop UI (Neurons + Upgrades tab panels) — player can buy neurons, buy upgrades, see affordability states end-to-end. The "can't buy a single neuron through the UI" bug that triggered this whole audit is resolved.
+- Panel-container architecture: activeTab routes to correct panel via TabPanelContainer. Bottom-sheet layout at `top: 45 %` keeps the canvas tappable for idle production while a panel is open.
+- Scaffold infrastructure for later sprints: TabBadge renderer (UI-3), NetworkErrorToast controlled component (UI-8) — both callable, not yet mounted, zero effort when Sprint 7 / 9a / 9b plug in real triggers.
+
+**What was deferred (all with documented rationale in SPRINTS.md + corresponding sprint prompts):**
+- MindPanel subtab nav (5 subtabs) → Sprint 4b with Pattern Tree content. All 5 would be empty placeholders today.
+- Prestige confirm modal → Sprint 4a (generic component, reused by 8b).
+- Offline "Welcome back" modal → Sprint 8a.
+- Transcendence confirm + ending share-frame → Sprint 8b.
+- Achievement celebration + Achievements viewing + TabBadge priority feed → Sprint 7.
+- Neural Diary read UI + Archetype confirm → Sprint 6.
+- Tap polish, gear icon, loading indicator, empty-state polish, Discharge pulse, tab switch transitions, aria pass, push infra → Sprint 10.
+- Ending native-share (OS sheet), meta-progression stats, keyboard nav → POSTLAUNCH.md v1.1.
+
+**Integrity correction applied (real-time doc audit during 3.6.4):** The original Sprint 3.6 scope wrote "Regions unlock at P5" as the placeholder text for RegionsPanel. That's wrong per GDD §16 REG-1 — 4 of 5 regions auto-unlock at P0 (`cycleGenerated >= 0.01 × threshold`); only Área de Broca is P14-gated. What actually lands in Sprint 5 is the UI PANEL that shows all 5. Text corrected via i18n (`panels.regions.shell_description`).
+
+**Verification (all gates green at close):**
+- `npm run typecheck` — 0 errors
+- `npm run lint` — 0 warnings
+- `bash scripts/check-invention.sh` — 4/4 PASS, ratio 0.81
+- `npm test` — 685 passed / 49 skipped / 0 failing (+33 from Sprint 3 close)
+
+**Commits landed:** 5dec382, c5e0b2e, 4e20182, 2a6a04c, 7893505, f563b5f, (this close commit).
+
+**Next:** Sprint 4a — Prestige Core.
 
 ### 2026-04-21 — Post-Sprint-3 gap audit + Sprint 3.6 scope
 
