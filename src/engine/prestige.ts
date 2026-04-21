@@ -6,6 +6,7 @@ import { SYNAPSE_CONSTANTS } from '../config/constants';
 import { PRESTIGE_RESET } from '../config/prestige';
 import { UPGRADES_BY_ID } from '../config/upgrades';
 import { calculateThreshold } from './production';
+import { applyPermanentPatternDecisionsToState, memoriesPerPrestigeDecisionAdd } from './patternDecisions';
 import type { GameState } from '../types/GameState';
 import type { AwakeningEntry, PatternNode } from '../types';
 
@@ -33,32 +34,24 @@ function ownedUpgradeIds(upgrades: GameState['upgrades']): Set<string> {
  * `memoryGainAdd: 0.5`, owned → 2 × 1.5 = 3, matching the §2 "+1 more"
  * table entry.
  */
-export function computeMemoriesGained(state: Pick<GameState, 'upgrades'>): number {
+export function computeMemoriesGained(state: Pick<GameState, 'upgrades' | 'patternDecisions'>): number {
   let mult = 1;
   for (const id of ownedUpgradeIds(state.upgrades)) {
     const effect = UPGRADES_BY_ID[id]?.effect;
     if (effect?.kind === 'basica_mult_and_memory_gain') mult += effect.memoryGainAdd;
   }
-  return SYNAPSE_CONSTANTS.baseMemoriesPerPrestige * mult;
+  // GDD §10 Node 24 B: +2 Memories per prestige (additive flat, post-mult).
+  return SYNAPSE_CONSTANTS.baseMemoriesPerPrestige * mult + memoriesPerPrestigeDecisionAdd(state);
 }
 
-/**
- * CORE-8 amended (2nd audit 4A-2): raw bonus is
- * `lastCycleEndProduction × momentumBonusSeconds`; the clamp caps it at
- * `nextThreshold × maxMomentumPct` (10%) so late-game end-of-cycle PPS
- * can't trivialize the next cycle. Returns the capped value.
- */
+/** CORE-8 amended cap: raw × 30s clamped at nextThreshold × maxMomentumPct (§35 4A-2). */
 export function computeMomentumBonus(lastCycleEndProduction: number, nextThreshold: number): number {
   const raw = lastCycleEndProduction * SYNAPSE_CONSTANTS.momentumBonusSeconds;
   const cap = nextThreshold * SYNAPSE_CONSTANTS.maxMomentumPct;
   return Math.min(raw, cap);
 }
 
-/**
- * BUG-06: Focus Persistente (§24 `focus_persist { pct: 0.25 }`) keeps
- * 25 % of the focusBar through prestige. Without it, focusBar resets
- * to 0 like every other cycle-scoped field.
- */
+/** BUG-06: Focus Persistente keeps 25 % of focusBar through prestige; else 0. */
 function focusBarAfterReset(state: Pick<GameState, 'upgrades' | 'focusBar'>): number {
   for (const id of ownedUpgradeIds(state.upgrades)) {
     const effect = UPGRADES_BY_ID[id]?.effect;
@@ -67,13 +60,7 @@ function focusBarAfterReset(state: Pick<GameState, 'upgrades' | 'focusBar'>): nu
   return 0;
 }
 
-/**
- * BUG-04: personalBests keyed by the PRE-increment prestigeCount — the
- * cycle just completed was P{state.prestigeCount} → P{state.prestigeCount + 1},
- * so the best-time record belongs to the starting prestigeCount.
- * Updates only if the new minutes are STRICTLY LESS than the prior
- * best (idle-game convention: "best" = fastest).
- */
+/** BUG-04: personalBests keyed by PRE-increment prestigeCount; update only if faster. */
 function updatePersonalBests(
   prev: GameState['personalBests'],
   prestigeCount: number,
@@ -150,10 +137,17 @@ export function handlePrestige(state: GameState, timestamp: number): { state: Ga
   };
 
   // Build post-prestige state: preserve everything, then override RESET fields,
-  // then override timestamp/upgrade-dependent fields, then UPDATE + lifetime.
+  // then override timestamp/upgrade-dependent fields, then UPDATE + lifetime,
+  // then reapply state-mutating pattern decisions (Node 6 B dischargeMaxCharges).
+  const permanentDecisionUpdates = applyPermanentPatternDecisionsToState({
+    patternDecisions: state.patternDecisions,
+    // PRESTIGE_RESET resets dischargeMaxCharges to 2 — we re-bump from there.
+    dischargeMaxCharges: PRESTIGE_RESET.dischargeMaxCharges ?? 0,
+  });
   const next: GameState = {
     ...state,
     ...PRESTIGE_RESET,
+    ...permanentDecisionUpdates,
     // RESET overrides (BUG-02 discharge timer, BUG-06 focus retention).
     dischargeLastTimestamp: timestamp,
     focusBar: focusBarRetained,

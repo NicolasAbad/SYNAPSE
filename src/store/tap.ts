@@ -17,6 +17,7 @@
 import { SYNAPSE_CONSTANTS } from '../config/constants';
 import { UPGRADES_BY_ID } from '../config/upgrades';
 import { tryActivateInsight } from '../engine/insight';
+import { focusFillRateDecisionMult } from '../engine/patternDecisions';
 import type { GameState } from '../types/GameState';
 
 function ownedUpgradeIds(state: Pick<GameState, 'upgrades'>): Set<string> {
@@ -55,6 +56,8 @@ export function computeFocusFillPerTap(state: GameState): number {
     const effect = UPGRADES_BY_ID[id]?.effect;
     if (effect?.kind === 'tap_focus_fill_add') fill += effect.add;
   }
+  // GDD §10 Node 15 B: Focus fills +20 % faster if chosen.
+  fill *= focusFillRateDecisionMult(state);
   return fill;
 }
 

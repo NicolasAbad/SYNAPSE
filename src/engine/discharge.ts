@@ -13,6 +13,7 @@
 
 import { SYNAPSE_CONSTANTS } from '../config/constants';
 import { UPGRADES_BY_ID } from '../config/upgrades';
+import { cascadeThresholdOverride, dischargeDamageDecisionMult } from './patternDecisions';
 import type { GameState } from '../types/GameState';
 
 function ownedUpgradeIds(state: Pick<GameState, 'upgrades'>): Set<string> {
@@ -62,7 +63,14 @@ export function computeDischargeMultiplier(state: GameState, isCascade: boolean)
   const base = baseDischargeMultiplier(state);
   const amp = dischargeUpgradeMult(ownedUpgradeIds(state));
   const cascade = isCascade ? computeCascadeMultiplier(state) : 1;
-  return base * amp * cascade;
+  // GDD §10 Node 36 B: +10 % Discharge damage (always applied when chosen).
+  const decisionMult = dischargeDamageDecisionMult(state);
+  return base * amp * cascade * decisionMult;
+}
+
+/** Effective Cascade threshold: 0.65 if Node 36 A chosen, else base (0.75). */
+export function effectiveCascadeThreshold(state: Pick<GameState, 'patternDecisions'>): number {
+  return cascadeThresholdOverride(state) ?? SYNAPSE_CONSTANTS.cascadeThreshold;
 }
 
 /** Potencial Latente flat bonus (GDD §24: "+1,000 × prestigeCount per Discharge"). */
@@ -104,7 +112,7 @@ export function performDischarge(
     return { updates: {}, outcome: { fired: false, isCascade: false, burst: 0 } };
   }
   // BUG-07: evaluate Cascade BEFORE consuming anything.
-  const isCascade = state.focusBar >= SYNAPSE_CONSTANTS.cascadeThreshold;
+  const isCascade = state.focusBar >= effectiveCascadeThreshold(state);
   const finalMult = computeDischargeMultiplier(state, isCascade);
   // CONST-OK: 60 = seconds-per-minute (§7 "= 1 minute of production compressed")
   const burst = state.effectiveProductionPerSecond * finalMult * 60 + potencialLatenteBonus(state); // CONST-OK (sec→min)

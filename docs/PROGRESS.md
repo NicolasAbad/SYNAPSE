@@ -6,10 +6,10 @@
 
 ## Current status
 
-**Phase:** Sprint 4b IN PROGRESS — Phase 4b.2 (engine stub replacement + production wiring) shipped. `handlePrestige` now grants 3 `PatternNode` entries per prestige (with decision-node flags set per [6,15,24,36,48], hard-cap at 50); `calculateProduction` now applies `patternFlatBonusPerNode × totalPatterns` pre-multiplier + `patternCycleBonus` post-softCap (capped at 1.5).
-**Last updated:** 2026-04-21 after Sprint 4b Phase 4b.2 close.
-**Active sprint:** Sprint 4b — Pattern Tree + Decisions. 5 planned sub-phases: 4b.1 pattern data + constants (DONE) → 4b.2 engine stubs + production bonuses (DONE) → 4b.3 per-decision effect appliers → 4b.4 PAT-3 reset action + MindPanel subtab router → 4b.5 decision modal + PAT-3 double-confirm UI + integration + close.
-**Next action:** Phase 4b.3 — wire the 10 decision-option effects into their consumers. Node 6B (max charges +1 → `dischargeMaxCharges` at discharge time); Node 15A (offline eff mult → offline.ts); Node 15B (focus fill mult → tap.ts); Node 24A (insight duration +3s → insight.ts); Node 24B (memories +2/prestige → `computeMemoriesGained`); Node 36A (cascade threshold set → discharge.ts); Node 36B (discharge damage mult → discharge.ts) + INT-5 Resonance-on-Discharge stub (real Resonance in 8b); Node 48A (region mult — stub until Sprint 5 Regions); Node 48B (mutation options — stub until Sprint 5 Mutations).
+**Phase:** Sprint 4b IN PROGRESS — Phase 4b.3 (decision effect appliers) shipped. 7 of 10 decisions wired end-to-end: 6A (cycle bonus), 6B (dischargeMaxCharges post-RESET), 15B (focus fill rate), 24A (insight duration), 24B (memories), 36A (cascade threshold), 36B (discharge damage + INT-5 gate). 3 stubs documented with owning-sprint handoff (15A / 48A / 48B → Sprint 8a / Sprint 5).
+**Last updated:** 2026-04-21 after Sprint 4b Phase 4b.3 close.
+**Active sprint:** Sprint 4b — Pattern Tree + Decisions. 5 planned sub-phases: 4b.1 pattern data + constants (DONE) → 4b.2 engine stubs + production bonuses (DONE) → 4b.3 decision effect appliers (DONE) → 4b.4 PAT-3 reset action + MindPanel subtab router → 4b.5 decision modal + PAT-3 double-confirm UI + integration + close.
+**Next action:** Phase 4b.4 — Zustand `resetPatternDecisions(now)` store action (gated `resonance >= 1000`); MindPanel subtab router replacing the null-render stub with a 6-subtab nav (`home` / `patterns` / `archetypes` / `diary` / `achievements` / `resonance`), where `home` renders null (canvas visible) and others overlay the bottom sheet. Patterns subtab gets a basic tree viz; others render "Unlocks in Sprint X" placeholders.
 
 ### Sprint 4a closing dashboard
 
@@ -804,6 +804,41 @@ Sprint 11a TODO for `ALL_RULE_IDS` constant must include all 16 (not 13 as state
 ---
 
 ## Session log
+
+### 2026-04-21 — Sprint 4b Phase 4b.3: decision effect appliers
+
+**Scope:** New `src/engine/patternDecisions.ts` bridge file between `PATTERN_DECISIONS` data (4b.1) and consumer sites. 7 of 10 decision options wired end-to-end; 3 remaining options documented as stubs for their owning sprints.
+
+**Wired this phase:**
+- **Node 6 A** (`cycle_bonus_add 0.08`) → `production.ts` — extra additive in `patternCycleBonus(cyclePatterns, decisionAdd)`.
+- **Node 6 B** (`discharge_charges_plus_one`) → `prestige.ts` — state-mutating: `applyPermanentPatternDecisionsToState()` re-bumps `dischargeMaxCharges` by +1 AFTER PRESTIGE_RESET zeroes it, because decisions PRESERVE but the state field RESETS each cycle.
+- **Node 15 B** (`focus_fill_rate_mult 1.20`) → `tap.ts` — multiplier on `computeFocusFillPerTap` output.
+- **Node 24 A** (`insight_duration_add_s 3`) → `insight.ts` — additive seconds to Insight duration, stacks with Concentración Profunda.
+- **Node 24 B** (`memories_per_prestige_add 2`) → `prestige.ts` — additive in `computeMemoriesGained()`, stacks with Consolidación de Memoria's multiplicative +50%.
+- **Node 36 A** (`cascade_threshold_set 0.65`) → `discharge.ts` — exported `effectiveCascadeThreshold(state)` used in `performDischarge` BUG-07 check.
+- **Node 36 B** (`discharge_damage_mult 1.10`) → `discharge.ts` — multiplier in `computeDischargeMultiplier`. INT-5 post-P13 Resonance-on-Discharge gate: `shouldAwardResonanceOnDischarge(state)` exported for Sprint 8b Resonance wiring.
+
+**Stubs for later sprints (owning-sprint owns the getter + consumer):**
+- Node 15 A `offline_efficiency_mult 1.15` — Sprint 8a `offline.ts`.
+- Node 48 A `region_mult 1.30` — Sprint 5 region production integration.
+- Node 48 B `mutation_options_add 1` — Sprint 5 mutation pool size.
+
+**New tests (19):**
+- Default-state identity (all 8 getters return neutral values).
+- Per-decision wiring (one test per wired option; 7 options × ~1–3 tests each).
+- Mutual exclusion at Node 36 (A's threshold override doesn't trigger B's damage mult, vice versa).
+- PAT-3 persistence: `patternDecisions` preserved across 10 prestiges; Node 6 B's dischargeMaxCharges bump stays at 3 throughout.
+- Transcendence preservation (mock — real transcendence in Sprint 8b).
+- Regression: `totalPatterns` increment unaffected by any decision state.
+
+**CODE-2 discipline:** `prestige.ts` grew to 211 lines after new imports; trimmed docblocks back to 193 lines (≤200). Added `DecisionNodeIndex` type alias in `patternDecisions.ts` with inline CONST-OK to stop Gate 1/3 flagging the `6 | 15 | 24 | 36 | 48` literal union.
+
+**Verification:**
+- `npm run typecheck` — 0 errors. `npm run lint` — 0 warnings.
+- `bash scripts/check-invention.sh` — 4/4 PASS, ratio 0.81.
+- `npm test` — **815 passed / 43 skipped / 0 failing** (from 796 → +19).
+
+**Next:** Phase 4b.4 — PAT-3 Zustand action + MindPanel subtab router.
 
 ### 2026-04-21 — Sprint 4b Phase 4b.2: pattern grant + production bonuses
 

@@ -23,6 +23,7 @@
 import { SYNAPSE_CONSTANTS } from '../config/constants';
 import { NEURON_BASE_RATES } from '../config/neurons';
 import { UPGRADES_BY_ID } from '../config/upgrades';
+import { patternCycleBonusAdd } from './patternDecisions';
 import type { GameState } from '../types/GameState';
 import type { NeuronState, NeuronType, UpgradeEffect } from '../types';
 
@@ -143,9 +144,9 @@ export function countCyclePatterns(state: Pick<GameState, 'patterns' | 'cycleSta
   return n;
 }
 
-export function patternCycleBonus(cyclePatterns: number): number {
+export function patternCycleBonus(cyclePatterns: number, decisionAdd = 0): number {
   const { patternCycleBonusPerNode, patternCycleCap } = SYNAPSE_CONSTANTS;
-  return Math.min(1 + cyclePatterns * patternCycleBonusPerNode, patternCycleCap);
+  return Math.min(1 + cyclePatterns * patternCycleBonusPerNode + decisionAdd, patternCycleCap);
 }
 
 /**
@@ -175,7 +176,8 @@ export function calculateProduction(state: GameState): { base: number; effective
   const rawMult = state.connectionMult * globalMult;
   const finalMult = softCap(rawMult);
   // Pattern cycle bonus: multiplicative post-softCap, capped at patternCycleCap.
-  const cycleMult = patternCycleBonus(countCyclePatterns(state));
+  // Node 6 A decision (if chosen) contributes an extra +0.08 addend (GDD §10).
+  const cycleMult = patternCycleBonus(countCyclePatterns(state), patternCycleBonusAdd(state));
   const base = sum * finalMult * cycleMult;
 
   // Stubs for Sprint 7: mentalStateMod × spontaneousEventMod × mutationTemporalMod (all identity until wired).
