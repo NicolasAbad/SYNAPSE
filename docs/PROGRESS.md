@@ -6,10 +6,10 @@
 
 ## Current status
 
-**Phase:** Sprint 3.6 CLOSED — tab panel backfill shipped; the player can now buy neurons + upgrades through the UI.
-**Last updated:** 2026-04-21 after Sprint 3.6 close.
-**Active sprint:** Sprint 4a (not yet started) — Prestige Core (PREST-1 order, 45/60/4 reset/preserve/update split, CORE-8 Momentum Bonus, Awakening screen). Now genuinely playtest-able end-to-end thanks to 3.6.
-**Next action:** Sprint 4a kickoff per `docs/SPRINTS.md §Sprint 4a`. Read GDD §9 (prestige + THRES-1), §20 (Transcendence context), §33 (PRESTIGE_RESET/PRESERVE/UPDATE field split). Implement `handlePrestige()` following PREST-1 step order; enforce CORE-8 amended Momentum cap. Sprint 4a's scope also now includes a **generic confirm-modal component** (per the Sprint 3.6 audit) that Sprint 8b Transcendence will reuse. Sprint 4b owns the deferred Mind-panel subtab nav.
+**Phase:** Sprint 4a IN PROGRESS — Phase 4a.1 (field-set constants) shipped. 5 `BLOCKED-SPRINT-4a` consistency tests un-skipped; 1 remains (TUTOR-2 isTutorialCycle post-prestige flip) pending handlePrestige in Phase 4a.2.
+**Last updated:** 2026-04-21 after Sprint 4a Phase 4a.1 close.
+**Active sprint:** Sprint 4a — Prestige Core. 6 planned sub-phases: 4a.1 field-set constants (DONE) → 4a.2 pure `handlePrestige` in engine → 4a.3 CORE-8 Momentum cap + personal best → 4a.4 store wiring + TUTOR-2 flip + remaining un-skip → 4a.5 generic confirm modal + Awakening screen → 4a.6 integration + close.
+**Next action:** Phase 4a.2 — create `src/engine/prestige.ts` with pure `handlePrestige(state, timestamp)` following PREST-1 steps 1–10. Apply PRESTIGE_RESET (with override for `dischargeLastTimestamp = timestamp` per BUG-02 and `focusBar = prev * 0.25` when Focus Persistente owned per BUG-06), stub patterns/resonance/RPs for Sprint 4b/8b/8c, set `insightActive=false` (BUG-01), `dischargeCharges=0` (BUG-02). CODE-9 pure — timestamp as parameter, no Date.now.
 
 ### Sprint 3 Phase 3.5 — accepted design decisions (owning phases inheriting)
 
@@ -743,6 +743,33 @@ Sprint 11a TODO for `ALL_RULE_IDS` constant must include all 16 (not 13 as state
 ---
 
 ## Session log
+
+### 2026-04-21 — Sprint 4a Phase 4a.1: prestige field-set constants
+
+**Scope:** Data layer of handlePrestige (GDD §33). New file `src/config/prestige.ts` exports the 4 canonical field sets — RESET (45) / PRESERVE (60) / UPDATE (4) / LIFETIME (1) — and the `PRESTIGE_RESET: Partial<GameState>` object with exact reset values per §33. Pure data only; handlePrestige logic lands in Phase 4a.2.
+
+**Field-set discipline:**
+- Tuples declared as `readonly (keyof GameState)[]` via `as const satisfies` — typo-proof; adding a stale field name fails typecheck.
+- `dischargeLastTimestamp: 0` kept as the §33 literal. The timestamp-param override (BUG-02 — fresh 20-min window) is engine logic in handlePrestige, documented inline.
+- `focusBar: 0` kept as the default reset. Focus Persistente 25%-retention (BUG-06) is engine logic.
+
+**Un-skipped 5 consistency tests (4 scoped as BLOCKED-SPRINT-4a + 1 bonus):**
+- PRESTIGE_RESET has exactly 45 fields (length + object-keys parity).
+- PRESTIGE_PRESERVE has exactly 60 fields.
+- RESET + PRESERVE + UPDATE + lifetime = 110 unique fields = `createDefaultState()` keys.
+- RESET ∩ PRESERVE = ∅ (disjoint).
+- TUTOR-2 first cycle uses tutorialThreshold, NOT baseThresholdTable[0] (un-skipped early since `calculateCurrentThreshold` already exists post-Sprint 3).
+
+**Still skipped (behavior, moves to Phase 4a.4):**
+- TUTOR-2 isTutorialCycle flipped to false on first prestige — needs handlePrestige.
+
+**Verification (all gates green):**
+- `npm run typecheck` — 0 errors.
+- `npm run lint` — 0 warnings.
+- `bash scripts/check-invention.sh` — 4/4 PASS, ratio 0.81.
+- `npm test` — **695 passed / 44 skipped / 0 failing** (from 690/49 at baseline → +5 un-skipped).
+
+**Next:** Phase 4a.2 — pure `handlePrestige(state, timestamp)` in `src/engine/prestige.ts` implementing PREST-1 steps 1–10 with stubs for patterns/resonance/resonant-pattern checks.
 
 ### 2026-04-21 — Sprint 3.6 close: tab panel backfill shipped
 

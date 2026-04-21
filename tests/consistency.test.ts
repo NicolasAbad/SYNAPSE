@@ -28,6 +28,13 @@ import { hash, mulberry32, seededRandom } from '../src/engine/rng';
 import { tick } from '../src/engine/tick';
 import { NEURON_CONFIG, NEURON_TYPES, neuronCost } from '../src/config/neurons';
 import { UPGRADES } from '../src/config/upgrades';
+import {
+  PRESTIGE_LIFETIME_FIELDS,
+  PRESTIGE_PRESERVE_FIELDS,
+  PRESTIGE_RESET,
+  PRESTIGE_RESET_FIELDS,
+  PRESTIGE_UPDATE_FIELDS,
+} from '../src/config/prestige';
 import type { GameState } from '../src/types/GameState';
 import type { UpgradeCategory } from '../src/types';
 
@@ -279,16 +286,50 @@ describe('Consistency: Threshold scaling (GDD §9, THRES-1)', () => {
 });
 
 describe('Consistency: PRESTIGE_RESET / PRESERVE / UPDATE split (GDD §33)', () => {
-  // BLOCKED-SPRINT-4a: PRESTIGE_RESET / PRESTIGE_PRESERVE / handlePrestige live
-  // in src/engine/prestige.ts which is Sprint 4a. The 45/60/4/1 field count
-  // assertion, RESET-PRESERVE disjointness, and TUTOR-2 prestige flip tests
-  // all un-skip in Sprint 4a.
-  test.skip('BLOCKED-SPRINT-4a: PRESTIGE_RESET has exactly 45 fields', () => {});
-  test.skip('BLOCKED-SPRINT-4a: PRESTIGE_PRESERVE has exactly 60 fields', () => {});
-  test.skip('BLOCKED-SPRINT-4a: RESET + PRESERVE + UPDATE + lifetime covers all 110 GameState fields', () => {});
-  test.skip('BLOCKED-SPRINT-4a: no field appears in both RESET and PRESERVE (disjoint)', () => {});
+  // Field-set data un-skipped in Sprint 4a Phase 4a.1 (src/config/prestige.ts
+  // defines the 4 tuples). handlePrestige() behavior tests un-skip in Phase 4a.4.
+
+  test('PRESTIGE_RESET has exactly 45 fields', () => {
+    expect(PRESTIGE_RESET_FIELDS.length).toBe(45);
+    expect(Object.keys(PRESTIGE_RESET).length).toBe(45);
+    // Tuple and data object must name the same fields.
+    expect(new Set(PRESTIGE_RESET_FIELDS)).toEqual(new Set(Object.keys(PRESTIGE_RESET)));
+  });
+
+  test('PRESTIGE_PRESERVE has exactly 60 fields', () => {
+    expect(PRESTIGE_PRESERVE_FIELDS.length).toBe(60);
+  });
+
+  test('RESET + PRESERVE + UPDATE + lifetime covers all 110 GameState fields', () => {
+    const union = new Set<string>([
+      ...PRESTIGE_RESET_FIELDS,
+      ...PRESTIGE_PRESERVE_FIELDS,
+      ...PRESTIGE_UPDATE_FIELDS,
+      ...PRESTIGE_LIFETIME_FIELDS,
+    ]);
+    expect(union.size).toBe(110); // also asserts no duplicates across all 4 sets
+    const gameStateKeys = new Set(Object.keys(createDefaultState()));
+    expect(gameStateKeys.size).toBe(110);
+    expect(union).toEqual(gameStateKeys);
+  });
+
+  test('no field appears in both RESET and PRESERVE (disjoint)', () => {
+    const resetSet = new Set<string>(PRESTIGE_RESET_FIELDS);
+    const overlap = PRESTIGE_PRESERVE_FIELDS.filter((f) => resetSet.has(f));
+    expect(overlap).toEqual([]);
+  });
+
   test.skip('BLOCKED-SPRINT-4a: TUTOR-2 isTutorialCycle flipped to false on first prestige', () => {});
-  test.skip('BLOCKED-SPRINT-4a: TUTOR-2 first cycle uses tutorialThreshold, not baseThresholdTable[0]', () => {});
+
+  test('TUTOR-2 first cycle uses tutorialThreshold, not baseThresholdTable[0]', () => {
+    const tutorialState = {
+      isTutorialCycle: true,
+      prestigeCount: 0,
+      transcendenceCount: 0,
+    } as GameState;
+    expect(calculateCurrentThreshold(tutorialState)).toBe(SYNAPSE_CONSTANTS.tutorialThreshold);
+    expect(calculateCurrentThreshold(tutorialState)).not.toBe(SYNAPSE_CONSTANTS.baseThresholdTable[0]);
+  });
 
   // Ready-now: field-presence assertions use createDefaultState() directly.
   test('productionPerSecond is NOT in GameState (deprecated, BUG-E fix)', () => {
