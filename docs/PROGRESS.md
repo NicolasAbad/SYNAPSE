@@ -6,10 +6,10 @@
 
 ## Current status
 
-**Phase:** Sprint 4a IN PROGRESS — Phase 4a.2 (pure `handlePrestige`) shipped. All PREST-1 / BUG-01 / BUG-02 / BUG-04 / BUG-06 / CORE-8-cap / TUTOR-2 unit behavior covered. Only fast-check property test (4a.3) + store wiring (4a.4) + UI (4a.5) + integration (4a.6) remain.
-**Last updated:** 2026-04-21 after Sprint 4a Phase 4a.2 close.
-**Active sprint:** Sprint 4a — Prestige Core. 6 planned sub-phases: 4a.1 field-set constants (DONE) → 4a.2 pure `handlePrestige` (DONE) → 4a.3 property test + CORE-8 cap assertions → 4a.4 store wiring + TUTOR-2 flip + last BLOCKED-SPRINT-4a un-skip → 4a.5 generic confirm modal + Awakening screen → 4a.6 integration + close.
-**Next action:** Phase 4a.3 — add `tests/properties/prestige-invariants.test.ts` with fast-check coverage: for any valid pre-prestige state, `prestigeCount` strictly increments by 1, `isTutorialCycle` ends false, and `momentumBonus ≤ nextThreshold × maxMomentumPct`. Feeds the Sprint 4a TEST-3 requirement.
+**Phase:** Sprint 4a IN PROGRESS — Phase 4a.3 (property-based prestige invariants) shipped. fast-check-verified: prestigeCount strictly +1, TUTOR-2 one-way flip, CORE-8 amended clamp, lifetimePrestiges monotonic, memoriesGained ≥ base, personalBests set post-prestige, awakeningLog appended, totalGenerated preserved.
+**Last updated:** 2026-04-21 after Sprint 4a Phase 4a.3 close.
+**Active sprint:** Sprint 4a — Prestige Core. 6 planned sub-phases: 4a.1 field-set constants (DONE) → 4a.2 pure `handlePrestige` (DONE) → 4a.3 property tests (DONE) → 4a.4 store wiring + TUTOR-2 flip + last BLOCKED-SPRINT-4a un-skip → 4a.5 generic confirm modal + Awakening screen → 4a.6 integration + close.
+**Next action:** Phase 4a.4 — Zustand store wiring: add `handlePrestige` action to `src/store/gameStore.ts` using merge-mode `setState` (Zustand pitfall — never `true` flag). Un-skip the last `BLOCKED-SPRINT-4a` test in `tests/consistency.test.ts` (`TUTOR-2 isTutorialCycle flipped to false on first prestige`). Add store-layer test coverage via `tests/store/gameStore.test.ts`.
 
 ### Sprint 3 Phase 3.5 — accepted design decisions (owning phases inheriting)
 
@@ -743,6 +743,30 @@ Sprint 11a TODO for `ALL_RULE_IDS` constant must include all 16 (not 13 as state
 ---
 
 ## Session log
+
+### 2026-04-21 — Sprint 4a Phase 4a.3: property-based prestige invariants
+
+**Scope:** New `tests/properties/prestige-invariants.test.ts` covering the Sprint 4a TEST-3 property-based requirement — for any valid pre-prestige state + timestamp, the post-prestige state satisfies the §33/§35 invariants. 9 fast-check properties × default 100 runs each = 900+ generated states stress-tested.
+
+**Properties shipped (all green, no shrinking required):**
+1. `prestigeCount` strictly increments by 1 regardless of prior state.
+2. TUTOR-2 one-way flip: `isTutorialCycle` always false post-prestige, regardless of pre-value.
+3. CORE-8 amended cap: `momentumBonus ≤ nextThreshold × maxMomentumPct + ε`.
+4. Momentum never exceeds raw formula: `momentumBonus ≤ PPS × momentumBonusSeconds + ε`.
+5. `lifetimePrestiges` strictly +1.
+6. `memoriesGained ≥ baseMemoriesPerPrestige` (no upgrade path reduces Memorias).
+7. `personalBests[prestigeCount]` is defined post-prestige.
+8. `awakeningLog` length grows by exactly 1.
+9. `totalGenerated` preserved unchanged (lifetime currency).
+
+**Why this matters (TEST-3 philosophy per Phase 4.5 precedent):** Unit tests I write can pass by construction — I choose inputs that validate the formula I already wrote. Property tests pick adversarial inputs fast-check generates: negative-zero PPS, boundary thresholds, pre-increment at the runThresholdMult edge, huge lifetime counters. The invariants expose algebraic errors the unit tests miss (e.g., a `<` that should be `<=`).
+
+**Verification (all gates green):**
+- `npm run typecheck` — 0 errors. `npm run lint` — 0 warnings.
+- `bash scripts/check-invention.sh` — 4/4 PASS, ratio 0.82 (held).
+- `npm test` — **731 passed / 44 skipped / 0 failing** (from 722 → +9 property tests).
+
+**Next:** Phase 4a.4 — Zustand store wiring + un-skip the last BLOCKED-SPRINT-4a test (TUTOR-2 isTutorialCycle flip via handlePrestige action).
 
 ### 2026-04-21 — Sprint 4a Phase 4a.2: pure handlePrestige in src/engine/prestige.ts
 
