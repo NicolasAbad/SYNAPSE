@@ -288,12 +288,75 @@ Canvas2D rendering, HUD overlay, tab navigation, theme architecture, performance
 - [x] Integration: buy 10 Básicas + 5 Sensoriales + 3 Piramidales → connectionMult = correct, production rises
 
 **Player tests 🎮:**
-- [x] Buy an upgrade → feel the production change *(covered by Phase 3/5 unit + integration tests; Sprint 4c playtest owns the feel-check)*
+
+> **Post-audit honesty note (2026-04-21):** Sprint 3 shipped every MECHANIC (data + store actions + unit + integration tests all green) but did NOT ship the user-facing panel UI to BUY things. The Neurons tab and Upgrades tab currently render no content. The player tests below were written assuming the panels exist; blocked items are unblocked by **Sprint 3.6** (inserted below).
+
+- [-] Buy an upgrade → feel the production change *(mechanics tested in tests/store/purchases.test.ts; Buy-button UI blocked by missing UpgradesPanel → unblocked by Sprint 3.6, feel-check in Sprint 4c)*
 - [x] Tap for 15s → Focus Bar visibly rises, Insight triggers *(verified by tests/store/tap.test.ts tap-driven activation + tests/engine/insight.test.ts)*
-- [-] Use Discharge right after Insight → feel the burst *(Sprint 4c playtest — needs human feel-check)*
-- [-] Trigger a Cascade (Focus ≥75% + Discharge) → visual + audio payoff satisfying *(Sprint 4c playtest — haptic heavy wired but feel unverified)*
-- [x] Buy something expensive (>10% thoughts) → Undo toast appears for 3s *(Phase 7.2 UndoToast.tsx + tests)*
-- [-] Try to tap-spam → game doesn't penalize normal fast play (7-8 taps/sec bursts OK) *(Sprint 4c playtest — TAP-1 threshold at 7.5 taps/sec may be too tight for normal burst-tapping)*
+- [-] Use Discharge right after Insight → feel the burst *(Discharge button UI exists; full end-to-end blocked by lack of Neurons panel for pre-scaling → unblocked by Sprint 3.6, feel-check in Sprint 4c)*
+- [-] Trigger a Cascade (Focus ≥75% + Discharge) → visual + audio payoff satisfying *(same as above; haptic heavy wired but feel unverified)*
+- [x] Buy something expensive (>10% thoughts) → Undo toast appears for 3s *(Phase 7.2 UndoToast.tsx + 8 tests verify trigger + render. Full E2E via panels unblocked by Sprint 3.6)*
+- [-] Try to tap-spam → game doesn't penalize normal fast play (7-8 taps/sec bursts OK) *(TAP-1 threshold at 7.5 taps/sec may be too tight for normal burst-tapping; feel-check in Sprint 4c after Sprint 3.6 unlocks play flow)*
+
+---
+
+## Sprint 3.6: Tab panel backfill + UX foundation (1 day · CRITICAL)
+
+Post-close addendum per Sprint 3 gap audit (2026-04-21). Builds the panel-container architecture and the two panels needed to actually play the game (Neurons, Upgrades), plus shells for Regions/Mind that later sprints fill in. No new mechanics — purely the UI surface that was implicitly deferred during Sprints 2+3 but never assigned an owner.
+
+**Duration:** 1 day · CRITICAL (Sprint 4a prestige testing is impossible without this)
+
+**Prompt to Claude Code:**
+> Implement Sprint 3.6 per docs/SPRINTS.md §Sprint 3.6. Read GDD §29 (HUD/Tabs/Upgrades ordering rule) and docs/UI_MOCKUPS.html (Screen 6 — Neurons panel with ×1/×10/Max + green/orange/red color coding). No new mechanics — wire existing `buyNeuron` / `buyUpgrade` / `state.upgrades` / `state.neurons` into user-visible panels. Follow the 4-category Upgrades sort rule from GDD §29 (Affordable → Teaser → Blocked-by-Pathway → Locked). "Blocked by Pathway" category will be empty until Sprint 5 — render the rule in code but no real entries populate pre-Sprint-5.
+
+**AI checks ✅:**
+- [ ] `src/ui/panels/TabPanelContainer.tsx` — renders content based on `activeTab`; default renders nothing (canvas + HUD overlay remain visible "behind" for Neurons tab so player can still tap)
+- [ ] `src/ui/panels/NeuronsPanel.tsx` — 5 rows (one per neuron type), each showing: name + icon color, owned count, rate/sec contribution, next-cost. Buy buttons: ×1 always; ×10 + Max when basica.count > 5 (reduce friction). Locked types show silhouette + unlock requirement text. Unaffordable shown greyed.
+- [ ] `src/ui/panels/UpgradesPanel.tsx` — 35 cards sorted per GDD §29: (1) Affordable green, (2) Teaser (next affordable) grey with unlock text, (3) Blocked-by-Pathway (empty pre-Sprint-5), (4) Locked silhouette. Unlock text for Locked includes `unlockPrestige` threshold.
+- [ ] `src/ui/panels/RegionsPanel.tsx` — shell only. Shows "Regions unlock at P5" placeholder. Sprint 5 replaces with real content.
+- [ ] `src/ui/panels/MindPanel.tsx` — shell with 5-subtab secondary row (Patterns / Archetypes / Diary / Achievements / Resonance). Each subtab shows "Unlocks in Sprint X" placeholder. Sprints 4b / 5 / 6 / 7 / 8b replace each subtab's content.
+- [ ] `src/ui/hud/TabBadge.tsx` — rendering layer for UI-3 badges keyed on `tabBadgesDismissed[]`. Ships with EMPTY priority-feed; Sprint 6+ populates.
+- [ ] `src/ui/hud/NetworkErrorToast.tsx` — generic toast matching UI-8 pattern. Used later by cloud-save fail, ad-load fail, store-unavailable banner. Currently not fired by any flow (infrastructure only).
+- [ ] HUD.tsx mounts TabPanelContainer. `pointerEvents: auto` on panels so Buy buttons work; canvas still reachable when activeTab falls through (Neurons tab overlays the lower 55% of the screen, not full-bleed).
+
+**Sprint 3.6 tests 🧪:**
+- [ ] Component: NeuronsPanel Buy ×1 increments count, decrements thoughts, toast fires on expensive buy
+- [ ] Component: NeuronsPanel Buy ×10 loops until affordability fails
+- [ ] Component: NeuronsPanel Max purchases until cannot afford
+- [ ] Component: NeuronsPanel locked row renders unlock requirement, no Buy button
+- [ ] Component: UpgradesPanel Affordable rows sort first, Teaser next, Locked last
+- [ ] Component: UpgradesPanel unaffordable click is no-op; affordable click calls buyUpgrade
+- [ ] Component: UpgradesPanel with Funciones Ejecutivas owned shows −20% cost display
+- [ ] Component: TabPanelContainer switches content when activeTab changes
+- [ ] Component: Regions/Mind shells render "Unlocks in..." placeholders
+- [ ] Component: TabBadge renders nothing with empty feed (smoke test for the infrastructure)
+- [ ] Component: NetworkErrorToast renders when passed a message prop (smoke; real wiring in later sprints)
+
+**Player tests 🎮 (the ones Sprint 3 couldn't execute without this):**
+- [ ] Open app → Neurons tab → buy Basicas → counter goes up, rate rises
+- [ ] Buy 10 Basicas → Sensorial row un-greys, hint #4 appears, buy first Sensorial
+- [ ] Open Upgrades tab → red_neuronal_densa visible + affordable → buy → production +25%
+- [ ] Switch tabs rapidly → no crashes, state preserved
+- [ ] Expensive upgrade purchase → Undo toast appears with correct name
+
+**Deliverables:**
+- 7 new files under `src/ui/panels/` + `src/ui/hud/TabBadge.tsx` + `src/ui/hud/NetworkErrorToast.tsx`
+- ~11 new component tests
+- HUD.tsx wiring update
+- SPRINTS.md §Sprint 3 player-test statuses flip from `[-]` back to `[x]` or noted as Sprint 4c feel-check
+- Sprint 3.6 closing dashboard in PROGRESS.md
+
+**Out of scope (explicitly deferred to owning sprints):**
+- Tap feedback polish (+X floaters, particles) → Sprint 10
+- Tab switch CSS transitions → Sprint 10
+- Discharge button pulse animation → Sprint 10
+- Settings gear icon → Sprint 10
+- Empty-state visual polish → Sprint 10
+- Prestige confirm modal → Sprint 4a (extended scope)
+- Offline rewards modal → Sprint 8a (extended scope)
+- Transcendence confirm + celebration → Sprint 8b (extended scope)
+- Achievement unlock celebration → Sprint 6/7 (extended scope)
+- TabBadge *population* (new-unlock priority feed) → Sprint 7 (Mental States + Achievements)
 
 ---
 
@@ -305,6 +368,8 @@ The foundational sprint. Prestige loop works or the game doesn't work. Implement
 
 **Prompt to Claude Code:**
 > Implementá Sprint 4a per docs/SPRINTS.md §Sprint 4a. Lee GDD §9 (prestige system + THRES-1), §20 (Transcendence context), §33 (PRESTIGE_RESET/PRESERVE/UPDATE — exact field split). handlePrestige() DEBE seguir PREST-1 order. PRESTIGE_RESET son exactamente 45 fields, PRESTIGE_PRESERVE 60 fields (Batch 1 2B-1 removed isTutorialCycle), PRESTIGE_UPDATE 4 fields (prestigeCount, currentThreshold, cycleStartTimestamp, isTutorialCycle). Momentum Bonus usa CORE-8 with maxMomentumPct cap (Batch 3 4A-2, 10% of next threshold). Este sprint NO implementa patterns ni polarity — solo el core de prestige. Los tests pueden mockear patterns/polarity para aislar prestige.
+
+**Scope addition per Sprint 3.6 audit (2026-04-21):** Add a "Prestige?" confirm modal before `handlePrestige()` fires. Rationale: single-tap Awakening is a huge reset — accidental-tap protection is standard mobile idle UX. Modal shows: current cycle thoughts, Memories earned, "Reset cycle progress?" with Cancel / Prestige buttons. Cancel is default-focused. This pattern will be reused by Sprint 8b (Transcendence) — make the modal component generic.
 
 **AI checks ✅:**
 - [ ] `handlePrestige()` sigue PREST-1 order: (1) capture `lastCycleEndProduction` from current `effectiveProductionPerSecond`, (2) duration, (3) personal best at CURRENT prestigeCount, (4) Resonant Pattern checks stub (placeholder — real impl in Sprint 8c), (5) Resonance gain stub, (6) Patterns gained stub, (7) Memories gained, (8) apply RESET (45 fields), (9) apply UPDATE (prestigeCount += 1, new threshold via `calculateThreshold()`, new cycleStartTimestamp, `isTutorialCycle = false`), (10) lifetimePrestiges++, (11) compute capped Momentum Bonus per CORE-8 amended formula (min of raw × 30 vs nextThreshold × 0.10), add to thoughts
@@ -494,6 +559,11 @@ Not a sprint. 2 days reserved for integration + bug fixes on the Sprint 4a/4b/4c
 **Prompt to Claude Code:**
 > Implement Sprint 6 per docs/SPRINTS.md. Read GDD §12 (3 Archetypes with full bonuses), §23 (8 Era 3 events), §8 (12 Spontaneous events), docs/NARRATIVE.md (57 fragments + 30 Echoes + 4 v1.0 endings; 5th ending "The Witness" is v1.5+ per POSTLAUNCH.md — do NOT implement). Archetype choice is permanent for the Run (irreversible until Transcendence).
 
+**Scope additions per Sprint 3.6 audit (2026-04-21):**
+- **Neural Diary read UI** — populate the Mind-panel `Diary` subtab shell left by Sprint 3.6. Scroll list of all fragments in `narrativeFragmentsSeen`, group by Era. Tap fragment → re-read modal. No polish animations (Sprint 10).
+- **Archetype-choice confirm modal** — reuse the confirm-modal component introduced by Sprint 4a. Same "Are you sure?" flow, Cancel default-focused. Irreversibility warning.
+- **TabBadge population hook** — when a new Archetype tier unlocks at P5, push `'archetype-unlock'` to the badge priority feed (TabBadge component scaffolded in Sprint 3.6). Dismisses on Mind-tab open.
+
 **AI checks ✅:**
 - [ ] 3 Archetypes with FULL bonus spec from GDD §12:
   - Analítica: Active ×1.15, Focus ×1.25, Insight +2s, narrative unlocks
@@ -546,6 +616,11 @@ Achievements system (30 IDs), Mental States (5), Micro-challenges (8), Neural Di
 
 **Prompt to Claude Code:**
 > Implement Sprint 7 per docs/SPRINTS.md. Read GDD §17 (Mental States with full trigger/effect/duration/exit), §18 (8 Micro-challenges), §22 (Resonant Patterns), §24.5 (30 Achievements — full list with IDs/triggers/rewards). MENTAL-5 (Hyperfocus + Discharge pending bonus) and MENTAL-6 (Flujo Eureka rename) are critical fixes. NEVER invent achievement IDs or triggers — use exactly the 30 in §24.5.
+
+**Scope additions per Sprint 3.6 audit (2026-04-21):**
+- **Achievement unlock celebration UX** — on unlock, fire a full-width toast + haptic success. Toast duration 3s, non-blocking. Reuses NetworkErrorToast pattern (scaffolded in Sprint 3.6) — different styling, same lifecycle model.
+- **Achievements viewing UI** — populate the Mind-panel `Achievements` subtab shell left by Sprint 3.6. Category grid (Cycle/Meta/Narrative/Hidden/Mastery tabs). Each card shows lock state; hidden ones show `???`; tap unlocked for reward detail.
+- **TabBadge population — achievements + micro-challenges** — write the priority-feed for UI-3: "new feature unlock" > "affordable upgrade" > "Discharge charge ready" > "active micro-challenge". TabBadge rendering was scaffolded in Sprint 3.6; this sprint plugs the real priority-feed logic.
 
 **AI checks ✅:**
 - [ ] `src/config/achievements.ts` exports `ACHIEVEMENTS: Achievement[]` with exactly 30 entries matching GDD §24.5 (IDs, display names, triggers as pure `(state: GameState) => boolean`, rewards, categories, `isHidden` flag). Categories evenly split: 6 Cycle, 6 Meta, 6 Narrative, 6 Hidden, 6 Mastery. Total Spark reward sum = 145.
@@ -611,6 +686,9 @@ Offline system complete, Sleep screen animation, Lucid Dream choice, rewarded ad
 **Prompt to Claude Code:**
 > Implementá Sprint 8a per docs/SPRINTS.md §Sprint 8a. Lee GDD §19 (offline system completo), §17 (Mental States — Sleep-screen integration). Este sprint cubre offline progress + Sleep screen + Lucid Dream + OFFLINE-7. NO incluye Transcendence (Sprint 8b). Los campos de GameState para offline ya existen (creados en Sprint 1) — acá se activa la lógica.
 
+**Scope addition per Sprint 3.6 audit (2026-04-21):**
+- **"Welcome back" offline-rewards modal** — when the player returns after ≥ `offlineModalMinSeconds` (suggest: 60 s), open a modal on first render showing: hours offline (capped), thoughts earned, current offline efficiency, optional "Watch ad for ×2" button (wires to Sprint 9a rewarded ad slot). Critical retention hook — mobile idle games that skip this lose measurable D7. Modal uses the generic confirm-modal component established in Sprint 4a.
+
 **AI checks ✅:**
 - [ ] `applyOfflineProgress()` per GDD §19 formula (called on app resume, seconds elapsed = timestamp param)
 - [ ] Base cap 4h, Sueño REM → 8h, Consciencia Distribuida → 12h (OFFLINE-6)
@@ -649,6 +727,10 @@ Transcendence flow, Runs 2-3 implementation, 4 Run-exclusive upgrades, Resonance
 
 **Prompt to Claude Code:**
 > Implementá Sprint 8b per docs/SPRINTS.md §Sprint 8b. Lee GDD §20 (Transcendence), §21 (4 Run-exclusive upgrades — NOT 6), §15 (Resonance — 8 upgrades, 3 tiers). CRITICAL: TRANS-1 resets prestigeCount a 0 (sino Run 2 es unplayable). TRANS-2: Convergencia usa lifetimePrestiges no prestigeCount. Este sprint NO incluye Resonant Patterns ni TEST-5 — eso es Sprint 8c.
+
+**Scope additions per Sprint 3.6 audit (2026-04-21):**
+- **Transcendence confirm modal** — reuse confirm-modal component from Sprint 4a. Text emphasizes permanence ("You'll reset everything except Sparks + Patterns. Run {N+1} begins."). Cancel default-focused; Transcend button requires 2s cooldown before it activates (anti-misclick for a once-per-Run commitment).
+- **Ending celebration screen** — the 4 v1.0 endings (+ Secret if unlocked) currently show via narrative card per GDD §22. Upgrade to a full-screen celebration with the ending fragment, its title, and a share-screenshot frame (the share target itself is a v1.1 feature per POSTLAUNCH.md §v1.1, but the FRAME on-screen ships now so players capture it via OS screenshot).
 
 **AI checks ✅:**
 - [ ] Transcendence at P26: ending choices (4 main + Secret placeholder — real Secret gate in 8c)
@@ -840,6 +922,18 @@ Settings, audio, accessibility, Firebase, push notifications, visual effects, de
 
 **Prompt to Claude Code:**
 > Implement Sprint 10 per docs/SPRINTS.md. Read GDD §27 (48 analytics events), §28 (audio). Settings panel, full i18n, 48 Firebase events (9 funnel + 11 money + 5 feature + 20 core + 3 weekly_challenge), push scheduler, colorblind mode, reduced motion, Android back button handler.
+
+**Scope additions per Sprint 3.6 audit (2026-04-21) — polish sweep:**
+- **Tap feedback polish** — `+X` floater on tap (fades up + out 400 ms), small particle burst at tap location. Respects reduced-motion setting.
+- **Discharge button pulse animation** — CSS keyframe glow when a charge is available, stops when consumed. Standard mobile idle affordance.
+- **Focus Bar fill curve** — ease-out fill animation on tap instead of linear step. Disabled under reduced-motion.
+- **Tab switch CSS transitions** — 150 ms cross-fade between tab panels.
+- **Settings gear icon** — add gear icon to HUD top-right of top bar (above RateCounter); onClick opens Settings panel. The Settings panel content was already in scope; this is just the entry point that no earlier sprint scoped.
+- **Empty-state visual polish** — real styling (not the Sprint 3.6 placeholder text) for Regions-pre-P5, Upgrades-no-affordable-yet, Mind-subtabs-pre-unlock. Consistent empty-state component with icon + explanation.
+- **Loading / save-sync indicator** — subtle spinner or "Saving..." pill when `saveInFlight === true`, auto-hides on completion. Build as a generic component and wire it to the save scheduler.
+- **Screen reader / aria pass** — aria-labels on all interactive HUD elements, role="status" on ephemeral toasts (already done on some), aria-live on Focus/Consciousness bars for assistive tech. Sprint 10 already owns colorblind mode + reduced motion — this extends the same pass.
+- **Push notification scheduling infrastructure** — Capacitor LocalNotifications plugin, daily-login-bonus reminder (Sprint 9b feature that was stranded without push infra), basic schedule/cancel API. No actual notification UX decisions beyond MONEY / retention defaults.
+- **Ending share-frame finalization** — polish the share-screenshot frame introduced in Sprint 8b (typography, branding, ending-specific visual flourish).
 
 **AI checks ✅:**
 - [ ] Settings panel: SFX volume, music volume, notifications toggle, language toggle, accessibility options

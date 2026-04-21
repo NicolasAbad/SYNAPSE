@@ -6,10 +6,16 @@
 
 ## Current status
 
-**Phase:** Sprint 3 CLOSED — Neurons + Upgrades + Discharge + Focus/Insight + Taps + Tutorial (hints + undo + cap banner) + tutorialThreshold retune.
-**Last updated:** 2026-04-21 after Sprint 3 Phase 7 close.
-**Active sprint:** Sprint 4a (not yet started) — Prestige Core (PREST-1 order, 45/60/4 reset/preserve/update split, CORE-8 Momentum Bonus, Awakening screen).
-**Next action:** Sprint 4a kickoff per `docs/SPRINTS.md §Sprint 4a`. Read GDD §9 (prestige + THRES-1), §20 (Transcendence context), §33 (PRESTIGE_RESET/PRESERVE/UPDATE field split). Implement `handlePrestige()` following PREST-1 step order; enforce CORE-8 amended Momentum cap (`min(lastCyclePPS × 30, nextThreshold × maxMomentumPct)` per 4A-2). Mock patterns/polarity to isolate prestige tests. The tutorial's first-prestige transition is the validation target (P0 @ tutorialThreshold 25K → P1 @ baseThresholdTable[1] 450K); Sprint 4c owns the post-kickoff playtest that re-confirms TUTOR-1 timing end-to-end.
+**Phase:** Sprint 3 CLOSED → Sprint 3.6 gap-audit addendum in flight (post-close UI backfill for orphan tab panels).
+**Last updated:** 2026-04-21 after full docs-vs-sprints gap audit.
+**Active sprint:** Sprint 3.6 — Tab panel backfill + UX foundation (see SPRINTS.md §Sprint 3.6).
+**Next action:** Sprint 3.6 implementation in 5 sub-phases. Start with 3.6.1 — `src/ui/panels/TabPanelContainer.tsx` + 4 shell panels (NeuronsPanel / UpgradesPanel / RegionsPanel / MindPanel) wired into HUD.tsx. Gate-check + commit at each sub-phase boundary. After Sprint 3.6 closes, Sprint 4a (Prestige Core) is the next sprint.
+
+### Sprint 3.6 handoff context
+
+Sprint 3 shipped every mechanic green but had no UI to *use* them — tab panels were orphaned from the sprint plan (specified in GDD §29 + UI_MOCKUPS.html:193-232, owned by no sprint). Sprint 3.6 is the post-close backfill that unblocks Sprint 4a prestige testing + Sprint 4c playtest. It also scaffolds TabBadge + NetworkErrorToast infrastructure that later sprints fill in.
+
+Scope additions were also inserted into Sprint 4a (confirm-modal component), Sprint 6 (Diary UI, Archetype confirm, TabBadge hook), Sprint 7 (achievement celebration + viewing + badge-priority feed), Sprint 8a (Welcome-back offline modal), Sprint 8b (Transcendence confirm, ending share-frame), Sprint 10 (tap polish + gear icon + loading indicator + aria pass + push infra). All logged in their respective sprint prompts.
 
 ### Sprint 3 Phase 3.5 — accepted design decisions (owning phases inheriting)
 
@@ -685,6 +691,30 @@ Sprint 11a TODO for `ALL_RULE_IDS` constant must include all 16 (not 13 as state
 ---
 
 ## Session log
+
+### 2026-04-21 — Post-Sprint-3 gap audit + Sprint 3.6 scope
+
+**Scope:** Full docs-vs-sprints audit (Explore agent doc sweep + expert-UX lens) triggered by the observation that the player could not buy a single neuron through the shipped UI. Confirmed a broad sprint-planning gap — 4 tab panels (Neurons, Upgrades, Regions, Mind) specified in GDD §29 and UI_MOCKUPS.html Screen 6 but **assigned to no sprint**. Extended the audit into UX polish, retention hooks, and accessibility gaps.
+
+**Findings (24 gaps, classified P0-P3):**
+- **P0 critical (blocks v1.0 play):** 6 gaps — the 4 tab panels + panel-container architecture + Offline "Welcome back" modal.
+- **P1 high (retention + polish):** 7 gaps — TabBar badge renderer (rule in GDD §29 UI-3, no implementer), prestige confirm modal, transcendence confirm + celebration, generic network-error toast pattern (GDD §29 UI-8), tap feedback polish, achievement unlock celebration, loading/save-sync indicators.
+- **P2 medium:** 7 gaps — empty states, Discharge button pulse, settings gear icon, tab switch transitions, aria labels, push notification scheduling infra, Neural Diary read UI.
+- **P3 low (v1.1 candidates):** 4 gaps — ending share target (OS native), meta-progression stats, keyboard nav, tutorial-skip-for-returners (actually correct behavior, documented).
+
+**Plan adopted (Nico approved):**
+1. **Sprint 3.6 addendum** — post-close 1-day sprint builds P0 items 1-5 + scaffolds P1 items 7+10. Unblocks Sprint 4a prestige testing.
+2. **Scope additions to existing sprints** — injected directly into the Sprint 4a / 6 / 7 / 8a / 8b / 10 prompts in SPRINTS.md so future sessions can't skip them.
+3. **POSTLAUNCH.md additions** — P3 items (share target, meta stats, keyboard nav) documented as v1.1.
+
+**Doc updates this commit:**
+- `docs/SPRINTS.md` — added §Sprint 3.6 with full AI-check list + prompt + test plan. Added "Scope additions per Sprint 3.6 audit" blocks to §Sprint 4a, §Sprint 6, §Sprint 7, §Sprint 8a, §Sprint 8b, §Sprint 10 prompts. Sprint 3 player-test boxes updated with honest "blocked by missing panel → unblocked by Sprint 3.6" notes.
+- `docs/POSTLAUNCH.md` — added v1.1 entries for ending share target, meta-progression stats screen, keyboard navigation.
+- `docs/PROGRESS.md` — Current status now points at Sprint 3.6; this session-log entry documents the audit.
+
+**Integrity correction applied:** Sprint 3 closing dashboard (in the entry below) marked player tests "Use Discharge → feel the burst", "Trigger a Cascade", "Try to tap-spam" as "deferred to Sprint 4c playtest, needs human feel-check". Real reason: **no UI surface exists to even attempt the test**. Corrected in SPRINTS.md §Sprint 3 player-test section; dashboard prose left intact but flagged here.
+
+**Next:** Sprint 3.6 implementation in 5 sub-phases.
 
 ### 2026-04-21 — Sprint 3 Phase 7.1–7.4b: Tutorial hints + Undo toast + Emergencia banner + tutorial retune
 

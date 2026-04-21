@@ -41,6 +41,15 @@ If Firebase save + local save differ significantly, present a "Which to keep?" m
 ### Search in Neural Diary
 Text search on all diary entries. Filter by type.
 
+### Ending share target (OS native share)
+v1.0 ships the on-screen ending share-frame (Sprint 8b + 10 polish). v1.1 adds native share integration — tap the frame, OS share sheet opens with the image + pre-filled caption. iOS `UIActivityViewController` + Android `ACTION_SEND`. Friction-free virality for the Secret Ending moment.
+
+### Meta-progression stats screen
+New subtab in Mind (pairs with the "Stats panel" item above — they may merge). Player-facing dashboard of identity: total runs completed, best cycle time per prestige, favorite archetype, lifetime taps, ending-completion grid. This was scoped by the Sprint 3 gap audit as "out of v1.0 budget but worth naming" — lands here.
+
+### Keyboard navigation (desktop preview + accessibility)
+Tab order through HUD buttons, Enter/Space activation, visible focus rings. Currently the game is touch-first and desktop is an incidental preview mode. Sprint 10's accessibility pass covers screen reader + colorblind + reduced motion; keyboard nav is the one item deferred to v1.1 because desktop audience is a small minority and testing surface is large.
+
 ### Sentry + source maps (deferred from audit)
 If Firebase Crashlytics non-fatal logging proves insufficient during soft launch, add Sentry with source maps for JS error tracking in Capacitor WebView. Free tier (5K events/mo) sufficient.
 
