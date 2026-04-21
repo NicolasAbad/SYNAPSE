@@ -68,6 +68,24 @@ export const en = {
     prefix_upgrade: 'Unlocked',
     button: 'UNDO',
   },
+  confirm: {
+    cancel: 'Cancel',
+    confirm: 'Confirm',
+  },
+  awakening: {
+    ready_label: 'AWAKENING',
+    ready_hint: 'Cycle threshold reached',
+    confirm_title: 'Awakening?',
+    confirm_body: 'Reset cycle progress and begin a new cycle. Neurons, upgrades, and thoughts reset. Memories and lifetime progress carry over.',
+    confirm_button: 'Awaken',
+    screen_title: 'Awakening',
+    duration_label: 'Cycle',
+    memories_label: 'Memories',
+    personal_best: 'New personal best',
+    momentum_label: 'Momentum',
+    momentum_suffix_seconds: 's head start',
+    continue: 'Continue',
+  },
   panels: {
     neurons: {
       rate_suffix: '/s',

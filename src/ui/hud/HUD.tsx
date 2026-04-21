@@ -9,6 +9,7 @@ import { DischargeButton } from './DischargeButton';
 import { TabBar } from './TabBar';
 import { UndoToast } from './UndoToast';
 import { EmergenciaCapBanner } from './EmergenciaCapBanner';
+import { AwakeningFlow } from './AwakeningFlow';
 import { TabPanelContainer } from '../panels/TabPanelContainer';
 
 /**
@@ -52,6 +53,7 @@ export const HUD = memo(function HUD() {
       <DischargeButton />
       <UndoToast />
       <EmergenciaCapBanner />
+      <AwakeningFlow />
       <TabBar />
     </div>
   );

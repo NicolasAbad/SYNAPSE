@@ -6,10 +6,10 @@
 
 ## Current status
 
-**Phase:** Sprint 4a IN PROGRESS — Phase 4a.4 (Zustand store wiring) shipped. All 6 `BLOCKED-SPRINT-4a` consistency tests now un-skipped (grep returns 0 matches). Prestige action callable from UI; threshold-gate + undo-toast-clear + merge-mode setState verified.
-**Last updated:** 2026-04-21 after Sprint 4a Phase 4a.4 close.
-**Active sprint:** Sprint 4a — Prestige Core. 6 planned sub-phases: 4a.1 field-set constants (DONE) → 4a.2 pure `handlePrestige` (DONE) → 4a.3 property tests (DONE) → 4a.4 store wiring (DONE) → 4a.5 generic confirm modal + Awakening screen UI → 4a.6 integration test (P0→P1 tick-by-tick) + sprint close.
-**Next action:** Phase 4a.5 — build `src/ui/modals/ConfirmModal.tsx` (generic 2-button confirm, reused by Sprint 8b Transcendence per Sprint 3.6 audit addition) + Awakening screen (`src/ui/modals/AwakeningScreen.tsx`) showing cycle duration / thoughts earned / Memories gained / Personal Best badge / animated Momentum counter. Wire both into HUD + gate via cycleGenerated ≥ currentThreshold.
+**Phase:** Sprint 4a IN PROGRESS — Phase 4a.5 (ConfirmModal + AwakeningScreen + HUD wiring) shipped. Player can now prestige end-to-end through the UI: ready button → confirm modal (Cancel default-focused) → fires action → AwakeningScreen shows cycle duration / Memories / Momentum / personal-best badge → Continue dismisses.
+**Last updated:** 2026-04-21 after Sprint 4a Phase 4a.5 close.
+**Active sprint:** Sprint 4a — Prestige Core. 6 planned sub-phases: 4a.1 field-set constants (DONE) → 4a.2 pure `handlePrestige` (DONE) → 4a.3 property tests (DONE) → 4a.4 store wiring (DONE) → 4a.5 UI flow (DONE) → 4a.6 integration test (P0→P1 tick-by-tick timing) + sprint close.
+**Next action:** Phase 4a.6 — integration test proving P0→P1 hits the 7-9 min TUTOR-1 target at 1 tap/sec (feeds SPRINTS.md §4a integration-test checkbox). Tick-by-tick simulation using real engine + tryBuyNeuron + applyTap. Reuses pattern from `scripts/tutorial-timing.ts`. Then Sprint 4a close commit with closing dashboard in PROGRESS.md.
 
 ### Sprint 3 Phase 3.5 — accepted design decisions (owning phases inheriting)
 
@@ -743,6 +743,38 @@ Sprint 11a TODO for `ALL_RULE_IDS` constant must include all 16 (not 13 as state
 ---
 
 ## Session log
+
+### 2026-04-21 — Sprint 4a Phase 4a.5: ConfirmModal + AwakeningScreen + HUD wiring
+
+**Scope:** 3 new UI components + HUD wiring + i18n strings for the prestige flow. Sprint 3.6 audit scope-addition (generic confirm modal reused by Sprint 8b Transcendence) delivered.
+
+**New files:**
+- `src/ui/modals/ConfirmModal.tsx` — generic 2-button dialog. Accepts `testIdPrefix` so multiple instances (prestige, transcendence, PAT-3 reset) can scope their test ids. Cancel is default-focused; Escape key maps to onCancel; `role="dialog" aria-modal="true" aria-labelledby` wired correctly.
+- `src/ui/modals/AwakeningScreen.tsx` — post-prestige summary. Displays cycle duration (min or sec fallback), Memories gained (with +prefix), Momentum Bonus + 30s head-start suffix, personal-best badge (only when `wasPersonalBest`), Continue button. Consumes the `PrestigeOutcome` from the engine directly.
+- `src/ui/hud/AwakeningFlow.tsx` — orchestrates the three-step flow (button → confirm → screen). Local React state for ephemeral UI coordination; the engine/store owns the actual post-prestige GameState.
+
+**HUD wiring:** `<AwakeningFlow />` mounted in `HUD.tsx` above `<TabBar />`. Ready button appears center-bottom when `cycleGenerated ≥ currentThreshold`, glows via `box-shadow: 0 0 24px var(--color-primary)`.
+
+**i18n strings added (en.ts):**
+- `confirm.cancel`, `confirm.confirm`
+- `awakening.{ready_label, ready_hint, confirm_title, confirm_body, confirm_button, screen_title, duration_label, memories_label, personal_best, momentum_label, momentum_suffix_seconds, continue}`
+
+**Tests (26 new, all green first run):**
+- 9 ConfirmModal — visibility gate, content scoping via prefix, interaction, Escape accessibility, Cancel default focus.
+- 10 AwakeningScreen — gated on null outcome, minute/second fallback formatting, memories/momentum value display, personal-best conditional badge, aria wiring.
+- 7 AwakeningFlow — full end-to-end button → confirm → action → screen → continue flow, cancel path, button hidden while screen is up.
+
+**Scope discipline honored:**
+- "Animated Momentum counter" shipped as static display (polished ramp deferred to Sprint 10) — per CLAUDE.md "don't add features beyond what the task requires". The accurate value + clear Continue affordance is what drives the design goal.
+- Awakening button position is center-bottom (above TabBar, below safe-area). Visual polish (tap-the-Consciousness-Bar interaction) is Sprint 10 scope.
+- Generic ConfirmModal intentionally NOT tied to prestige — its API is pure (open, title, body, labels, callbacks, prefix). Sprint 8b Transcendence and Sprint 4b PAT-3 reset both drop in with zero changes.
+
+**Verification:**
+- `npm run typecheck` — 0 errors. `npm run lint` — 0 warnings.
+- `bash scripts/check-invention.sh` — 4/4 PASS, ratio 0.81 (required 6 CONST-OK annotations on new CSS-variable lines to defend Gate 3).
+- `npm test` — **764 passed / 43 skipped / 0 failing** (from 738 / 43 → +26 new).
+
+**Next:** Phase 4a.6 — P0→P1 integration test + sprint close.
 
 ### 2026-04-21 — Sprint 4a Phase 4a.4: Zustand store wiring + final un-skip
 
