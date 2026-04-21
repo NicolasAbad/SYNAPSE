@@ -6,10 +6,75 @@
 
 ## Current status
 
-**Phase:** Sprint 4b IN PROGRESS — Phase 4b.4 (PAT-3 action + MindPanel subtab router + PatternTreeView) shipped. 6-subtab Mind panel now functional: home (canvas visible), patterns (50-cell grid + double-confirm reset), 4 placeholders for Sprint 5/6/7/8b. PAT-3 Zustand action gated on resonance + reverses Node 6 B dischargeMaxCharges bump on reset.
-**Last updated:** 2026-04-21 after Sprint 4b Phase 4b.4 close.
-**Active sprint:** Sprint 4b — Pattern Tree + Decisions. 5 planned sub-phases: 4b.1 pattern data + constants (DONE) → 4b.2 engine stubs + production bonuses (DONE) → 4b.3 decision effect appliers (DONE) → 4b.4 PAT-3 + MindPanel subtabs + PatternTreeView (DONE) → 4b.5 decision modal (A/B prompt when player crosses a decision node) + integration + close.
-**Next action:** Phase 4b.5 — build the A/B decision modal component (reuses the `ConfirmModal` pattern but with two "confirm" buttons instead of cancel/confirm). Fire the modal when `state.patterns` includes a decision-node index AND `state.patternDecisions[index]` is undefined. After choice, write to `patternDecisions` AND apply any permanent state effect (Node 6 B dischargeMaxCharges bump); cycle bonus / discharge threshold / etc. take effect immediately via the Phase 4b.3 helpers. Sprint 4b integration test + close.
+**Phase:** Sprint 4b CLOSED — Pattern Tree + Decisions shipped. Patterns grant on prestige; production formula applies flat+cycle bonuses; 10 decision-option effects wired (7 now, 3 stubs for Sprint 5/8a); A/B decision modal fires when player crosses a decision node; PAT-3 double-confirm reset returns full state to default; MindPanel 6-subtab router replaces the 3.6 null stub.
+**Last updated:** 2026-04-21 after Sprint 4b close.
+**Active sprint:** Sprint 4c (not yet started) — Polarity + CycleSetupScreen + mandatory human playtest. Replaces the Sprint 4a `patternsGained=0` stub's remaining cousin on the polarity side; unifies the CycleSetupScreen (1/2/3 columns by prestige); ends with P0→P4 blind-play tuning.
+**Next action:** Sprint 4c kickoff per `docs/SPRINTS.md §Sprint 4c`. Read GDD §11 (Polarity — Excitatoria / Inhibitoria, P3+), §29 (UI/CycleSetupScreen layout 1/2/3 columns). Polarity defaults to last choice (POLAR-1). SAME AS LAST button 1-tap skip. End: blind-play P0→P4 — if P1 > 10 min, adjust `tutorialThreshold` before Sprint 5.
+
+### Sprint 4b closing dashboard
+
+- **Phases:** 5 sub-phases (4b.1 data + constants → 4b.2 engine stubs + production bonuses → 4b.3 decision effect appliers → 4b.4 PAT-3 + MindPanel subtabs + PatternTreeView → 4b.5 A/B decision modal + integration + close) + this close commit = 6 total.
+- **Active tests:** **871 passed**, 0 failing (up from 768 at Sprint 4a close → **+103 in Sprint 4b**). Breakdown: 9 consistency (Phase 4b.1) + 6 prestige grant + 14 pattern-bonuses (Phase 4b.2) + 19 decision effect appliers (Phase 4b.3) + 7 resetPatternDecisions + 8 MindPanel + 13 PatternTreeView (Phase 4b.4) + 9 DecisionModal + 7 PendingDecisionFlow + 9 choosePatternDecision + 3 integration (Phase 4b.5) = 104. (One existing prestige test body updated to reflect the Sprint 4b `patternsGained=3` delta.)
+- **Skipped tests:** **43** (unchanged from Sprint 4a close — no `BLOCKED-SPRINT-4b` markers existed; all Sprint 4b work was greenfield-add).
+- **Typecheck errors:** 0. **Lint warnings:** 0.
+- **Anti-invention gates:** 4/4 PASS, **ratio 0.82** (up from 0.81 after new constants landed — `patternTreeSize` + reused `patternDecisionNodes` / `patternCycleBonusPerNode` / `patternFlatBonusPerNode` in new consumer sites).
+- **Scope delivered vs. scope deferred:**
+  - ✅ Pattern Tree data canon (5 × 2 = 10 decision effects in `src/config/patterns.ts`)
+  - ✅ `patternsPerPrestige = 3` replaces 4a `patternsGained=0` stub in handlePrestige
+  - ✅ `patternFlatBonusPerNode` + cycle bonus wired into production formula (capped 1.5×)
+  - ✅ 7 of 10 decision options wired into consumers (6A/6B/15B/24A/24B/36A/36B + INT-5 gate)
+  - ⏭ 3 decision-option stubs handed off: 15A offline_efficiency_mult → Sprint 8a; 48A region_mult → Sprint 5; 48B mutation_options_add → Sprint 5
+  - ✅ `patternDecisions` NEVER resets on prestige (property-tested 10 prestiges + integration test)
+  - ✅ PAT-3 reset: 1000 Resonance gate + double-ConfirmModal + reverses Node 6 B dischargeMaxCharges bump
+  - ✅ MindPanel 6-subtab router (deferred from 3.6.4): home + patterns + 4 placeholders
+  - ✅ A/B decision modal fires when crossing decision node (6/15/24/36/48)
+  - ✅ Generic `ConfirmModal` reused (PAT-3 double-confirm — 2 separate instances with distinct testIdPrefix)
+- **Player tests:** deferred to Sprint 4c blind-play (combines Polarity + Pattern Tree + full prestige loop). Nothing to hand-verify in isolation this sprint.
+- **Design decisions:**
+  - **Permanent-vs-multiplier decision split:** only Node 6 B mutates state (`dischargeMaxCharges +1`). Other 9 options are derived-at-read (helpers in `src/engine/patternDecisions.ts`). Avoids state-cache-drift bugs.
+  - **Node 6 B state persistence:** `applyPermanentPatternDecisionsToState()` runs both in `handlePrestige` (after PRESTIGE_RESET) and `choosePatternDecision` (immediate on click). Same helper, one source of truth.
+  - **Decision modal priority:** lowest-indexed pending decision first. Multiple pending decisions advance one at a time (integration test covers 6 → 15 transition).
+  - **MindPanel subtab state is React-local:** switching main tabs resets to `home`. Matches standard mobile default-first-open UX.
+- **Doc-vs-code corrections applied this sprint:**
+  - Added `patternTreeSize: 50` to `src/config/constants.ts` (GDD §10 "50 nodes" — canonical spec value, previously implicit in `patternDecisionNodes` max).
+- **Commits landed in Sprint 4b:** 6 total.
+  - `d6d863e` Phase 4b.1 pattern decision data + canon
+  - `096a745` Phase 4b.2 pattern grant + production bonuses
+  - `9283fef` Phase 4b.3 decision effect appliers
+  - `712d224` Phase 4b.4 PAT-3 + MindPanel subtabs + PatternTreeView
+  - `(this commit)` Phase 4b.5 decision modal + integration + Sprint 4b close
+- **Reviewer fabrications tracked:** 0 this sprint. 6+ sprints clean since the 7+ Sprint 1/2 fabrications.
+
+**Handoff state for Sprint 4c:**
+
+What Sprint 4c will build (per SPRINTS.md §Sprint 4c):
+- Polarity system (P3+): Excitatoria (+10% prod, −15% Discharge) / Inhibitoria (−6% prod, +30% Discharge, +10% Cascade chance).
+- POLAR-1: Polarity defaults to last choice if skipped; null until P3.
+- Unified `CycleSetupScreen` — P3-P6 shows 1 column, P7-P9 shows 2, P10+ shows 3 (Polarity + Mutation stub + Pathway stub).
+- SAME AS LAST button — 1-tap skip < 1 sec.
+- Mandatory blind-play P0→P4 with TUTOR-1 7-9 min verification.
+
+What Sprint 4c does NOT touch — **Sprint 4b exports are frozen** unless a bug is found:
+- `src/config/patterns.ts` — 10 decision effects (frozen; Sprint 5/8a fill the 3 stubs)
+- `src/engine/patternDecisions.ts` — 7 consumer helpers + `applyPermanentPatternDecisionsToState` (frozen)
+- `src/engine/prestige.ts` — `grantPatterns` + permanent-decision reapply (frozen)
+- `src/engine/production.ts` — pattern flat + cycle bonuses (frozen)
+- `src/store/gameStore.ts` `choosePatternDecision` + `resetPatternDecisions` (frozen)
+- `src/ui/panels/MindPanel.tsx` subtab router (frozen; Sprint 5/6/7/8b replace placeholders)
+- `src/ui/panels/PatternTreeView.tsx` (frozen; polish Sprint 10)
+- `src/ui/modals/DecisionModal.tsx` + `src/ui/hud/PendingDecisionFlow.tsx` (frozen)
+
+**Clean-baseline verification for Sprint 4c kickoff** (run from cold state):
+- `git status` — clean
+- `npm run typecheck` — 0 errors
+- `npm run lint` — 0 warnings
+- `bash scripts/check-invention.sh` — 4/4 PASS, ratio 0.82
+- `npm test` — 871 passed / 43 skipped / 0 failing
+- `grep "BLOCKED-SPRINT-4b" tests/` — 0 matches (none ever existed)
+
+Sprint 4c un-skip targets: any `BLOCKED-SPRINT-4c` test in `tests/consistency.test.ts` — grep on sprint kickoff.
+
+---
 
 ### Sprint 4a closing dashboard
 
@@ -804,6 +869,36 @@ Sprint 11a TODO for `ALL_RULE_IDS` constant must include all 16 (not 13 as state
 ---
 
 ## Session log
+
+### 2026-04-21 — Sprint 4b close: Pattern Tree + Decisions shipped
+
+**Scope:** Phase 4b.5 (A/B decision modal + integration test) + Sprint 4b close.
+
+**Phase 4b.5 content:**
+- New `src/ui/modals/DecisionModal.tsx` — two-choice dialog (no Cancel — decision must be made). Option A default-focused, testIds scoped per node index, full aria wiring.
+- New `src/ui/hud/PendingDecisionFlow.tsx` — orchestrator that finds the lowest-indexed pending decision (acquired pattern at 6/15/24/36/48 AND `patternDecisions[index]` undefined) and mounts the `DecisionModal`. Auto-advances to the next pending decision on resolve.
+- New Zustand action `choosePatternDecision(nodeIndex, choice)` — validates node index membership, enforces one-shot-per-node (requires PAT-3 reset to re-choose), applies permanent state effect via `applyPermanentPatternDecisionsToState`.
+- HUD mounts `<PendingDecisionFlow />`.
+
+**Integration test (Sprint 4b close):**
+- `tests/integration/pattern-tree-flow.test.ts` (5 tests): patterns accumulate 3/prestige; decision-node flags land at correct indices; cycle bonus grows with cycle-pattern count; `patternDecisions` preserved through 10 prestiges including Node 6 B's dischargeMaxCharges bump; cycle-scoped decisions take effect on the current cycle.
+
+**Sprint 4b total — 103 new tests across 5 categories + integration:**
+1. Data canon (9 consistency — 4b.1).
+2. Engine (20 = 6 prestige grant + 14 pattern bonuses — 4b.2).
+3. Decision effect appliers (19 — 4b.3).
+4. PAT-3 + MindPanel + PatternTreeView (28 = 7 resetPatternDecisions + 8 MindPanel + 13 PatternTreeView — 4b.4).
+5. A/B decision flow + integration (28 = 9 DecisionModal + 7 PendingDecisionFlow + 9 choosePatternDecision + 3 integration — 4b.5 + close).
+
+**Sprint-level verification (all gates green):**
+- `npm run typecheck` — 0 errors. `npm run lint` — 0 warnings.
+- `bash scripts/check-invention.sh` — 4/4 PASS, ratio **0.82** (up from 0.81 after new constants landed).
+- `npm test` — **871 passed / 43 skipped / 0 failing** (from 768 → +103 in Sprint 4b).
+- `grep BLOCKED-SPRINT-4b tests/` — 0 matches (none ever existed).
+
+**Commits landed:** `d6d863e` (4b.1), `096a745` (4b.2), `9283fef` (4b.3), `712d224` (4b.4), (this) Phase 4b.5 + Sprint 4b close.
+
+**Next:** Sprint 4c — Polarity + CycleSetupScreen + mandatory human playtest.
 
 ### 2026-04-21 — Sprint 4b Phase 4b.4: PAT-3 action + MindPanel subtab router + PatternTreeView
 

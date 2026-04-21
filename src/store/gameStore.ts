@@ -20,6 +20,7 @@ import { tryBuyNeuron, tryBuyUpgrade, type BuyReason, type UndoToast } from './p
 import { applyTap } from './tap';
 import { performDischarge, type DischargeOutcome } from '../engine/discharge';
 import { handlePrestige, type PrestigeOutcome } from '../engine/prestige';
+import { applyPermanentPatternDecisionsToState } from '../engine/patternDecisions';
 
 /**
  * Pure default state. Matches GDD §32 100-field enumeration exactly.
@@ -284,6 +285,14 @@ export interface GameStoreActions {
    * Returns `{ fired: false }` if `resonance < patternResetCostResonance`.
    */
   resetPatternDecisions: () => { fired: boolean };
+  /**
+   * Sprint 4b Phase 4b.5: lock in a Pattern Tree decision at `nodeIndex`.
+   * Writes `patternDecisions[nodeIndex] = choice` AND applies any permanent
+   * state effect (Node 6 B dischargeMaxCharges +1). Rejects when:
+   *   - the node isn't a decision node (index ∉ patternDecisionNodes), or
+   *   - the decision has already been locked in (requires PAT-3 reset to re-choose).
+   */
+  choosePatternDecision: (nodeIndex: number, choice: 'A' | 'B') => { fired: boolean };
 }
 
 export const useGameStore = create<GameState & UIState & GameStoreActions>((set, get) => ({
@@ -373,6 +382,20 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
       patternDecisions: {},
       dischargeMaxCharges: state.dischargeMaxCharges - (wasSixB ? 1 : 0),
     });
+    return { fired: true };
+  },
+  choosePatternDecision: (nodeIndex, choice) => {
+    const state = get();
+    const isDecisionNode = (SYNAPSE_CONSTANTS.patternDecisionNodes as readonly number[]).includes(nodeIndex);
+    if (!isDecisionNode) return { fired: false };
+    if (state.patternDecisions[nodeIndex] !== undefined) return { fired: false };
+    const nextDecisions = { ...state.patternDecisions, [nodeIndex]: choice };
+    // Apply permanent state effect (Node 6 B bumps dischargeMaxCharges).
+    const permUpdates = applyPermanentPatternDecisionsToState({
+      patternDecisions: nextDecisions,
+      dischargeMaxCharges: state.dischargeMaxCharges,
+    });
+    set({ patternDecisions: nextDecisions, ...permUpdates });
     return { fired: true };
   },
 }));

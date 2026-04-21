@@ -10,6 +10,7 @@ import { TabBar } from './TabBar';
 import { UndoToast } from './UndoToast';
 import { EmergenciaCapBanner } from './EmergenciaCapBanner';
 import { AwakeningFlow } from './AwakeningFlow';
+import { PendingDecisionFlow } from './PendingDecisionFlow';
 import { TabPanelContainer } from '../panels/TabPanelContainer';
 
 /**
@@ -54,6 +55,7 @@ export const HUD = memo(function HUD() {
       <UndoToast />
       <EmergenciaCapBanner />
       <AwakeningFlow />
+      <PendingDecisionFlow />
       <TabBar />
     </div>
   );
