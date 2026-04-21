@@ -234,3 +234,88 @@ describe('useGameStore — onTap action (TAP-2 default-state behavior)', () => {
     expect(useGameStore.getState().initSessionTimestamps).toBeTypeOf('function');
   });
 });
+
+// Sprint 4a Phase 4a.4: prestige action wiring.
+describe('useGameStore — prestige action (Sprint 4a Phase 4a.4)', () => {
+  beforeEach(() => {
+    useGameStore.getState().reset();
+  });
+
+  test('returns fired=false when cycleGenerated < currentThreshold (pre-threshold guard)', () => {
+    useGameStore.setState({ cycleGenerated: 1000, currentThreshold: 25_000 });
+    const before = useGameStore.getState();
+    const result = useGameStore.getState().prestige(1_000_000);
+    expect(result.fired).toBe(false);
+    expect(result.outcome).toBeNull();
+    // State untouched on no-op.
+    expect(useGameStore.getState().prestigeCount).toBe(before.prestigeCount);
+    expect(useGameStore.getState().isTutorialCycle).toBe(before.isTutorialCycle);
+  });
+
+  test('fires when cycleGenerated >= currentThreshold; increments prestigeCount', () => {
+    useGameStore.setState({
+      cycleGenerated: 25_000,
+      currentThreshold: 25_000,
+      effectiveProductionPerSecond: 50,
+    });
+    const result = useGameStore.getState().prestige(1_000_000);
+    expect(result.fired).toBe(true);
+    expect(result.outcome).not.toBeNull();
+    expect(result.outcome!.newPrestigeCount).toBe(1);
+    expect(useGameStore.getState().prestigeCount).toBe(1);
+  });
+
+  test('TUTOR-2 flip: isTutorialCycle → false after first prestige', () => {
+    useGameStore.setState({
+      cycleGenerated: 25_000,
+      currentThreshold: 25_000,
+      isTutorialCycle: true,
+    });
+    useGameStore.getState().prestige(1_000_000);
+    expect(useGameStore.getState().isTutorialCycle).toBe(false);
+  });
+
+  test('clears undoToast on prestige (pre-prestige purchases obsolete)', () => {
+    useGameStore.setState({
+      cycleGenerated: 25_000,
+      currentThreshold: 25_000,
+      undoToast: {
+        kind: 'upgrade',
+        id: 'x',
+        refund: 1,
+        currency: 'thoughts',
+        expiresAt: 999_999,
+        snapshot: createDefaultState(),
+      },
+    });
+    useGameStore.getState().prestige(1_000_000);
+    expect(useGameStore.getState().undoToast).toBeNull();
+  });
+
+  test('action references preserved after prestige (Zustand pitfall per CLAUDE.md)', () => {
+    useGameStore.setState({ cycleGenerated: 25_000, currentThreshold: 25_000 });
+    const beforeRefs = {
+      onTap: useGameStore.getState().onTap,
+      reset: useGameStore.getState().reset,
+      discharge: useGameStore.getState().discharge,
+      prestige: useGameStore.getState().prestige,
+    };
+    useGameStore.getState().prestige(1_000_000);
+    expect(useGameStore.getState().onTap).toBe(beforeRefs.onTap);
+    expect(useGameStore.getState().reset).toBe(beforeRefs.reset);
+    expect(useGameStore.getState().discharge).toBe(beforeRefs.discharge);
+    expect(useGameStore.getState().prestige).toBe(beforeRefs.prestige);
+  });
+
+  test('preserves UI-local state (activeTab, antiSpamActive) across prestige', () => {
+    useGameStore.setState({
+      cycleGenerated: 25_000,
+      currentThreshold: 25_000,
+      activeTab: 'neurons',
+      antiSpamActive: true,
+    });
+    useGameStore.getState().prestige(1_000_000);
+    expect(useGameStore.getState().activeTab).toBe('neurons');
+    expect(useGameStore.getState().antiSpamActive).toBe(true);
+  });
+});

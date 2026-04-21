@@ -319,7 +319,13 @@ describe('Consistency: PRESTIGE_RESET / PRESERVE / UPDATE split (GDD §33)', () 
     expect(overlap).toEqual([]);
   });
 
-  test.skip('BLOCKED-SPRINT-4a: TUTOR-2 isTutorialCycle flipped to false on first prestige', () => {});
+  test('TUTOR-2 isTutorialCycle flipped to false on first prestige (handlePrestige integration)', async () => {
+    const { handlePrestige } = await import('../src/engine/prestige');
+    const before = { ...createDefaultState(), isTutorialCycle: true, prestigeCount: 0 };
+    const { state: after } = handlePrestige(before, 1_000_000);
+    expect(after.isTutorialCycle).toBe(false);
+    expect(after.prestigeCount).toBe(1);
+  });
 
   test('TUTOR-2 first cycle uses tutorialThreshold, not baseThresholdTable[0]', () => {
     const tutorialState = {

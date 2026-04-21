@@ -19,6 +19,7 @@ import { loadGame, saveGame } from './saveGame';
 import { tryBuyNeuron, tryBuyUpgrade, type BuyReason, type UndoToast } from './purchases';
 import { applyTap } from './tap';
 import { performDischarge, type DischargeOutcome } from '../engine/discharge';
+import { handlePrestige, type PrestigeOutcome } from '../engine/prestige';
 
 /**
  * Pure default state. Matches GDD §32 100-field enumeration exactly.
@@ -267,6 +268,14 @@ export interface GameStoreActions {
    * No-op (returns fired=false) if dischargeCharges === 0.
    */
   discharge: (nowTimestamp: number) => DischargeOutcome;
+  /**
+   * Sprint 4a Phase 4a.4: trigger an Awakening (prestige) per §9 + §33.
+   * Wraps the pure `handlePrestige` engine function. Merge-mode setState
+   * preserves action references (CLAUDE.md Zustand pitfall). Gated on
+   * `cycleGenerated >= currentThreshold` — returns { fired: false } if
+   * the player hasn't met the threshold yet (UI belt-and-suspenders).
+   */
+  prestige: (nowTimestamp: number) => { fired: boolean; outcome: PrestigeOutcome | null };
 }
 
 export const useGameStore = create<GameState & UIState & GameStoreActions>((set, get) => ({
@@ -332,5 +341,17 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
     const { updates, outcome } = performDischarge(get(), nowTimestamp);
     if (outcome.fired) set(updates);
     return outcome;
+  },
+  prestige: (nowTimestamp) => {
+    const state = get();
+    if (state.cycleGenerated < state.currentThreshold) {
+      return { fired: false, outcome: null };
+    }
+    const { state: nextState, outcome } = handlePrestige(state, nowTimestamp);
+    // Merge mode (no `true` flag) — preserves action bindings per CLAUDE.md
+    // Zustand pitfall rule. undoToast cleared since pre-prestige purchases no
+    // longer apply to the new cycle.
+    set({ ...nextState, undoToast: null });
+    return { fired: true, outcome };
   },
 }));

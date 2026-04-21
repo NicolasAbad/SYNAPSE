@@ -6,10 +6,10 @@
 
 ## Current status
 
-**Phase:** Sprint 4a IN PROGRESS — Phase 4a.3 (property-based prestige invariants) shipped. fast-check-verified: prestigeCount strictly +1, TUTOR-2 one-way flip, CORE-8 amended clamp, lifetimePrestiges monotonic, memoriesGained ≥ base, personalBests set post-prestige, awakeningLog appended, totalGenerated preserved.
-**Last updated:** 2026-04-21 after Sprint 4a Phase 4a.3 close.
-**Active sprint:** Sprint 4a — Prestige Core. 6 planned sub-phases: 4a.1 field-set constants (DONE) → 4a.2 pure `handlePrestige` (DONE) → 4a.3 property tests (DONE) → 4a.4 store wiring + TUTOR-2 flip + last BLOCKED-SPRINT-4a un-skip → 4a.5 generic confirm modal + Awakening screen → 4a.6 integration + close.
-**Next action:** Phase 4a.4 — Zustand store wiring: add `handlePrestige` action to `src/store/gameStore.ts` using merge-mode `setState` (Zustand pitfall — never `true` flag). Un-skip the last `BLOCKED-SPRINT-4a` test in `tests/consistency.test.ts` (`TUTOR-2 isTutorialCycle flipped to false on first prestige`). Add store-layer test coverage via `tests/store/gameStore.test.ts`.
+**Phase:** Sprint 4a IN PROGRESS — Phase 4a.4 (Zustand store wiring) shipped. All 6 `BLOCKED-SPRINT-4a` consistency tests now un-skipped (grep returns 0 matches). Prestige action callable from UI; threshold-gate + undo-toast-clear + merge-mode setState verified.
+**Last updated:** 2026-04-21 after Sprint 4a Phase 4a.4 close.
+**Active sprint:** Sprint 4a — Prestige Core. 6 planned sub-phases: 4a.1 field-set constants (DONE) → 4a.2 pure `handlePrestige` (DONE) → 4a.3 property tests (DONE) → 4a.4 store wiring (DONE) → 4a.5 generic confirm modal + Awakening screen UI → 4a.6 integration test (P0→P1 tick-by-tick) + sprint close.
+**Next action:** Phase 4a.5 — build `src/ui/modals/ConfirmModal.tsx` (generic 2-button confirm, reused by Sprint 8b Transcendence per Sprint 3.6 audit addition) + Awakening screen (`src/ui/modals/AwakeningScreen.tsx`) showing cycle duration / thoughts earned / Memories gained / Personal Best badge / animated Momentum counter. Wire both into HUD + gate via cycleGenerated ≥ currentThreshold.
 
 ### Sprint 3 Phase 3.5 — accepted design decisions (owning phases inheriting)
 
@@ -743,6 +743,40 @@ Sprint 11a TODO for `ALL_RULE_IDS` constant must include all 16 (not 13 as state
 ---
 
 ## Session log
+
+### 2026-04-21 — Sprint 4a Phase 4a.4: Zustand store wiring + final un-skip
+
+**Scope:** Added `prestige(nowTimestamp)` action to `useGameStore` that wraps the pure `handlePrestige` engine function. Un-skipped the last `BLOCKED-SPRINT-4a` consistency test (TUTOR-2 isTutorialCycle flip via handlePrestige integration). 6 new store-layer tests covering threshold gate, undo-toast clearing, UI-local state preservation, and action-reference integrity (Zustand pitfall per CLAUDE.md).
+
+**Action signature:**
+```ts
+prestige: (nowTimestamp: number) => { fired: boolean; outcome: PrestigeOutcome | null }
+```
+Mirrors `discharge`'s `{ fired, ... }` shape. Returns `fired: false` when `cycleGenerated < currentThreshold` (belt-and-suspenders; the UI prestige button should already gate). Uses merge-mode `set({ ...nextState, undoToast: null })` — CLAUDE.md's "never use the `true` replace flag" rule applies here since it would drop all action references.
+
+**Un-skipped test:**
+- `TUTOR-2 isTutorialCycle flipped to false on first prestige` — now imports `handlePrestige` via dynamic `await import` (keeps the consistency test file decoupled from engine internals) and asserts both the flag flip AND `prestigeCount + 1`.
+
+**Design decisions:**
+- Clear `undoToast` on prestige. A pre-prestige purchase's refund logic doesn't apply to the new cycle (thoughts have been reset to Momentum Bonus). Leaving the toast live could let a player "undo" a neuron that no longer exists.
+- UI-local fields (`activeTab`, `antiSpamActive`) preserved across prestige by design. Tab selection and anti-spam cooldown aren't cycle-scoped.
+- Action references preserved — explicit test verifies `onTap/reset/discharge/prestige` function references are stable after prestige (guards against future Zustand refactors).
+
+**All 6 BLOCKED-SPRINT-4a tests un-skipped this sprint:**
+1. PRESTIGE_RESET has exactly 45 fields (Phase 4a.1).
+2. PRESTIGE_PRESERVE has exactly 60 fields (Phase 4a.1).
+3. RESET + PRESERVE + UPDATE + lifetime covers all 110 GameState fields (Phase 4a.1).
+4. RESET ∩ PRESERVE = ∅ (Phase 4a.1).
+5. TUTOR-2 first cycle uses tutorialThreshold, not baseThresholdTable[0] (Phase 4a.1, bonus early un-skip).
+6. TUTOR-2 isTutorialCycle flipped to false on first prestige (Phase 4a.4, this phase).
+
+**Verification (all gates green):**
+- `npm run typecheck` — 0 errors. `npm run lint` — 0 warnings.
+- `bash scripts/check-invention.sh` — 4/4 PASS, ratio 0.82 (held).
+- `npm test` — **738 passed / 43 skipped / 0 failing** (from 731 / 44 → +7 new, −1 skipped).
+- `grep "BLOCKED-SPRINT-4a" tests/` — 0 matches (all un-skipped).
+
+**Next:** Phase 4a.5 — Awakening screen UI + generic ConfirmModal component (used by prestige here, reused by Sprint 8b Transcendence).
 
 ### 2026-04-21 — Sprint 4a Phase 4a.3: property-based prestige invariants
 
