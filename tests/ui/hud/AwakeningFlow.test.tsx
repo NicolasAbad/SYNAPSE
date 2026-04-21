@@ -1,12 +1,31 @@
 // @vitest-environment jsdom
-// Tests for src/ui/hud/AwakeningFlow.tsx (Sprint 4a Phase 4a.5).
-// End-to-end flow: button appears at threshold → confirm modal → fire
-// prestige action → AwakeningScreen → Continue dismisses it.
+// Tests for src/ui/hud/AwakeningFlow.tsx — end-to-end prestige flow.
+// Sprint 4a Phase 4a.5 shipped steps 1-4 (button → confirm → action → screen).
+// Sprint 4c Phase 4c.4 extends with step 5 (post-Awakening CycleSetupScreen
+// when P3+) and the pre-P3 skip path.
 
-import { afterEach, describe, expect, test } from 'vitest';
+import { afterEach, beforeAll, describe, expect, test, vi } from 'vitest';
 import { cleanup, fireEvent, render } from '@testing-library/react';
 import { AwakeningFlow } from '../../../src/ui/hud/AwakeningFlow';
 import { useGameStore } from '../../../src/store/gameStore';
+
+// CycleSetupScreen uses matchMedia via useIsTabletWidth. jsdom lacks it.
+beforeAll(() => {
+  Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    configurable: true,
+    value: vi.fn().mockImplementation((query: string) => ({
+      matches: true, // columns layout (tablet)
+      media: query,
+      onchange: null,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })),
+  });
+});
 
 afterEach(() => {
   cleanup();
@@ -99,5 +118,88 @@ describe('AwakeningFlow — confirm flow', () => {
     // asserting the button isn't shown while AwakeningScreen is visible:
     expect(queryByTestId('hud-awakening-button')).toBeNull();
     expect(getByTestId('awakening-screen-root')).toBeTruthy();
+  });
+});
+
+describe('AwakeningFlow — post-Awakening CycleSetupScreen (Sprint 4c.4)', () => {
+  test('pre-P3 path: Awakening Continue closes flow; NO CycleSetupScreen', () => {
+    useGameStore.setState({
+      cycleGenerated: 25_000,
+      currentThreshold: 25_000,
+      prestigeCount: 0, // post-prestige will become 1 — still below 3
+      effectiveProductionPerSecond: 50,
+    });
+    const { getByTestId, queryByTestId } = render(<AwakeningFlow />);
+    fireEvent.pointerDown(getByTestId('hud-awakening-button'));
+    fireEvent.pointerDown(getByTestId('awakening-confirm-confirm'));
+    fireEvent.pointerDown(getByTestId('awakening-screen-continue'));
+    expect(queryByTestId('cycle-setup-screen')).toBeNull();
+    expect(queryByTestId('awakening-screen-root')).toBeNull();
+  });
+
+  test('P3+ path: Awakening Continue opens CycleSetupScreen with polarity slot', () => {
+    useGameStore.setState({
+      cycleGenerated: 25_000,
+      currentThreshold: 25_000,
+      prestigeCount: 3, // post-prestige → 4, polarity unlock met
+      effectiveProductionPerSecond: 50,
+    });
+    const { getByTestId } = render(<AwakeningFlow />);
+    fireEvent.pointerDown(getByTestId('hud-awakening-button'));
+    fireEvent.pointerDown(getByTestId('awakening-confirm-confirm'));
+    fireEvent.pointerDown(getByTestId('awakening-screen-continue'));
+    expect(getByTestId('cycle-setup-screen')).toBeTruthy();
+    expect(getByTestId('cycle-setup-slot-polarity')).toBeTruthy();
+  });
+
+  test('P3+ path: Continue button on CycleSetupScreen fires setPolarity + dismisses', () => {
+    useGameStore.setState({
+      cycleGenerated: 25_000,
+      currentThreshold: 25_000,
+      prestigeCount: 3,
+      effectiveProductionPerSecond: 50,
+    });
+    const { getByTestId, queryByTestId } = render(<AwakeningFlow />);
+    fireEvent.pointerDown(getByTestId('hud-awakening-button'));
+    fireEvent.pointerDown(getByTestId('awakening-confirm-confirm'));
+    fireEvent.pointerDown(getByTestId('awakening-screen-continue'));
+    fireEvent.pointerDown(getByTestId('cycle-setup-polarity-excitatory'));
+    fireEvent.pointerDown(getByTestId('cycle-setup-continue'));
+    expect(queryByTestId('cycle-setup-screen')).toBeNull();
+    expect(useGameStore.getState().currentPolarity).toBe('excitatory');
+  });
+
+  test('POLAR-1: CycleSetupScreen pre-selects last cycle polarity from lastCycleConfig', () => {
+    useGameStore.setState({
+      cycleGenerated: 25_000,
+      currentThreshold: 25_000,
+      prestigeCount: 3,
+      effectiveProductionPerSecond: 50,
+      currentPolarity: 'inhibitory', // last cycle's choice; handlePrestige snapshots → lastCycleConfig
+    });
+    const { getByTestId } = render(<AwakeningFlow />);
+    fireEvent.pointerDown(getByTestId('hud-awakening-button'));
+    fireEvent.pointerDown(getByTestId('awakening-confirm-confirm'));
+    fireEvent.pointerDown(getByTestId('awakening-screen-continue'));
+    // inhibitory card is pre-selected per POLAR-1 lastCycleConfig default.
+    expect(getByTestId('cycle-setup-polarity-inhibitory').dataset.selected).toBe('true');
+    expect(getByTestId('cycle-setup-polarity-excitatory').dataset.selected).toBe('false');
+  });
+
+  test('SAME AS LAST fast-path: 1-tap skip applies lastCycleConfig polarity + dismisses', () => {
+    useGameStore.setState({
+      cycleGenerated: 25_000,
+      currentThreshold: 25_000,
+      prestigeCount: 3,
+      effectiveProductionPerSecond: 50,
+      currentPolarity: 'excitatory',
+    });
+    const { getByTestId, queryByTestId } = render(<AwakeningFlow />);
+    fireEvent.pointerDown(getByTestId('hud-awakening-button'));
+    fireEvent.pointerDown(getByTestId('awakening-confirm-confirm'));
+    fireEvent.pointerDown(getByTestId('awakening-screen-continue'));
+    fireEvent.pointerDown(getByTestId('cycle-setup-same-as-last'));
+    expect(queryByTestId('cycle-setup-screen')).toBeNull();
+    expect(useGameStore.getState().currentPolarity).toBe('excitatory');
   });
 });

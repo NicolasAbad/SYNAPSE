@@ -6,10 +6,10 @@
 
 ## Current status
 
-**Phase:** Sprint 4c IN PROGRESS — Phase 4c.3 (CycleSetupScreen Polarity interactive) shipped. Existing Sprint 2 shell upgraded: `PolaritySlot` component (A/B cards, click-to-select), SAME AS LAST wired to `lastCycleConfig.polarity`, Continue button gated on selection, POLAR-1 default pre-selects last cycle's polarity. Mutation / Pathway slots now show "Sprint 5" placeholders when unlocked.
-**Last updated:** 2026-04-21 after Sprint 4c Phase 4c.3 close.
-**Active sprint:** Sprint 4c — Polarity + CycleSetupScreen + Playtest. 5 planned sub-phases: 4c.1 constants + setPolarity + snapshot (DONE) → 4c.2 engine wiring (DONE) → 4c.3 CycleSetupScreen component (DONE) → 4c.4 post-prestige sequence + pre-P3 skip → 4c.5 integration tests + Sprint close + PLAYTEST-REQUIRED handoff.
-**Next action:** Phase 4c.4 — wire `CycleSetupScreen` into the post-prestige flow via `AwakeningFlow` (or a sibling orchestrator). Sequence: Awakening screen → Continue → (if P3+) CycleSetupScreen → Continue/Same-as-last → new cycle play. Pre-P3: skip CycleSetupScreen entirely (existing post-Awakening path with no interstitial). Orchestrator reads `state.prestigeCount` + `state.lastCycleConfig.polarity` and fires `setPolarity(chosen)` on commit.
+**Phase:** Sprint 4c IN PROGRESS — Phase 4c.4 (post-prestige sequence wiring) shipped. `AwakeningFlow` now orchestrates the full 5-step prestige loop: ready button → confirm → prestige action → Awakening screen → (if P3+) CycleSetupScreen → setPolarity → resume play. Pre-P3 path skips CycleSetupScreen entirely.
+**Last updated:** 2026-04-21 after Sprint 4c Phase 4c.4 close.
+**Active sprint:** Sprint 4c — Polarity + CycleSetupScreen + Playtest. 5 planned sub-phases: 4c.1 constants + setPolarity + snapshot (DONE) → 4c.2 engine wiring (DONE) → 4c.3 CycleSetupScreen component (DONE) → 4c.4 post-prestige sequence (DONE) → 4c.5 integration tests + Sprint close + PLAYTEST-REQUIRED handoff.
+**Next action:** Phase 4c.5 — integration tests for the end-to-end P0→P3 → Polarity pick → new cycle flow, and P0→P5 multi-polarity chain. Sprint 4c close with PLAYTEST-REQUIRED block in PROGRESS.md (blind-play P0→P4 — Nico-owned human test, can't be automated).
 
 ### Sprint 4b closing dashboard
 
@@ -869,6 +869,46 @@ Sprint 11a TODO for `ALL_RULE_IDS` constant must include all 16 (not 13 as state
 ---
 
 ## Session log
+
+### 2026-04-21 — Sprint 4c Phase 4c.4: post-prestige sequence wiring
+
+**Scope:** Extend `AwakeningFlow` to orchestrate CycleSetupScreen insertion when post-prestige prestigeCount meets the Polarity gate (P3+). Pre-P3 path skips CycleSetupScreen per GDD §29 / SPRINTS.md §4c.
+
+**Flow (post-4c.4):**
+1. Ready button (cycleGenerated ≥ currentThreshold).
+2. `ConfirmModal` "Awaken?" (Cancel default-focused).
+3. Confirm → `prestige(now)` store action fires.
+4. `AwakeningScreen` with `PrestigeOutcome`.
+5. Continue → check `prestigeCount >= polarityUnlockPrestige (3)`:
+   - If P3+: `CycleSetupScreen` opens. Polarity slot interactive.
+   - If pre-P3: flow ends; new-cycle play resumes immediately.
+6. On CycleSetupScreen Continue / SAME AS LAST: `setPolarity(chosen)` + dismiss.
+
+**Wiring:**
+- Added 3 new subscriptions in `AwakeningFlow`: `prestigeCount`, `lastCycleConfig.polarity` (coerced to `Polarity | null`), `setPolarity` action.
+- New React-local state `showCycleSetup`.
+- `onAwakeningContinue` reads `prestigeCount` (already incremented by `handlePrestige`) → opens CycleSetupScreen when ≥ polarityUnlockPrestige.
+- `onCycleSetupChoose(polarity)` fires `setPolarity(polarity)` + dismisses the screen.
+
+**Spec note:** SPRINTS.md §4c mentioned "Awakening animation → 3s → Pattern Tree view → CycleSetupScreen" but the Pattern Tree visual interstitial is Sprint 10 polish. Shipping the functional 2-step flow now (Awakening → CycleSetupScreen).
+
+**5 new tests:**
+- Pre-P3 path: Awakening Continue closes flow with NO CycleSetupScreen appearing.
+- P3+ path: Awakening Continue opens CycleSetupScreen with polarity slot interactive.
+- P3+ Continue button: fires setPolarity + dismisses (full state check: `currentPolarity === 'excitatory'`).
+- POLAR-1: CycleSetupScreen pre-selects last cycle's polarity from `lastCycleConfig` (end-to-end: prev-cycle `currentPolarity='inhibitory'` → handlePrestige snapshots → CycleSetupScreen defaults to inhibitory card selected).
+- SAME AS LAST: 1-tap skip applies `lastCycleConfig.polarity` without requiring a click on the cards.
+
+**jsdom compat:** `matchMedia` stubbed in `beforeAll` so `useIsTabletWidth` works under the test runner. All 7 existing AwakeningFlow tests still green; +5 new = 12 total in the file.
+
+**CODE-2 discipline:** `AwakeningFlow.tsx` = 121 lines (up from 89). Under the 200-line cap.
+
+**Verification (all gates green):**
+- `npm run typecheck` — 0 errors. `npm run lint` — 0 warnings.
+- `bash scripts/check-invention.sh` — 4/4 PASS, ratio **0.84** (up from 0.83 — `SYNAPSE_CONSTANTS.polarityUnlockPrestige` reference added).
+- `npm test` — **917 passed / 43 skipped / 0 failing** (from 912 → +5).
+
+**Next:** Phase 4c.5 — integration tests + Sprint 4c close.
 
 ### 2026-04-21 — Sprint 4c Phase 4c.3: CycleSetupScreen Polarity interactive
 

@@ -1,32 +1,47 @@
 import { memo, useCallback, useState } from 'react';
 import { useGameStore } from '../../store/gameStore';
+import { SYNAPSE_CONSTANTS } from '../../config/constants';
 import type { PrestigeOutcome } from '../../engine/prestige';
 import { ConfirmModal } from '../modals/ConfirmModal';
 import { AwakeningScreen } from '../modals/AwakeningScreen';
+import { CycleSetupScreen } from '../modals/CycleSetupScreen';
 import { t } from '../../config/strings';
 import { HUD } from '../tokens';
+import type { Polarity } from '../../types';
 
 /**
- * Orchestrates the prestige flow per SPRINTS.md §4a + §3.6-audit addition:
- *   1. Player sees an AWAKENING button when cycleGenerated ≥ currentThreshold.
+ * Orchestrates the prestige flow per SPRINTS.md §4a + §4c:
+ *   1. Player sees AWAKENING button when cycleGenerated ≥ currentThreshold.
  *   2. Tap opens a generic ConfirmModal (Cancel default-focused).
- *   3. Confirm → calls the store `prestige(now)` action.
- *   4. On `fired: true` → renders AwakeningScreen with PrestigeOutcome.
- *   5. "Continue" dismisses the screen; new-cycle play resumes.
+ *   3. Confirm → store `prestige(now)` action.
+ *   4. `AwakeningScreen` with PrestigeOutcome.
+ *   5. "Continue" on Awakening → if `prestigeCount >= polarityUnlockPrestige`
+ *      show `CycleSetupScreen` (Polarity pick); else close out.
+ *   6. CycleSetupScreen Continue / SAME AS LAST → `setPolarity(chosen)` +
+ *      close out.
  *
- * Local React state because the flow is ephemeral (open → dismiss in the
- * same render tree), same pattern as GdprModal. The engine/store already
- * owns the post-prestige GameState; this component only coordinates UI.
+ * Pre-P3 path: CycleSetupScreen is skipped entirely (no choices to make).
+ * All state is React-local — engine/store already owns the post-prestige
+ * GameState; this component only coordinates UI.
  */
 export const AwakeningFlow = memo(function AwakeningFlow() {
   const cycleGenerated = useGameStore((s) => s.cycleGenerated);
   const currentThreshold = useGameStore((s) => s.currentThreshold);
+  const prestigeCount = useGameStore((s) => s.prestigeCount);
+  const lastCyclePolarityStr = useGameStore((s) => s.lastCycleConfig?.polarity ?? '');
   const prestige = useGameStore((s) => s.prestige);
+  const setPolarity = useGameStore((s) => s.setPolarity);
 
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [outcome, setOutcome] = useState<PrestigeOutcome | null>(null);
+  const [showCycleSetup, setShowCycleSetup] = useState(false);
 
   const ready = cycleGenerated >= currentThreshold;
+  const lastCyclePolarity: Polarity | null =
+    lastCyclePolarityStr === 'excitatory' || lastCyclePolarityStr === 'inhibitory'
+      ? lastCyclePolarityStr
+      : null;
+  const polarityUnlocked = prestigeCount >= SYNAPSE_CONSTANTS.polarityUnlockPrestige;
 
   const onReadyClick = useCallback(() => setConfirmOpen(true), []);
   const onCancel = useCallback(() => setConfirmOpen(false), []);
@@ -35,9 +50,20 @@ export const AwakeningFlow = memo(function AwakeningFlow() {
     const result = prestige(Date.now());
     if (result.fired) setOutcome(result.outcome);
   }, [prestige]);
-  const onContinue = useCallback(() => setOutcome(null), []);
+  const onAwakeningContinue = useCallback(() => {
+    setOutcome(null);
+    // Post-prestige prestigeCount has already incremented, so the P3+ gate
+    // activates on the prestige that earns it (P2→P3 shows the screen).
+    if (polarityUnlocked) {
+      setShowCycleSetup(true);
+    }
+  }, [polarityUnlocked]);
+  const onCycleSetupChoose = useCallback((p: Polarity) => {
+    setPolarity(p);
+    setShowCycleSetup(false);
+  }, [setPolarity]);
 
-  const showReadyButton = ready && !confirmOpen && !outcome;
+  const showReadyButton = ready && !confirmOpen && !outcome && !showCycleSetup;
 
   return (
     <>
@@ -82,7 +108,14 @@ export const AwakeningFlow = memo(function AwakeningFlow() {
         onCancel={onCancel}
         testIdPrefix="awakening-confirm"
       />
-      <AwakeningScreen outcome={outcome} onContinue={onContinue} />
+      <AwakeningScreen outcome={outcome} onContinue={onAwakeningContinue} />
+      {showCycleSetup && (
+        <CycleSetupScreen
+          prestigeCount={prestigeCount}
+          lastCyclePolarity={lastCyclePolarity}
+          onChoose={onCycleSetupChoose}
+        />
+      )}
     </>
   );
 });
