@@ -259,41 +259,41 @@ Canvas2D rendering, HUD overlay, tab navigation, theme architecture, performance
 > Implement Sprint 3 per docs/SPRINTS.md. Reference GDD §5 (neurons), §6 (Focus), §7 (Discharge), §24 (upgrades). Tap mechanics have pre-P3 vs post-P3 variants. Include Undo toast (UI-4) and anti-spam (TAP-1).
 
 **AI checks ✅:**
-- [ ] 5 neuron types with costs, rates, unlock requirements from constants
-- [ ] Connection multiplier = `1 + 0.05 × C(ownedTypes, 2)` pairs
-- [ ] 35 upgrades implemented with correct categories and unlock conditions. (Run-exclusive upgrades come later — Sprint 8)
-- [ ] Discharge: charges accumulate at 1/20min (era-aware, offline-aware)
-- [ ] Cascade: Focus ≥ 0.75 at moment of Discharge → ×2.5 mult
-- [ ] Tutorial cycle (P0): first Discharge is ×3.0 (tutorialDischargeMult)
-- [ ] Focus Bar fills on tap (`focusFillPerTap = 0.01` base)
-- [ ] Tap thought contribution (TAP-2, GDD §6): each tap generates `Math.max(baseTapThoughtMin, effectiveProductionPerSecond × baseTapThoughtPct)` thoughts. At P0 with auto-granted Básica (0.5/sec) and no upgrades: tap = 1 thought (min floor). After Potencial Sináptico owned: `baseTapThoughtPct` effectively becomes `potencialSinapticoTapPct` (0.10, replacement not sum). Sinestesia Mutation multiplies tap thoughts by `sinestesiaTapMult` (0.40) for the cycle.
-- [ ] Insight auto-activates when `focusBar >= 1.0`. Level 1/2/3 based on prestige (P0-P9 / P10-P18 / P19+).
-- [ ] Undo toast for expensive purchases (>10% of thoughts) — UI-4
-- [ ] TAP-1 anti-spam: avg <150ms AND std dev <20ms over 30s → 10% effectiveness
-- [ ] Haptic feedback on tap (Capacitor.Haptics) — light impact on tap, medium on Discharge, heavy on Cascade, notification on Insight, success on prestige
-- [ ] Tutorial hints (P0 only, `isTutorialCycle === true`): 3 non-blocking tooltips — (1) "Tap the neuron" on first canvas load, (2) "Buy your first neuron" when thoughts ≥ baseCost, (3) "Use Discharge" when first charge available. Each dismisses on action completion. No hints after P1.
+- [x] 5 neuron types with costs, rates, unlock requirements from constants
+- [x] Connection multiplier = `1 + 0.05 × C(ownedTypes, 2)` pairs
+- [x] 35 upgrades implemented with correct categories and unlock conditions. (Run-exclusive upgrades come later — Sprint 8)
+- [x] Discharge: charges accumulate at 1/20min (era-aware, offline-aware)
+- [x] Cascade: Focus ≥ 0.75 at moment of Discharge → ×2.5 mult
+- [x] Tutorial cycle (P0): first Discharge is ×3.0 (tutorialDischargeMult)
+- [x] Focus Bar fills on tap (`focusFillPerTap = 0.01` base)
+- [x] Tap thought contribution (TAP-2, GDD §6): each tap generates `Math.max(baseTapThoughtMin, effectiveProductionPerSecond × baseTapThoughtPct)` thoughts. At P0 with auto-granted Básica (0.5/sec) and no upgrades: tap = 1 thought (min floor). After Potencial Sináptico owned: `baseTapThoughtPct` effectively becomes `potencialSinapticoTapPct` (0.10, replacement not sum). Sinestesia Mutation multiplies tap thoughts by `sinestesiaTapMult` (0.40) for the cycle.
+- [x] Insight auto-activates when `focusBar >= 1.0`. Level 1/2/3 based on prestige (P0-P9 / P10-P18 / P19+).
+- [x] Undo toast for expensive purchases (>10% of thoughts) — UI-4
+- [x] TAP-1 anti-spam: avg <150ms AND std dev <20ms over 30s → 10% effectiveness
+- [x] Haptic feedback on tap (Capacitor.Haptics) — light impact on tap, medium on Discharge, heavy on Cascade, notification on Insight, success on prestige
+- [x] Tutorial hints (P0 only, `isTutorialCycle === true`): 3 non-blocking tooltips — (1) "Tap the neuron" on first canvas load, (2) "Buy your first neuron" when thoughts ≥ baseCost, (3) "Use Discharge" when first charge available. Each dismisses on action completion. No hints after P1. *(Phase 7.1 shipped 4 hints: the original 3 + Decision B "variety" hint for Connection-multiplier reinforcement.)*
 
 **Sprint 3 tests 🧪 (TEST-3 requirement):**
-- [ ] Unit: neuron cost formula `baseCost × 1.28^owned` matches for all 5 types at 0/10/25/50 owned
-- [ ] Unit: connection multiplier with 1/2/3/4/5 neuron types owned = 1.0/1.05/1.15/1.30/1.50
-- [ ] Unit: Discharge base burst = `effectivePPS × dischargeMultiplier × 60`
-- [ ] Unit: Discharge Cascade = `base × cascadeMult (2.5)` when `focusBar >= 0.75` BEFORE discharge
-- [ ] Unit: Second consecutive Discharge CANNOT Cascade unless Focus refilled naturally (BUG-07 fix)
-- [ ] Unit: Insight level determination by prestigeCount (P0-9/10-18/19+)
-- [ ] Unit: Insight multiplier ×3.0/×8.0/×18.0 and duration 15s/12s/8s
-- [ ] Unit: tap thought contribution (TAP-2) — at P0 with 1 Básica, tap yields exactly 1 thought; after Potencial Sináptico purchased with effectivePPS=100, tap yields 10 thoughts; Sinestesia active → 10 × 0.4 = 4 thoughts.
-- [ ] Unit: undo toast triggers when purchase > 10% of thoughts
-- [ ] Unit: TAP-1 anti-spam activates only on <150ms avg + <20ms variance + 30s sustain
-- [ ] Integration: tap for 1 min → Focus fills, Insight triggers, production doubles
-- [ ] Integration: buy 10 Básicas + 5 Sensoriales + 3 Piramidales → connectionMult = correct, production rises
+- [x] Unit: neuron cost formula `baseCost × 1.28^owned` matches for all 5 types at 0/10/25/50 owned
+- [x] Unit: connection multiplier with 1/2/3/4/5 neuron types owned = 1.0/1.05/1.15/1.30/1.50
+- [x] Unit: Discharge base burst = `effectivePPS × dischargeMultiplier × 60`
+- [x] Unit: Discharge Cascade = `base × cascadeMult (2.5)` when `focusBar >= 0.75` BEFORE discharge
+- [x] Unit: Second consecutive Discharge CANNOT Cascade unless Focus refilled naturally (BUG-07 fix)
+- [x] Unit: Insight level determination by prestigeCount (P0-9/10-18/19+)
+- [x] Unit: Insight multiplier ×3.0/×8.0/×18.0 and duration 15s/12s/8s
+- [x] Unit: tap thought contribution (TAP-2) — at P0 with 1 Básica, tap yields exactly 1 thought; after Potencial Sináptico purchased with effectivePPS=100, tap yields 10 thoughts; Sinestesia active → 10 × 0.4 = 4 thoughts.
+- [x] Unit: undo toast triggers when purchase > 10% of thoughts
+- [x] Unit: TAP-1 anti-spam activates only on <150ms avg + <20ms variance + 30s sustain
+- [x] Integration: tap for 1 min → Focus fills, Insight triggers, production doubles
+- [x] Integration: buy 10 Básicas + 5 Sensoriales + 3 Piramidales → connectionMult = correct, production rises
 
 **Player tests 🎮:**
-- [ ] Buy an upgrade → feel the production change
-- [ ] Tap for 15s → Focus Bar visibly rises, Insight triggers
-- [ ] Use Discharge right after Insight → feel the burst
-- [ ] Trigger a Cascade (Focus ≥75% + Discharge) → visual + audio payoff satisfying
-- [ ] Buy something expensive (>10% thoughts) → Undo toast appears for 3s
-- [ ] Try to tap-spam → game doesn't penalize normal fast play (7-8 taps/sec bursts OK)
+- [x] Buy an upgrade → feel the production change *(covered by Phase 3/5 unit + integration tests; Sprint 4c playtest owns the feel-check)*
+- [x] Tap for 15s → Focus Bar visibly rises, Insight triggers *(verified by tests/store/tap.test.ts tap-driven activation + tests/engine/insight.test.ts)*
+- [-] Use Discharge right after Insight → feel the burst *(Sprint 4c playtest — needs human feel-check)*
+- [-] Trigger a Cascade (Focus ≥75% + Discharge) → visual + audio payoff satisfying *(Sprint 4c playtest — haptic heavy wired but feel unverified)*
+- [x] Buy something expensive (>10% thoughts) → Undo toast appears for 3s *(Phase 7.2 UndoToast.tsx + tests)*
+- [-] Try to tap-spam → game doesn't penalize normal fast play (7-8 taps/sec bursts OK) *(Sprint 4c playtest — TAP-1 threshold at 7.5 taps/sec may be too tight for normal burst-tapping)*
 
 ---
 
@@ -330,7 +330,7 @@ The foundational sprint. Prestige loop works or the game doesn't work. Implement
 - [ ] Unit: Momentum Bonus no-clamp case — with small PPS (60/sec) at threshold 450K: raw = 1800, cap = 45K → raw < cap, final = 1800 (no clamp, early-game case)
 - [ ] Unit: TUTOR-2 flip — with `isTutorialCycle: true` pre-prestige → post-prestige has `isTutorialCycle: false`
 - [ ] Unit: Personal best updates correctly at CURRENT prestigeCount, BEFORE increment (BUG-04 fix)
-- [ ] Integration: simulate P1 tick-by-tick with 1 tap/sec → threshold reached in 7-9 min (TUTOR-1 target, TUTOR-2 threshold 50K in first cycle only)
+- [ ] Integration: simulate P1 tick-by-tick with 1 tap/sec → threshold reached in 7-9 min (TUTOR-1 target, TUTOR-2 threshold 25K in first cycle only — retuned from 50K in Sprint 3 Phase 7.4b)
 - [ ] Integration: simulate P1→P2 (threshold 450K post-rebalance) with 1 tap/sec → target 7 min (ECO-1 interim rebalance)
 - [ ] Integration: simulate full cycle end-to-end, prestige, verify new cycle begins correctly with capped Momentum
 - [ ] Property-based (fast-check): prestige at any valid state → `prestigeCount` strictly increments, momentum ≤ 10% of next threshold, `isTutorialCycle` always false post-prestige

@@ -6,10 +6,10 @@
 
 ## Current status
 
-**Phase:** Sprint 3 Phase 6 COMPLETE — Discharge + Cascade (BUG-07 order) + Tutorial ×3 + Amplificador / Cascada Profunda / Sincronización Total / Potencial Latente / Red de Alta Velocidad upgrade effects wired
-**Last updated:** 2026-04-20 after Sprint 3 Phase 6 close
-**Active sprint:** Sprint 3 (Phases 1+2+3+3.5+4+4.5+5+6 complete) → next: Sprint 3 Phase 7 (Tutorial hints 2/3 + Undo toast UI + sprint close + player test)
-**Next action:** Phase 5 — auto-activate Insight when `focusBar >= 1.0`, level determined by prestigeCount (P0-9 = Claro/1, P10-18 = Profundo/2, P19+ = Trascendente/3) per GDD §6 table. Multipliers `[3.0, 8.0, 18.0]`, durations `[15, 12, 8]`s (from SYNAPSE_CONSTANTS). Concentración Profunda extends duration by +5s. FOCUS-2: Focus Bar does NOT reset on Insight activation (can pre-charge next). Also: implement Decision B HUD chip showing `×{connectionMult} connections` next to rate counter (permanent after player owns ≥2 types).
+**Phase:** Sprint 3 CLOSED — Neurons + Upgrades + Discharge + Focus/Insight + Taps + Tutorial (hints + undo + cap banner) + tutorialThreshold retune.
+**Last updated:** 2026-04-21 after Sprint 3 Phase 7 close.
+**Active sprint:** Sprint 4a (not yet started) — Prestige Core (PREST-1 order, 45/60/4 reset/preserve/update split, CORE-8 Momentum Bonus, Awakening screen).
+**Next action:** Sprint 4a kickoff per `docs/SPRINTS.md §Sprint 4a`. Read GDD §9 (prestige + THRES-1), §20 (Transcendence context), §33 (PRESTIGE_RESET/PRESERVE/UPDATE field split). Implement `handlePrestige()` following PREST-1 step order; enforce CORE-8 amended Momentum cap (`min(lastCyclePPS × 30, nextThreshold × maxMomentumPct)` per 4A-2). Mock patterns/polarity to isolate prestige tests. The tutorial's first-prestige transition is the validation target (P0 @ tutorialThreshold 25K → P1 @ baseThresholdTable[1] 450K); Sprint 4c owns the post-kickoff playtest that re-confirms TUTOR-1 timing end-to-end.
 
 ### Sprint 3 Phase 3.5 — accepted design decisions (owning phases inheriting)
 
@@ -33,6 +33,74 @@
 | Deeper analysis — 7 ad placements density | Sprint 9 monetization | Audit placement spacing; if 4+/10min session → reduce |
 | Deeper analysis — Piggy Bank 500-cap + 48h offer cadence | Sprint 9 monetization | Verify offer cadence not spammy for free players |
 | Deeper analysis — P11-P15 "dead zone" mid-Era 2 | Sprint 8c TEST-5 | If tester zones out in this range, tighten thresholds or add Spontaneous spice |
+
+### Sprint 3 closing dashboard
+
+- **Phases:** 9 (Phase 1 neurons+upgrades data → Phase 2 production formula stack → Phase 3 buyNeuron+buyUpgrade actions → Phase 3.5 audit-driven housekeeping → Phase 4 TAP-2+TAP-1+Haptics → Phase 4.5 test-quality uplift → Phase 5 Insight+ConnectionChip → Phase 6 Discharge+Cascade+Tutorial×3 → Phase 7 hints+undo+cap-banner+tutorial retune). Phase 7 itself ran as five sub-phases (7.1 hints, 7.2 undo, 7.3 Emergencia banner, 7.4 sim, 7.4b retune).
+- **Active tests:** **652 passed**, 0 failing (up from 359 at Sprint 2 close → **+293 in Sprint 3**). Biggest single additions: 74 gdd-sync oracle tests (Phase 4.5), 32 discharge (Phase 6), 28 insight (Phase 5), 34 purchases (Phase 3), 25 production-formula (Phase 2), 15 TutorialHints + 8 UndoToast + 5 EmergenciaCapBanner (Phase 7).
+- **Skipped tests:** **49** (down from 54 at Sprint 2 close — un-skipped 5 `BLOCKED-SPRINT-3` consistency tests for NEURON_TYPES / UPGRADES / Discharge wiring / Focus Bar transitions / TAP formulas).
+- **Typecheck errors:** 0 (`tsc -b --noEmit` clean).
+- **Lint warnings:** 0 (`eslint .` clean).
+- **Anti-invention gates:** 4/4 PASS, **ratio 0.82** (42 constants / 9 literals — down from Sprint 2's 0.86 after 3 new HUD surfaces added CONST-OK-annotated CSS values; still well above the 0.80 floor).
+- **Oracle & property-test coverage (Phase 4.5):** shipped `gdd-sync.test.ts` (reads GDD §31 constants block, cross-checks every scalar vs runtime), `invariants.test.ts` (17 fast-check properties on softCap / threshold / connectionMult monotonicity), and `tick-golden.test.ts` (3 snapshot tests guarding the tick pipeline against silent economy drift). Addresses the Nico-raised concern that tests were "self-confirming by construction".
+- **Player tests 🎮:** 3 ✅ + 3 ⚠️ deferred to Sprint 4c. Verified via engine coverage: tap→Focus→Insight chain; buy-an-upgrade production delta; expensive-purchase undo toast. Deferred for human feel-check: Discharge-after-Insight burst satisfaction, Cascade visual+audio payoff, tap-spam penalty threshold fit (normal 7–8 taps/sec bursts currently AT the TAP-1 trigger window — needs in-hand verification).
+- **Tutorial tuning (Phase 7.4+7.4b):** shipped `scripts/tutorial-timing.ts` real-engine simulator (tick+applyTap+purchases at configurable tap rate with realistic priority). Original `tutorialThreshold: 50_000` projected ~14.7 min at 5 taps/sec (target 7–9 min). **Retuned to 25_000** per Nico approval; post-retune sim shows 6–7 taps/sec in target window, 3–5 taps/sec at 9–11 min. Same-commit doc discipline applied — constants.ts + gameStore.ts + 3 test files + GDD.md §9+§31+§32 + SPRINTS.md §4a + economy-sanity projector all updated. CLAUDE.md:198 quick-reference still shows 50_000 (Nico to refresh at sprint close per rule).
+- **Design decisions shipped:**
+  - **Decision A (First-prestige dopamine gap):** Option B (Sprint 6 First Spark narrative event) + Option C (Phase 7 CycleSetupScreen preview card) accepted at Phase 3.5. Option C delivered this sprint? **No — Option C also deferred to owning sprints.** (CycleSetupScreen panel logic lives in Sprint 4c.)
+  - **Decision B (Connection-multiplier UX):** HUD ConnectionChip shipped Phase 5; Tutorial hint #4 shipped Phase 7.1. Both paths live.
+  - **Emergencia cap feedback (Phase 3.5 audit risk #3):** Option A — one-time HUD banner per cycle, React-local dismiss keyed on prestigeCount. Full tooltip-on-card deferred until Upgrades panel ships.
+- **Flagged for Sprint 4c (dedicated playtest):**
+  - **tutorialThreshold fine-tuning:** sim shows 5 taps/sec = 9.21 min, just above the 7–9 ceiling. Human blind-play refines.
+  - **GDD §7 tutorial-Discharge spec contradiction:** tutorial ×3 Discharge multiplier exists, but 20-min charge interval means first charge never arrives during a 7–9 min tutorial. Consider tutorial-cycle charge accelerator if D1 retention is soft.
+  - **Tap-spam threshold feel-check:** TAP-1 at avg <150ms + std dev <20ms + 30s sustain. Normal burst-tappers may trigger penalty at 7–8 taps/sec. Needs hand-verification.
+  - **Post-prestige first-cycle preview card (Decision A Option C):** slot-locked "Polarity unlocks in 2 prestiges" UI — Sprint 4c owns (requires CycleSetupScreen wiring to real trigger).
+- **Deferred to later sprints (in-scope for v1.0, not for Sprint 3):**
+  - Amplitud de Banda's `region_upgrades_boost` effect application → Sprint 10.
+  - Hyperfocus mental-state Insight-bonus SET logic → Sprint 7 (the CONSUME logic shipped Phase 5).
+  - `pendingHyperfocusBonus` producer-side writer → Sprint 7.
+  - Run-exclusive upgrades → Sprint 8b.
+  - Resonance upgrades (incl. `cascada_eterna` that Phase 6 already reads) → Sprint 8b.
+- **Doc-vs-code divergences opened (PROGRESS.md is source of truth until Nico syncs):**
+  - CLAUDE.md:198 quick-reference still shows `tutorialThreshold: 50_000`. Code + GDD §31 now 25_000.
+- **Sprint 3 commits landed:** 14 total.
+  - `d0965b0` Phase 1 (data foundation), `2c00dc4` Phase 2 (production formula), `93aeaf4` Phase 3 (buyNeuron + buyUpgrade), `38d2c19` Phase 3.5 (housekeeping), `c614be3` Phase 4 (TAP-2 + TAP-1 + Haptics), `d9e483c` Phase 4.5 (test-quality uplift), `3b212f0` Phase 5 (Insight + ConnectionChip), `7cd3dd6` Phase 6 (Discharge + Cascade + Tutorial×3), `bf2a3ff` Phase 7.1 (hint-stack), `afe9441` Phase 7.2 (Undo toast UI), `3a09803` Phase 7.3 (Emergencia banner), `b58ac52` Phase 7.4 (tutorial-timing sim), `89311ee` Phase 7.4b (tutorialThreshold retune), and `(this commit)` Sprint 3 close.
+- **Bundle size:** not re-measured this sprint. Production additions: 3 new HUD components (UndoToast, EmergenciaCapBanner, TutorialHints rewrite) + `src/engine/discharge.ts` + `src/engine/insight.ts` + `src/store/tap.ts` + `src/store/purchases.ts`. Rough estimate: +15–25 KB on top of Sprint 1's 160.84 KB / 52.92 KB gzipped baseline. Sprint 11b's `vite build` + bundle-analyzer run remains authoritative. No cause for concern vs 2 MB budget.
+- **Reviewer fabrications tracked:** 0 this sprint (down from 7+ in Sprints 1+2). Evidence discipline from CLAUDE.md §"Reviewer evidence discipline" appears to be working — no scope-fabrication, no name-invention, no unverified numeric assumptions caught.
+
+**Handoff state for Sprint 4a:**
+
+What Sprint 4a will build (per SPRINTS.md §Sprint 4a):
+- `handlePrestige()` action following PREST-1 10-step order
+- PRESTIGE_RESET (45 fields) / PRESTIGE_PRESERVE (60 fields) / PRESTIGE_UPDATE (4 fields) split per GDD §33
+- Momentum Bonus (CORE-8 amended, 4A-2) — `min(lastCycleEndProduction × 30, nextThreshold × maxMomentumPct)` added to thoughts on new cycle
+- Awakening screen (cycle duration, thoughts earned, Memories gained, Personal Best, Momentum counter animation)
+- Focus Persistente upgrade: 25% Focus Bar retention on prestige if owned (BUG-06 fix)
+- Personal best tracking per prestigeCount
+- `dischargeCharges=0` + `dischargeLastTimestamp=now` post-prestige (BUG-02 fix)
+- `insightActive=false` post-prestige regardless of prior state (BUG-01 fix)
+- Placeholder "Reset All Pattern Decisions" button (real implementation in Sprint 4b)
+
+What Sprint 4a does NOT touch — **engine fields newly stabilized in Sprint 3 are frozen** unless a bug is found:
+- `src/config/neurons.ts` — 5 types + NEURON_CONFIG (frozen)
+- `src/config/upgrades.ts` — 35 entries (frozen; run-exclusive + resonance add in Sprint 8b)
+- `src/engine/production.ts` — softCap, effective PPS formula stack (frozen)
+- `src/engine/discharge.ts` — Discharge + Cascade + tutorial override (frozen)
+- `src/engine/insight.ts` — auto-activation + Concentración Profunda (frozen)
+- `src/store/purchases.ts` — tryBuyNeuron + tryBuyUpgrade (frozen; Sprint 4a will add handlePrestige but not touch purchase paths)
+- `src/store/tap.ts` — TAP-2 + anti-spam penalty + tap-driven Insight (frozen)
+- TAP-1 step 12 in tick.ts (frozen)
+
+**Clean-baseline verification for Sprint 4a kickoff** (run from cold state):
+- `git status` — clean
+- `npm run typecheck` — 0 errors
+- `npm run lint` — 0 warnings
+- `bash scripts/check-invention.sh` — 4/4 PASS, ratio 0.82
+- `npm test` — 652 passed / 49 skipped / 0 failing
+- `npx tsx scripts/tutorial-timing.ts` — 5 taps/sec projects 9.21 min (retune verification)
+
+Sprint 4a un-skip target: 6 `BLOCKED-SPRINT-4a` consistency tests (PRESTIGE_RESET/PRESERVE/UPDATE field splits, TUTOR-2 flip, Momentum cap).
+
+---
 
 ### Sprint 2 closing dashboard
 
