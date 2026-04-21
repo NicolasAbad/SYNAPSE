@@ -276,6 +276,14 @@ export interface GameStoreActions {
    * the player hasn't met the threshold yet (UI belt-and-suspenders).
    */
   prestige: (nowTimestamp: number) => { fired: boolean; outcome: PrestigeOutcome | null };
+  /**
+   * Sprint 4b Phase 4b.4: PAT-3 reset per GDD §10. Consumes 1000 Resonance,
+   * clears `patternDecisions`, and reverses the Node 6 B dischargeMaxCharges
+   * bump if it was set. UI owns the double-confirmation — this action does
+   * NOT re-prompt; call it only after a confirmed intent.
+   * Returns `{ fired: false }` if `resonance < patternResetCostResonance`.
+   */
+  resetPatternDecisions: () => { fired: boolean };
 }
 
 export const useGameStore = create<GameState & UIState & GameStoreActions>((set, get) => ({
@@ -353,5 +361,18 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
     // longer apply to the new cycle.
     set({ ...nextState, undoToast: null });
     return { fired: true, outcome };
+  },
+  resetPatternDecisions: () => {
+    const state = get();
+    const cost = SYNAPSE_CONSTANTS.patternResetCostResonance;
+    if (state.resonance < cost) return { fired: false };
+    // Node 6 B is the only state-mutating decision — remove its +1 bump.
+    const wasSixB = state.patternDecisions[6] === 'B';
+    set({
+      resonance: state.resonance - cost,
+      patternDecisions: {},
+      dischargeMaxCharges: state.dischargeMaxCharges - (wasSixB ? 1 : 0),
+    });
+    return { fired: true };
   },
 }));

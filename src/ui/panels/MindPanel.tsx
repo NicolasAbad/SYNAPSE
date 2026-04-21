@@ -1,16 +1,133 @@
-import { memo } from 'react';
+import { memo, useState } from 'react';
+import { t } from '../../config/strings';
+import { PatternTreeView } from './PatternTreeView';
 
 /**
- * Mind tab panel (Sprint 3.6.1 shell).
+ * Mind tab panel — subtab router per Sprint 4b Phase 4b.4 (scope-addition
+ * deferred from 3.6.4).
  *
- * Intentionally renders nothing when the player is on the default
- * "home" Mind tab — the canvas + HUD behind should stay visible and
- * tappable, which is how a first-open player generates thoughts.
+ * Subtabs (6): home / patterns / archetypes / diary / achievements / resonance.
+ * `home` is the default first-open view — renders nothing so the canvas +
+ * HUD behind stay tappable. Non-home subtabs overlay the bottom-sheet area.
+ * Subtab state is React-local — switching main tabs (mind→neurons→mind)
+ * intentionally resets to `home` per default-first-open UX.
  *
- * Sprint 4b adds the first subtab content (Pattern Tree). Sprints 5 /
- * 6 / 7 / 8b add Archetypes / Neural Diary / Achievements / Resonance
- * subtabs. At that point this component will host a subtab router.
+ * Patterns subtab (this sprint): basic Pattern Tree viz + PAT-3 reset. Other
+ * subtabs render "Unlocks in Sprint X" placeholders until Sprint 5/6/7/8b.
  */
+type MindSubtab = 'home' | 'patterns' | 'archetypes' | 'diary' | 'achievements' | 'resonance';
+
+const NON_HOME_SUBTABS: MindSubtab[] = ['patterns', 'archetypes', 'diary', 'achievements', 'resonance'];
+
 export const MindPanel = memo(function MindPanel() {
-  return null;
+  const [subtab, setSubtab] = useState<MindSubtab>('home');
+  const showBody = subtab !== 'home';
+
+  return (
+    <>
+      <MindSubtabBar subtab={subtab} onChange={setSubtab} />
+      {showBody && <MindSubtabBody subtab={subtab} />}
+    </>
+  );
 });
+
+function MindSubtabBar({ subtab, onChange }: { subtab: MindSubtab; onChange: (s: MindSubtab) => void }) {
+  return (
+    <div
+      data-testid="mind-subtab-bar"
+      style={{
+        position: 'absolute',
+        top: 'calc(env(safe-area-inset-top, 0) + var(--spacing-12))', // CONST-OK: CSS custom property ref
+        left: 0, // CONST-OK: CSS full-bleed
+        right: 0, // CONST-OK: CSS full-bleed
+        display: 'flex',
+        flexDirection: 'row',
+        justifyContent: 'center',
+        gap: 'var(--spacing-2)', // CONST-OK: CSS custom property ref
+        padding: 'var(--spacing-2) var(--spacing-4)', // CONST-OK: CSS custom property ref
+        pointerEvents: 'auto',
+        overflowX: 'auto',
+        zIndex: 880, // CONST-OK: above HUD, below modals
+      }}
+    >
+      {(['home', ...NON_HOME_SUBTABS] as MindSubtab[]).map((s) => (
+        <SubtabButton key={s} value={s} active={subtab === s} onSelect={onChange} />
+      ))}
+    </div>
+  );
+}
+
+function SubtabButton({
+  value,
+  active,
+  onSelect,
+}: {
+  value: MindSubtab;
+  active: boolean;
+  onSelect: (s: MindSubtab) => void;
+}) {
+  return (
+    <button
+      type="button"
+      data-testid={`mind-subtab-${value}`}
+      onPointerDown={() => onSelect(value)}
+      style={{
+        padding: 'var(--spacing-1) var(--spacing-3)', // CONST-OK: CSS custom property ref
+        background: active ? 'var(--color-primary)' : 'transparent',
+        color: active ? 'var(--color-bg-deep)' : 'var(--color-text-secondary)',
+        border: '1px solid var(--color-border-subtle)',
+        borderRadius: 'var(--radius-full)',
+        fontFamily: 'var(--font-body)',
+        fontSize: 'var(--text-xs)',
+        fontWeight: active ? 'var(--font-weight-semibold)' : 'var(--font-weight-normal)',
+        cursor: 'pointer',
+        touchAction: 'manipulation',
+        whiteSpace: 'nowrap',
+      }}
+    >
+      {t(`mind_subtabs.${value}`)}
+    </button>
+  );
+}
+
+function MindSubtabBody({ subtab }: { subtab: MindSubtab }) {
+  return (
+    <div
+      data-testid={`mind-subtab-body-${subtab}`}
+      style={{
+        position: 'absolute',
+        top: '30%', // CONST-OK: bottom-sheet idiom — leaves upper 30% for canvas + subtab bar
+        bottom: 'calc(var(--spacing-16) * 2)', // CONST-OK: above Discharge + TabBar
+        left: 0, // CONST-OK: CSS full-bleed
+        right: 0, // CONST-OK: CSS full-bleed
+        padding: 'var(--spacing-4)', // CONST-OK: CSS custom property ref
+        background: 'var(--color-bg-deep)',
+        borderTop: '1px solid var(--color-border-subtle)',
+        overflowY: 'auto',
+        pointerEvents: 'auto',
+      }}
+    >
+      {subtab === 'patterns' && <PatternTreeView />}
+      {subtab === 'archetypes' && <Placeholder keyName="mind_subtabs.archetypes_placeholder" />}
+      {subtab === 'diary' && <Placeholder keyName="mind_subtabs.diary_placeholder" />}
+      {subtab === 'achievements' && <Placeholder keyName="mind_subtabs.achievements_placeholder" />}
+      {subtab === 'resonance' && <Placeholder keyName="mind_subtabs.resonance_placeholder" />}
+    </div>
+  );
+}
+
+function Placeholder({ keyName }: { keyName: string }) {
+  return (
+    <div
+      data-testid="mind-subtab-placeholder"
+      style={{
+        color: 'var(--color-text-secondary)',
+        fontSize: 'var(--text-sm)',
+        textAlign: 'center',
+        padding: 'var(--spacing-8)', // CONST-OK: CSS custom property ref
+      }}
+    >
+      {t(keyName)}
+    </div>
+  );
+}

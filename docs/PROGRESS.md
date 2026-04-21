@@ -6,10 +6,10 @@
 
 ## Current status
 
-**Phase:** Sprint 4b IN PROGRESS — Phase 4b.3 (decision effect appliers) shipped. 7 of 10 decisions wired end-to-end: 6A (cycle bonus), 6B (dischargeMaxCharges post-RESET), 15B (focus fill rate), 24A (insight duration), 24B (memories), 36A (cascade threshold), 36B (discharge damage + INT-5 gate). 3 stubs documented with owning-sprint handoff (15A / 48A / 48B → Sprint 8a / Sprint 5).
-**Last updated:** 2026-04-21 after Sprint 4b Phase 4b.3 close.
-**Active sprint:** Sprint 4b — Pattern Tree + Decisions. 5 planned sub-phases: 4b.1 pattern data + constants (DONE) → 4b.2 engine stubs + production bonuses (DONE) → 4b.3 decision effect appliers (DONE) → 4b.4 PAT-3 reset action + MindPanel subtab router → 4b.5 decision modal + PAT-3 double-confirm UI + integration + close.
-**Next action:** Phase 4b.4 — Zustand `resetPatternDecisions(now)` store action (gated `resonance >= 1000`); MindPanel subtab router replacing the null-render stub with a 6-subtab nav (`home` / `patterns` / `archetypes` / `diary` / `achievements` / `resonance`), where `home` renders null (canvas visible) and others overlay the bottom sheet. Patterns subtab gets a basic tree viz; others render "Unlocks in Sprint X" placeholders.
+**Phase:** Sprint 4b IN PROGRESS — Phase 4b.4 (PAT-3 action + MindPanel subtab router + PatternTreeView) shipped. 6-subtab Mind panel now functional: home (canvas visible), patterns (50-cell grid + double-confirm reset), 4 placeholders for Sprint 5/6/7/8b. PAT-3 Zustand action gated on resonance + reverses Node 6 B dischargeMaxCharges bump on reset.
+**Last updated:** 2026-04-21 after Sprint 4b Phase 4b.4 close.
+**Active sprint:** Sprint 4b — Pattern Tree + Decisions. 5 planned sub-phases: 4b.1 pattern data + constants (DONE) → 4b.2 engine stubs + production bonuses (DONE) → 4b.3 decision effect appliers (DONE) → 4b.4 PAT-3 + MindPanel subtabs + PatternTreeView (DONE) → 4b.5 decision modal (A/B prompt when player crosses a decision node) + integration + close.
+**Next action:** Phase 4b.5 — build the A/B decision modal component (reuses the `ConfirmModal` pattern but with two "confirm" buttons instead of cancel/confirm). Fire the modal when `state.patterns` includes a decision-node index AND `state.patternDecisions[index]` is undefined. After choice, write to `patternDecisions` AND apply any permanent state effect (Node 6 B dischargeMaxCharges bump); cycle bonus / discharge threshold / etc. take effect immediately via the Phase 4b.3 helpers. Sprint 4b integration test + close.
 
 ### Sprint 4a closing dashboard
 
@@ -804,6 +804,37 @@ Sprint 11a TODO for `ALL_RULE_IDS` constant must include all 16 (not 13 as state
 ---
 
 ## Session log
+
+### 2026-04-21 — Sprint 4b Phase 4b.4: PAT-3 action + MindPanel subtab router + PatternTreeView
+
+**Scope:** Zustand `resetPatternDecisions()` action + 6-subtab MindPanel router + PatternTreeView component with basic 50-cell grid + 2-stage PAT-3 reset flow.
+
+**New Zustand action:** `resetPatternDecisions()` — fires only if `resonance >= patternResetCostResonance (1000)`. Consumes resonance, clears `patternDecisions`, and reverses the Node 6 B `+1 dischargeMaxCharges` bump if it was set (the only state-mutating decision). UI owns the double-confirmation; the action doesn't re-prompt.
+
+**MindPanel subtab router (deferred from 3.6.4):** 6 subtabs — `home` (default, renders nothing; canvas behind visible/tappable), `patterns` (PatternTreeView content), `archetypes` (Sprint 6 placeholder), `diary` (Sprint 6), `achievements` (Sprint 7), `resonance` (Sprint 8b). Subtab state is React-local — switching main tabs (mind→neurons→mind) resets to `home`. Per-subtab test ids make placeholder content addressable.
+
+**PatternTreeView:** 50-cell grid (10 × 5 layout) showing the tree at a glance. Cell state: empty = transparent, acquired non-decision = filled border, decision A = primary color + "A" label, decision B = secondary color + "B" label, pending decision = accent color + "?" label. Decision resolution UI lands in Phase 4b.5.
+
+**PAT-3 reset flow (2-stage ConfirmModal chain):**
+1. Player taps "Reset All Decisions" — first `ConfirmModal` appears. Cancel → closes.
+2. Stage 1 confirm → second `ConfirmModal` appears.
+3. Stage 2 confirm → `resetPatternDecisions()` fires. State clears.
+4. Either stage's cancel → full-cancel, state untouched.
+Reset button is disabled when `resonance < 1000` OR no decisions have been made yet.
+
+**i18n additions (en.ts):** `mind_subtabs.*` namespace — subtab labels, 4 placeholder strings, Pattern Tree title, reset button, 2-stage confirm strings, blocked tooltip.
+
+**28 new tests:**
+- 7 resetPatternDecisions (Resonance gate, cost drain, 6 B rollback, no-op on 6 A, Zustand pitfall compliance).
+- 8 MindPanel (6 subtab buttons present, default home no overlay, each non-home subtab opens its body, home click restores canvas view).
+- 13 PatternTreeView (50 cells, header progress display, cell state by acquired/decision/pending, reset button enabled/disabled state machine, 2-stage flow fire/cancel paths, full state verification on stage-2 confirm).
+
+**Verification (all gates green):**
+- `npm run typecheck` — 0 errors. `npm run lint` — 0 warnings.
+- `bash scripts/check-invention.sh` — 4/4 PASS, ratio 0.81 (required CONST-OK annotations on stage-machine `0|1|2` literals + `testIdPrefix="pattern-reset-2"` because the regex flags `-2` in strings).
+- `npm test` — **843 passed / 43 skipped / 0 failing** (from 815 → +28 new).
+
+**Next:** Phase 4b.5 — A/B decision modal (fires when player crosses a decision-node index without having picked yet) + Sprint 4b integration test + close.
 
 ### 2026-04-21 — Sprint 4b Phase 4b.3: decision effect appliers
 
