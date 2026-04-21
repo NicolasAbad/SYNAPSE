@@ -6,9 +6,9 @@
 
 ## Current status
 
-**Phase:** Sprint 3 Phase 4 COMPLETE — TAP-2 formula + TAP-1 anti-spam + Mielina/Potencial/Dopamina wiring + Capacitor Haptics light feedback on tap
-**Last updated:** 2026-04-20 after Sprint 3 Phase 4 close
-**Active sprint:** Sprint 3 (Phases 1+2+3+3.5+4 complete) → next: Sprint 3 Phase 5 (Focus Bar + Insight auto-activate + HUD chip for Decision B)
+**Phase:** Sprint 3 Phase 4.5 COMPLETE — test-quality uplift (property-based tests + GDD parser cross-check + golden snapshots)
+**Last updated:** 2026-04-20 after Sprint 3 Phase 4.5 close
+**Active sprint:** Sprint 3 (Phases 1+2+3+3.5+4+4.5 complete) → next: Sprint 3 Phase 5 (Focus Bar + Insight auto-activate + HUD chip for Decision B)
 **Next action:** Phase 5 — auto-activate Insight when `focusBar >= 1.0`, level determined by prestigeCount (P0-9 = Claro/1, P10-18 = Profundo/2, P19+ = Trascendente/3) per GDD §6 table. Multipliers `[3.0, 8.0, 18.0]`, durations `[15, 12, 8]`s (from SYNAPSE_CONSTANTS). Concentración Profunda extends duration by +5s. FOCUS-2: Focus Bar does NOT reset on Insight activation (can pre-charge next). Also: implement Decision B HUD chip showing `×{connectionMult} connections` next to rate counter (permanent after player owns ≥2 types).
 
 ### Sprint 3 Phase 3.5 — accepted design decisions (owning phases inheriting)
@@ -617,6 +617,48 @@ Sprint 11a TODO for `ALL_RULE_IDS` constant must include all 16 (not 13 as state
 ---
 
 ## Session log
+
+### 2026-04-20 — Sprint 3 Phase 4.5: test-quality uplift
+
+**Context:** Nico asked if the test suite is genuinely catching regressions or if it's self-confirming theater (I write code + tests together → tests pass by construction). Honest answer: ~10-15% of tests were near-tautologies. Phase 4.5 addresses the self-confirming-bias gap with three mechanisms.
+
+**Files created:**
+- `tests/properties/invariants.test.ts` (17 property-based tests via fast-check 4.7.0) — verifies invariants that must hold across ALL generated inputs, not single hand-picked cases. Covers: softCap monotonicity + dampening, neuronCost strict growth with owned count, connectionMult growth with owned-type count, Sincronía ×2 always, calculateProduction base≤effective, zero-neurons ⇒ base=0, tap thought floor (≥ 0.1 = min × anti-spam), anti-spam only reduces (never increases), applyTap strictly grows thoughts, circular buffer ≤ antiSpamBufferSize, purchases idempotent (double-buy rejected), tryBuyNeuron cost-and-count coherence, tick non-decreasing totalGenerated, thoughts never negative, tick() pure-function invariance.
+  - **Real bug caught by property test during development:** attempted a 1e-9 relative-tolerance assertion on `tryBuyNeuron` at thoughts=1e12. fast-check shrunk the counterexample to `["basica", 0]` in 2 steps — revealed that IEEE 754 precision at 1e12 magnitude is ~1e-4 relative, making the 1e-9 assertion false. Fixed by relaxing to the real invariant (thoughts strictly decrease + count increments by 1) + using 1e10 thoughts ceiling where precision is workable. This is the exact class of bug property tests are designed to find.
+- `tests/properties/gdd-sync.test.ts` (74 scalar cross-checks) — reads `docs/GDD.md` §31 at test time, parses scalar constants from the TS code block, and cross-checks each against runtime `SYNAPSE_CONSTANTS`. Catches silent drift where a value in the GDD diverges from the code. Array-valued keys (baseThresholdTable, runThresholdMult, etc.) are intentionally excluded — they need human review for tuning, and dedicated consistency tests already cover them.
+- `tests/properties/tick-golden.test.ts` (3 inline-snapshot tests) — seeds a mid-game GameState (20 Básicas + 5 Sensoriales + 2 Piramidales + 3 owned upgrades) and runs the engine for 1 / 10 / 100 ticks. Captures the projected numeric fields (thoughts, cycleGenerated, totalGenerated, baseProductionPerSecond, effectiveProductionPerSecond, dischargeCharges, consciousnessBarUnlocked, piggyBankSparks) as inline snapshots. Any behavior change to the tick pipeline surfaces as a diff; legitimate changes regenerate via `--update`. Snapshot produced `baseProductionPerSecond=153.09375` which matches the hand-computed §4 value exactly — confidence that the formula + seed are correct.
+
+**Files modified:**
+- `package.json` + `package-lock.json` — added `fast-check@^4.7.0` as devDependency.
+
+**What these three mechanisms catch that the deterministic suite doesn't:**
+
+| Mechanism | Anti-bias property |
+|---|---|
+| Property tests | I can't hand-pick inputs that pass — generator explores edge cases I didn't think about (e.g., IEEE 754 precision at 1e12, 0-rate states, buffer-boundary conditions, float rounding on cost subtraction). |
+| GDD parser | I don't write "expected" in the test — the expected value comes from docs/GDD.md. If I change constants.ts without updating the GDD, the test fails and vice-versa. |
+| Golden snapshots | I don't hand-write the expected numbers — they come from running the actual engine once, then locking them in. Refactors that change behavior produce a clear diff. |
+
+**Verification (all gates green):**
+- `npm run typecheck` — 0 errors
+- `npm run lint` — 0 warnings
+- `bash scripts/check-invention.sh` — 4/4 PASS, ratio 0.89
+- `npm test` — **560 passed / 49 skipped / 0 failing** (+94 from Phase 4: 17 property tests + 74 GDD scalar cross-checks + 3 golden snapshots)
+
+**Honest test-suite audit after Phase 4.5:**
+
+| Category | ~% of suite | Value |
+|---|---|---|
+| Gates anti-invención (Gate 1-4) | ~12% | **High** — mechanical anti-invention |
+| Consistency tests (GDD ↔ constants literals) | ~22% | **High** — drift detection |
+| **GDD parser cross-check** | **~13%** | **Highest** — GDD.md is the oracle, no self-confirm path |
+| Refactor safety (behavior tests) | ~25% | **High** — tick 125→16 refactor verified by these |
+| **Property tests (invariants)** | **~3%** | **High** — independent of my implementation choices |
+| Per-ID spec checks | ~13% | **Medium** — may both be wrong |
+| **Golden snapshots** | **~0.5%** | **Medium-High** — captures behavior, diff-visible |
+| Near-tautologies (self-confirming) | ~11% | **Low** — unavoidable for new features, reduce via the above |
+
+Self-confirming-bias reduced from ~15% to ~11% of the suite; oracle-based checks (GDD parser) grew from 0% to ~13%.
 
 ### 2026-04-20 — Sprint 3 Phase 4: TAP-2 + TAP-1 + Haptics
 
