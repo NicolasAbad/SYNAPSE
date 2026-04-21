@@ -131,6 +131,24 @@ function computeGlobalUpgradeMult(
 }
 
 /**
+ * GDD §10 pattern bonuses (Sprint 4b Phase 4b.2):
+ *   flat  = totalPatterns × patternFlatBonusPerNode (thoughts/sec, pre-mult)
+ *   cycle = min(1 + patternsAcquiredThisCycle × patternCycleBonusPerNode, patternCycleCap)
+ * Cycle bonus stacks multiplicatively AFTER softCap (same placement as Insight
+ * — per-cycle modifier, not a stack the softCap should dampen).
+ */
+export function countCyclePatterns(state: Pick<GameState, 'patterns' | 'cycleStartTimestamp'>): number {
+  let n = 0;
+  for (const p of state.patterns) if (p.acquiredAt >= state.cycleStartTimestamp) n++;
+  return n;
+}
+
+export function patternCycleBonus(cyclePatterns: number): number {
+  const { patternCycleBonusPerNode, patternCycleCap } = SYNAPSE_CONSTANTS;
+  return Math.min(1 + cyclePatterns * patternCycleBonusPerNode, patternCycleCap);
+}
+
+/**
  * Full production formula per GDD §4. Returns both the softCap-tempered
  * `baseProductionPerSecond` (pre-temporary-modifier) and `effectiveProductionPerSecond`
  * (post-Insight; adds Mental State + Spontaneous + mutation temporal when those ship).
@@ -148,11 +166,17 @@ export function calculateProduction(state: GameState): { base: number; effective
     sum += neuron.count * NEURON_BASE_RATES[neuron.type] * allNeuronsMult * perType;
   }
 
+  // GDD §10 pattern flat bonus — per-lifetime-pattern thoughts/sec addon, applied
+  // to the pre-multiplier sum so the upgrade × connection chain multiplies it too.
+  sum += state.totalPatterns * SYNAPSE_CONSTANTS.patternFlatBonusPerNode;
+
   const globalMult = computeGlobalUpgradeMult(state, ownedIds);
   // Stubs for Sprint 5-7: archetypeMod × regionMult × mutationStaticMod × polarityMod (all identity until wired).
   const rawMult = state.connectionMult * globalMult;
   const finalMult = softCap(rawMult);
-  const base = sum * finalMult;
+  // Pattern cycle bonus: multiplicative post-softCap, capped at patternCycleCap.
+  const cycleMult = patternCycleBonus(countCyclePatterns(state));
+  const base = sum * finalMult * cycleMult;
 
   // Stubs for Sprint 7: mentalStateMod × spontaneousEventMod × mutationTemporalMod (all identity until wired).
   const effective = state.insightActive ? base * state.insightMultiplier : base;

@@ -95,6 +95,7 @@ export const SYNAPSE_CONSTANTS = {
 
   // ── Patterns ──
   patternsPerPrestige: 3,
+  patternTreeSize: 50, // GDD §10: "Pattern Tree (50 nodes + 5 decisions)". Hard cap on totalPatterns.
   patternCycleBonusPerNode: 0.04,
   patternCycleCap: 1.5,
   patternFlatBonusPerNode: 2,

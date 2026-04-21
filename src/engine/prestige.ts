@@ -1,15 +1,13 @@
-// Implements docs/GDD.md §9 (prestige + THRES-1), §33 (45/60/4/1 field split),
-// §6 (Memorias), §35 rules PREST-1, BUG-01/02/04/06, CORE-8, TUTOR-2.
-// Sprint 4a Phase 4a.2 — pure CODE-9 function (timestamp as parameter).
-// Stubs: patternsGained=0 (Sprint 4b), resonanceGain=0 (Sprint 8b),
-// RP checks none (Sprint 8c). Per SPRINTS.md §4a prestige lands before.
+// Implements GDD.md §9 (prestige + THRES-1), §33 (45/60/4/1 split), §6 (Memorias),
+// §10 (Patterns — 4b.2), §35 rules PREST-1, BUG-01/02/04/06, CORE-8, TUTOR-2.
+// Pure CODE-9 (timestamp as parameter). Resonance/RP stubs for 8b/8c.
 
 import { SYNAPSE_CONSTANTS } from '../config/constants';
 import { PRESTIGE_RESET } from '../config/prestige';
 import { UPGRADES_BY_ID } from '../config/upgrades';
 import { calculateThreshold } from './production';
 import type { GameState } from '../types/GameState';
-import type { AwakeningEntry } from '../types';
+import type { AwakeningEntry, PatternNode } from '../types';
 
 /** Metadata the Awakening UI needs; engine doesn't store it. */
 export interface PrestigeOutcome {
@@ -97,15 +95,21 @@ function updatePersonalBests(
   return { next: prev, wasPersonalBest: false };
 }
 
-/**
- * Apply prestige per PREST-1 (§35). Steps 1-10 in order, with BUG-01
- * (insightActive=false), BUG-02 (dischargeLastTimestamp=timestamp),
- * BUG-06 (Focus Persistente), CORE-8 amended (Momentum cap),
- * TUTOR-2 (isTutorialCycle one-way flip to false).
- *
- * Pattern / Resonance / RP side-effects are stubbed — Sprint 4b/8b/8c
- * replace the zeros with real computations.
- */
+/** Sprint 4b: sequential PatternNodes from `totalPatterns`, up to tree cap (§10). */
+function grantPatterns(state: Pick<GameState, 'totalPatterns'>, timestamp: number): PatternNode[] {
+  const { patternsPerPrestige, patternTreeSize, patternDecisionNodes } = SYNAPSE_CONSTANTS;
+  const available = Math.max(0, patternTreeSize - state.totalPatterns);
+  const gained = Math.min(patternsPerPrestige, available);
+  const decisionSet = new Set<number>(patternDecisionNodes);
+  const out: PatternNode[] = [];
+  for (let i = 0; i < gained; i++) {
+    const index = state.totalPatterns + i;
+    out.push({ index, isDecisionNode: decisionSet.has(index), acquiredAt: timestamp });
+  }
+  return out;
+}
+
+/** Apply prestige per PREST-1. Patterns wired 4b.2; Resonance/RP stubs for 8b/8c. */
 export function handlePrestige(state: GameState, timestamp: number): { state: GameState; outcome: PrestigeOutcome } {
   // Step 1 — capture pre-reset PPS for Momentum Bonus.
   const lastCycleEndProduction = state.effectiveProductionPerSecond;
@@ -118,8 +122,9 @@ export function handlePrestige(state: GameState, timestamp: number): { state: Ga
     state.prestigeCount,
     cycleMinutes,
   );
-  // Steps 4-6 — patterns / resonance / RP stubs (real impl in Sprint 4b/8b/8c).
-  const patternsGained = 0;
+  // Steps 4-6 — patterns (Sprint 4b) / resonance (Sprint 8b) / RP (Sprint 8c).
+  const newPatterns = grantPatterns(state, timestamp);
+  const patternsGained = newPatterns.length;
   const resonanceGain = 0;
   // Step 7 — Memories.
   const memoriesGained = computeMemoriesGained(state);
@@ -158,6 +163,10 @@ export function handlePrestige(state: GameState, timestamp: number): { state: Ga
     awakeningLog: [...state.awakeningLog, awakeningEntry],
     personalBests,
     personalBestsBeaten: state.personalBestsBeaten + (wasPersonalBest ? 1 : 0),
+    // Step 4 — patterns gained this prestige (Sprint 4b). Appended to the
+    // patterns list; totalPatterns counter bumped by the same amount.
+    patterns: [...state.patterns, ...newPatterns],
+    totalPatterns: state.totalPatterns + patternsGained,
     // UPDATE (4 fields).
     prestigeCount: newPrestigeCount,
     currentThreshold: nextThreshold,

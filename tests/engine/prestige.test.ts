@@ -32,16 +32,18 @@ function withUpgrades(state: GameState, ids: string[]): GameState {
 
 // PRESERVE-side fields that handlePrestige legitimately reads + updates as part
 // of its numbered PREST-1 steps (step 7 Memories, awakening log append, personal
-// bests, resonance gain stub). These are "not in PRESTIGE_RESET" — they DO
-// survive prestige; their value just isn't identical pre→post because the step
-// logic updates them. The strict subset of PRESERVE that passes through
-// UNCHANGED is the complement.
+// bests, resonance gain stub, Sprint 4b 4b.2 patterns grant). These are "not in
+// PRESTIGE_RESET" — they DO survive prestige; their value just isn't identical
+// pre→post because the step logic updates them. The strict subset of PRESERVE
+// that passes through UNCHANGED is the complement.
 const PRESERVE_UPDATED_BY_HANDLEPRESTIGE = new Set<keyof GameState>([
   'memories',
   'awakeningLog',
   'personalBests',
   'personalBestsBeaten',
   'resonance',
+  'patterns',        // 4b.2: +patternsPerPrestige nodes appended.
+  'totalPatterns',   // 4b.2: incremented by patternsPerPrestige.
 ]);
 
 describe('handlePrestige — PRESTIGE_RESET field-level behavior (§33)', () => {
@@ -184,6 +186,78 @@ describe('handlePrestige — PRESTIGE_PRESERVE pass-through (§33)', () => {
   });
 });
 
+// Sprint 4b Phase 4b.2 — pattern grant on prestige (GDD §10).
+describe('handlePrestige — pattern grant (Sprint 4b Phase 4b.2)', () => {
+  test('first prestige adds exactly patternsPerPrestige new PatternNodes', () => {
+    const before: GameState = { ...createDefaultState(), patterns: [], totalPatterns: 0 };
+    const { state: next } = handlePrestige(before, 1_000_000);
+    expect(next.patterns).toHaveLength(SYNAPSE_CONSTANTS.patternsPerPrestige);
+    expect(next.totalPatterns).toBe(SYNAPSE_CONSTANTS.patternsPerPrestige);
+  });
+
+  test('new pattern nodes have sequential indices starting from totalPatterns', () => {
+    const before: GameState = {
+      ...createDefaultState(),
+      patterns: [],
+      totalPatterns: 5, // as if a prior prestige already granted some
+    };
+    const { state: next } = handlePrestige(before, 1_000_000);
+    const added = next.patterns.slice(-3).map((p) => p.index);
+    expect(added).toEqual([5, 6, 7]);
+    // index 6 is a decision node per §10.
+    expect(next.patterns.find((p) => p.index === 6)?.isDecisionNode).toBe(true);
+  });
+
+  test('acquiredAt equals the prestige timestamp (so new patterns count as this-cycle)', () => {
+    const before: GameState = { ...createDefaultState(), totalPatterns: 0 };
+    const { state: next } = handlePrestige(before, 2_500_000);
+    for (const p of next.patterns) {
+      expect(p.acquiredAt).toBe(2_500_000);
+    }
+  });
+
+  test('isDecisionNode flags match patternDecisionNodes for each crossed threshold', () => {
+    const before: GameState = { ...createDefaultState(), totalPatterns: 4 };
+    // 4, 5, 6 → index 6 is a decision node, others are not.
+    const { state: next } = handlePrestige(before, 1_000_000);
+    const flags = next.patterns
+      .slice(-3)
+      .map((p) => ({ index: p.index, isDecisionNode: p.isDecisionNode }));
+    expect(flags).toEqual([
+      { index: 4, isDecisionNode: false },
+      { index: 5, isDecisionNode: false },
+      { index: 6, isDecisionNode: true },
+    ]);
+  });
+
+  test('stops granting when tree cap (50) is reached', () => {
+    const before: GameState = { ...createDefaultState(), totalPatterns: 49 };
+    const { state: next } = handlePrestige(before, 1_000_000);
+    // Only 1 slot available (49 → 50).
+    expect(next.totalPatterns).toBe(SYNAPSE_CONSTANTS.patternTreeSize);
+    expect(next.patterns.slice(-1)[0]!.index).toBe(49);
+  });
+
+  test('no-op when tree is already full', () => {
+    const existing = Array.from({ length: 50 }, (_, i) => ({ // CONST-OK tree size mirror for fixture
+      index: i,
+      isDecisionNode: false,
+      acquiredAt: 0,
+    }));
+    const before: GameState = {
+      ...createDefaultState(),
+      patterns: existing,
+      totalPatterns: 50, // CONST-OK mirrors patternTreeSize for fixture
+    };
+    const { state: next, outcome } = handlePrestige(before, 1_000_000);
+    expect(next.totalPatterns).toBe(before.totalPatterns);
+    expect(next.patterns.length).toBe(existing.length);
+    // patternsGained in AwakeningLog reflects the real 0.
+    expect(next.awakeningLog[0].patternsGained).toBe(0);
+    expect(outcome).toBeDefined();
+  });
+});
+
 describe('computeMemoriesGained — GDD §2 Memory generation table', () => {
   test('base +2 per prestige with no upgrades', () => {
     expect(computeMemoriesGained(createDefaultState())).toBe(2);
@@ -227,7 +301,7 @@ describe('handlePrestige — Memories + awakening log (PREST-1 step 7)', () => {
     expect(entry.endProduction).toBe(150);
     expect(entry.polarity).toBe('excitatory');
     expect(entry.memoriesGained).toBe(2);
-    expect(entry.patternsGained).toBe(0); // Sprint 4b stub
+    expect(entry.patternsGained).toBe(3); // 4b.2: patternsPerPrestige
   });
 });
 

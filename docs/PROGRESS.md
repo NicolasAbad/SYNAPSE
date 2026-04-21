@@ -6,10 +6,10 @@
 
 ## Current status
 
-**Phase:** Sprint 4b IN PROGRESS — Phase 4b.1 (Pattern data + decision effect canon) shipped. `src/config/patterns.ts` defines the 10 decision effects with kind-tagged union distinct from UpgradeEffect; 9 new consistency tests cover per-node spec-authority spot checks.
-**Last updated:** 2026-04-21 after Sprint 4b Phase 4b.1 close.
-**Active sprint:** Sprint 4b — Pattern Tree + Decisions. 5 planned sub-phases: 4b.1 pattern data + constants (DONE) → 4b.2 engine stub replacement (patterns gained on prestige + flat/cycle production bonuses) → 4b.3 per-decision effect appliers (10 options wired) → 4b.4 PAT-3 reset action + MindPanel subtab router → 4b.5 decision modal + PAT-3 double-confirm UI + integration + close.
-**Next action:** Phase 4b.2 — replace `patternsGained = 0` stub in `handlePrestige` with 3 new `PatternNode` entries per prestige; wire `patternFlatBonusPerNode × totalPatterns` and cycle-bonus (derived from `patterns.filter(p => p.acquiredAt >= cycleStartTimestamp).length`) into `calculateProduction`. Cap cycle bonus at `patternCycleCap = 1.5`.
+**Phase:** Sprint 4b IN PROGRESS — Phase 4b.2 (engine stub replacement + production wiring) shipped. `handlePrestige` now grants 3 `PatternNode` entries per prestige (with decision-node flags set per [6,15,24,36,48], hard-cap at 50); `calculateProduction` now applies `patternFlatBonusPerNode × totalPatterns` pre-multiplier + `patternCycleBonus` post-softCap (capped at 1.5).
+**Last updated:** 2026-04-21 after Sprint 4b Phase 4b.2 close.
+**Active sprint:** Sprint 4b — Pattern Tree + Decisions. 5 planned sub-phases: 4b.1 pattern data + constants (DONE) → 4b.2 engine stubs + production bonuses (DONE) → 4b.3 per-decision effect appliers → 4b.4 PAT-3 reset action + MindPanel subtab router → 4b.5 decision modal + PAT-3 double-confirm UI + integration + close.
+**Next action:** Phase 4b.3 — wire the 10 decision-option effects into their consumers. Node 6B (max charges +1 → `dischargeMaxCharges` at discharge time); Node 15A (offline eff mult → offline.ts); Node 15B (focus fill mult → tap.ts); Node 24A (insight duration +3s → insight.ts); Node 24B (memories +2/prestige → `computeMemoriesGained`); Node 36A (cascade threshold set → discharge.ts); Node 36B (discharge damage mult → discharge.ts) + INT-5 Resonance-on-Discharge stub (real Resonance in 8b); Node 48A (region mult — stub until Sprint 5 Regions); Node 48B (mutation options — stub until Sprint 5 Mutations).
 
 ### Sprint 4a closing dashboard
 
@@ -804,6 +804,38 @@ Sprint 11a TODO for `ALL_RULE_IDS` constant must include all 16 (not 13 as state
 ---
 
 ## Session log
+
+### 2026-04-21 — Sprint 4b Phase 4b.2: pattern grant + production bonuses
+
+**Scope:** Two engine integrations — replaced the `patternsGained = 0` stub in `handlePrestige` with real `grantPatterns()` logic, and wired GDD §10 `patternFlatBonusPerNode` + `patternCycleBonus` into `calculateProduction`.
+
+**`handlePrestige` changes:**
+- New local helper `grantPatterns(state, timestamp)` returns the N new `PatternNode`s for this prestige — sequential from `totalPatterns`, decision flags set for indices in `patternDecisionNodes`, `acquiredAt=timestamp`.
+- Hard cap at `patternTreeSize = 50` (new constant; GDD §10 "50 nodes").
+- New 4b.2 tests: sequential indexing, post-prestige patterns count as this-cycle, decision-flag accuracy, tree-cap enforcement, no-op when full.
+- Existing PRESERVE-pass-through test updated — `patterns` + `totalPatterns` now in `PRESERVE_UPDATED_BY_HANDLEPRESTIGE` set (handlePrestige legitimately updates them per Sprint 4b scope).
+
+**`calculateProduction` changes:**
+- Pattern flat bonus (`totalPatterns × patternFlatBonusPerNode`) added to `sum` BEFORE upgrade multipliers, so the existing production chain multiplies it too.
+- Pattern cycle bonus (`min(1 + cyclePatterns × 0.04, patternCycleCap)`) multiplies AFTER softCap, same placement as the Insight multiplier — per-cycle condition, not a stack softCap should dampen.
+- New helpers exported: `countCyclePatterns(state)` + `patternCycleBonus(n)`.
+
+**New constant (Update Discipline applied):**
+- `patternTreeSize: 50` — GDD §10 "Pattern Tree (50 nodes + 5 decisions)". Existing `patternDecisionNodes: [6, 15, 24, 36, 48]` already stored; adding the upper bound as a constant completes the spec canon.
+
+**14 new pattern-bonuses tests:**
+- 3 `countCyclePatterns` — zero / threshold-aware filter / post-prestige alignment.
+- 4 `patternCycleBonus` — identity at 0 / linear growth / cap at 1.5 / adversarial huge count.
+- 3 `calculateProduction` flat bonus — zero / scaling / linearity.
+- 4 `calculateProduction` cycle bonus — zero identity / 3 patterns × 1.12 / cap at 1.5 / pre-cycle patterns don't contribute to cycle mult.
+
+**Verification (all gates green):**
+- `npm run typecheck` — 0 errors. `npm run lint` — 0 warnings.
+- `bash scripts/check-invention.sh` — 4/4 PASS, ratio 0.81.
+- `npm test` — **796 passed / 43 skipped / 0 failing** (from 777 → +19 new across pattern-bonuses + prestige grant).
+- `src/engine/prestige.ts` = 199 lines, `src/engine/production.ts` = 184 lines — both within CODE-2 ≤200.
+
+**Next:** Phase 4b.3 — wire the 10 decision-option effects into their consumers.
 
 ### 2026-04-21 — Sprint 4b Phase 4b.1: pattern decision data + canon
 
