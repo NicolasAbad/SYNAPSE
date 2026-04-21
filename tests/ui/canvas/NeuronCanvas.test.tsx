@@ -111,3 +111,35 @@ describe('NeuronCanvas — onPointerDown taps (Phase 3)', () => {
     debugSpy.mockRestore();
   });
 });
+
+// Sprint 3.6 audit follow-up — confirm the TabPanelContainer + activeTab
+// routing never couples to the canvas tap path. Real layout (panel overlays
+// lower 55 %, canvas handles tap on upper 45 %) is CSS and can't be exercised
+// in jsdom; what IS testable here is that the canvas's pointerdown handler
+// still dispatches regardless of the current activeTab. If a future refactor
+// accidentally wires activeTab into the tap path, this test fails.
+describe('NeuronCanvas — tap independence from activeTab (Sprint 3.6 audit)', () => {
+  test('tap still increments thoughts when a management panel is open', () => {
+    useGameStore.getState().reset();
+    // Open the Neurons panel — the bottom-sheet would cover lower 55 % of screen.
+    useGameStore.getState().setActiveTab('neurons');
+    const before = useGameStore.getState().thoughts;
+    const { getByTestId } = render(<NeuronCanvas />);
+    const canvas = getByTestId('neuron-canvas') as HTMLCanvasElement;
+    fireEvent.pointerDown(canvas, { clientX: 200, clientY: 300 });
+    expect(useGameStore.getState().thoughts - before).toBe(SYNAPSE_CONSTANTS.baseTapThoughtMin);
+  });
+
+  test.each(['mind', 'neurons', 'upgrades', 'regions'] as const)(
+    'tap works regardless of activeTab=%s',
+    (tab) => {
+      useGameStore.getState().reset();
+      useGameStore.getState().setActiveTab(tab);
+      const before = useGameStore.getState().thoughts;
+      const { getByTestId } = render(<NeuronCanvas />);
+      const canvas = getByTestId('neuron-canvas') as HTMLCanvasElement;
+      fireEvent.pointerDown(canvas, { clientX: 200, clientY: 300 });
+      expect(useGameStore.getState().thoughts - before).toBe(SYNAPSE_CONSTANTS.baseTapThoughtMin);
+    },
+  );
+});

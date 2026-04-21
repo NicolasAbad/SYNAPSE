@@ -195,7 +195,7 @@ This is NOT an escape hatch. Canonical storage files must:
 
 ## Key constants (quick reference — full list in GDD §constants)
 ```
-tutorialThreshold:      50_000     // P1 tutorial ~7-8 min
+tutorialThreshold:      25_000     // P0 tutorial ~7-9 min target (retuned 50K→25K Sprint 3 Phase 7.4b per tutorial-timing sim)
 tutorialDischargeMult:  3.0        // ×3 first discharge
 costMult:               1.28       // neuron cost scaling
 softCapExponent:        0.72       // softCap(x) = 100 × pow(x/100, 0.72)

@@ -2,7 +2,7 @@
 // Tests for src/ui/hud/ConnectionChip.tsx (Sprint 3 Phase 5, Decision B).
 
 import { afterEach, describe, expect, test } from 'vitest';
-import { cleanup, render } from '@testing-library/react';
+import { act, cleanup, render } from '@testing-library/react';
 import { ConnectionChip } from '../../../src/ui/hud/ConnectionChip';
 import { useGameStore, createDefaultState } from '../../../src/store/gameStore';
 
@@ -64,15 +64,17 @@ describe('ConnectionChip — Decision B visibility gate', () => {
     });
     const { getByTestId, queryByTestId, rerender } = render(<ConnectionChip />);
     expect(getByTestId('hud-connection-chip')).toBeTruthy();
-    useGameStore.setState({
-      neurons: [
-        { type: 'basica', count: 10 },
-        { type: 'sensorial', count: 0 },
-        { type: 'piramidal', count: 0 },
-        { type: 'espejo', count: 0 },
-        { type: 'integradora', count: 0 },
-      ],
-      connectionMult: 1.0,
+    act(() => {
+      useGameStore.setState({
+        neurons: [
+          { type: 'basica', count: 10 },
+          { type: 'sensorial', count: 0 },
+          { type: 'piramidal', count: 0 },
+          { type: 'espejo', count: 0 },
+          { type: 'integradora', count: 0 },
+        ],
+        connectionMult: 1.0,
+      });
     });
     rerender(<ConnectionChip />);
     expect(queryByTestId('hud-connection-chip')).toBeNull();
