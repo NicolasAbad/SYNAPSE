@@ -15,6 +15,7 @@ import { SYNAPSE_CONSTANTS } from '../config/constants';
 import { UPGRADES_BY_ID } from '../config/upgrades';
 import { cascadeThresholdOverride, dischargeDamageDecisionMult } from './patternDecisions';
 import { mutationDischargeMult } from './mutations';
+import { era3DischargeMultOverride } from './era3';
 import type { GameState } from '../types/GameState';
 import type { Polarity } from '../types';
 
@@ -37,9 +38,12 @@ function ownedUpgradeIds(state: Pick<GameState, 'upgrades'>): Set<string> {
   return out;
 }
 
-/** Base Discharge multiplier by prestige + tutorial override. */
+/** Base Discharge multiplier by prestige + tutorial override + §23 P25 override. */
 function baseDischargeMultiplier(state: Pick<GameState, 'prestigeCount' | 'isTutorialCycle' | 'cycleDischargesUsed'>): number {
   const { dischargeMultiplier, dischargeMultiplierP3Plus, tutorialDischargeMult } = SYNAPSE_CONSTANTS;
+  // GDD §23 P25 Final Awakening — Discharge ×5 overrides base.
+  const era3Override = era3DischargeMultOverride(state);
+  if (era3Override !== null) return era3Override;
   // Tutorial override applies to the FIRST Discharge of the first-ever cycle
   // (isTutorialCycle=true && cycleDischargesUsed===0). After that, back to prestige-based base.
   if (state.isTutorialCycle && state.cycleDischargesUsed === 0) return tutorialDischargeMult;

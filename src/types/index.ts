@@ -290,6 +290,18 @@ export interface SpontaneousDef {
   effect: SpontaneousEffect;
 }
 
+// Sprint 6 Phase 6.5 — Era 3 events (P19-P26) per GDD §23 + NARRATIVE.md §7.
+// Each event has narrative copy (intro) and mechanical copy (what changes),
+// both resolved via i18n. Mechanical effects are driven by
+// engine/era3.ts helpers keyed on prestigeCount.
+export interface Era3EventDef {
+  id: string; // e.g. 'era3_p19' — used as narrativeFragmentsSeen key (Memory grant suppressed).
+  prestigeCount: number;
+  nameKey: string;
+  narrativeKey: string;
+  mechanicalKey: string;
+}
+
 export interface MutationActive {
   id: string;
   stackedRandomId?: string;

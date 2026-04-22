@@ -20,6 +20,7 @@ import { tryActivateInsight } from '../engine/insight';
 import { focusFillRateDecisionMult } from '../engine/patternDecisions';
 import { archetypeFocusFillRateMult } from '../engine/archetypes';
 import { spontaneousFocusFillMult } from '../engine/spontaneous';
+import { era3FocusFillBlocked } from '../engine/era3';
 import type { GameState } from '../types/GameState';
 
 function ownedUpgradeIds(state: Pick<GameState, 'upgrades'>): Set<string> {
@@ -52,6 +53,8 @@ export function computeTapThought(state: GameState, antiSpamActive: boolean): nu
  * Mielina's +0.02 is applied here from ownership, keeping the formula order-independent.
  */
 export function computeFocusFillPerTap(state: GameState): number {
+  // GDD §23 P23 Dreamer's Dream — active play doesn't fill Focus.
+  if (era3FocusFillBlocked(state)) return 0;
   const owned = ownedUpgradeIds(state);
   let fill = state.focusFillRate;
   for (const id of owned) {

@@ -19,6 +19,7 @@ import type { Mutation } from '../types';
 import { MUTATIONS, MUTATIONS_BY_ID, MUT3_FIRST_CYCLE_FILTER } from '../config/mutations';
 import { SYNAPSE_CONSTANTS } from '../config/constants';
 import { hash, mulberry32 } from './rng';
+import { era3MutationBonusOptions } from './era3';
 
 /**
  * MUT-2: deterministic seed for the Mutation pool draw.
@@ -61,7 +62,9 @@ export function getMutationOptions(state: GameState, ctx: MutationOptionsContext
   const archetypeBonus = ctx.creativaArchetype ? SYNAPSE_CONSTANTS.creativaMutationBonusOptions : 0;
   const geniusBonus = ctx.geniusPass ? SYNAPSE_CONSTANTS.geniusPassMutationBonusOptions : 0;
   const patternBonus = ctx.patternBonusOptions ?? 0;
-  const targetN = baseN + archetypeBonus + geniusBonus + patternBonus;
+  // GDD §23 P19 First Fracture: Mutations offer +2 options (5 vs 3) this cycle.
+  const era3Bonus = era3MutationBonusOptions(state);
+  const targetN = baseN + archetypeBonus + geniusBonus + patternBonus + era3Bonus;
 
   // Build candidate pool: full pool minus MUT-2 (last) minus MUT-3 (first cycle).
   const isFirstCycle = state.prestigeCount === 0;

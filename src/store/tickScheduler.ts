@@ -30,6 +30,7 @@
 import { useEffect } from 'react';
 import { SYNAPSE_CONSTANTS } from '../config/constants';
 import { tick } from '../engine/tick';
+import { era3AutoPrestigeAt45MinElapsed } from '../engine/era3';
 import { useGameStore } from './gameStore';
 
 export function useTickScheduler(): void {
@@ -43,6 +44,11 @@ export function useTickScheduler(): void {
       // UIState so the tap handler can consume the ×0.10 penalty without
       // recomputing. UI-local — saveScheduler strips it before persistence.
       useGameStore.setState({ ...next, antiSpamActive });
+      // GDD §23 P24 Long Thought — auto-awaken at MIN(threshold, 45 min).
+      // Threshold path is handled by UI AWAKEN button; 45-min path fires here.
+      if (era3AutoPrestigeAt45MinElapsed(next, now)) {
+        useGameStore.getState().prestige(now, true);
+      }
     }, SYNAPSE_CONSTANTS.tickIntervalMs);
 
     return () => window.clearInterval(intervalId);

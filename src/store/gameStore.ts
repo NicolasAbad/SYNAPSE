@@ -21,7 +21,7 @@ import { applyTap } from './tap';
 import { performDischarge, type DischargeOutcome } from '../engine/discharge';
 import { handlePrestige, type PrestigeOutcome } from '../engine/prestige';
 import { applyPermanentPatternDecisionsToState } from '../engine/patternDecisions';
-import { dispatchNarrative } from '../engine/narrative';
+import { dispatchNarrative, applyFragmentRead } from '../engine/narrative';
 import { MUTATIONS_BY_ID } from '../config/mutations';
 
 /**
@@ -287,8 +287,10 @@ export interface GameStoreActions {
    * preserves action references (CLAUDE.md Zustand pitfall). Gated on
    * `cycleGenerated >= currentThreshold` — returns { fired: false } if
    * the player hasn't met the threshold yet (UI belt-and-suspenders).
+   * Sprint 6 Phase 6.5: `force=true` bypasses the threshold gate for GDD
+   * §23 P24 Long Thought 45-min auto-awaken.
    */
-  prestige: (nowTimestamp: number) => { fired: boolean; outcome: PrestigeOutcome | null };
+  prestige: (nowTimestamp: number, force?: boolean) => { fired: boolean; outcome: PrestigeOutcome | null };
   /**
    * Sprint 4b Phase 4b.4: PAT-3 reset per GDD §10. Consumes 1000 Resonance,
    * clears `patternDecisions`, and reverses the Node 6 B dischargeMaxCharges
@@ -335,6 +337,13 @@ export interface GameStoreActions {
    * Pre-P5 also returns fired=false.
    */
   setArchetype: (archetype: Archetype) => { fired: boolean };
+  /**
+   * Sprint 6 Phase 6.5: mark a narrative fragment / Era 3 event as read.
+   * Appends id to `narrativeFragmentsSeen`. Grants +1 Memory on first read
+   * for narrative fragments (NARR-8); era3_* ids are system events and do
+   * NOT grant. Idempotent — re-reads are no-ops.
+   */
+  readFragment: (id: string) => void;
 }
 
 export const useGameStore = create<GameState & UIState & GameStoreActions>((set, get) => ({
@@ -411,9 +420,9 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
     set({ ...updates, ...narrative });
     return outcome;
   },
-  prestige: (nowTimestamp) => {
+  prestige: (nowTimestamp, force = false) => {
     const state = get();
-    if (state.cycleGenerated < state.currentThreshold) {
+    if (!force && state.cycleGenerated < state.currentThreshold) {
       return { fired: false, outcome: null };
     }
     const { state: nextState, outcome } = handlePrestige(state, nowTimestamp);
@@ -504,5 +513,10 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
     const narrative = dispatchNarrative(mid, { kind: 'archetype_chosen' });
     set({ ...pending, ...narrative });
     return { fired: true };
+  },
+  readFragment: (id) => {
+    const state = get();
+    const updates = applyFragmentRead(state, id);
+    if (Object.keys(updates).length > 0) set(updates);
   },
 }));

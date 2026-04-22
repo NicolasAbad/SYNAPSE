@@ -347,6 +347,53 @@ export const en = {
     confirm_warning: 'This choice cannot be changed until Transcendence.',
     cancel: 'Back',
   },
+  // Sprint 6 Phase 6.5 — 8 Era 3 events (GDD §23 + NARRATIVE.md §7). Narrative
+  // intro + mechanical explanation copy, surfaced in Era3EventModal at cycle
+  // start for prestiges 19-26.
+  era3: {
+    modal_title: 'An Era 3 moment',
+    continue: 'Continue',
+    p19: {
+      name: 'The First Fracture',
+      narrative: 'The mind questions itself for the first time.',
+      mechanical: 'Mutations offer 5 options this cycle (vs 3).',
+    },
+    p20: {
+      name: 'Threshold Doubt',
+      narrative: '7 awakenings remain. The end becomes visible.',
+      mechanical: 'A countdown appears below the consciousness bar.',
+    },
+    p21: {
+      name: 'The Mirror Cycle',
+      narrative: 'The mind sees itself clearly — for better or worse.',
+      mechanical: "Your chosen Polarity's strength is doubled.",
+    },
+    p22: {
+      name: 'Silent Resonance',
+      narrative: 'In quieting the noise, understanding grows.',
+      mechanical: 'Resonance gain ×3 this cycle; production −20%.',
+    },
+    p23: {
+      name: "The Dreamer's Dream",
+      narrative: 'The mind sleeps even while awake.',
+      mechanical: "Offline ×3 this cycle; active play doesn't fill Focus.",
+    },
+    p24: {
+      name: 'The Long Thought',
+      narrative: 'Time itself becomes a cycle.',
+      mechanical: 'Auto-awakens at the threshold or 45 minutes — whichever comes first.',
+    },
+    p25: {
+      name: 'The Final Awakening',
+      narrative: 'The final awakening approaches.',
+      mechanical: 'All neurons cost half. Discharge yields ×5.',
+    },
+    p26: {
+      name: 'The Last Choice',
+      narrative: 'Take your time. There is no rush.',
+      mechanical: 'Reach the threshold to face the ending.',
+    },
+  },
   // Sprint 6 Phase 6.4 — 12 Spontaneous events (GDD §8). Internal snake_case
   // Spanish ids; display names translated pre-code per CLAUDE.md discipline.
   spontaneous: {

@@ -20,6 +20,7 @@ import { SYNAPSE_CONSTANTS } from '../config/constants';
 import { computeConnectionMult } from '../engine/production';
 import { mutationNeuronCostMod, mutationUpgradeCostMod } from '../engine/mutations';
 import { pathwayCostMod } from '../engine/pathways';
+import { era3NeuronCostMult } from '../engine/era3';
 import type { GameState } from '../types/GameState';
 import type { NeuronState, NeuronType } from '../types';
 
@@ -88,7 +89,8 @@ export function canBuyNeuron(state: GameState, type: NeuronType): { reason: BuyR
   // COST-1: base × mutationNeuronCostMod × pathwayCostMod. Wired Sprint 5
   // Phase 5.2 (mutation) + Phase 5.3 (pathway, 1.0 in v1.0). FE doesn't
   // apply to neurons.
-  const cost = neuronBuyCost(type, countOf(state.neurons, type)) * mutationNeuronCostMod(state) * pathwayCostMod(state);
+  // COST-1 + §23 P25 Final Awakening (neurons ×0.5 at P25).
+  const cost = neuronBuyCost(type, countOf(state.neurons, type)) * mutationNeuronCostMod(state) * pathwayCostMod(state) * era3NeuronCostMult(state);
   if (state.thoughts < cost) return { reason: 'insufficient_funds', cost };
   return { reason: 'ok', cost };
 }

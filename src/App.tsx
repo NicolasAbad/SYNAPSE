@@ -8,6 +8,7 @@ import { SplashScreen } from './ui/modals/SplashScreen';
 import { GdprModal, isEU } from './ui/modals/GdprModal';
 import { TutorialHints } from './ui/modals/TutorialHints';
 import { FragmentOverlay } from './ui/modals/FragmentOverlay';
+import { Era3EventModal } from './ui/modals/Era3EventModal';
 import { EchoLayer } from './ui/canvas/EchoLayer';
 
 export function App() {
@@ -54,6 +55,7 @@ export function App() {
       <TutorialHints />
       <EchoLayer />
       <FragmentOverlay />
+      <Era3EventModal />
       {!splashDone && <SplashScreen onComplete={() => setSplashDone(true)} />}
       {splashDone && isEU && !gdprDone && <GdprModal onComplete={() => setGdprDone(true)} />}
     </main>
