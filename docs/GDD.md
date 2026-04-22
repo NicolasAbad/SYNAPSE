@@ -89,25 +89,34 @@ Loop 1 feeds Loop 2 (thoughts accumulate). Loop 2 feeds Loop 3 (patterns accumul
 
 # 3. Economy — 3 currencies
 
-Clean role separation — no currency overlap. Each currency has one purpose.
+Clean role separation — no currency overlap. Each currency has one purpose. Sprint 6.8 re-architecture added **Memory Shards** as a sub-currency of Memorias (3 types), preserving the "3 primary currencies" mental model while adding passive drip progression. See §16.1 Hipocampo.
 
 | Currency | Role | Resets on prestige | Resets on Transcendence | Earned from |
 |---|---|---|---|---|
-| **Pensamientos (Thoughts)** | Cycle currency — buy neurons, upgrades | ✓ Yes | ✓ Yes | Production (passive + tap) |
-| **Memorias (Memories)** | Meta currency — buy region upgrades, pattern synthesis | ✗ No | ✓ Yes | Prestiges, fragments, achievements, events |
-| **Chispas (Sparks)** | Premium currency — daily login, challenges, monetization | ✗ No | ✗ No | Daily login, achievements, weekly challenges, IAP |
+| **Pensamientos (Thoughts)** | Cycle currency — buy neurons, Thoughts-priced upgrades | ✓ Yes | ✓ Yes | Production (passive + tap) |
+| **Memorias (Memories)** | Meta currency — buy Memoria-priced upgrades, Pre-commitment wagers, Memoria-upgrades | ✗ No | ✓ Yes | Prestiges, fragments, achievements, events, Shard conversion |
+| **Chispas (Sparks)** | Premium currency — daily login, challenges, achievements, monetization | ✗ No | ✗ No | Daily login, achievements, weekly challenges, Resonant Patterns, IAP |
+| **Shards** (sub-Memorias) | Hipocampo currency — passive drip per active play, buy Shard upgrades | ✗ No | ✗ No (lifetime) | Cycle-time drip per type: Emotional (events), Procedural (taps/purchases), Episodic (prestiges/RPs) |
 
-**Memory generation table (validated by simulation):**
+**Shards to Memoria conversion:** Integrated Mind unlock "Memory Weave" converts 100 shards (any type mix) → 1 Memoria. See §16.6.
+
+**Memory generation table (Sprint 6.8 updated — `consolidacion_memoria` retired per §16.8):**
 
 | Source | Memories | Frequency |
 |---|---|---|
 | Prestige (base) | +2 | Every prestige |
-| Prestige (with "Consolidación de Memoria" upgrade) | +1 more | Every prestige |
-| Fragment read | +1 | 57 base + 15 per archetype (first time only) |
-| Hipocampo unlock | +3 | Once |
+| Fragment read | +1 | 79 v1.0 (12 base + 15 per archetype + 5 region unlocks + 3 cross-Run + 5 mood-tier beats + 5 dreams + 1 integrated-mind) |
+| Hipocampo unlock | +3 | Once (preserved as REG-3) |
 | Resonant Pattern discovered | +5 Sparks (not Memories) | 4 times lifetime |
-| Lucid Dream Option B | +2 (or +3 with Regulación Emocional) | P10+, 33% chance |
+| Lucid Dream Option B | +2 (or +3 with high-mood Empática) | P10+, 33%/100% by archetype |
 | Spontaneous "Memoria Fugaz" | +1 | Max 1 per cycle |
+| Pre-commit success | 2× cycle Memory reward | Per cycle (§16.2) |
+| Pre-commit failure | 0.85× cycle Memory reward | Per cycle |
+| Pre-commit streak (5+ consecutive) | +1 permanent Memoria/cycle | Lifetime while streak held |
+| Shard conversion (Memory Weave) | +1 per 100 Shards | Any time shards ≥ 100 |
+| Integrated Mind 4-region tier | +10% Memoria gain globally | Per cycle while tier held |
+| Shard upgrade `shard_emo_resonance` | +2 Memory on fragment read (base +1) | Per new fragment |
+| Shard upgrade `shard_epi_imprint` | +1 Memory per prestige | Per prestige |
 
 ---
 
@@ -211,10 +220,13 @@ rawMult = connectionMult × upgradeMult × archetypeMod × regionMult × mutatio
 finalMult = softCap(rawMult)
 
 // Effective production includes temporary modifiers (used for tick, tap, UI display)
+// Sprint 6.8 re-architecture: Mood layer added post-softCap (stacks multiplicatively
+// with Mental States). Mood ranges 0.90 (Numb) → 1.30 (Euphoric). See §16.3.
 effectiveProductionPerSecond = 
   baseProductionPerSecond 
   × insightMult 
   × mentalStateMod 
+  × moodTierMod           // NEW Sprint 6.8: Mood tier multiplier (Numb 0.90 → Euphoric 1.30)
   × spontaneousEventMod 
   × mutationTemporalMod  // Crescendo, Sprint, etc.
 
@@ -449,25 +461,28 @@ Verified values: `calculateThreshold(0, 0) === 800_000` (P0→P1 Run 1), `calcul
 - Avg cycle time: 24-35 minutes
 - Feeling: "I'm approaching the ending"
 
-**Era milestones table:**
+**Era milestones table (Sprint 6.8 re-architecture — onboarding re-paced, Region sub-systems staggered):**
 
 | Prestige | Feature unlocked | UI change |
 |---|---|---|
-| P0 | Start | Canvas with Básicas only |
-| P1 | Patterns + Regions + Daily missions | Mind tab available |
+| P0 | Start + Visual Foresight T1 | Canvas with Básicas only; What-if 3 cycles ahead |
+| P1 | Patterns + Hipocampo region (Shards begin) | Mind tab, Regions tab (1 of 5 active — Hipocampo glows on brain canvas) |
 | P3 | Polarity | CycleSetupScreen shows 1 column |
 | P4 | Focus level 2 (Profundo) | Focus bar extends visually |
-| P5 | Archetypes | Archetype choice modal (permanent for Run) |
+| P5 | Prefrontal + Límbico regions + Pre-commit unlocked + Visual T2 + Mood icon in HUD | CycleSetupScreen shows 2 columns (+ Pre-commit slot) |
 | P6 | Meta upgrades | New upgrade category |
-| P7 | Mutations | CycleSetupScreen shows 2 columns |
-| P10 | Neural Pathways, Era 2, Lucid Dreams | CycleSetupScreen shows 3 columns, canvas evolves |
-| P13 | Resonance (currency) | New tab UI element for Resonance |
-| P14 | Área de Broca region | Region panel shows 5 regions |
-| P15 | Micro-challenges unlocked | Challenge banners appear at 30% threshold |
-| P17 | Personal Best tracking visible | Best times shown in Awakening screen + Neural Diary |
-| P19 | Era 3 begins | Canvas evolves to cosmic |
+| P7 | Mutations **+ Archetypes** (migrated from P5 Sprint 6.8 — informed choice) | CycleSetupScreen shows 3 columns; Archetype choice modal |
+| P10 | Neural Pathways, Era 2, Lucid Dreams, Auto-buy neurons (v1.1 pulled) | CycleSetupScreen shows 4 columns (Polarity/Mutation/Pathway/Pre-commit); canvas evolves |
+| P12 | Visual Foresight T3 (Spontaneous 20s countdown) | Spontaneous badge previews |
+| P13 | Resonance currency + Sintesis Cognitiva + Mastery begins visible | New Mind sub-tab for Resonance, Mastery tree |
+| P14 | Área de Broca region + Inner Voice fully active | Region panel shows all 5 regions on brain canvas |
+| P15 | Micro-challenges unlocked, Mini-map (v1.1 pulled) | Challenge banners at 30% threshold, mini-map overlay bottom-left |
+| P17 | Personal Best tracking visible | Best times in Awakening screen + Neural Diary |
+| P19 | Era 3 begins + Visual Foresight T4 (Era 3 preview 1-cycle-ahead) | Canvas cosmic, next-event preview |
 | P20 | Endgame countdown | Countdown below consciousness bar |
 | P26 | Transcendence unlocked | Ending screen appears |
+
+**Region unlock cadence (Sprint 6.8):** Regions are no longer all-at-P1. Hipocampo first (P1), then Prefrontal + Límbico (P5), then Visual tier upgrades (T2 P5 / T3 P12 / T4 P19), then Broca (P14). This respects **progressive disclosure** (see §37 Onboarding) — players meet one new region every ~hour of play, not all at once.
 
 ---
 
@@ -508,11 +523,15 @@ Each cycle (post-prestige), the player picks a Polarity. Permanent for this cycl
 
 ---
 
-# 12. Archetypes — 3 types (P5+)
+# 12. Archetypes — 3 types (P7+)
 
-Permanent for the ENTIRE Run (cannot change until Transcendence). Unlocks 15 archetype-exclusive narrative fragments. Fragment count math: 12 universal fragments + 15 per archetype = 57 when a Run sees all three.
+**Sprint 6.8 re-architecture:** Archetype choice migrated from P5 → P7. Rationale: at P5 the player has ~45 min of play and hasn't seen Mutations yet — too early for a Run-defining irreversible choice. At P7 the player has seen Polarity (P3) and is simultaneously choosing their first Mutation — they now understand the SHAPE of cycle choices and can pick an Archetype that matches their emerging preference. Implementation: Sprint 7.6 migrates the unlock gate; existing P5 state remains valid (legacy saves auto-play the Archetype Choice modal at the P7 cycle start).
 
-**Note on values:** the bonuses below are **design starting points validated by simulation**. Balance may shift during Sprint 4c-6 playtest and the Sprint 8b TEST-5 run. Update this doc FIRST, code second.
+Permanent for the ENTIRE Run (cannot change until Transcendence). Unlocks 15 archetype-exclusive narrative fragments. Fragment count math: 12 universal fragments + 15 per archetype + 5 region-unlock + 3 cross-Run memory + 5 mood-tier beats + 5 Oneiric dreams + 1 integrated-mind = **79 total** when a Run sees all three archetypes' content.
+
+**Note on values:** the bonuses below are **design starting points validated by simulation**. Balance shifts during Sprint 8c TEST-5 1000-run simulation (now critical after Sprint 6.8 added Mood + Shards + Pre-commits + Mastery). Update this doc FIRST, code second.
+
+**Empática offline path update (Sprint 6.8, per §16.8 + §19):** With `regulacion_emocional` retired, Empática's offline ceiling is preserved via two paths: (a) new `ondas_theta` upgrade replaces Reg. Emocional in the offline stack (§24), and (b) Mood now applies to offline calc — Euphoric mood ×1.30 extends Empática's offline production further than v1.0 original design. Sprint 8c TEST-5 validates the final ratio stays ≤ 2.0 OFFLINE-4 cap.
 
 ### Analítica (Analytical) — the speed-focused mind
 
@@ -593,7 +612,7 @@ Each cycle (from P7+), 3 cards drawn from pool of 15 (4 if Creativa). Player pic
 
 **MUT-1:** Each Mutation has `affectsOffline: boolean`. If true, offline uses AVERAGE production (Crescendo) not peak.
 
-**MUT-2:** Mutation seed = `hash(cycleStartTimestamp + prestigeCount)`. Filter `lastMutationId` from options (no repeat).
+**MUT-2 (Sprint 6.8 refactor):** Mutation seed computed at **prestige-END** (was prestige-START), enabling Visual Foresight T2 preview: the NEXT cycle's mutation pool is known the moment the CURRENT cycle prestiges. Formula: `hash(currentCycleEndTimestamp + prestigeCount + 1)`. Filter `lastMutationId` from options (no repeat). This refactor is BACKWARDS COMPATIBLE — determinism preserved; only the compute moment shifts one step earlier in the game loop.
 
 **MUT-3 (INT-6 fix):** First cycle of any Run (`prestigeCount === 0`): filter out Déjà Vu, Neuroplasticidad, and any Mutation that references "previous cycle" state. Prevents Transcendence-break edge case.
 
@@ -665,7 +684,7 @@ function resonanceGainOnPrestige(cycleMetrics: CycleMetrics): number {
 
 Typical cycle: 5-10 Resonance. Perfect cycle: ~18. Max/run: ~260.
 
-**Resonance upgrade pool (8 permanent upgrades, 3 tiers):**
+**Resonance upgrade pool (13 permanent upgrades, 3 tiers) — Sprint 6.8 pulled 5 from v1.5 POSTLAUNCH:**
 
 ### Tier 1 (unlocked P13)
 
@@ -674,6 +693,8 @@ Typical cycle: 5-10 Resonance. Perfect cycle: ~18. Max/run: ~260.
 | `eco_neural` | Eco Neural | 50 | All production +5% per Resonance upgrade owned |
 | `patron_estable` | Patrón Estable | 50 | Pattern cycle cap 1.5 → 1.8 |
 | `cascada_eterna` | Cascada Eterna | 80 | `cascadeMult` base 2.5 → 3.0 (Cascada Profunda then doubles: 3.0→6.0) |
+| `deep_listening` *(v1.5 pulled)* | Deep Listening | 120 | Inner Voice engine: Oneiric dream frequency doubled; cross-Run memory fragments grant +1 extra Memoria |
+| `cosmic_voice` *(v1.5 pulled)* | Cosmic Voice | 100 | Fragments glow permanently in Diary; rereading any fragment grants +1 Memoria (vs 0 normally — NARR-8 amendment) |
 
 ### Tier 2 (unlocked P18, requires ≥1 Tier 1)
 
@@ -682,6 +703,8 @@ Typical cycle: 5-10 Resonance. Perfect cycle: ~18. Max/run: ~260.
 | `mente_despierta` | Mente Despierta | 150 | `focusFillRate` ×1.25 permanent |
 | `memoria_longeva` | Memoria Longeva | 150 | Memory cap 3 unspent carryover between cycles |
 | `eureka_frecuente` | Eureka Frecuente | 200 | Spontaneous event frequency ×1.3 |
+| `time_dilation` *(v1.5 pulled)* | Time Dilation | 250 | Offline cap +4h permanent (stacks with Consciencia Distribuida + Sueño Profundo → 20h lifetime max) |
+| `meta_consciousness` *(v1.5 pulled)* | Meta Consciousness | 300 | Patterns earned ×1.5 per prestige (stacks with Node 48 region mult) |
 
 ### Tier 3 (unlocked P23, requires ≥2 Tier 2)
 
@@ -689,6 +712,9 @@ Typical cycle: 5-10 Resonance. Perfect cycle: ~18. Max/run: ~260.
 |---|---|---|---|
 | `resonancia_profunda` | Resonancia Profunda | 400 | Resonance earn rate ×1.5 |
 | `consciencia_eterna` | Consciencia Eterna | 500 | Unlocks Modo Ascensión early post-Transcendence (otherwise requires completing 4 endings) |
+| `eternal_witness` *(v1.5 pulled, scope reduced)* | Eternal Witness | 600 | Unlocks "Dual Archetype" — select a SECONDARY archetype in CycleSetupScreen at 50% bonus strength (Run-specific, no permanent stack) |
+
+**Note on v1.5 pulls:** These 5 Resonance upgrades were originally planned for v1.5 POSTLAUNCH ("Resonance tree expansion (+5 upgrades)"). Sprint 6.8 pulls them into v1.0 to give the endgame Resonance sink a meaningful depth — 8 upgrades felt thin for a 3-Run completion arc. v1.5 still adds the Observer archetype + Cerebelo region but no longer expands Resonance separately (it's now baked into v1.0 ceiling).
 
 **RESON-1:** Resonance upgrades survive Transcendence (persistent). `resonanceUpgrades: string[]`.
 
@@ -1027,6 +1053,16 @@ Active state modifies production and shows a chip in the HUD.
 
 **MENTAL-6 (INT-7 fix — Eureka naming):** Mental State "Eureka Rush" displays in UI as **"Flujo Eureka"** to differentiate from the Spontaneous Event "Eureka" (which is a free-upgrade pickup). When both active simultaneously, HUD shows BOTH indicators stacked (not just highest priority).
 
+**MENTAL-7 (Sprint 6.8 — Mental States vs Mood clarification):** Mental States are SHORT-TERM state (seconds-to-minutes, tick-level triggers, reset on prestige implicitly via timestamp buffers). Mood (§16.3) is LONG-TERM state (hours-days, event-cumulative, persists across prestige, resets on Transcendence). They are **complementary, not competing** — both apply in `effectiveProductionPerSecond` and stack multiplicatively:
+
+```ts
+effectiveMult = insightMult × mentalStateMod × moodTierMod × spontaneousMod × mutationTemporalMod
+```
+
+Worst-case compound (Euphoric mood × Flow mental × Insight Trasc × Spontaneous Ráfaga × Crescendo late) = 1.30 × 1.20 × 18.0 × 2.0 × 3.0 = 168×. This is intentional — a perfect burst window is the speedrunner's payoff. SoftCap (`rawMult` layer) does NOT cap `effectiveMult`.
+
+**MENTAL-8 (Sprint 6.8 — Dormancy + Mood tier interaction):** When Mood ≥ 60 (Elevated/Euphoric) and Dormancy triggers, the Dormancy passive prod bonus becomes +30% (vs base +15%). Narrative framing: "the mind rests better when happy." Minor balance effect.
+
 ---
 
 # 18. Micro-challenges — 8 pool
@@ -1051,6 +1087,8 @@ Optional mid-cycle challenges. Unlock at P15 (Era 2 mid-game). Appear when `cycl
 **MICRO-3:** Fail state: timer runs out → banner fades, no reward, no penalty (challenges are optional upside only).
 
 **MICRO-4:** Challenge selection: deterministic from `hash(cycleStartTimestamp + cycleMicroChallengesAttempted)`.
+
+**MICRO-5 (Sprint 6.8 — Pre-commit interaction):** Micro-challenges and Pre-commits (§16.2) operate at different time scales: Micro = mid-cycle pop-ups (2 min windows), Pre-commit = full-cycle wagers. A completed Micro-challenge MAY incidentally satisfy a Pre-commit goal (e.g., completing `neuron_collector` helps toward Pre-commit `pc_20_neurons`). When this happens, the player gets BOTH rewards — no double-counting penalty. Analytics event `micro_challenge_completed` fires independently of `precommit_fulfilled`.
 
 ---
 
@@ -1085,12 +1123,14 @@ function applyOfflineProgress(state: GameState, now: number): GameState {
   
   let efficiency = state.currentOfflineEfficiency;  // starts at 0.50 base
   
-  // Apply upgrade stack (multiplicative)
+  // Apply upgrade stack (multiplicative) — Sprint 6.8: regulacion_emocional retired,
+  // replaced by ondas_theta; Mood tier now contributes via getEffectiveMoodMult().
   if (hasUpgrade(state, 'ritmo_circadiano')) efficiency *= 1.5;
-  if (hasUpgrade(state, 'regulacion_emocional')) efficiency *= 2.0;
-  if (state.archetype === 'empatica') efficiency *= 2.5;  // null until P5; check is safe
+  if (hasUpgrade(state, 'ondas_theta')) efficiency *= 2.0;  // NEW §24 replacing regulacion_emocional
+  if (state.archetype === 'empatica') efficiency *= 2.5;  // null until P7 (Sprint 6.8 migration); check is safe
   if (state.isSubscribed) efficiency *= 1.25;  // Genius Pass +25%
   if (patternDecisions[15] === 'A') efficiency *= 1.15;  // Decision 2A
+  efficiency *= getEffectiveMoodMult(state);  // NEW Sprint 6.8: 0.90-1.30 based on Mood tier, AVG during offline window
   
   // Final ratio cap (OFFLINE-4, fixes EXPLOIT-03)
   efficiency = Math.min(efficiency, state.currentOfflineEfficiency * (2.0 / 0.5));  
@@ -1120,12 +1160,14 @@ function applyOfflineProgress(state: GameState, now: number): GameState {
 | Base (P0) | 4h | 50% | 7.2M (in 4h only — cap) |
 | + Sueño REM | 8h | 50% | 14.4M |
 | + Ritmo Circadiano | 8h | 75% | 21.6M |
-| + Regulación Emocional | 8h | 100% | 28.8M |
+| + Ondas Theta *(Sprint 6.8 — replaces Reg. Emocional)* | 8h | 100% | 28.8M |
 | + Consciencia Distribuida (P10+) | 12h | 100% | 43.2M |
 | + Decision 2A | 12h | 115% | 49.7M |
 | + Genius Pass | 12h | 143.75% | 62.1M |
-| Empática (full stack) | 12h | **200% (capped)** | 86.4M |
+| + Euphoric Mood (×1.30, Sprint 6.8) | 12h | 186.8% | 80.7M |
+| Empática (full stack + Euphoric) | 12h | **200% (capped)** | 86.4M |
 | + Sueño Profundo (Run 2+) | 16h | **200% (capped)** | 115.2M |
+| + Time Dilation Resonance (pulled v1.5, §15) | 20h | **200% (capped)** | 144.0M |
 
 **Sleep screen (return UI):**
 - 4-second animation: brain "dreaming" — neurons pulse softly, accumulated thoughts fall as golden particles
@@ -1147,6 +1189,9 @@ function applyOfflineProgress(state: GameState, now: number): GameState {
 - **OFFLINE-5:** Time anomaly: `now < lastActiveTimestamp` → ignore offline, reset timestamp. `elapsed > cap × 2` → cap hard, log event.
 - **OFFLINE-6:** `baseOfflineCapHours = 4`. Sueño REM upgrade → 8h. Consciencia Distribuida (P10+) → 12h. Sueño Profundo (Run 2+) → 16h. `maxOfflineHours = 16` (achievable cap). Player never loses a night of sleep once Sueño REM is purchased (achievable in first cycle at 50K thoughts).
 - **OFFLINE-7 (BUG-03 fix):** If offline fills the cycle to 100%, and `nextDischargeBonus > 0` (from "Resonancia Acumulada" upgrade), show on Sleep screen: "Your mind awakened. You have 1 enhanced Discharge before Awakening — use it?" Option to use or skip.
+- **OFFLINE-8 (Sprint 6.8 — Mood during offline):** Mood decays toward Calm (50) at 2/hour while offline (1/hour for Empática archetype; never below 40 for Genius Pass subscribers). The `moodTierMod` used in the offline efficiency stack is the AVERAGE mood across the offline window (computed from `moodHistory` 30min samples), NOT the current mood — prevents ramp-farming by checking in for 1 minute to spike Mood before going offline.
+- **OFFLINE-9 (Sprint 6.8 — Shard drip):** Offline contributes Procedural shards (§16.1) at 50% rate. Emotional and Episodic shards do NOT drip offline (they require active play triggers).
+- **OFFLINE-10 (Sprint 6.8 — Returning-player greeting):** On return after ≥30 min offline, a Broca Inner Voice greeting (§16.5 + §39) prepends the Sleep screen with mood-gated prose — "Your mind welcomes you back, still alight" (Euphoric) / "Your mind was quiet. It missed you" (Calm) / "Your mind has been waiting" (Numb).
 
 ---
 
@@ -1206,6 +1251,20 @@ function handleTranscendence(state: GameState, endingChosen: EndingID): GameStat
 **TRANS-3:** Run 2 threshold multiplier ×3.5. Run 3: ×6.0. See `RUN_THRESHOLD_MULT` constant.
 
 **TRANS-4:** Archetype choice is Run-specific. `archetypeHistory` records past archetypes used.
+
+**TRANS-5 (Sprint 6.8 — new field PRESERVE/RESET rules for Region re-architecture):**
+
+| Field (Sprint 6.8 new) | PRESTIGE | TRANSCENDENCE | Rationale |
+|---|---|---|---|
+| `memoryShards` (3-type object) | PRESERVE | **PRESERVE** | Lifetime neurobiological accumulation; never reset |
+| `memoryShardUpgrades` | PRESERVE | **PRESERVE** | Purchases are permanent; lifetime investment |
+| `activePrecommitment` | RESET (null) | RESET (null) | Cycle-scoped; cannot span cycles |
+| `precommitmentStreak` | PRESERVE | RESET (0) | Tracks streaks within a Run; fresh on Transcendence |
+| `mood` | PRESERVE | RESET (50) | Mood persists across prestige (plans across cycles); fresh Run = fresh emotional slate |
+| `moodHistory` | PRESERVE | RESET (empty) | 24h chart only relevant within a Run |
+| `brocaNamedMoments` | PRESERVE | **PRESERVE** | Identity persists across Runs — player's voice echoes |
+| `mastery` (Record<id, uses>) | PRESERVE | **PRESERVE** | Lifetime use tracking; core of §38 Mastery system |
+| `autoBuyConfig` | PRESERVE | PRESERVE | QoL preference; player's auto-buy toggles don't reset |
 
 ---
 
