@@ -192,7 +192,7 @@ describe('handlePrestige — lastCycleConfig snapshot for POLAR-1 / SAME AS LAST
   test('writes polarity from currentPolarity into lastCycleConfig before RESET', () => {
     const before: GameState = { ...createDefaultState(), currentPolarity: 'excitatory' };
     const { state: next } = handlePrestige(before, 1_000_000);
-    expect(next.lastCycleConfig).toEqual({ polarity: 'excitatory', mutation: '', pathway: '' });
+    expect(next.lastCycleConfig).toEqual({ polarity: 'excitatory', mutation: '', pathway: '', upgrades: [] });
   });
 
   test('snapshots inhibitory too', () => {
@@ -209,7 +209,7 @@ describe('handlePrestige — lastCycleConfig snapshot for POLAR-1 / SAME AS LAST
       currentPathway: null,
     };
     const { state: next } = handlePrestige(before, 1_000_000);
-    expect(next.lastCycleConfig).toEqual({ polarity: '', mutation: '', pathway: '' });
+    expect(next.lastCycleConfig).toEqual({ polarity: '', mutation: '', pathway: '', upgrades: [] });
   });
 
   test('currentPolarity itself RESETs to null (cycle-scoped) — only lastCycleConfig preserves the choice', () => {

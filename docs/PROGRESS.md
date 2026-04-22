@@ -26,6 +26,57 @@
 - **Hand-verification deferred to Nico**: Focus Persistente unlocks at P12+ — long enough that a from-scratch playtest is impractical. Recommended: in dev console, set `prestigeCount=12` + buy Focus Persistente + tap to fill Focus to 1.0 + prestige + observe focusBar=0.25 in HUD.
 - **Buffer 1 absorbed**: per SPRINTS.md "If 4a-4c finished cleanly and these 2 days aren't needed, they absorb into Sprint 9a-9b platform delay contingency." Buffer 1 shipped today (~1 hour automation work; 1.9 days remain absorbed into Sprint 9 contingency).
 
+### Sprint 5 — approved decisions (locked 2026-04-21, BEFORE code)
+
+Per CLAUDE.md anti-invention rules + translation discipline, all Sprint 5 names + new numeric values approved by Nico in pre-code research before any code written. These are CANONICAL — code must match exactly.
+
+**15 Mutation translations (GDD §13)**:
+| # | Spanish | English |
+|---|---|---|
+| 1 | Eficiencia Neural | Neural Efficiency |
+| 2 | Hiperestimulación | Hyperstimulation |
+| 3 | Descarga Rápida | Rapid Discharge |
+| 4 | Disparo Concentrado | Focused Discharge |
+| 5 | Neuroplasticidad | Neuroplasticity |
+| 6 | Especialización | Specialization |
+| 7 | Focus Acelerado | Accelerated Focus |
+| 8 | Meditación | Meditation |
+| 9 | Región Dominante | Dominant Region |
+| 10 | Memoria Frágil | Fragile Memory |
+| 11 | Sprint | Sprint |
+| 12 | Crescendo | Crescendo |
+| 13 | Sinestesia | Synesthesia |
+| 14 | Déjà Vu | Déjà Vu |
+| 15 | Mente Dividida | Divided Mind |
+
+**5 Region translations (GDD §16)**: Hipocampo→Hippocampus, Corteza Prefrontal→Prefrontal Cortex, Sistema Límbico→Limbic System, Corteza Visual→Visual Cortex, Área de Broca→Broca's Area.
+
+**5 Region upgrade translations (GDD §16)**: Consolidación de Memoria→Memory Consolidation, Regulación Emocional→Emotional Regulation, Procesamiento Visual→Visual Processing, Funciones Ejecutivas→Executive Functions, Amplitud de Banda→Bandwidth.
+
+**3 Pathway display names (GDD §14 already provides English in parens)**: rapida→Swift, profunda→Deep, equilibrada→Balanced. (Internal TS union strings stay Spanish per CLAUDE.md.)
+
+**9 Mutation category labels**: produccion→Production, disparo→Discharge, upgrade→Upgrade, restriccion→Restriction, focus→Focus, regions→Regions, memorias→Memories, temporal→Temporal, especial→Special.
+
+**Constants alignment (already in constants.ts, names locked from earlier sprints)**:
+- `mutationPoolSize: 15` (already present line 114)
+- `mutationOptionsPerCycle: 3` (already present line 115 — supersedes my proposed `mutationOptionsBaseCount`)
+- `regionsUnlockPct: 0.01` (already present line 125 — supersedes my proposed `regionUnlockProgressRatio`)
+
+**6 new constants Sprint 5 will add (cite GDD)**:
+- `creativaMutationBonusOptions: 1` (GDD §13: "+1 if Creativa")
+- `geniusPassMutationBonusOptions: 1` (GDD §13: "+1 with Genius Pass")
+- `pathwayEquilibradaBonusMult: 0.85` (GDD §14: "all upgrade bonuses ×0.85")
+- `hipocampoUnlockMemoriasBonus: 3` (GDD §16 REG-1: "+3 Memories awarded once")
+- `brocaPassiveMemoryPerCycle: 1` (GDD §16: "+1 passive Memory at end of each cycle")
+- `brocaNameMaxChars: 20` (GDD §16: "max 20 chars, profanity-filtered")
+
+**lastCycleConfig schema extension**: adds `upgrades: string[]` field to support Déjà Vu Mutation (#14). No new GameState fields — `lastCycleConfig` is a single field whose object shape grows from 3 keys to 4 keys. 110-field invariant unchanged.
+
+**3 architectural decisions**:
+1. **Mutation effect refactor**: change `Mutation.effect: string` → `Mutation.effect: MutationEffect` discriminated union (parallel to UpgradeEffect). Add `Mutation.descriptionKey: string` for player-facing copy. Avoids per-ID switch in engine.
+2. **Region upgrades stay in `src/config/upgrades.ts`** (already there with `costCurrency: 'memorias'`). Sprint 5 work = wire UI in RegionsPanel + region unlock state machine. No fork into separate file.
+3. **What-if Preview formula**: `estimatedCycleSeconds = currentThreshold / projectedAvgPPS`, where `projectedAvgPPS = currentEffectivePPS × mutationProdMod × pathwayBonusMod`. Display 1 decimal. Disclaimer: "Estimate — excludes offline, taps, Cascades, Spontaneous events." Caveat under each card.
+
 ### Sprint 5 readiness
 
 Per SPRINTS.md §Sprint 5 prompt:

@@ -118,7 +118,9 @@ export function handlePrestige(state: GameState, timestamp: number): { state: Ga
   // Step 8 — capture Focus Persistente retention BEFORE applying RESET defaults.
   const focusBarRetained = focusBarAfterReset(state);
   // POLAR-1 / SAME AS LAST snapshot — cycle choices captured before RESET zeroes them.
-  const lastCycleConfig = { polarity: state.currentPolarity ?? '', mutation: state.currentMutation?.id ?? '', pathway: state.currentPathway ?? '' };
+  // Sprint 5: snapshot also captures purchased upgrade IDs for Mutation #14
+  // Déjà Vu (carries upgrades into next cycle). Pre-RESET so array isn't empty.
+  const lastCycleConfig = { polarity: state.currentPolarity ?? '', mutation: state.currentMutation?.id ?? '', pathway: state.currentPathway ?? '', upgrades: state.upgrades.filter((u) => u.purchased).map((u) => u.id) };
   // Step 9 — compute UPDATE values (new prestigeCount, threshold, timestamp, tutorial flip).
   const newPrestigeCount = state.prestigeCount + 1;
   const nextThreshold = calculateThreshold(newPrestigeCount, state.transcendenceCount);

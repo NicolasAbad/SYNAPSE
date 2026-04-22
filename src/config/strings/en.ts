@@ -260,6 +260,70 @@ export const en = {
     sintesis_cognitiva: 'Pattern flat bonus ×2',
     focus_persistente: 'Keep 25% Focus across prestige',
   },
+  // Sprint 5 — 15 Mutations (GDD §13). Player-facing display name + concise
+  // mechanical description. Internal ids stay Spanish snake_case in mutations.ts;
+  // these translations are the only place names get rendered.
+  mutations: {
+    eficiencia_neural: { name: 'Neural Efficiency', description: 'Neurons cost 40% less but produce 25% less.' },
+    hiperestimulacion: { name: 'Hyperstimulation', description: 'Production ×2 — Focus fills 50% slower.' },
+    descarga_rapida: { name: 'Rapid Discharge', description: 'Charges every 12 min — Discharge bonus −40%.' },
+    disparo_concentrado: { name: 'Focused Discharge', description: 'Discharge ×3 — only 1 charge max.' },
+    neuroplasticidad: { name: 'Neuroplasticity', description: 'Upgrades cost 50% less — effects reduced 40% past 50% consciousness.' },
+    especializacion: { name: 'Specialization', description: 'Choose 1 neuron type — only it produces this cycle, at ×4.' },
+    focus_acelerado: { name: 'Accelerated Focus', description: 'Focus fills ×3 — Insight lasts only 5 s.' },
+    meditacion: { name: 'Meditation', description: 'Focus fills passively at 25% rate (idle only).' },
+    region_dominante: { name: 'Dominant Region', description: 'Most expensive region ×3, others ×0.5.' },
+    memoria_fragil: { name: 'Fragile Memory', description: 'Memories ×2 — lose 1 if cycle exceeds 20 min.' },
+    sprint: { name: 'Sprint', description: 'Production ×5 for first 5 min, then ×0.5.' },
+    crescendo: { name: 'Crescendo', description: 'Production ramps ×0.2 → ×3 with consciousness %.' },
+    sinestesia: { name: 'Synesthesia', description: 'Taps generate Memories (1 per 500 taps), tap thoughts −60%.' },
+    deja_vu: { name: 'Déjà Vu', description: 'Start with last cycle’s upgrades owned — costs ×2.' },
+    mente_dividida: { name: 'Divided Mind', description: '2 Focus Bars — each Insight is half power.' },
+  },
+  // Sprint 5 — 9 mutation category labels (rendered as section headers in
+  // CycleSetupScreen Mutation card UI).
+  mutation_categories: {
+    produccion: 'Production',
+    disparo: 'Discharge',
+    upgrade: 'Upgrade',
+    restriccion: 'Restriction',
+    focus: 'Focus',
+    regions: 'Regions',
+    memorias: 'Memories',
+    temporal: 'Temporal',
+    especial: 'Special',
+  },
+  // Sprint 5 — 3 Pathways (GDD §14). Display names + tradeoff descriptions.
+  pathways: {
+    rapida: { name: 'Swift', description: 'Speed specialist. Insight ×2, Discharge rate ×1.5. Blocks Regions, Connections, New upgrades.' },
+    profunda: { name: 'Deep', description: 'Idle specialist. Memories ×2 this cycle, Focus fill ×0.5. Blocks Tap, Focus, Synapse.' },
+    equilibrada: { name: 'Balanced', description: 'Flexible. All categories enabled — but every upgrade bonus ×0.85.' },
+  },
+  // Sprint 5 — 5 Region display names (GDD §16). Anatomical English standard.
+  regions: {
+    hipocampo: { name: 'Hippocampus' },
+    prefrontal: { name: 'Prefrontal Cortex' },
+    limbico: { name: 'Limbic System' },
+    visual: { name: 'Visual Cortex' },
+    broca: { name: 'Broca’s Area' },
+  },
+  // Sprint 5 — RegionsPanel UI strings.
+  regions_panel: {
+    locked_at: 'Unlocks at P',
+    meta_section: 'Cross-region',
+    broca_name_placeholder: 'Name your mind…',
+    broca_name_label: 'Mind name',
+  },
+  // Sprint 5 — CycleSetupScreen blocked-upgrade tooltip (PATH-1).
+  pathway_blocked: {
+    tooltip: 'Blocked by current Pathway',
+  },
+  // Sprint 5 — What-if Preview disclaimer.
+  what_if: {
+    estimate_label: 'Est. cycle time',
+    disclaimer: 'Estimate excludes offline, taps, Cascades, and Spontaneous events.',
+  },
+
   // Sprint 3+ adds keys as new features ship — do NOT preload
   // empty keys for future features (CODE-1 anti-pattern is
   // hardcoding; empty keys anticipating features is NOT a

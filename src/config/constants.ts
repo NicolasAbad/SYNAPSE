@@ -113,6 +113,16 @@ export const SYNAPSE_CONSTANTS = {
   // ── Mutations ──
   mutationPoolSize: 15,
   mutationOptionsPerCycle: 3, // +1 with Creativa, +1 with Genius Pass
+  // Sprint 5: cross-cutting bonuses to mutationOptionsPerCycle (per GDD §13).
+  // Per-mutation effect tuning lives in src/config/mutations.ts (canonical
+  // data file, exempt from Gate 3 per CLAUDE.md src/config/ exclusion).
+  creativaMutationBonusOptions: 1, // GDD §13 "+1 if Creativa archetype"
+  geniusPassMutationBonusOptions: 1, // GDD §13 "+1 if Genius Pass" (Sprint 9)
+
+  // ── Pathways ──
+  // Per-pathway tuning lives in src/config/pathways.ts. Cross-cutting only here.
+  // Equilibrada multiplier hits ALL upgrade bonus magnitudes globally.
+  pathwayEquilibradaBonusMult: 0.85, // GDD §14 "all upgrade bonuses ×0.85"
 
   // ── Resonance ──
   resonanceBasePerPrestige: 1,
@@ -123,6 +133,12 @@ export const SYNAPSE_CONSTANTS = {
 
   // ── Regions ──
   regionsUnlockPct: 0.01, // 1% of threshold to trigger first region unlock
+  // GDD §16 REG-1: Hipocampo's first unlock awards a one-time +3 Memorias.
+  hipocampoUnlockMemoriasBonus: 3,
+  // GDD §16: Área de Broca (P14 unlock) — adds +1 passive Memory each cycle
+  // and lets the player name their mind (free-text, capped, profanity-filtered).
+  brocaPassiveMemoryPerCycle: 1,
+  brocaNameMaxChars: 20,
 
   // ── Spontaneous events ──
   spontaneousCheckIntervalMin: 240, // 4 min

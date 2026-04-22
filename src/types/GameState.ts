@@ -178,7 +178,11 @@ export interface GameState {
 
   // === What-if Preview (2) ===
   lastCycleTimes: number[];
-  lastCycleConfig: { polarity: string; mutation: string; pathway: string } | null;
+  // Sprint 4c.1: snapshot for POLAR-1 / SAME AS LAST.
+  // Sprint 5: extended with `upgrades: string[]` to support Mutation #14
+  // Déjà Vu ("Start with last cycle's upgrades owned"). 110-field invariant
+  // unchanged — same field, wider object shape.
+  lastCycleConfig: { polarity: string; mutation: string; pathway: string; upgrades: string[] } | null;
 
   // === App infrastructure (2) ===
   notificationPermissionAsked: number;

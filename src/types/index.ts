@@ -84,12 +84,79 @@ export type MutationCategory =
   | 'temporal'
   | 'especial';
 
+// Sprint 5 Phase 5.1 — discriminated union for Mutation effects, parallel
+// to UpgradeEffect. One kind per GDD §13 row so each mutation's runtime
+// behavior is type-checked at the consumer site (production / discharge /
+// cost / focus / etc.) instead of via per-id switch.
+//
+// Effect values come from `src/config/mutations.ts` (canonical data file
+// under the src/config/ Gate-3 exclusion). Strings + tuning live with the
+// data, not in constants.ts.
+export type MutationEffect =
+  | { kind: 'neural_efficiency'; neuronCostMult: number; neuronProdMult: number }
+  | { kind: 'hyperstimulation'; prodMult: number; focusFillMult: number }
+  | { kind: 'rapid_discharge'; chargeIntervalMin: number; dischargeBonusMult: number }
+  | { kind: 'focused_discharge'; dischargeMult: number; maxCharges: number }
+  | { kind: 'neuroplasticity'; upgradeCostMult: number; postThresholdEffectMult: number; consciousnessThreshold: number }
+  | { kind: 'specialization'; selectedTypeProdMult: number }
+  | { kind: 'accelerated_focus'; focusFillMult: number; insightDurationS: number }
+  | { kind: 'meditation'; passiveFocusFillRatio: number }
+  | { kind: 'dominant_region'; dominantMult: number; otherMult: number }
+  | { kind: 'fragile_memory'; memoryGainMult: number; penaltyMemories: number; penaltyThresholdMin: number }
+  | { kind: 'sprint'; earlyMult: number; lateMult: number; splitMin: number }
+  | { kind: 'crescendo'; startMult: number; endMult: number }
+  | { kind: 'synesthesia'; tapsPerMemory: number; tapThoughtMult: number }
+  | { kind: 'deja_vu'; upgradeCostMult: number }
+  | { kind: 'divided_mind'; insightLevelMult: number; focusBars: number };
+
 export interface Mutation {
   id: string;
-  name: string;
-  effect: string;
+  /** i18n key — full path under en.ts: `mutations.${id}.name`. Player-facing. */
+  nameKey: string;
+  /** i18n key — full path under en.ts: `mutations.${id}.description`. Player-facing. */
+  descriptionKey: string;
   category: MutationCategory;
+  /** MUT-1: if true, offline calc uses AVERAGE production (not peak). */
   affectsOffline: boolean;
+  effect: MutationEffect;
+}
+
+// Sprint 5 Phase 5.1 — Pathway data definition. Display name + bonuses live
+// in `src/config/pathways.ts`; this is the structural shape only.
+export interface PathwayDef {
+  id: Pathway;
+  /** i18n key — `pathways.${id}.name`. */
+  nameKey: string;
+  /** i18n key — `pathways.${id}.description`. */
+  descriptionKey: string;
+  /** Categories whose upgrades are buyable under this Pathway (PATH-1). */
+  enables: readonly UpgradeCategory[];
+  /** Categories whose upgrades are greyed out (visible but blocked). */
+  blocks: readonly UpgradeCategory[];
+  /** COST-1 final-cost factor (Equilibrada = 1.0; Rápida/Profunda = 1.0 in v1.0). */
+  pathwayCostMod: number;
+  /** Optional bonuses applied during cycle. */
+  bonuses: {
+    insightDurationMult?: number;     // Rápida
+    chargeRateMult?: number;          // Rápida
+    memoriesPerPrestigeMult?: number; // Profunda
+    focusFillRateMult?: number;       // Profunda
+    upgradeBonusMult?: number;        // Equilibrada (×0.85 cross-cutting)
+  };
+}
+
+// Sprint 5 Phase 5.1 — Region data definition. 5 entries in
+// `src/config/regions.ts`. UpgradeIds reference entries in upgrades.ts.
+export type RegionId = 'hipocampo' | 'prefrontal' | 'limbico' | 'visual' | 'broca';
+
+export interface RegionDef {
+  id: RegionId;
+  /** i18n key — `regions.${id}.name`. */
+  nameKey: string;
+  /** Prestige level at which the region itself becomes visible (0 for starters, 14 for Broca). */
+  unlockPrestige: number;
+  /** IDs from upgrades.ts that belong in this region's panel. */
+  upgradeIds: readonly string[];
 }
 
 export interface PatternNode {
