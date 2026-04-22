@@ -498,6 +498,18 @@ export const en = {
     reg_integrated_mind: { name: 'Integrated Mind', description: 'Activate all 5 regions in a single Run.' },
   },
 
+  // Sprint 7.4 — 8 Micro-challenges (GDD §18). English IDs (no Spanish translation needed).
+  micro: {
+    tap_surge: { name: 'Tap Surge', description: 'Tap 50 times in 30 seconds.' },
+    focus_hold: { name: 'Focus Hold', description: 'Keep Focus Bar above 60% for 45 seconds.' },
+    discharge_drought: { name: 'Discharge Drought', description: "Don't use Discharge for 2 minutes." },
+    neuron_collector: { name: 'Neuron Collector', description: 'Buy 10 neurons in 60 seconds.' },
+    perfect_cascade: { name: 'Perfect Cascade', description: 'Trigger Cascade with Focus 73-77%.' },
+    patient_mind: { name: 'Patient Mind', description: "Don't tap for 45 seconds." },
+    upgrade_rush: { name: 'Upgrade Rush', description: 'Buy 3 upgrades in 90 seconds.' },
+    synergy_master: { name: 'Synergy Master', description: 'Own all 5 neuron types within 2 minutes of cycle start.' },
+  },
+
   // Sprint 3+ adds keys as new features ship — do NOT preload
   // empty keys for future features (CODE-1 anti-pattern is
   // hardcoding; empty keys anticipating features is NOT a

@@ -1,5 +1,4 @@
-// Implements docs/GDD.md §35 TICK-1 12-step pure reducer (CODE-9, TICK-1, RP-1, SPONT-1, MICRO-1, TAP-1).
-
+// GDD.md §35 TICK-1 12-step pure reducer (CODE-9, TICK-1, RP-1, SPONT-1, MICRO-1, TAP-1).
 import { SYNAPSE_CONSTANTS } from '../config/constants';
 import { calculateProduction } from './production';
 import { tryActivateInsight } from './insight';
@@ -10,15 +9,15 @@ import { checkRegionUnlock } from './regions';
 import { shouldCheckSpontaneous, rollSpontaneous, activateSpontaneous } from './spontaneous';
 import { archetypeSpontaneousRateMult } from './archetypes';
 import { checkMentalState, mentalStateProductionMult, mentalStateDuration, updateHyperfocusTracking } from './mentalStates';
+import { shouldTriggerMicroChallenge, rollMicroChallenge, activateMicroChallenge, isMicroChallengeFailed, isMicroChallengeComplete, clearMicroChallenge } from './microChallenges';
+import { MICRO_CHALLENGES_BY_ID } from '../config/microChallenges';
 import type { GameState } from '../types/GameState';
 
 // Structural intrinsics (not designer-tunable). Changing breaks determinism / spec.
 const TICK_MS = 100; // CONST-OK (§35 TICK-1 fixed dt)
 const HYPERFOCUS_BONUS_WINDOW_MS = 5_000; // CONST-OK (§35 MENTAL-5)
 const RP_WINDOW_MS = 120_000; // CONST-OK (§22 RP-1 window)
-const ERA3_FIRST_TICK_WINDOW_MS = 1_000; // CONST-OK (§35 TICK-1 step 9)
 
-/** antiSpamActive: derived per-tick (TICK-1 step 12), consumed by the tap handler. */
 export type TickResult = Readonly<{ state: GameState; antiSpamActive: boolean }>;
 
 /** Step 2: Expire temporary modifiers that have passed their endTime. */
@@ -119,44 +118,47 @@ function stepResonantPatternPrune(s: GameState, nowTimestamp: number): void {
   }
 }
 
-/** Step 8 (Sprint 7.3): Mental State triggers per §17 + MENTAL-7 priority resolver. */
-function stepMentalStateTriggers(s: GameState, nowTimestamp: number): void {
-  Object.assign(s, updateHyperfocusTracking(s, nowTimestamp));
-  const newState = checkMentalState(s, nowTimestamp);
-  if (newState !== s.currentMentalState) {
-    s.currentMentalState = newState;
-    s.mentalStateExpiry = newState === null ? null : nowTimestamp + mentalStateDuration(newState);
+/** Step 8: Mental State triggers per §17 + MENTAL-7 priority resolver. */
+function stepMentalStateTriggers(s: GameState, n: number): void {
+  Object.assign(s, updateHyperfocusTracking(s, n));
+  const ms = checkMentalState(s, n);
+  if (ms !== s.currentMentalState) {
+    s.currentMentalState = ms;
+    s.mentalStateExpiry = ms === null ? null : n + mentalStateDuration(ms);
   }
-  if (newState !== null) {
-    s.effectiveProductionPerSecond *= mentalStateProductionMult(s, nowTimestamp);
-  }
+  if (ms !== null) s.effectiveProductionPerSecond *= mentalStateProductionMult(s, n);
 }
 
-/** Step 9: Era 3 event activation on first tick of cycle (§23). */
-function stepEra3EventActivation(s: GameState, nowTimestamp: number): void {
-  const cycleAgeMs = nowTimestamp - s.cycleStartTimestamp;
-  if (s.prestigeCount >= SYNAPSE_CONSTANTS.era3StartPrestige && s.prestigeCount <= SYNAPSE_CONSTANTS.era3EndPrestige && s.cycleStartTimestamp !== 0 && cycleAgeMs >= 0 && cycleAgeMs < ERA3_FIRST_TICK_WINDOW_MS) {
-    // Modal dispatch handled by UI layer reading prestigeCount + cycleAge.
-  }
-}
+/** Step 9: Era 3 event activation on first tick of cycle (§23). UI layer dispatches modal. */
+function stepEra3EventActivation(_s: GameState, _nowTimestamp: number): void { /* no-op; UI reads prestigeCount + cycleAge */ }
 
-/** Step 10: Spontaneous event scheduling (SPONT-1). Sprint 6 Phase 6.4 roll+apply. */
+/** Step 10: Spontaneous event scheduling (SPONT-1). */
 function stepSpontaneousEventTrigger(s: GameState, nowTimestamp: number): void {
   if (!shouldCheckSpontaneous(s, nowTimestamp)) return;
-  // GDD §12 Creativa bumps spontaneous rate; identity otherwise.
-  const rateMult = archetypeSpontaneousRateMult(s);
+  const rateMult = archetypeSpontaneousRateMult(s); // Creativa ×, identity otherwise
   const def = rollSpontaneous(s, nowTimestamp, rateMult);
   if (def === null) {
-    // No event this check; still advance lastSpontaneousCheck so next seed differs.
     s.lastSpontaneousCheck = nowTimestamp;
     return;
   }
   Object.assign(s, activateSpontaneous(s, def, nowTimestamp));
 }
 
-/** Step 11: Micro-challenge trigger (MICRO-1). Sprint 7.4 wires real check. */
-function stepMicroChallengeTrigger(_s: GameState, _nowTimestamp: number): void {
-  // Sprint 7.4 placeholder — gated on prestigeCount >= 15 when wired.
+/** Step 11: Micro-challenge resolve + roll per §18 + MICRO-1..5. */
+function stepMicroChallengeTrigger(s: GameState, nowTimestamp: number): void {
+  if (s.activeMicroChallenge !== null) {
+    if (isMicroChallengeComplete(s, nowTimestamp)) {
+      const def = MICRO_CHALLENGES_BY_ID[s.activeMicroChallenge.id];
+      if (def !== undefined) s.sparks += def.reward;
+      Object.assign(s, clearMicroChallenge());
+    } else if (isMicroChallengeFailed(s, nowTimestamp)) {
+      Object.assign(s, clearMicroChallenge());
+    }
+  }
+  if (!shouldTriggerMicroChallenge(s, nowTimestamp)) return;
+  const def = rollMicroChallenge(s, nowTimestamp);
+  if (def === null) return;
+  Object.assign(s, activateMicroChallenge(s, def, nowTimestamp));
 }
 
 /** Step 12: Anti-spam TAP-1 — derived per-tick flag, not stored. Consumed by the tap handler. */
