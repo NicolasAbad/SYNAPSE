@@ -7,6 +7,7 @@ import { hash, randomInRange } from './rng';
 import { UPGRADES_BY_ID } from '../config/upgrades';
 import { mutationChargeIntervalMs, mutationMaxChargesOverride } from './mutations';
 import { pathwayChargeRateMult } from './pathways';
+import { checkRegionUnlock } from './regions';
 import type { GameState } from '../types/GameState';
 
 // Structural intrinsics (not designer-tunable). Changing breaks determinism / spec.
@@ -15,10 +16,7 @@ const HYPERFOCUS_BONUS_WINDOW_MS = 5_000; // CONST-OK (§35 MENTAL-5)
 const RP_WINDOW_MS = 120_000; // CONST-OK (§22 RP-1 window)
 const ERA3_FIRST_TICK_WINDOW_MS = 1_000; // CONST-OK (§35 TICK-1 step 9)
 
-/**
- * antiSpamActive is derived per-tick (TICK-1 step 12), not stored in GameState.
- * Sprint 3's tap handler consumes this to apply the tap-effectiveness penalty.
- */
+/** antiSpamActive: derived per-tick (TICK-1 step 12), consumed by the tap handler. */
 export type TickResult = Readonly<{ state: GameState; antiSpamActive: boolean }>;
 
 /** Step 2: Expire temporary modifiers that have passed their endTime. */
@@ -188,6 +186,8 @@ export function tick(state: GameState, nowTimestamp: number): TickResult {
   stepRecalcProduction(s);
   stepProduce(s);
   stepConsciousnessBarUnlock(s);
+  // REG-1 unlock check (Sprint 5 Phase 5.4).
+  checkRegionUnlock(s);
   stepDischargeChargeAccumulation(s, nowTimestamp);
   stepResonantPatternPrune(s, nowTimestamp);
   stepMentalStateTriggers(s, nowTimestamp);
