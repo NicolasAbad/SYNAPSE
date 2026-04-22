@@ -30,6 +30,15 @@ coverage/
 test-results/
 playwright-report/
 
+# Smoke playtest harness outputs (scripts/smoke-playtest*.mjs)
+.playtest-screens/
+.playtest-screens-mi-a3/
+.playtest-screens-mi-a3-deep/
+.playtest-screens-mi-a3-verify/
+.playtest-report.json
+.playtest-report-mi-a3.json
+.playtest-report-mi-a3-deep.json
+
 # IDE / OS
 .DS_Store
 Thumbs.db

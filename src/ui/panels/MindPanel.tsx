@@ -45,7 +45,10 @@ function MindSubtabBar({ subtab, onChange }: { subtab: MindSubtabId; onChange: (
         // subtitle). Max defined spacing var is spacing-16 (64px) — we add
         // spacing-8 (32px) via calc to reach 96px. Also offset from the left
         // to clear the thoughts counter column.
-        top: 'calc(env(safe-area-inset-top, 0) + var(--spacing-16) + var(--spacing-8))', // CONST-OK: CSS custom property math — below HUD bar
+        // Offset below HUD thoughts row AND the MemoriesCounter (added 4c.6.5,
+        // sits at ~top 88px). Using two spacing-16 instead of spacing-16+8
+        // so the subtab row clears the memories line without visually crowding.
+        top: 'calc(env(safe-area-inset-top, 0) + var(--spacing-16) + var(--spacing-16))', // CONST-OK: CSS custom property math — below HUD + MemoriesCounter
         left: 'var(--spacing-4)', // CONST-OK: CSS custom property ref — indent past thoughts column
         right: 'var(--spacing-4)', // CONST-OK: CSS custom property ref
         display: 'flex',
@@ -87,6 +90,12 @@ function SubtabButton({
         // Sprint 4c Phase 4c.6 — tighter padding so 6 buttons fit more comfortably
         // on 420px-wide viewports (iPhone SE / older Android baseline).
         padding: 'var(--spacing-1) var(--spacing-2)', // CONST-OK: CSS custom property ref
+        // CODE-4 tap-target: Android/iOS guidance = 48dp / 44pt. `touchTargetMin`
+        // token is 48px (src/ui/tokens.ts); spacing-12 maps to the same 3rem/48px.
+        // Width stays intrinsic so chip row still scrolls on 360px viewports.
+        minHeight: 'var(--spacing-12)', // CONST-OK: CSS custom property ref — WCAG tap-target
+        display: 'flex',
+        alignItems: 'center',
         background: active ? 'var(--color-primary)' : 'transparent',
         color: active ? 'var(--color-bg-deep)' : 'var(--color-text-secondary)',
         border: '1px solid var(--color-border-subtle)',

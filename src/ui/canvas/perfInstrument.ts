@@ -29,6 +29,7 @@ export interface PerfDevAPI {
 declare global {
   interface Window {
     __SYNAPSE_PERF__?: PerfDevAPI;
+    __SYNAPSE_STORE__?: typeof useGameStore;
   }
 }
 
@@ -68,6 +69,7 @@ export function installPerfInstrument(): PerfInstrument {
   };
 
   window.__SYNAPSE_PERF__ = api;
+  window.__SYNAPSE_STORE__ = useGameStore;
 
   return {
     onFrame: (timestamp) => meter.frame(timestamp),
@@ -76,6 +78,7 @@ export function installPerfInstrument(): PerfInstrument {
         useGameStore.setState({ neurons: savedNeurons });
       }
       delete window.__SYNAPSE_PERF__;
+      delete window.__SYNAPSE_STORE__;
     },
   };
 }
