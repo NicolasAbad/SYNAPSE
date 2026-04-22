@@ -1373,9 +1373,13 @@ Each of the 8 final cycles has a unique narrative event that changes the cycle's
 
 ---
 
-# 24. The 35 upgrades (categorized)
+# 24. Upgrades (33 v1.0, categorized) — Sprint 6.8 re-architected
+
+**Sprint 6.8 re-architecture:** Count changed 35 → 33. Three region-priced upgrades retired into the Region sub-systems (§16.8) — effects absorbed by Hipocampo shards (`consolidacion_memoria`), Límbico mood + offline stack (`regulacion_emocional` → new `ondas_theta`), and Visual Foresight T1 (`procesamiento_visual`). Net: -3 retired + 1 new (`ondas_theta`) = 33 total v1.0 upgrades. `funciones_ejecutivas` and `amplitud_banda` are preserved but rehomed in Regions panel UI.
 
 Categories used by Pathway gating: `tap`, `foc`, `syn`, `neu`, `reg`, `con`, `met`, `new`.
+
+**UX ordering rule (UPGRADES-1):** The Upgrades tab shows Thoughts-priced upgrades FIRST, then Memoria-priced in a separate subsection. Within each subsection, sort by cost ascending. Previously (pre-Sprint-6.8) the Sprint 3.6.3 sort compared numeric values directly — a 2-Memoria upgrade sorted before a 3000-Thought upgrade because `2 < 3000`, which was visually jarring ("why are these memory things at the top?"). Fix: sort by `(currencyRank, cost)` where `currencyRank(thoughts)=0, currencyRank(memorias)=1`. This keeps sections coherent and puts the player's most-common decision (thought-priced next buy) at the top.
 
 ### Tap (⚡, 3)
 | Upgrade | Cost | Effect | Tier |
@@ -1410,16 +1414,27 @@ Categories used by Pathway gating: `tap`, `foc`, `syn`, `neu`, `reg`, `con`, `me
 | Espejo Resonantes | 150K | Espejos ×4 | P2+ |
 | Neurogénesis | 5M | All neuron rates ×1.10 + visual hint (greyed 6th slot appears — v1.5 foreshadowing) | P5+ |
 
-### Regions (◈, 5) — costs in Memorias
-See §16 for full list.
+### Regions (◈, 2 — Memoria-priced, Sprint 6.8 reduced from 5)
 
-### Consciousness & Offline (✦, 4)
+Sprint 6.8 retired 3 upgrades (`consolidacion_memoria` → Hipocampo shards; `regulacion_emocional` → `ondas_theta` below; `procesamiento_visual` → Visual T1). Remaining:
+
+| Upgrade | Region | Cost | Effect | Unlock |
+|---|---|---|---|---|
+| Funciones Ejecutivas | Prefrontal | 3 Mem | Thought-cost upgrades −20% (COST-1) | P2+ |
+| Amplitud de Banda | Meta (cross-region) | 15 Mem | Reinterpreted as Integrated Mind tracker (§16.6) — when 5 regions active, secret narrative beat fires | P2+ |
+
+Plus Sprint 6.8 NEW `ondas_theta` (`con` category below, Thoughts-priced).
+
+### Consciousness & Offline (✦, 5) — one more than v1.0 original
+
+### Consciousness & Offline (✦, 5 — Sprint 6.8 added ondas_theta)
 | Upgrade | Cost | Effect | Tier |
 |---|---|---|---|
 | Sueño REM | 50K | Offline cap 4h → 8h | P0 |
 | Umbral de Consciencia | 100K | Consciousness bar fills ×1.3 | P0 (at ≥50% bar) |
 | Ritmo Circadiano | 200K | Offline ×1.5 efficiency + auto-charge on return if ≥cap | P2+ |
 | Hiperconciencia | 500K | Consciousness bar fills ×2 | P4+ |
+| **Ondas Theta** *(NEW Sprint 6.8)* | 300K | Offline efficiency ×2 (replaces retired `regulacion_emocional`; stacks into OFFLINE-4 cap) | P3+ |
 
 ### Meta (∞, 3) — unlock P6+
 | Upgrade | Cost | Effect | Tier |
@@ -1438,7 +1453,11 @@ See §16 for full list.
 | Síntesis Cognitiva | 800K | Pattern flat bonus ×2 | P13+ |
 | Focus Persistente | 600K | Retain 25% Focus across prestige *(fix from BUG-06 — was 50%)* | P12+ |
 
-**Total: 35 upgrades.**
+**Total: 33 upgrades (Sprint 6.8, was 35).**
+
+Breakdown: Tap 3 + Focus 1 + Syn 5 + Neurons 8 + Regions 2 (reduced from 5 per §16.8) + Consciousness 5 (added ondas_theta) + Meta 3 + Tier P10 6 = **33**.
+
+**Sprint 5 upgrade IDs retired in Sprint 6.8:** `consolidacion_memoria`, `regulacion_emocional`, `procesamiento_visual`. Code will continue to understand these IDs (`migrateState()` drops them from `state.upgrades` silently) — their effects are preserved via the Region sub-systems.
 
 ---
 
@@ -1517,6 +1536,20 @@ Requires multi-Run play. Bulk of these hit only Run 2 or later.
 
 ### Reward total verification
 
+### Category 6 — Regions (5 achievements, 30 Sparks total — Sprint 6.8 added)
+
+Tied to Region sub-system engagement. Reward exploration of each sub-system.
+
+| ID | Display name | Trigger | Reward | Notes |
+|---|---|---|---|---|
+| `reg_shard_collector` | Shard Collector | Accumulate 100 shards of any type | +5 Sparks | Rewards Hipocampo engagement |
+| `reg_precommit_streak` | Committed Mind | Achieve 5 consecutive Pre-commit successes | +7 Sparks | Prefrontal streak bonus |
+| `reg_euphoric` | Euphoric | Reach Mood 100 (Euphoric tier) | +5 Sparks | Límbico peak mood |
+| `reg_foresight_master` | Foresight Master | Unlock all 4 Visual Foresight tiers | +7 Sparks | Visual region completion |
+| `reg_integrated_mind` | Integrated Mind | Activate all 5 regions in one Run (Amplitud de Banda 5-tier) | +6 Sparks | Integrated Mind endgame beat |
+
+### Reward total verification
+
 | Category | Count | Total Sparks |
 |---|---|---|
 | Cycle | 6 | 25 |
@@ -1524,7 +1557,8 @@ Requires multi-Run play. Bulk of these hit only Run 2 or later.
 | Narrative | 6 | 30 |
 | Hidden | 6 | 28 |
 | Mastery | 6 | 27 |
-| **Total** | **30** | **145** |
+| **Regions** *(Sprint 6.8)* | **5** | **30** |
+| **Total** | **35** | **175** |
 
 ### New field required (minor GameState addition — does NOT affect 110 count)
 
@@ -3057,6 +3091,120 @@ Both the original 15-issue audit (Categories 1-7) AND the senior review (11 bugs
 - INT-12 (Cascade Chorus RP): RP-4 requires NOT owning Cascada Profunda upgrade.
 
 **Status:** 0 open issues. Ready for Sprint 1.
+
+---
+
+# 37. Onboarding & Tutorial Track — Sprint 6.8 addition
+
+**Rationale:** The original v1.0 tutorial is 2 hints across 8 minutes (first-idle "tap the neuron" prompt + Discharge ×3 boost). For a 29-hour completionist game, this under-teaches critical mechanics. New players who don't understand Discharge+Cascade or Polarity in the first session drop before Run 2. Sprint 6.8 ships a **5-cycle progressive tutorial track** that introduces one new mechanical concept per cycle with dismissable tooltips + small Sparks rewards.
+
+## 37.1 Tutorial cycles
+
+| Cycle | New concept revealed | UI surfaces |
+|---|---|---|
+| **1** (P0 → P1) | Tap + Consciousness bar | Minimal HUD (Thoughts counter + Consciousness bar only) |
+| **2** (P1 → P2) | Upgrades tab + Sensoriales unlock + Sparks counter | Upgrades tab becomes active; +2 Sparks rewarded |
+| **3** (P2 → P3) | Focus bar + Discharge button + Cascade hint | Focus bar + Discharge charges visible; Cascade teaser on first Cascade-possible moment |
+| **4** (P3 → P4) | Polarity (first real cycle-choice) | CycleSetupScreen 1-column |
+| **5** (P4 → P5) | Patterns tab + Hipocampo region (Shard drip begins) | Mind tab + Regions tab both active |
+
+After Cycle 5, the tutorial track dismisses and progressive disclosure continues via §9 era-milestones (P5 Prefrontal+Límbico, P7 Archetype, etc.).
+
+## 37.2 Rules
+
+- **TUTOR-3:** Tutorial hints are dismissable (tap anywhere to fade after 3s). Never blocking.
+- **TUTOR-4:** Each tutorial step completion fires analytics `tutorial_step_completed` with `{cycle: 1..5, step_id}`.
+- **TUTOR-5:** Completing a tutorial step grants +2 Sparks (`tutorialSparksRewardPerStep` constant) — first dopamine hits that establish the reward loop.
+
+## 37.3 Returning-player context
+
+After a 30+ min absence, a Broca-voiced greeting prefaces the Sleep screen (per §16.5 + §39 Inner Voice engine). This isn't part of the tutorial track — it's a retention hook. See OFFLINE-10 (§19).
+
+---
+
+# 38. Mastery System — Sprint 6.8 addition
+
+**Rationale:** 15 Mutations exist but TEST-5 simulation shows players default to 2-3 favorites (Hiperestimulación, Déjà Vu, Meditación dominate; Sinestesia / Especialización / Memoria Frágil see <5% use). Same pattern holds for Upgrades (players buy Dopamina / Potencial Sináptico every Run, skip others). Sprint 6.8's Mastery system nudges variety by rewarding lifetime use — PULLED FROM v1.5 POSTLAUNCH ("Upgrade Mastery +1% per lifetime purchase") and unified with B5 Mutation Mastery into a single cross-system mechanic.
+
+## 38.1 Scope
+
+Mastery applies to 4 entity classes:
+- **Mutations** — each of 15 tracks lifetime use (cycles played with that Mutation)
+- **Upgrades** — each of 33 tracks lifetime purchase count (across all Runs)
+- **Pathways** — each of 3 tracks lifetime cycle count
+- **Archetypes** — each of 3 tracks lifetime Run count (+1 per full Run completed in that archetype)
+
+Total trackable entities: 15 + 33 + 3 + 3 = **54**. Storage: `mastery: Record<string, number>` (single field).
+
+## 38.2 Rules
+
+- **MASTERY-1:** Mastery level = `floor(uses / 1)` for first 10 uses. Caps at level 10 (no gain past that). Constants: `masteryMaxLevel = 10`, `masteryBonusPerLevel = 0.005`.
+- **MASTERY-2:** Each Mastery level grants +0.5% to that entity's effectiveness. Max bonus per entity = +5% at level 10. Bonus applies multiplicatively:
+  - Mutation Mastery → multiplies Mutation effect strength (e.g. Hiperestimulación L10 → ×2.10 instead of ×2.00)
+  - Upgrade Mastery → multiplies upgrade effect (e.g. Dopamina L10 → ×1.575 instead of ×1.50)
+  - Pathway Mastery → multiplies Pathway bonus
+  - Archetype Mastery → multiplies archetype bonus
+
+## 38.3 UI surface
+
+`Mind → Mastery` sub-tab — added in Sprint 7.7:
+- 4 section tabs (Mutations / Upgrades / Pathways / Archetypes)
+- Each entity card shows: name + current use count + level (0-10) + next-level preview
+- Locked/never-used entities show as `???` with a small "Use once to reveal" hint
+
+## 38.4 Interactions
+
+- **With shard upgrade `shard_proc_mastery`:** Mastery XP gain ×1.25 (accelerates mastery accumulation).
+- **With Resonance upgrade `eternal_witness` (pulled v1.5):** Player picks a SECONDARY archetype per cycle at 50% bonus strength. The secondary archetype's use count DOES contribute to its Mastery (encourages dual-archetype variety).
+- **Persistence:** Mastery survives PRESTIGE AND TRANSCENDENCE (it's lifetime).
+- **Analytics:** `mastery_level_up` event fires at each level-up with `{entity_id, new_level}`.
+
+---
+
+# 39. Inner Voice Engine — Sprint 6.8 addition
+
+**Rationale:** Multiple narrative-persistence mechanisms were overlapping: Broca Named Moments (new), Oneiric Dreams (v1.5 proposal), Mood-gated returning greetings (B7), Cross-Run memory fragments (B10). Unifying them into ONE engine avoids code duplication and creates a cohesive player-voice surface spanning Broca + dreams + greetings.
+
+## 39.1 Engine scope
+
+The Inner Voice engine handles all player-voiced or player-named narrative payloads:
+
+1. **Named Moments (5 per Run)** — Broca-driven per §16.5. Player picks/writes phrases at key points.
+2. **Oneiric Dreams (5 in v1.0, 25 more v1.5+)** — Short narrative beats shown on offline return. Originally v1.5 POSTLAUNCH content; pulled to v1.0 as 5 seed dreams.
+3. **Mood-gated Returning Greetings** — Broca speaks when player returns after ≥30 min absence, tone varying by current Mood tier.
+4. **Cross-Run Memory Fragments** — At each new Run's P5 (when Archetype choice would have been, now migrated to P7 — so this slot is freed), Broca speaks in the voice of the player's PRIOR Run's archetype.
+5. **Integrated Mind Secret Beat** — "Your mind is whole" one-time narrative beat at 5-region active tier.
+
+## 39.2 Data model
+
+All Inner Voice content flows through existing `narrativeFragmentsSeen: string[]` field (no new GameState field needed). Fragment ID prefixes:
+- `voice_*` — Named Moment authored phrases (e.g. `voice_first_prestige`)
+- `dream_*` — Oneiric dream payloads (e.g. `dream_empathic_01`)
+- `greeting_*` — Returning greetings (e.g. `greeting_euphoric_01`)
+- `crossrun_*` — Cross-Run memory fragments (e.g. `crossrun_from_analitica`)
+- `integrated_mind_whole` — single ID for the 5-region beat
+
+Named phrases themselves stored in `brocaNamedMoments: { momentId; phrase }[]`. Prose templates with `{playerPhrase}` placeholders rendered at display time.
+
+## 39.3 v1.0 content counts
+
+| Type | v1.0 count | Storage |
+|---|---|---|
+| Named Moments | 5 slots × 3 prose templates each = 15 template variants | `src/config/narrative/namedMoments.ts` |
+| Oneiric Dreams | 5 dreams (1 per Archetype + 1 per Polarity + 1 Era 3) | `src/config/narrative/dreams.ts` |
+| Mood-gated Greetings | 5 variants (one per Mood tier) | `src/config/narrative/greetings.ts` |
+| Cross-Run Fragments | 3 (one per archetype-as-prior-voice) | `src/config/narrative/crossRun.ts` |
+| Integrated Mind | 1 | existing `fragments.ts` |
+
+Total v1.0 Inner Voice content: **29 narrative payloads**. See NARRATIVE.md §10-14 for the actual prose.
+
+## 39.4 Rules
+
+- **VOICE-1:** Named phrases persist across Transcendence (lifetime identity). Skip always valid — default archetype-keyed phrase used.
+- **VOICE-2:** Greetings fire once per return session. If player returns twice within 10 min, second return skips the greeting.
+- **VOICE-3:** Dreams fire on offline ≥30 min with one weighted per archetype-fit. Pool expands v1.5.
+- **VOICE-4:** Cross-Run fragments fire at each new Run's P5 — only if `archetypeHistory` has ≥1 prior archetype. First Run skips.
+- **VOICE-5:** Integrated Mind beat fires ONCE per Run when 5 regions activate simultaneously. Stored as `integrated_mind_whole` in `narrativeFragmentsSeen`.
 
 ---
 

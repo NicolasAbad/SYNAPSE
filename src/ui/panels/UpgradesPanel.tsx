@@ -138,8 +138,18 @@ function classifyUpgrades(state: GameState): Record<Section, ClassifiedUpgrade[]
     }
   }
 
-  affordable.sort((a, b) => a.cost - b.cost);
-  teaser.sort((a, b) => a.cost - b.cost);
+  // GDD §24 UPGRADES-1: sort by (currencyRank, cost) — Thoughts before Memorias,
+  // then by cost ascending within each currency group. Fixes Sprint 6.8 Nico UX
+  // finding: prior sort compared raw numbers, so 2-Memoria upgrades sorted before
+  // 3000-Thought upgrades (2 < 3000), misleading the player about what to buy next.
+  const byCurrencyThenCost = (a: ClassifiedUpgrade, b: ClassifiedUpgrade) => {
+    const rankA = a.costCurrency === 'thoughts' ? 0 : 1;
+    const rankB = b.costCurrency === 'thoughts' ? 0 : 1;
+    if (rankA !== rankB) return rankA - rankB;
+    return a.cost - b.cost;
+  };
+  affordable.sort(byCurrencyThenCost);
+  teaser.sort(byCurrencyThenCost);
   locked.sort((a, b) => a.unlockPrestige - b.unlockPrestige);
 
   return { affordable, teaser, locked };
