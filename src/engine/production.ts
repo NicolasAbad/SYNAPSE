@@ -26,6 +26,7 @@ import { UPGRADES_BY_ID } from '../config/upgrades';
 import { patternCycleBonusAdd } from './patternDecisions';
 import { mutationProdMult } from './mutations';
 import { dampenUpgradeBonus, pathwayUpgradeBonusDamp } from './pathways';
+import { archetypeActiveProductionMult } from './archetypes';
 import type { GameState } from '../types/GameState';
 import type { NeuronState, NeuronType, Polarity, UpgradeEffect } from '../types';
 
@@ -183,10 +184,9 @@ export function calculateProduction(state: GameState): { base: number; effective
   // GDD §14 Equilibrada: dampen the upgrade-bonus delta by 0.85 cross-cutting.
   // Identity for Rápida / Profunda / no-pathway. Wired Sprint 5 Phase 5.3.
   const globalMult = dampenUpgradeBonus(computeGlobalUpgradeMult(state, ownedIds), pathwayUpgradeBonusDamp(state));
-  // Stubs for Sprint 6-7: archetypeMod × regionMult (all identity until wired).
-  // Mutation static mod wired Phase 5.2; polarity wired 4c.2; pathway dampening
-  // applied above on globalMult, so rawMult below stays a clean product.
-  const rawMult = state.connectionMult * globalMult * polarityProdMult(state.currentPolarity) * mutationProdMult(state);
+  // Archetype × polarity × mutation modifiers; pathway dampening already on globalMult.
+  // Region mult deferred to Sprint 10. (Sprint 5.2 / 4c.2 / 6.2 wirings.)
+  const rawMult = state.connectionMult * globalMult * polarityProdMult(state.currentPolarity) * mutationProdMult(state) * archetypeActiveProductionMult(state);
   const finalMult = softCap(rawMult);
   // Pattern cycle bonus: multiplicative post-softCap, capped at patternCycleCap.
   // Node 6 A decision (if chosen) contributes an extra +0.08 addend (GDD §10).

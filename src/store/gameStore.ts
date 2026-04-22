@@ -14,7 +14,7 @@
 import { create } from 'zustand';
 import { SYNAPSE_CONSTANTS } from '../config/constants';
 import type { GameState } from '../types/GameState';
-import type { NeuronType, Polarity, Pathway } from '../types';
+import type { NeuronType, Polarity, Pathway, Archetype } from '../types';
 import { loadGame, saveGame } from './saveGame';
 import { tryBuyNeuron, tryBuyUpgrade, type BuyReason, type UndoToast } from './purchases';
 import { applyTap } from './tap';
@@ -327,6 +327,13 @@ export interface GameStoreActions {
    * pre-fills the picker from the snapshot.
    */
   setPathway: (pathway: Pathway) => { fired: boolean };
+  /**
+   * Sprint 6 Phase 6.2: pick an Archetype at P5+ (GDD §12). IRREVERSIBLE for
+   * the Run — second call returns fired=false unless a Transcendence cleared
+   * `state.archetype` to null. Pushes to `archetypeHistory` for meta progression.
+   * Pre-P5 also returns fired=false.
+   */
+  setArchetype: (archetype: Archetype) => { fired: boolean };
 }
 
 export const useGameStore = create<GameState & UIState & GameStoreActions>((set, get) => ({
@@ -466,6 +473,22 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
       upgrades = carry.map((id) => ({ id, purchased: true, purchasedAt: 0 }));
     }
     set({ currentMutation: { id: mutationId }, mutationSeed: mutationId === '' ? 0 : state.mutationSeed, upgrades });
+    return { fired: true };
+  },
+  setArchetype: (archetype) => {
+    const state = get();
+    if (state.prestigeCount < SYNAPSE_CONSTANTS.archetypeUnlockPrestige) {
+      return { fired: false };
+    }
+    // GDD §12: irreversible for the Run. Transcendence is the only path that
+    // clears `state.archetype` back to null (per §34 TRANSCENDENCE_RESET).
+    if (state.archetype !== null) {
+      return { fired: false };
+    }
+    set({
+      archetype,
+      archetypeHistory: [...state.archetypeHistory, archetype],
+    });
     return { fired: true };
   },
 }));

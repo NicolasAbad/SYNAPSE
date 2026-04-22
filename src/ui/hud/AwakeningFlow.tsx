@@ -5,10 +5,11 @@ import type { PrestigeOutcome } from '../../engine/prestige';
 import { ConfirmModal } from '../modals/ConfirmModal';
 import { AwakeningScreen } from '../modals/AwakeningScreen';
 import { CycleSetupScreen, type CycleSetupChoice } from '../modals/CycleSetupScreen';
+import { ArchetypeChoiceModal } from '../modals/ArchetypeChoiceModal';
 import { getMutationOptions } from '../../engine/mutations';
 import { t } from '../../config/strings';
 import { HUD } from '../tokens';
-import type { Pathway, Polarity } from '../../types';
+import type { Archetype, Pathway, Polarity } from '../../types';
 
 /**
  * Orchestrates the prestige flow per SPRINTS.md §4a + §4c:
@@ -33,18 +34,21 @@ export const AwakeningFlow = memo(function AwakeningFlow() {
   const lastCycleMutationStr = useGameStore((s) => s.lastCycleConfig?.mutation ?? '');
   const lastCyclePathwayStr = useGameStore((s) => s.lastCycleConfig?.pathway ?? '');
   const effectivePPS = useGameStore((s) => s.effectiveProductionPerSecond);
+  const archetype = useGameStore((s) => s.archetype);
   const prestige = useGameStore((s) => s.prestige);
   const setPolarity = useGameStore((s) => s.setPolarity);
   const setMutation = useGameStore((s) => s.setMutation);
   const setPathway = useGameStore((s) => s.setPathway);
-  // Mutation options drawn at CycleSetupScreen open. ctx defaults to no-archetype
-  // / no-Genius-Pass / no-Pattern-bonus / no-Weekly-Challenge — Sprint 6/9 expand
-  // ctx fields when those features ship.
-  const mutationOptions = useGameStore((s) => getMutationOptions(s));
+  const setArchetype = useGameStore((s) => s.setArchetype);
+  // Mutation options drawn at CycleSetupScreen open. Creativa archetype
+  // adds +1 option per GDD §12 (Sprint 6 Phase 6.2 wired); Genius Pass /
+  // Pattern / Weekly Challenge ctx expand in Sprint 9 / 4b / 7.
+  const mutationOptions = useGameStore((s) => getMutationOptions(s, { creativaArchetype: s.archetype === 'creativa' }));
 
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [outcome, setOutcome] = useState<PrestigeOutcome | null>(null);
   const [showCycleSetup, setShowCycleSetup] = useState(false);
+  const [showArchetypeChoice, setShowArchetypeChoice] = useState(false);
 
   const ready = cycleGenerated >= currentThreshold;
   const lastCyclePolarity: Polarity | null =
@@ -57,6 +61,7 @@ export const AwakeningFlow = memo(function AwakeningFlow() {
       ? lastCyclePathwayStr
       : null;
   const polarityUnlocked = prestigeCount >= SYNAPSE_CONSTANTS.polarityUnlockPrestige;
+  const needsArchetypeChoice = prestigeCount >= SYNAPSE_CONSTANTS.archetypeUnlockPrestige && archetype === null;
 
   const onReadyClick = useCallback(() => setConfirmOpen(true), []);
   const onCancel = useCallback(() => setConfirmOpen(false), []);
@@ -67,12 +72,23 @@ export const AwakeningFlow = memo(function AwakeningFlow() {
   }, [prestige]);
   const onAwakeningContinue = useCallback(() => {
     setOutcome(null);
+    // Sprint 6 Phase 6.2: P5+ first-time archetype choice gates the cycle
+    // setup flow. After choosing, onArchetypeChoose opens CycleSetup.
+    if (needsArchetypeChoice) {
+      setShowArchetypeChoice(true);
+      return;
+    }
     // Post-prestige prestigeCount has already incremented, so the P3+ gate
     // activates on the prestige that earns it (P2→P3 shows the screen).
     if (polarityUnlocked) {
       setShowCycleSetup(true);
     }
-  }, [polarityUnlocked]);
+  }, [needsArchetypeChoice, polarityUnlocked]);
+  const onArchetypeChoose = useCallback((a: Archetype) => {
+    setArchetype(a);
+    setShowArchetypeChoice(false);
+    if (polarityUnlocked) setShowCycleSetup(true);
+  }, [setArchetype, polarityUnlocked]);
   const onCycleSetupChoose = useCallback((choice: CycleSetupChoice) => {
     if (choice.polarity !== null) setPolarity(choice.polarity);
     if (choice.mutationId !== null) setMutation(choice.mutationId);
@@ -80,7 +96,7 @@ export const AwakeningFlow = memo(function AwakeningFlow() {
     setShowCycleSetup(false);
   }, [setPolarity, setMutation, setPathway]);
 
-  const showReadyButton = ready && !confirmOpen && !outcome && !showCycleSetup;
+  const showReadyButton = ready && !confirmOpen && !outcome && !showCycleSetup && !showArchetypeChoice;
 
   return (
     <>
@@ -126,6 +142,7 @@ export const AwakeningFlow = memo(function AwakeningFlow() {
         testIdPrefix="awakening-confirm"
       />
       <AwakeningScreen outcome={outcome} onContinue={onAwakeningContinue} />
+      <ArchetypeChoiceModal open={showArchetypeChoice} onChoose={onArchetypeChoose} />
       {showCycleSetup && (
         <CycleSetupScreen
           prestigeCount={prestigeCount}

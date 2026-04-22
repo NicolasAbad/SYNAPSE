@@ -21,6 +21,7 @@
 import { SYNAPSE_CONSTANTS } from '../config/constants';
 import { UPGRADES_BY_ID } from '../config/upgrades';
 import { insightDurationDecisionAddS } from './patternDecisions';
+import { archetypeInsightDurationAddSec } from './archetypes';
 import type { GameState } from '../types/GameState';
 
 export type InsightLevel = 1 | 2 | 3; // CONST-OK (structural level enum, §6 3-tier system)
@@ -76,6 +77,8 @@ export function activateInsight(state: GameState, nowTimestamp: number): Partial
   if (hasConcentracionProfunda(state)) durationSeconds += SYNAPSE_CONSTANTS.concentracionInsightDurationAddS;
   // GDD §10 Node 24 A: Insight duration +3 s (stacks with Concentración).
   durationSeconds += insightDurationDecisionAddS(state);
+  // GDD §12 Analítica: +2s each level (Sprint 6 Phase 6.2 wired).
+  durationSeconds += archetypeInsightDurationAddSec(state);
   if (hasHyperfocus && baseLevel === maxLevel) {
     durationSeconds = durationSeconds * (1 + SYNAPSE_CONSTANTS.hyperfocusLevel3DurationBoost);
   }
