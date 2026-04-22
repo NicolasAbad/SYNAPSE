@@ -9,6 +9,7 @@ import { pathwayChargeRateMult } from './pathways';
 import { checkRegionUnlock } from './regions';
 import { shouldCheckSpontaneous, rollSpontaneous, activateSpontaneous } from './spontaneous';
 import { archetypeSpontaneousRateMult } from './archetypes';
+import { checkMentalState, mentalStateProductionMult, mentalStateDuration, updateHyperfocusTracking } from './mentalStates';
 import type { GameState } from '../types/GameState';
 
 // Structural intrinsics (not designer-tunable). Changing breaks determinism / spec.
@@ -118,25 +119,24 @@ function stepResonantPatternPrune(s: GameState, nowTimestamp: number): void {
   }
 }
 
-/**
- * Step 8: Mental State triggers (priority: Eureka > Flow > Hyperfocus > Deep > Dormancy).
- * TODO Sprint 7: evaluate trigger conditions per §17; promote when newPriority > currentPriority.
- */
-function stepMentalStateTriggers(_s: GameState, _nowTimestamp: number): void {
-  // Framework placeholder — no-op until Sprint 7 wires MENTAL-4 trigger functions.
+/** Step 8 (Sprint 7.3): Mental State triggers per §17 + MENTAL-7 priority resolver. */
+function stepMentalStateTriggers(s: GameState, nowTimestamp: number): void {
+  Object.assign(s, updateHyperfocusTracking(s, nowTimestamp));
+  const newState = checkMentalState(s, nowTimestamp);
+  if (newState !== s.currentMentalState) {
+    s.currentMentalState = newState;
+    s.mentalStateExpiry = newState === null ? null : nowTimestamp + mentalStateDuration(newState);
+  }
+  if (newState !== null) {
+    s.effectiveProductionPerSecond *= mentalStateProductionMult(s, nowTimestamp);
+  }
 }
 
-/** Step 9: Era 3 event activation on first tick of cycle. TODO Sprint 6: modal dispatch per §23. */
+/** Step 9: Era 3 event activation on first tick of cycle (§23). */
 function stepEra3EventActivation(s: GameState, nowTimestamp: number): void {
   const cycleAgeMs = nowTimestamp - s.cycleStartTimestamp;
-  if (
-    s.prestigeCount >= SYNAPSE_CONSTANTS.era3StartPrestige &&
-    s.prestigeCount <= SYNAPSE_CONSTANTS.era3EndPrestige &&
-    s.cycleStartTimestamp !== 0 &&
-    cycleAgeMs >= 0 &&
-    cycleAgeMs < ERA3_FIRST_TICK_WINDOW_MS
-  ) {
-    // TODO Sprint 6: modal dispatch goes here.
+  if (s.prestigeCount >= SYNAPSE_CONSTANTS.era3StartPrestige && s.prestigeCount <= SYNAPSE_CONSTANTS.era3EndPrestige && s.cycleStartTimestamp !== 0 && cycleAgeMs >= 0 && cycleAgeMs < ERA3_FIRST_TICK_WINDOW_MS) {
+    // Modal dispatch handled by UI layer reading prestigeCount + cycleAge.
   }
 }
 
@@ -154,13 +154,9 @@ function stepSpontaneousEventTrigger(s: GameState, nowTimestamp: number): void {
   Object.assign(s, activateSpontaneous(s, def, nowTimestamp));
 }
 
-/**
- * Step 11: Micro-challenge trigger (MICRO-1).
- * TODO Sprint 7: cross-threshold check + cooldown + attempt cap + seeded pick per §18.
- * Scaffolding: prestigeCount < 15 gate means this branch is inactive until late game.
- */
+/** Step 11: Micro-challenge trigger (MICRO-1). Sprint 7.4 wires real check. */
 function stepMicroChallengeTrigger(_s: GameState, _nowTimestamp: number): void {
-  // Framework placeholder — no-op until Sprint 7 wires MICRO-1 trigger functions.
+  // Sprint 7.4 placeholder — gated on prestigeCount >= 15 when wired.
 }
 
 /** Step 12: Anti-spam TAP-1 — derived per-tick flag, not stored. Consumed by the tap handler. */
@@ -184,13 +180,13 @@ export function tick(state: GameState, nowTimestamp: number): TickResult {
   stepExpireModifiers(s, nowTimestamp);
   stepInsightActivation(s, nowTimestamp);
   stepRecalcProduction(s);
+  stepMentalStateTriggers(s, nowTimestamp); // Mental state mult applied before stepProduce
   stepProduce(s);
   stepConsciousnessBarUnlock(s);
   // REG-1 unlock check (Sprint 5 Phase 5.4).
   checkRegionUnlock(s);
   stepDischargeChargeAccumulation(s, nowTimestamp);
   stepResonantPatternPrune(s, nowTimestamp);
-  stepMentalStateTriggers(s, nowTimestamp);
   stepEra3EventActivation(s, nowTimestamp);
   stepSpontaneousEventTrigger(s, nowTimestamp);
   stepMicroChallengeTrigger(s, nowTimestamp);

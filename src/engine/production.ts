@@ -192,7 +192,7 @@ export function calculateProduction(state: GameState): { base: number; effective
   // Pattern cycle bonus: post-softCap mult, capped at patternCycleCap (§10).
   const cycleMult = patternCycleBonus(countCyclePatterns(state), patternCycleBonusAdd(state));
   const base = sum * finalMult * cycleMult;
-  // Sprint 7 stubs: mentalStateMod × mutationTemporalMod (identity until wired).
+  // Mental State + Mood multipliers applied in tick.ts (clock-dependent).
   const effective = state.insightActive ? base * state.insightMultiplier : base;
   return { base, effective };
 }
