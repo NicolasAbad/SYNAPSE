@@ -6,10 +6,97 @@
 
 ## Current status
 
-**Phase:** Sprint 6.8 Re-architecture CLOSED. 5 phase commits spec'd the full-game v1.0 re-architecture (Region redesign + v1.1/v1.5 pull-ins + Upgrades audit + Phase 5 upgrade additions). **1091 tests pass** across all 5 commits; 4/4 gates green. No Region sub-system code yet — those ship in Sprint 7.5.
-**Last updated:** 2026-04-22 after Sprint 6.8 Phase 5 close.
-**Active sprint:** Sprint 7 ready, plus new Sprint 7.5/7.6/7.7/7.8/7.9 inserted by Sprint 6.8 re-architecture. Total sprint 7-13 work estimate: ~93 days (+5.5 weeks vs original).
-**Next action:** Start Sprint 7 implementation per the pre-code research catalog already prepared (Achievements + Mental States + Micro-challenges + Diary + What-if polish, 5 days). Sprint 7.5 Region Deepening follows immediately.
+**Phase:** Sprint 7 CLOSED. All 6 phases (7.1 Achievements data → 7.2 Store integration → 7.3 Mental States → 7.4 Micro-challenges → 7.5 Diary writes + UI → 7.6 Achievements UI + What-if polish) shipped. **1243 tests pass** (+152 from Sprint 6.8 close 1091); 4/4 gates green.
+**Last updated:** 2026-04-22 after Sprint 7 close.
+**Active sprint:** Sprint 7.5 Region Deepening ready (10-12 days, the BIG one — 9 new fields, 5 sub-systems, brain canvas panel).
+**Next action:** Sprint 7.5 Phase 7.5.1 — GameState scaffolding (110→119 fields, validateLoadedState bump, PRESTIGE_RESET split update, consistency tests, migration code for legacy 110-field saves).
+
+### Sprint 7 closing dashboard (this session, 2026-04-22)
+
+- **Phases:** 6 phase commits
+  - Phase 7.1 (`fdc374f`) — 35 Achievements data + engine + 50 unit tests
+  - Phase 7.2 (`bfd89fb`) — Store integration (unlockAchievement watchers, toast, diary entries, +16 tests)
+  - Phase 7.3 (`cdbe041`) — Mental States engine (5 states + priority + MENTAL-1..8) + tick wiring + 37 tests
+  - Phase 7.4 (`7e31c55`) — Micro-challenges engine (8 challenges + MICRO-1..5 + tick wiring) + 30 tests
+  - Phase 7.5 (`d9a0997`) — Diary write integrations (RP, personal_best, fragment, spontaneous) + DiarySubtab UI + 10 tests
+  - Phase 7.6 *(this commit)* — AchievementsSubtab UI (category tabs + ACH-2 hidden display) + What-if ±10% confidence band polish + Sprint 7 close
+
+- **Scope delivered:**
+  - ✅ 35 Achievements (30 base + 5 region-stubbed) with 175-Spark pool
+  - ✅ Achievement triggers wired to: prestige, setPolarity, setArchetype, setMutation, setPathway, buyNeuron, buyUpgrade, discharge, readFragment, chooseEnding
+  - ✅ Pre-reset + post-reset achievement check at prestige (catches both cycle-scoped cyc_* and persistent meta_*)
+  - ✅ Achievement toast UI surface (3s expiry, dismissable, ACH-3)
+  - ✅ DiaryEntryType extended with 'spontaneous' (D4 decision — clean semantics)
+  - ✅ Mental State priority resolver (Eureka > Flow > Hyperfocus > Deep > Dormancy) with §17 effect mults
+  - ✅ MENTAL-5 pendingHyperfocusBonus consumption (level 1→2, 2→3, 3+0.5 duration boost)
+  - ✅ MENTAL-7 Mental + Mood time-scale separation (mood field forwards-compat, defaults to Calm)
+  - ✅ MENTAL-8 Dormancy bonus enhanced at high Mood (1.30 vs 1.15)
+  - ✅ Hyperfocus tracking (focusAbove50Since timestamp)
+  - ✅ 8 Micro-challenges with deterministic MICRO-4 seed
+  - ✅ MICRO-1..5 trigger gates (30% threshold, 120s cooldown, 3 per cycle, P15+ unlock)
+  - ✅ Per-challenge complete checks (tap_surge, focus_hold, discharge_drought, neuron_collector, perfect_cascade, patient_mind, upgrade_rush, synergy_master)
+  - ✅ Sparks granted on micro-challenge success (inline in tick.ts)
+  - ✅ Neural Diary with 7 entry types + 500-entry circular buffer
+  - ✅ Diary writes from: prestige, RP discovery, personal best, ending, fragment read, achievement unlock, spontaneous activation
+  - ✅ Mind→Diary subtab with reverse-chronological list + per-type icons + summaries
+  - ✅ Mind→Achievements subtab with 6 category tabs + ACH-2 hidden display + unlock progress
+  - ✅ What-if Preview ±10% confidence band (Sprint 7 polish)
+  - ✅ Session-activity guard for Mental States (prevents stale-load Dormancy false fire)
+
+- **Tests delta breakdown:**
+  - Phase 7.1: +50 (35 achievement triggers + data integrity + engine API)
+  - Phase 7.2: +16 (store integration: prestige, ending, polarity, mutation, pathway, archetype, idempotency, sparks accumulation, toast, diary cap)
+  - Phase 7.3: +37 (5 trigger conditions + priority hierarchy + production mults + MENTAL-5 bonus + Hyperfocus tracking + duration table)
+  - Phase 7.4: +30 (8 challenge complete checks + trigger gates + deterministic seed + fail/cooldown)
+  - Phase 7.5: +10 (DiarySubtab rendering + 7 entry types + reverse-chronological + scalability + integration)
+  - Phase 7.6: +9 (AchievementsSubtab UI + 6 tabs + ACH-2 hidden + unlock progress)
+  - Total: +152 → 1243 / 37 skipped
+
+- **Design decisions (locked Sprint 7):**
+  - DiaryEntryType extended with 'spontaneous' (Sprint 7.1 D4) — preserves nar_ten_fragments/nar_diary_50 semantics
+  - Mental State multiplier applies in tick.ts (real clock), not production.ts (CODE-9 pure)
+  - Session-activity guard for Mental States (prevents stale lastPurchaseTimestamp=0 from triggering Dormancy)
+  - mood field forwards-compat via optional access (Sprint 7.5 adds the field)
+  - Pre-reset + post-reset achievement check at prestige (catches cycle-scoped + lifetime achievements)
+  - 5 Region achievements STUBBED to false (Sprint 7.5 wires real triggers when sub-systems land)
+  - hid_no_tap_cycle STUBBED (D5c — defer until Sprint 8b adds cycle-tap counter)
+  - hid_no_discharge_full_cycle derives streak from diaryEntries filter (D6 — no new field)
+  - INSIGHT_MAX_LEVEL derived from insightMultiplier.length (no hardcoded 3)
+
+- **Files created:**
+  - src/config/achievements.ts (~310 lines) — 35 entries
+  - src/engine/achievements.ts — checkAllAchievements + helpers
+  - src/engine/mentalStates.ts (189 lines) — 5-state engine
+  - src/config/microChallenges.ts — 8 entries
+  - src/engine/microChallenges.ts — engine
+  - src/ui/panels/DiarySubtab.tsx — diary list UI
+  - src/ui/panels/AchievementsSubtab.tsx — achievements grid UI
+  - 6 test files (achievements + 7.2 unlock + mentalStates + microChallenges + DiarySubtab + AchievementsSubtab)
+
+- **Files modified:**
+  - src/types/index.ts — AchievementCategory + AchievementDef + AchievementCheckResult; DiaryEntryType +'spontaneous'
+  - src/store/gameStore.ts — achievementToast UIState + processAchievementUnlocks helper + dismissAchievementToast + 10 action wirings + RP/PB/spontaneous diary writes
+  - src/store/saveScheduler.ts — strips achievementToast from save
+  - src/engine/tick.ts — stepMentalStateTriggers + stepMicroChallengeTrigger wired (lines tightened to 198)
+  - src/engine/narrative.ts — applyFragmentRead writes 'fragment' diary entry
+  - src/engine/spontaneous.ts — activateSpontaneous writes 'spontaneous' diary entry
+  - src/ui/panels/MindPanel.tsx — diary + achievements subtabs wired
+  - src/ui/modals/WhatIfPreview.tsx — ±10% confidence band display
+  - src/config/strings/en.ts — +35×2 achievement keys, +8×2 micro-challenge keys, +diary.* block, +misc keys
+  - src/config/constants.ts — +6 achievement threshold constants
+
+- **Sprint 7.5 Region Deepening — first action (next session):**
+  Phase 7.5.1 — GameState scaffolding:
+  1. Add 9 new fields to src/types/GameState.ts (memoryShards, memoryShardUpgrades, activePrecommitment, precommitmentStreak, mood, moodHistory, brocaNamedMoments, mastery, autoBuyConfig)
+  2. Add defaults to createDefaultState() in gameStore.ts
+  3. Update GAMESTATE_FIELD_COUNT 110→119 in constants.ts
+  4. Update saveGame validateLoadedState to accept 119
+  5. migrateState() adds defaults for 9 new fields when loading 110-field saves
+  6. Update PRESTIGE_RESET split (current: 45/60/4/1=110, target: 46/68/4/1=119)
+  7. Update tests/consistency.test.ts assertions
+  8. Lint/test/gates green
+
+  Then Phase 7.5.2-7.5.9 ship the 5 sub-systems per GDD §16 spec.
 
 ### Sprint 6.8 Re-architecture dashboard (this session, 2026-04-22)
 

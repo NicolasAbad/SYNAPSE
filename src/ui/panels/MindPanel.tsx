@@ -4,6 +4,7 @@ import type { MindSubtabId } from '../../store/gameStore';
 import { t } from '../../config/strings';
 import { PatternTreeView } from './PatternTreeView';
 import { DiarySubtab } from './DiarySubtab';
+import { AchievementsSubtab } from './AchievementsSubtab';
 
 /**
  * Mind tab panel — subtab router per Sprint 4b Phase 4b.4 (scope-addition
@@ -135,7 +136,7 @@ function MindSubtabBody({ subtab }: { subtab: MindSubtabId }) {
       {subtab === 'patterns' && <PatternTreeView />}
       {subtab === 'archetypes' && <Placeholder keyName="mind_subtabs.archetypes_placeholder" />}
       {subtab === 'diary' && <DiarySubtab />}
-      {subtab === 'achievements' && <Placeholder keyName="mind_subtabs.achievements_placeholder" />}
+      {subtab === 'achievements' && <AchievementsSubtab />}
       {subtab === 'resonance' && <Placeholder keyName="mind_subtabs.resonance_placeholder" />}
     </div>
   );

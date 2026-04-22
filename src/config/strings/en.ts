@@ -110,6 +110,7 @@ export const en = {
     diary_placeholder: 'Unlocks in Sprint 6',
     diary_empty: 'Your Neural Diary is empty. Memories of your awakenings will appear here.',
     diary_count: '{n} entries',
+    hidden_locked: 'Hidden achievement — discover to reveal.',
     achievements_placeholder: 'Unlocks in Sprint 7',
     resonance_placeholder: 'Unlocks in Sprint 8b',
     patterns_title: 'Pattern Tree',

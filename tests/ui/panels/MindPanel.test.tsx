@@ -54,10 +54,10 @@ describe('MindPanel — switching to non-home subtab overlays body', () => {
     expect(getByTestId('diary-subtab-empty')).toBeTruthy();
   });
 
-  test('clicking achievements shows Sprint 7 placeholder', () => {
+  test('clicking achievements shows the AchievementsSubtab (Sprint 7.6 wired)', () => {
     const { getByTestId } = render(<MindPanel />);
     fireEvent.pointerDown(getByTestId('mind-subtab-achievements'));
-    expect(getByTestId('mind-subtab-body-achievements').textContent).toContain('Sprint 7');
+    expect(getByTestId('achievements-subtab')).toBeTruthy();
   });
 
   test('clicking resonance shows Sprint 8b placeholder', () => {

@@ -57,9 +57,14 @@ export const WhatIfPreview = memo(function WhatIfPreview({
   const projectedPPS = Math.max(0.01, effectivePPS * mutMult); // CONST-OK: avoid div-by-zero
   const remaining = Math.max(0, currentThreshold);
   const estimatedSeconds = remaining / projectedPPS;
-  const display = estimatedSeconds >= 60
-    ? `${(estimatedSeconds / 60).toFixed(1)} min` // CONST-OK: sec→min
-    : `${Math.max(1, Math.round(estimatedSeconds))} s`;
+  // Sprint 7.6 polish: ±10% confidence band per Sprint 7 SPRINTS.md AI check.
+  // Estimate is a model — show uncertainty so player doesn't anchor on exact.
+  const lowSec = estimatedSeconds * 0.9;  // CONST-OK: ±10% band lower
+  const highSec = estimatedSeconds * 1.1; // CONST-OK: ±10% band upper
+  const fmt = (sec: number): string => sec >= 60
+    ? `${(sec / 60).toFixed(1)} min` // CONST-OK: sec→min
+    : `${Math.max(1, Math.round(sec))} s`;
+  const display = `${fmt(lowSec)} – ${fmt(highSec)}`;
 
   return (
     <div
