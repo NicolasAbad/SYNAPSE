@@ -76,9 +76,14 @@ export function activateSpontaneous(
   nowTimestamp: number,
 ): Partial<GameState> {
   const e = def.effect;
+  // Sprint 7.5: write 'spontaneous' diary entry for hid_spontaneous_hunter
+  // tracking + Diary visibility. 500-entry circular cap enforced.
+  const diary = [...state.diaryEntries, { timestamp: nowTimestamp, type: 'spontaneous' as const, data: { spontaneousId: def.id, eventType: def.type } }];
+  const trimmed = diary.length > 500 ? diary.slice(diary.length - 500) : diary; // CONST-OK: nar_diary_50 + Sprint 7.5 cap
   const updates: Partial<GameState> = {
     lastSpontaneousCheck: nowTimestamp,
     cyclePositiveSpontaneous: state.cyclePositiveSpontaneous + (def.type === 'positive' ? 1 : 0),
+    diaryEntries: trimmed,
   };
 
   if (e.kind === 'free_next_upgrade') {

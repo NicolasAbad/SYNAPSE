@@ -106,8 +106,10 @@ export const en = {
     diary: 'Diary',
     achievements: 'Achievements',
     resonance: 'Resonance',
-    archetypes_placeholder: 'Unlocks in Sprint 6',
+    archetypes_placeholder: 'Pick your archetype at P7 to unlock.',
     diary_placeholder: 'Unlocks in Sprint 6',
+    diary_empty: 'Your Neural Diary is empty. Memories of your awakenings will appear here.',
+    diary_count: '{n} entries',
     achievements_placeholder: 'Unlocks in Sprint 7',
     resonance_placeholder: 'Unlocks in Sprint 8b',
     patterns_title: 'Pattern Tree',
@@ -508,6 +510,17 @@ export const en = {
     patient_mind: { name: 'Patient Mind', description: "Don't tap for 45 seconds." },
     upgrade_rush: { name: 'Upgrade Rush', description: 'Buy 3 upgrades in 90 seconds.' },
     synergy_master: { name: 'Synergy Master', description: 'Own all 5 neuron types within 2 minutes of cycle start.' },
+  },
+
+  // Sprint 7.5 — Neural Diary entry summaries.
+  diary: {
+    prestige_title: 'Awakening',
+    rp_title: 'Resonant Pattern',
+    rp_subtitle: 'Discovered',
+    pb_title: 'Personal best at',
+    ending_subtitle: 'Choice:',
+    fragment_title: 'Fragment read',
+    spontaneous_subtitle: 'Witnessed',
   },
 
   // Sprint 3+ adds keys as new features ship — do NOT preload

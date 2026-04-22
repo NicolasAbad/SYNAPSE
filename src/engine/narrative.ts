@@ -82,14 +82,21 @@ export function checkFragmentTriggers(state: GameState, event: FragmentEvent): s
  * First-read effect per NARR-8: appends to `narrativeFragmentsSeen` and
  * grants +1 Memory (GDD §3 Memory table). No-op if already seen. Era 3
  * event IDs (`era3_*`) persist to the array but do NOT grant Memory.
+ *
+ * Sprint 7.5: also pushes 'fragment' diary entry on first-read (excluded for
+ * era3_* system events to keep the Diary focused on player-narrative beats).
  */
-export function applyFragmentRead(state: GameState, id: string): Partial<GameState> {
+export function applyFragmentRead(state: GameState, id: string, nowTimestamp = 0): Partial<GameState> {
   if (state.narrativeFragmentsSeen.includes(id)) return {};
   const seen = [...state.narrativeFragmentsSeen, id];
   if (id.startsWith('era3_')) return { narrativeFragmentsSeen: seen };
+  // 500-entry diary cap (Sprint 7.5 per achievement processor pattern).
+  const diary = [...state.diaryEntries, { timestamp: nowTimestamp, type: 'fragment' as const, data: { fragmentId: id } }];
+  const trimmed = diary.length > 500 ? diary.slice(diary.length - 500) : diary; // CONST-OK: nar_diary_50 + Sprint 7.5 cap
   return {
     narrativeFragmentsSeen: seen,
     memories: state.memories + 1,
+    diaryEntries: trimmed,
   };
 }
 
@@ -104,13 +111,13 @@ export function getFragment(id: string): FragmentDef | null {
  * triggers + applies the first-read effects atomically. Returns the merged
  * Partial<GameState> the caller should spread into its set() call.
  */
-export function dispatchNarrative(state: GameState, event: FragmentEvent): Partial<GameState> {
+export function dispatchNarrative(state: GameState, event: FragmentEvent, nowTimestamp = 0): Partial<GameState> {
   const fired = checkFragmentTriggers(state, event);
   if (fired.length === 0) return {};
   let updates: Partial<GameState> = {};
   let working = state;
   for (const id of fired) {
-    const read = applyFragmentRead(working, id);
+    const read = applyFragmentRead(working, id, nowTimestamp);
     updates = { ...updates, ...read };
     working = { ...working, ...read };
   }

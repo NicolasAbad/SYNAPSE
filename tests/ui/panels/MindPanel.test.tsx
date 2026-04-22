@@ -38,19 +38,20 @@ describe('MindPanel — switching to non-home subtab overlays body', () => {
     expect(getByTestId('pattern-tree-view')).toBeTruthy();
   });
 
-  test('clicking archetypes shows the Sprint 6 placeholder', () => {
+  test('clicking archetypes shows the placeholder (Sprint 7.6 will replace with real panel)', () => {
     const { getByTestId } = render(<MindPanel />);
     fireEvent.pointerDown(getByTestId('mind-subtab-archetypes'));
     const body = getByTestId('mind-subtab-body-archetypes');
     const placeholder = body.querySelector('[data-testid="mind-subtab-placeholder"]');
     expect(placeholder).toBeTruthy();
-    expect(placeholder?.textContent).toContain('Sprint 6');
+    expect(placeholder?.textContent).toContain('archetype');
   });
 
-  test('clicking diary shows Sprint 6 placeholder', () => {
+  test('clicking diary shows the DiarySubtab (Sprint 7.5 wired)', () => {
     const { getByTestId } = render(<MindPanel />);
     fireEvent.pointerDown(getByTestId('mind-subtab-diary'));
-    expect(getByTestId('mind-subtab-body-diary').textContent).toContain('Sprint 6');
+    // Empty default state → DiarySubtab renders empty-state component
+    expect(getByTestId('diary-subtab-empty')).toBeTruthy();
   });
 
   test('clicking achievements shows Sprint 7 placeholder', () => {

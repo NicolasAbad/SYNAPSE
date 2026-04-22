@@ -506,6 +506,8 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
     const { state: nextState, outcome } = handlePrestige(state, nowTimestamp);
     // Push prestige diary entry BEFORE post-reset achievement check so
     // hid_no_discharge_full_cycle can count this cycle's tail entry.
+    // Sprint 7.5: also push personal_best entry if achieved + resonant_pattern
+    // entries for any newly-discovered RPs (handlePrestige fires them inline).
     const prestigeDiary: DiaryEntry = {
       timestamp: nowTimestamp,
       type: 'prestige',
@@ -517,7 +519,17 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
         dischargesUsed: state.cycleDischargesUsed,
       },
     };
-    const withDiary = { ...nextState, diaryEntries: [...nextState.diaryEntries, prestigeDiary], achievementsUnlocked: [...nextState.achievementsUnlocked, ...preCheck.newlyUnlocked] };
+    const extraDiary: DiaryEntry[] = [];
+    if (outcome.wasPersonalBest) {
+      extraDiary.push({ timestamp: nowTimestamp, type: 'personal_best', data: { prestigeCount: state.prestigeCount, cycleMinutes: outcome.cycleDurationMs / 60_000 } });
+    }
+    // Newly-discovered RPs: compare pre-prestige vs post-prestige resonantPatternsDiscovered arrays.
+    for (let i = 0; i < state.resonantPatternsDiscovered.length; i++) {
+      if (!state.resonantPatternsDiscovered[i] && nextState.resonantPatternsDiscovered[i]) {
+        extraDiary.push({ timestamp: nowTimestamp, type: 'resonant_pattern', data: { rpIndex: i, rpNumber: i + 1 } });
+      }
+    }
+    const withDiary = { ...nextState, diaryEntries: [...nextState.diaryEntries, prestigeDiary, ...extraDiary], achievementsUnlocked: [...nextState.achievementsUnlocked, ...preCheck.newlyUnlocked] };
     // Merge mode (no `true` flag) — preserves action bindings per CLAUDE.md
     // Zustand pitfall rule. undoToast cleared since pre-prestige purchases no
     // longer apply to the new cycle. Narrative triggers fire on the POST-reset
