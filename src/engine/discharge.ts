@@ -14,6 +14,7 @@
 import { SYNAPSE_CONSTANTS } from '../config/constants';
 import { UPGRADES_BY_ID } from '../config/upgrades';
 import { cascadeThresholdOverride, dischargeDamageDecisionMult } from './patternDecisions';
+import { mutationDischargeMult } from './mutations';
 import type { GameState } from '../types/GameState';
 import type { Polarity } from '../types';
 
@@ -81,7 +82,10 @@ export function computeDischargeMultiplier(state: GameState, isCascade: boolean)
   const decisionMult = dischargeDamageDecisionMult(state);
   // GDD §11 Polarity Discharge mult (Excit −15%, Inhib +30%).
   const polMult = polarityDischargeMult(state.currentPolarity);
-  return base * amp * cascade * decisionMult * polMult;
+  // GDD §13 Mutation Discharge mult (#3 Descarga Rápida −40% bonus, #4 Disparo
+  // Concentrado ×3). Wired Sprint 5 Phase 5.2.
+  const mutMult = mutationDischargeMult(state);
+  return base * amp * cascade * decisionMult * polMult * mutMult;
 }
 
 /**

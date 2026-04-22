@@ -113,6 +113,7 @@ export const SYNAPSE_CONSTANTS = {
   // ── Mutations ──
   mutationPoolSize: 15,
   mutationOptionsPerCycle: 3, // +1 with Creativa, +1 with Genius Pass
+  mutationUnlockPrestige: 7, // GDD §13: "Each cycle (from P7+)"
   // Sprint 5: cross-cutting bonuses to mutationOptionsPerCycle (per GDD §13).
   // Per-mutation effect tuning lives in src/config/mutations.ts (canonical
   // data file, exempt from Gate 3 per CLAUDE.md src/config/ exclusion).

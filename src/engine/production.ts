@@ -24,6 +24,7 @@ import { SYNAPSE_CONSTANTS } from '../config/constants';
 import { NEURON_BASE_RATES } from '../config/neurons';
 import { UPGRADES_BY_ID } from '../config/upgrades';
 import { patternCycleBonusAdd } from './patternDecisions';
+import { mutationProdMult } from './mutations';
 import type { GameState } from '../types/GameState';
 import type { NeuronState, NeuronType, Polarity, UpgradeEffect } from '../types';
 
@@ -179,9 +180,12 @@ export function calculateProduction(state: GameState): { base: number; effective
   sum += state.totalPatterns * SYNAPSE_CONSTANTS.patternFlatBonusPerNode;
 
   const globalMult = computeGlobalUpgradeMult(state, ownedIds);
-  // Stubs for Sprint 5-7: archetypeMod × regionMult × mutationStaticMod (all identity until wired).
+  // Stubs for Sprint 6-7: archetypeMod × regionMult (all identity until wired).
   // GDD §11 polarityMod wired Sprint 4c Phase 4c.2.
-  const rawMult = state.connectionMult * globalMult * polarityProdMult(state.currentPolarity);
+  // GDD §13 mutationStaticMod wired Sprint 5 Phase 5.2 — covers #1 Eficiencia,
+  // #2 Hiperestimulación. Time-based (#11 Sprint, #12 Crescendo) and per-type
+  // (#6 Especialización) effects ride on top in Phase 5.6 / Sprint 6.
+  const rawMult = state.connectionMult * globalMult * polarityProdMult(state.currentPolarity) * mutationProdMult(state);
   const finalMult = softCap(rawMult);
   // Pattern cycle bonus: multiplicative post-softCap, capped at patternCycleCap.
   // Node 6 A decision (if chosen) contributes an extra +0.08 addend (GDD §10).

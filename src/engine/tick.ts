@@ -1,13 +1,12 @@
 // Implements docs/GDD.md §35 TICK-1 — 12-step pure reducer. Rules: CODE-9,
 // TICK-1, RP-1 (step 7), SPONT-1 (step 10), MICRO-1 (step 11), TAP-1 (step 12).
-// cycleTime derived per-site (Phase 5 Sprint 1 Option B). Phase 3.5 split
-// steps into functions; Phase 5 added step 2.5 stepInsightActivation.
 
 import { SYNAPSE_CONSTANTS } from '../config/constants';
 import { calculateProduction } from './production';
 import { tryActivateInsight } from './insight';
 import { hash, randomInRange } from './rng';
 import { UPGRADES_BY_ID } from '../config/upgrades';
+import { mutationChargeIntervalMs, mutationMaxChargesOverride } from './mutations';
 import type { GameState } from '../types/GameState';
 
 // Structural intrinsics (not designer-tunable). Changing breaks determinism / spec.
@@ -102,8 +101,11 @@ function stepDischargeChargeAccumulation(s: GameState, nowTimestamp: number): vo
     const e = UPGRADES_BY_ID[u.id]?.effect;
     if (e?.kind === 'charge_rate_mult') intervalMs = intervalMs / e.mult;
   }
+  // GDD §13 Mutations: #3 Descarga Rápida → 12 min interval; #4 Disparo Concentrado → max=1.
+  intervalMs = mutationChargeIntervalMs(s, intervalMs);
+  const effectiveMax = mutationMaxChargesOverride(s) ?? s.dischargeMaxCharges;
   if (nowTimestamp - s.dischargeLastTimestamp >= intervalMs) {
-    s.dischargeCharges = Math.min(s.dischargeMaxCharges, s.dischargeCharges + 1);
+    s.dischargeCharges = Math.min(effectiveMax, s.dischargeCharges + 1);
     s.dischargeLastTimestamp = nowTimestamp;
   }
 }

@@ -21,6 +21,7 @@ import { applyTap } from './tap';
 import { performDischarge, type DischargeOutcome } from '../engine/discharge';
 import { handlePrestige, type PrestigeOutcome } from '../engine/prestige';
 import { applyPermanentPatternDecisionsToState } from '../engine/patternDecisions';
+import { MUTATIONS_BY_ID } from '../config/mutations';
 
 /**
  * Pure default state. Matches GDD §32 100-field enumeration exactly.
@@ -310,6 +311,14 @@ export interface GameStoreActions {
    * read `state.currentPolarity` directly — no state-cache propagation needed.
    */
   setPolarity: (polarity: Polarity) => { fired: boolean };
+  /**
+   * Sprint 5 Phase 5.2: pick a Mutation for the current cycle (GDD §13).
+   * Pre-P7 returns fired=false (Mutations unlock at P7+ per spec).
+   * Mutation #14 Déjà Vu: also rehydrates upgrades from `lastCycleConfig.upgrades`
+   * so the player's previous-cycle purchases re-apply (with cost ×2 enforced via
+   * mutationUpgradeCostMod in tryBuyUpgrade).
+   */
+  setMutation: (mutationId: string) => { fired: boolean };
 }
 
 export const useGameStore = create<GameState & UIState & GameStoreActions>((set, get) => ({
@@ -424,6 +433,23 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
       return { fired: false };
     }
     set({ currentPolarity: polarity });
+    return { fired: true };
+  },
+  setMutation: (mutationId) => {
+    const state = get();
+    if (state.prestigeCount < SYNAPSE_CONSTANTS.mutationUnlockPrestige) {
+      return { fired: false };
+    }
+    const mutation = MUTATIONS_BY_ID[mutationId];
+    if (!mutation) return { fired: false };
+    // Déjà Vu (#14): rehydrate upgrades from last cycle's snapshot.
+    // Cost ×2 is enforced separately via mutationUpgradeCostMod in tryBuyUpgrade.
+    let upgrades = state.upgrades;
+    if (mutation.effect.kind === 'deja_vu') {
+      const carry = state.lastCycleConfig?.upgrades ?? [];
+      upgrades = carry.map((id) => ({ id, purchased: true, purchasedAt: 0 }));
+    }
+    set({ currentMutation: { id: mutationId }, mutationSeed: mutationId === '' ? 0 : state.mutationSeed, upgrades });
     return { fired: true };
   },
 }));

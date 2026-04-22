@@ -18,6 +18,7 @@ import { NEURON_CONFIG } from '../config/neurons';
 import { UPGRADES_BY_ID } from '../config/upgrades';
 import { SYNAPSE_CONSTANTS } from '../config/constants';
 import { computeConnectionMult } from '../engine/production';
+import { mutationNeuronCostMod, mutationUpgradeCostMod } from '../engine/mutations';
 import type { GameState } from '../types/GameState';
 import type { NeuronState, NeuronType } from '../types';
 
@@ -37,13 +38,31 @@ function countOf(neurons: readonly NeuronState[], type: NeuronType): number {
   return 0;
 }
 
-/** Apply COST-1 modifiers: thought-cost upgrades get −20% if Funciones Ejecutivas is owned. */
-function finalUpgradeCost(baseCost: number, costCurrency: 'thoughts' | 'memorias', owned: ReadonlySet<string>): number {
-  if (costCurrency !== 'thoughts') return baseCost;
-  const funcEjec = UPGRADES_BY_ID['funciones_ejecutivas'];
-  if (!funcEjec || !owned.has('funciones_ejecutivas')) return baseCost;
-  if (funcEjec.effect.kind !== 'upgrade_cost_reduction') return baseCost;
-  return baseCost * (1 - funcEjec.effect.pct);
+/**
+ * COST-1 (GDD §4): final cost = base × mutationCostMod × funcionesEjecutivasMod ×
+ * pathwayCostMod, in EXACTLY that order. Sprint 5 Phase 5.2 wires mutationCostMod
+ * (Eficiencia Neural #1, Neuroplasticidad #5, Déjà Vu #14). Pathway cost mod is
+ * 1.0 in v1.0 per GDD §14 (kept in formula for spec correctness — Phase 5.3
+ * confirms via pathwaysCostMod helper).
+ */
+function finalUpgradeCost(
+  baseCost: number,
+  costCurrency: 'thoughts' | 'memorias',
+  owned: ReadonlySet<string>,
+  state: GameState,
+): number {
+  // Mutation mod first per COST-1 order.
+  let cost = baseCost * mutationUpgradeCostMod(state);
+  // Funciones Ejecutivas applies only to thought-cost upgrades (not memorias).
+  if (costCurrency === 'thoughts') {
+    const funcEjec = UPGRADES_BY_ID['funciones_ejecutivas'];
+    if (funcEjec && owned.has('funciones_ejecutivas') && funcEjec.effect.kind === 'upgrade_cost_reduction') {
+      cost = cost * (1 - funcEjec.effect.pct);
+    }
+  }
+  // Pathway cost mod (Sprint 5 Phase 5.3 will plug a real helper). All v1.0
+  // pathways set pathwayCostMod=1.0 per GDD §14, so identity now is correct.
+  return cost;
 }
 
 /** Per-neuron cost with COST-1 modifiers applied (Sprint 3: no modifiers for neurons). */
@@ -60,10 +79,12 @@ export function isNeuronUnlocked(state: Pick<GameState, 'neurons' | 'prestigeCou
   return false;
 }
 
-/** Reason code + cost snapshot. UI can use this to grey out / tooltip without attempting a buy. */
+/** Reason code + cost snapshot. UI uses this to grey out / show price without attempting a buy. */
 export function canBuyNeuron(state: GameState, type: NeuronType): { reason: BuyReason; cost: number } {
   if (!isNeuronUnlocked(state, type)) return { reason: 'locked', cost: 0 };
-  const cost = neuronBuyCost(type, countOf(state.neurons, type));
+  // COST-1: base × mutationNeuronCostMod. Wired Sprint 5 Phase 5.2 — covers
+  // Eficiencia Neural #1 (×0.6). Pathway/FE pieces don't apply to neurons.
+  const cost = neuronBuyCost(type, countOf(state.neurons, type)) * mutationNeuronCostMod(state);
   if (state.thoughts < cost) return { reason: 'insufficient_funds', cost };
   return { reason: 'ok', cost };
 }
@@ -74,7 +95,7 @@ export function canBuyUpgrade(state: GameState, id: string): { reason: BuyReason
   const owned = ownedUpgradeIds(state);
   if (owned.has(id)) return { reason: 'already_owned', cost: 0 };
   if (state.prestigeCount < def.unlockPrestige) return { reason: 'locked', cost: def.cost };
-  const cost = finalUpgradeCost(def.cost, def.costCurrency, owned);
+  const cost = finalUpgradeCost(def.cost, def.costCurrency, owned, state);
   const bank = def.costCurrency === 'thoughts' ? state.thoughts : state.memories;
   if (bank < cost) return { reason: 'insufficient_funds', cost };
   return { reason: 'ok', cost };
