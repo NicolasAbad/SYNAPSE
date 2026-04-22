@@ -347,6 +347,22 @@ export const en = {
     confirm_warning: 'This choice cannot be changed until Transcendence.',
     cancel: 'Back',
   },
+  // Sprint 6 Phase 6.4 — 12 Spontaneous events (GDD §8). Internal snake_case
+  // Spanish ids; display names translated pre-code per CLAUDE.md discipline.
+  spontaneous: {
+    eureka: { name: 'Eureka', description: 'Next upgrade costs 0.' },
+    rafaga_dopaminica: { name: 'Dopamine Burst', description: 'Production ×2 for 30s.' },
+    claridad_momentanea: { name: 'Fleeting Clarity', description: 'Focus fills ×3 for 45s.' },
+    conexion_profunda: { name: 'Deep Connection', description: 'Connection multipliers ×2 for 60s.' },
+    disparo_latente: { name: 'Latent Discharge', description: '+1 Discharge charge.' },
+    memoria_fugaz: { name: 'Fleeting Memory', description: '+1 Memory (max once per cycle).' },
+    polaridad_fluctuante: { name: 'Polarity Flux', description: 'Polarity reverses for 45s.' },
+    mutacion_temporal: { name: 'Temporal Mutation', description: 'A random Mutation stacks for 60s.' },
+    eco_distante: { name: 'Distant Echo', description: 'A narrative fragment surfaces.' },
+    pausa_neural: { name: 'Neural Pause', description: 'Production pauses but Focus fills ×5 for 10s.' },
+    fatiga_sinaptica: { name: 'Synaptic Fatigue', description: 'Production −30% for 45s.' },
+    interferencia: { name: 'Interference', description: 'Focus Bar resets (max once per cycle).' },
+  },
 
   // Sprint 3+ adds keys as new features ship — do NOT preload
   // empty keys for future features (CODE-1 anti-pattern is

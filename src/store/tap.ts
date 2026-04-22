@@ -19,6 +19,7 @@ import { UPGRADES_BY_ID } from '../config/upgrades';
 import { tryActivateInsight } from '../engine/insight';
 import { focusFillRateDecisionMult } from '../engine/patternDecisions';
 import { archetypeFocusFillRateMult } from '../engine/archetypes';
+import { spontaneousFocusFillMult } from '../engine/spontaneous';
 import type { GameState } from '../types/GameState';
 
 function ownedUpgradeIds(state: Pick<GameState, 'upgrades'>): Set<string> {
@@ -61,6 +62,8 @@ export function computeFocusFillPerTap(state: GameState): number {
   fill *= focusFillRateDecisionMult(state);
   // GDD §12 Analítica: Focus fills ×1.25 (Sprint 6 Phase 6.2 wired).
   fill *= archetypeFocusFillRateMult(state);
+  // GDD §8 Spontaneous events — Claridad Momentánea ×3 / Pausa Neural ×5.
+  fill *= spontaneousFocusFillMult(state);
   return fill;
 }
 

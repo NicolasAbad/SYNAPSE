@@ -3,11 +3,12 @@
 import { SYNAPSE_CONSTANTS } from '../config/constants';
 import { calculateProduction } from './production';
 import { tryActivateInsight } from './insight';
-import { hash, randomInRange } from './rng';
 import { UPGRADES_BY_ID } from '../config/upgrades';
 import { mutationChargeIntervalMs, mutationMaxChargesOverride } from './mutations';
 import { pathwayChargeRateMult } from './pathways';
 import { checkRegionUnlock } from './regions';
+import { shouldCheckSpontaneous, rollSpontaneous, activateSpontaneous } from './spontaneous';
+import { archetypeSpontaneousRateMult } from './archetypes';
 import type { GameState } from '../types/GameState';
 
 // Structural intrinsics (not designer-tunable). Changing breaks determinism / spec.
@@ -139,19 +140,18 @@ function stepEra3EventActivation(s: GameState, nowTimestamp: number): void {
   }
 }
 
-/** Step 10: Spontaneous event scheduling (SPONT-1). TODO Sprint 6: roll + pick + apply. */
+/** Step 10: Spontaneous event scheduling (SPONT-1). Sprint 6 Phase 6.4 roll+apply. */
 function stepSpontaneousEventTrigger(s: GameState, nowTimestamp: number): void {
-  const { spontaneousCheckIntervalMin, spontaneousCheckIntervalMax } = SYNAPSE_CONSTANTS;
-  const nextCheckSeconds = randomInRange(
-    spontaneousCheckIntervalMin,
-    spontaneousCheckIntervalMax,
-    hash(s.cycleStartTimestamp + s.lastSpontaneousCheck),
-  );
-  const secondsSinceLastCheck = (nowTimestamp - s.lastSpontaneousCheck) / 1000; // CONST-OK (ms→sec)
-  if (secondsSinceLastCheck >= nextCheckSeconds) {
+  if (!shouldCheckSpontaneous(s, nowTimestamp)) return;
+  // GDD §12 Creativa bumps spontaneous rate; identity otherwise.
+  const rateMult = archetypeSpontaneousRateMult(s);
+  const def = rollSpontaneous(s, nowTimestamp, rateMult);
+  if (def === null) {
+    // No event this check; still advance lastSpontaneousCheck so next seed differs.
     s.lastSpontaneousCheck = nowTimestamp;
-    // Sprint 6 adds the roll + pick + apply here.
+    return;
   }
+  Object.assign(s, activateSpontaneous(s, def, nowTimestamp));
 }
 
 /**

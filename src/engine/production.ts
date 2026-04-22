@@ -27,6 +27,7 @@ import { patternCycleBonusAdd } from './patternDecisions';
 import { mutationProdMult } from './mutations';
 import { dampenUpgradeBonus, pathwayUpgradeBonusDamp } from './pathways';
 import { archetypeActiveProductionMult } from './archetypes';
+import { spontaneousProdMult, spontaneousConnectionMult } from './spontaneous';
 import type { GameState } from '../types/GameState';
 import type { NeuronState, NeuronType, Polarity, UpgradeEffect } from '../types';
 
@@ -184,16 +185,13 @@ export function calculateProduction(state: GameState): { base: number; effective
   // GDD §14 Equilibrada: dampen the upgrade-bonus delta by 0.85 cross-cutting.
   // Identity for Rápida / Profunda / no-pathway. Wired Sprint 5 Phase 5.3.
   const globalMult = dampenUpgradeBonus(computeGlobalUpgradeMult(state, ownedIds), pathwayUpgradeBonusDamp(state));
-  // Archetype × polarity × mutation modifiers; pathway dampening already on globalMult.
-  // Region mult deferred to Sprint 10. (Sprint 5.2 / 4c.2 / 6.2 wirings.)
-  const rawMult = state.connectionMult * globalMult * polarityProdMult(state.currentPolarity) * mutationProdMult(state) * archetypeActiveProductionMult(state);
+  // Archetype × polarity × mutation × spontaneous modifiers (Phase 6.4 wirings).
+  const rawMult = state.connectionMult * spontaneousConnectionMult(state) * globalMult * polarityProdMult(state.currentPolarity) * mutationProdMult(state) * archetypeActiveProductionMult(state) * spontaneousProdMult(state);
   const finalMult = softCap(rawMult);
-  // Pattern cycle bonus: multiplicative post-softCap, capped at patternCycleCap.
-  // Node 6 A decision (if chosen) contributes an extra +0.08 addend (GDD §10).
+  // Pattern cycle bonus: post-softCap mult, capped at patternCycleCap (§10).
   const cycleMult = patternCycleBonus(countCyclePatterns(state), patternCycleBonusAdd(state));
   const base = sum * finalMult * cycleMult;
-
-  // Stubs for Sprint 7: mentalStateMod × spontaneousEventMod × mutationTemporalMod (all identity until wired).
+  // Sprint 7 stubs: mentalStateMod × mutationTemporalMod (identity until wired).
   const effective = state.insightActive ? base * state.insightMultiplier : base;
   return { base, effective };
 }

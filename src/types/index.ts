@@ -264,6 +264,32 @@ export interface SpontaneousEventActive {
   endTime: number;
 }
 
+// Sprint 6 Phase 6.4 — 12 Spontaneous event effects per GDD §8.
+// Discriminated union: consumers branch on `kind` to read the right fields.
+// Instant effects apply at activation time; timed effects persist until
+// `activeSpontaneousEvent.endTime` is exceeded. Eureka is an exception —
+// persists until next upgrade buy (no time limit), tracked via `eurekaExpiry`.
+export type SpontaneousEffect =
+  | { kind: 'free_next_upgrade' }
+  | { kind: 'production_mult'; mult: number; durationMs: number }
+  | { kind: 'focus_fill_mult'; mult: number; durationMs: number }
+  | { kind: 'connection_mult'; mult: number; durationMs: number }
+  | { kind: 'discharge_charge_add'; add: number }
+  | { kind: 'memory_add'; add: number }
+  | { kind: 'polarity_reverse'; durationMs: number }
+  | { kind: 'mutation_stack_random'; durationMs: number }
+  | { kind: 'extra_fragment' }
+  | { kind: 'production_and_focus_mult'; prodMult: number; focusMult: number; durationMs: number }
+  | { kind: 'focus_reset' };
+
+export interface SpontaneousDef {
+  id: string;
+  nameKey: string;
+  descriptionKey: string;
+  type: SpontaneousEventType;
+  effect: SpontaneousEffect;
+}
+
 export interface MutationActive {
   id: string;
   stackedRandomId?: string;

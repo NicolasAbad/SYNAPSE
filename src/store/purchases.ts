@@ -52,6 +52,8 @@ function finalUpgradeCost(
   owned: ReadonlySet<string>,
   state: GameState,
 ): number {
+  // GDD §8 Spontaneous Eureka — next upgrade costs 0 until used.
+  if (state.eurekaExpiry !== null) return 0;
   // Mutation mod first per COST-1 order.
   let cost = baseCost * mutationUpgradeCostMod(state);
   // Funciones Ejecutivas applies only to thought-cost upgrades (not memorias).
@@ -213,6 +215,8 @@ export function tryBuyUpgrade(state: GameState, id: string, nowTimestamp: number
   };
   if (def.costCurrency === 'thoughts') updates.thoughts = state.thoughts - check.cost;
   else updates.memories = state.memories - check.cost;
+  // GDD §8 Eureka — consume the "next upgrade costs 0" flag once used.
+  if (state.eurekaExpiry !== null) updates.eurekaExpiry = null;
 
   // Immediate state side-effects at purchase time (effects consumed at event time
   // are handled in their respective phases — TAP-2, Discharge, Cascade, Insight, offline).

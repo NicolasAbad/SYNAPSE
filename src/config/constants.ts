@@ -150,6 +150,8 @@ export const SYNAPSE_CONSTANTS = {
   spontaneousCheckIntervalMax: 360, // 6 min
   spontaneousTriggerChance: 0.4,
   spontaneousWeights: { positive: 0.5, neutral: 0.33, negative: 0.17 },
+  // Per-event tuning values from GDD §8 table. Per-event effects live in
+  // src/config/spontaneous.ts (Gate-3 exempt canonical storage).
 
   // ── Mental States ──
   mentalStateFlowTapCount: 10,
