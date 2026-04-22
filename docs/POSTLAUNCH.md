@@ -225,6 +225,7 @@ All cost Enlightenment Points, not thoughts.
 
 ## Proposals for evaluation (not committed)
 
+- **Watch-ad-for-Discharge-charge** — rewarded-ad surface giving a free Discharge charge on demand. Sourced from Sprint 4c.6.7 Nico playtest finding #5: with `chargeIntervalMinutes: 20` and 7-9 min tutorial cycles, players never see a charge land naturally. Sprint 4c.6.7 fix shipped a live MM:SS countdown so players at least see the timer; this proposal would let them skip the wait. Pairs cleanly with Sprint 9 monetization (RevenueCat + AdMob) — slot it as one of the 3-4 rewarded-ad placements (~10 min cooldown, daily cap of 3-5 charges).
 - **Recurring Dreams system** — each Run could have 3-5 "recurring dreams" that the player experiences at specific prestiges, evolving with each Run
 - **Mind Diary** (extended) — more detail than v1.0's Neural Diary, with editable notes from the player
 - **Latent Neuron** (7th type, v2.5) — a neuron that only produces during Enlightenment prestiges

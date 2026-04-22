@@ -170,7 +170,10 @@ export const CycleSetupScreen = memo(function CycleSetupScreen({
         gap: 'var(--spacing-6)', // CONST-OK: CSS custom property ref (CODE-1 exception)
         color: 'var(--color-text-primary)',
         fontFamily: 'var(--font-body)',
-        zIndex: 800, // CONST-OK: overlay stacking (CODE-1 exception)
+        // Sprint 4c.6.7 BLOCKER fix — Mind subtab bar (z 880) was covering
+        // the upper portion of the polarity cards, eating taps. Lifted to
+        // 940 so it shares the modal-overlay tier with AwakeningScreen.
+        zIndex: 940, // CONST-OK: overlay stacking (CODE-1 exception)
       }}
     >
       {isTablet ? columnsLayout : stepperLayout}

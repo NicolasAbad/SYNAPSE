@@ -12,7 +12,12 @@ export const en = {
     // that previously had zero context. Shown below the relevant HUD chip /
     // counter so the player always understands what each number means.
     connection_chip: '+5% per pair of different neuron types owned',
-    awakening_progress: 'to Awakening',
+    // Sprint 4c.6.7 — playtest finding #9: "100% to Awakening" read as a
+    // thoughts-balance target, but it's actually fraction of cumulative
+    // cycle production (cycleGenerated / currentThreshold). New copy makes
+    // the cumulative meaning explicit so players don't think they need
+    // 25K thoughts in hand.
+    awakening_progress: 'of Awakening threshold',
     memories_label: 'memories',
   },
   hud: {
@@ -127,6 +132,11 @@ export const en = {
       mode_x1: '×1',
       mode_x10: '×10',
       mode_max: 'Max',
+      // Sprint 4c.6.7 — playtest finding #1: per-row text shows base rate
+      // (`count × baseRate`), not effective. This footer surfaces the
+      // global effective production so the player sees the real /s.
+      effective_total_prefix: 'Total ',
+      effective_total_suffix: ' (with upgrades + connections)',
     },
     upgrades: {
       owned: 'OWNED',

@@ -31,6 +31,11 @@ export const NeuronsPanel = memo(function NeuronsPanel() {
   const neurons = useGameStore((s) => s.neurons);
   const prestigeCount = useGameStore((s) => s.prestigeCount);
   const buyNeuron = useGameStore((s) => s.buyNeuron);
+  // Sprint 4c.6.7 — playtest finding #1: per-row shows base rate only
+  // (`count × baseRate`) which misled players whose effective rate had
+  // 2-5× upgrade multipliers applied. Showing the global effective PPS
+  // as a footer keeps per-row math honest while exposing the real /s.
+  const effectivePPS = useGameStore((s) => s.effectiveProductionPerSecond);
 
   const [mode, setMode] = useState<BuyMode>('x1');
 
@@ -91,6 +96,23 @@ export const NeuronsPanel = memo(function NeuronsPanel() {
           />
         ))}
       </ul>
+
+      <div
+        data-testid="panel-neurons-effective-total"
+        style={{
+          marginTop: 'var(--spacing-3)', // CONST-OK: CSS token ref
+          padding: 'var(--spacing-2) var(--spacing-3)', // CONST-OK: CSS token ref
+          fontSize: 'var(--text-xs)',
+          color: 'var(--color-text-secondary)',
+          textAlign: 'center',
+        }}
+      >
+        {t('panels.neurons.effective_total_prefix')}
+        <span style={{ color: 'var(--color-rate-counter)', fontWeight: 'var(--font-weight-semibold)' }}>
+          {`+${formatNumber(effectivePPS)}${t('panels.neurons.rate_suffix')}`}
+        </span>
+        {' '}{t('panels.neurons.effective_total_suffix')}
+      </div>
 
       <div
         data-testid="panel-neurons-buy-mode"
