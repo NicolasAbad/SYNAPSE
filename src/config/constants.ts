@@ -127,7 +127,10 @@ export const SYNAPSE_CONSTANTS = {
 
   // ── Archetypes ──
   // Per-archetype tuning lives in src/config/archetypes.ts. Cross-cutting only here.
-  archetypeUnlockPrestige: 5, // GDD §12: "Archetype choice at P5+"
+  // Current value: 5. Sprint 7.6 will migrate to 7 (Archetype choice moved after Mutations
+  // at P7 — choice becomes informed, not premature). GDD §12 + §9 already document the new
+  // target; constants.ts migrates when Sprint 7.6 implementation + test updates land together.
+  archetypeUnlockPrestige: 5, // Sprint 7.6: migrate to 7
 
   // ── Resonance ──
   resonanceBasePerPrestige: 1,
@@ -152,6 +155,70 @@ export const SYNAPSE_CONSTANTS = {
   spontaneousWeights: { positive: 0.5, neutral: 0.33, negative: 0.17 },
   // Per-event tuning values from GDD §8 table. Per-event effects live in
   // src/config/spontaneous.ts (Gate-3 exempt canonical storage).
+
+  // ── Regions: Mood System (Límbico, Sprint 6.8 re-architecture) ──
+  // GDD §16 Sistema Límbico + MOOD-1..3 rules. Mood applies post-softCap as
+  // effectiveMult (stacks multiplicatively with Mental States).
+  moodMaxValue: 100, // GDD §16 Moodometer range 0-100
+  moodInitialValue: 50, // Calm tier default for new games
+  moodTierBoundaries: [20, 40, 60, 80] as const, // Numb<20 / Calm<40 / Engaged<60 / Elevated<80 / Euphoric
+  moodTierProductionMults: [0.90, 1.00, 1.05, 1.15, 1.30] as const, // per tier, post-softCap
+  moodTierFocusFillMults: [1.00, 1.00, 1.10, 1.10, 1.10] as const, // Engaged+ only
+  moodTierMaxChargesBonus: [0, 0, 0, 1, 1] as const, // Elevated/Euphoric: +1 discharge max
+  moodTierInsightPotentialBonus: [0, 0, 0, 0, 1] as const, // Euphoric only: +1 Insight level potential
+  moodDecayPerHourOffline: 2, // MOOD-3: mood drifts toward Calm during long offline
+  moodGeniusPassFloor: 40, // GDD §26: Genius Pass subscribers' Mood never drops below Calm
+
+  // ── Regions: Pre-commitments (Prefrontal, Sprint 6.8) ──
+  // GDD §16 Corteza Prefrontal + PRECOMMIT-1..4 rules.
+  precommitMinWager: 1, // Memorias minimum
+  precommitMaxWager: 3, // Memorias maximum
+  precommitSuccessMult: 2.0, // 2× Memory reward on success
+  precommitFailurePenalty: 0.15, // -15% Memory on fail (softened from -25% per Sprint 6.8)
+  precommitStreakBonusCycles: 5, // 5 consecutive successes → +1 permanent Memoria/cycle
+  precommitUnlockPrestige: 5, // GDD §9: Pre-commits unlock at P5 (Prefrontal region panel active)
+
+  // ── Regions: Memory Shards (Hipocampo, Sprint 6.8) ──
+  // GDD §16 Hipocampo + SHARD-1..3 rules. Typed shards replace generic Memorias drip.
+  shardDripBasePerMinute: 0.5, // base drip per active shard type per active minute
+  shardsToMemoriaConversion: 100, // 100 shards (any type) → 1 Memoria (via Memory Weave)
+  shardTypeCount: 3, // emotional, procedural, episodic
+
+  // ── Regions: Visual Foresight (Sprint 6.8) ──
+  // GDD §16 Corteza Visual + FORESIGHT-1..4 rules. Tier-gated preview powers.
+  foresightT1UnlockPrestige: 0, // What-if 3 cycles ahead
+  foresightT2UnlockPrestige: 5, // Mutation pool preview pre-prestige (requires MUT-2 seed refactor)
+  foresightT3UnlockPrestige: 12, // 20s Spontaneous event countdown
+  foresightT4UnlockPrestige: 19, // Era 3 event preview 1 cycle ahead
+  spontaneousEventForewarningMs: 20_000, // FORESIGHT-3: countdown window before event fires
+
+  // ── Regions: Broca Named Moments (Sprint 6.8) ──
+  // GDD §16 Área de Broca + VOICE-1..2 rules. 5 named-moment slots.
+  brocaNamedMomentSlots: 5, // First Prestige / Archetype / First RP / Era 3 Entry / P26 Ending
+  brocaPhraseMaxChars: 40, // per-phrase player input cap
+
+  // ── Regions: Integrated Mind (Amplitud de Banda synergy, Sprint 6.8) ──
+  integratedMindThreshold3Regions: 3, // +1 Discharge max at 3 active
+  integratedMindThreshold4Regions: 4, // +10% Memory gain global at 4 active
+  integratedMindThreshold5Regions: 5, // Secret cycle-end narrative beat at 5 active
+
+  // ── Mastery system (Sprint 6.8 — unified cross-system lifetime tracking) ──
+  // GDD §38 + MASTERY-1..2 rules. Covers Mutations + Upgrades + Pathways + Archetypes.
+  masteryMaxLevel: 10, // cap per entity
+  masteryBonusPerLevel: 0.005, // +0.5% per level (max +5%)
+
+  // ── Onboarding tutorial track (Sprint 6.8 — 5-cycle progressive) ──
+  // GDD §37 + TUTOR-3..5 rules.
+  tutorialTrackCycleCount: 5, // 5 cycles of progressive disclosure
+  tutorialSparksRewardPerStep: 2, // +2 Sparks per tutorial goal completion
+
+  // ── Mood event deltas (per MOOD-2 rule — shifts from play events) ──
+  moodDeltaCascade: 5, // +5 on Cascade
+  moodDeltaPrestige: 10, // +10 on Prestige complete
+  moodDeltaFragmentRead: 3, // +3 on fragment read
+  moodDeltaPrecommitFail: -15, // -15 on Pre-commit fail
+  moodDeltaLongIdle: -5, // -5 per Dormancy entry
+  moodDeltaWeeklyChallenge: 20, // +20 on Weekly Challenge complete
 
   // ── Mental States ──
   mentalStateFlowTapCount: 10,
@@ -237,5 +304,9 @@ export const SYNAPSE_CONSTANTS = {
   gameVersion: '1.0.0',
 
   // ── Field-count runtime verification (§32) ──
+  // Current code state: 110 fields. Sprint 7.5 Phase 7.5.1 will add 9 new fields
+  // (memoryShards, memoryShardUpgrades, activePrecommitment, precommitmentStreak,
+  // mood, moodHistory, brocaNamedMoments, mastery, autoBuyConfig) and bump to 119.
+  // See GDD §32 for target spec.
   GAMESTATE_FIELD_COUNT: 110,
 } as const;

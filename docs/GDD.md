@@ -698,35 +698,302 @@ Typical cycle: 5-10 Resonance. Perfect cycle: ~18. Max/run: ~260.
 
 ---
 
-# 16. Regions — 5 brain areas
+# 16. Regions — 5 thematic sub-systems
 
-Brain regions are visual panels where the player buys upgrades using **Memorias**. 5 regions total (Sprint 5 card previously listed 3 — this was under-count, now corrected).
+**Sprint 6.8 re-architecture (2026-04-22):** Regions are no longer upgrade-skin panels with flat Memoria-priced buffs. Each region is a **distinct mechanical sub-system** that maps to the brain area's real neurobiological function. The 5 regions together constitute the second-strongest system in SYNAPSE (after Archetypes), and the Memorias currency becomes a hub-of-meta-progression rather than a dead-end sink.
 
-| Region | Unlock | First upgrade | Theme |
-|---|---|---|---|
-| Hipocampo | P0 (starting) | Consolidación de Memoria | Memory & learning |
-| Corteza Prefrontal | P0 (region visible, first upgrade needs P2+) | Funciones Ejecutivas | Executive function |
-| Sistema Límbico | P0 (first upgrade needs P2+) | Regulación Emocional | Emotion |
-| Corteza Visual | P0 (first upgrade needs P2+) | Procesamiento Visual | Perception |
-| Área de Broca | **P14 unlock** | Cosmetic: "Name your mind" + +1 passive Memory/cycle | Language & identity |
+## 16.0 Overview
 
-**Region upgrades (5 total, priced in Memorias):**
-
-| Upgrade | Region | Cost | Effect | Unlock |
+| Region | Neurobiology | Gameplay verb | Sub-system | Unlocks |
 |---|---|---|---|---|
-| Consolidación de Memoria | Hipocampo | 2 Mem | Básicas ×3, Memories +50% | P0 |
-| Regulación Emocional | Sistema Límbico | 5 Mem | Offline efficiency ×2 | P0 |
-| Procesamiento Visual | Corteza Visual | 8 Mem | Shows "best available upgrade" indicator | P0 |
-| Funciones Ejecutivas | Corteza Prefrontal | 3 Mem | Thought-cost upgrades −20% | P2+ |
-| Amplitud de Banda | All regions (meta) | 15 Mem | All region upgrades +50% | P2+ |
+| **Hipocampo** | Memory consolidation | **Accumulation** | Memory Shards (3 types: Emotional / Procedural / Episodic) + 8-upgrade shard tree | P0 |
+| **Corteza Prefrontal** | Executive function, planning | **Commitment** | Pre-commitments (cycle-start wagers, 8 goal templates, streak bonuses) | P5 |
+| **Sistema Límbico** | Emotion, motivation | **Dynamic state** | Moodometer (0-100 with 5 tiers) + event-driven shifts + 6 mood upgrades | P5 |
+| **Corteza Visual** | Pattern recognition, foresight | **Foresight** | 4-tier preview powers (What-if extended / Mutation pool preview / Spontaneous countdown / Era 3 preview) | P0 (T1) / P5 (T2) / P12 (T3) / P19 (T4) |
+| **Área de Broca** | Language, self-narration | **Identity** | Named Moments (5 slots) + Inner Voice engine + cross-Run memory fragments + mood-gated greetings | P14 |
+| **Amplitud de Banda** | — | **Synergy** | Integrated Mind: compound bonuses when multiple regions active (3/4/5 thresholds) | P5 (meta) |
 
-**Área de Broca mechanics (P14 unlock):**
-- Not a traditional upgrade — it's an identity layer
-- Player can name their mind (free-text, max 20 chars, profanity-filtered)
-- Name appears in awakening log, ending screens, cosmetic only
-- Adds +1 passive Memory at end of each cycle (compounding late-game reward)
+**REG-1:** Regions unlock progressively, NOT all at P1. Hipocampo auto-activates at first prestige (P1), the rest unlock at their listed prestige. Locked regions render greyed on the brain canvas.
 
-**REG-1:** Regions are unlocked by reaching `cycleGenerated >= 0.01 × threshold` (1% into first cycle). Hipocampo auto-unlocks with the trigger, +3 Memories awarded once.
+**REG-2:** Regions tab is replaced from a list of upgrade-rows into a **brain-diagram canvas** (5 positioned region nodes). Tap a region → its mini-panel slides up with that sub-system's specific UI.
+
+**REG-3:** The Hipocampo +3 Memorias one-time bonus (prior v1.0 design) is preserved and fires on first Hipocampo unlock.
+
+**REG-4:** Retired upgrades (moved into sub-system mechanics): `consolidacion_memoria`, `regulacion_emocional`, `procesamiento_visual`. New upgrade `ondas_theta` replaces the offline path of `regulacion_emocional` (see §19). `funciones_ejecutivas` and `amplitud_banda` are preserved but reinterpreted as Prefrontal panel features.
+
+---
+
+## 16.1 Hipocampo — Memory Shards
+
+**Theme:** Continuous experience compressed into discrete memory. Passive drip reward tied to play depth.
+
+**Mechanic:**
+- 3 shard types, each driplets tied to specific play behaviors:
+  - **Emotional Shards** — drip from Cascades, Spontaneous events, fragment reads (+0.5/min of active play in cycles where these fire)
+  - **Procedural Shards** — drip from taps and purchases (+0.5/min of active play where actions occur)
+  - **Episodic Shards** — drip from prestiges and Resonant Pattern discoveries (+N at each prestige, +5 per RP)
+- Shards persist across prestige AND Transcendence (lifetime counter by type)
+- 8-upgrade Hipocampo tree (3 Emotional + 3 Procedural + 2 Episodic) priced in typed shards
+- Integrated Mind unlock: "Memory Weave" converts 100 shards (any mix) → 1 Memoria
+
+**Hipocampo shard upgrade tree (8 upgrades):**
+
+| ID | Branch | Cost | Effect | Unlock |
+|---|---|---|---|---|
+| `shard_emo_pulse` | Emotional | 20 Emo | Cascade Sparks bonus +1 each | P1 |
+| `shard_emo_resonance` | Emotional | 50 Emo | Fragment first-read grants +2 Memory (base +1) | P3 |
+| `shard_emo_deep` | Emotional | 120 Emo | Mood events ±50% stronger (bigger swings either way) | P7 |
+| `shard_proc_flow` | Procedural | 20 Proc | Tap contribution +5% | P1 |
+| `shard_proc_pattern` | Procedural | 50 Proc | Discharge charge interval −10% | P3 |
+| `shard_proc_mastery` | Procedural | 120 Proc | Mastery XP gain ×1.25 (see §38) | P7 |
+| `shard_epi_imprint` | Episodic | 10 Epi | +1 Memoria per prestige | P1 |
+| `shard_epi_reflection` | Episodic | 30 Epi | Each Resonant Pattern also grants +10 Sparks (base +5) | P5 |
+
+**REG-5 (Hipocampo):** Shard types track independently. UI shows 3 counters with color coding (Emotional pink, Procedural blue, Episodic cyan).
+
+**REG-6:** Shard drip pauses while the cycle is completed (at threshold). Offline contributes Procedural shards at 50% rate.
+
+---
+
+## 16.2 Corteza Prefrontal — Pre-commitments
+
+**Theme:** Strategic commitment and risk. Player bets on a cycle outcome at setup.
+
+**Mechanic:**
+- At cycle start (integrated into CycleSetupScreen), optionally spend 1-3 Memorias to **commit to a cycle goal**.
+- Success at cycle end = 2× Memory reward + Sparks bonus proportional to wager.
+- Failure = −15% Memory reward this cycle (softened from original −25% proposal per Sprint 6.8 balance pass).
+- Skip = neutral baseline.
+- Streak counter: 5 consecutive successes → +1 permanent Memoria/cycle (stacking buff, lifetime).
+
+**Pre-commitment goal templates (8):**
+
+| ID | Goal | Wager | Success bonus |
+|---|---|---|---|
+| `pc_under_12min` | Complete cycle in < 12 min | 1 Mem | 2× + 2 Sparks |
+| `pc_under_8min` | Complete cycle in < 8 min | 2 Mem | 2× + 5 Sparks |
+| `pc_no_discharge` | Complete cycle without Discharge | 2 Mem | 2× + 5 Sparks |
+| `pc_five_cascades` | Trigger 5 Cascades this cycle | 2 Mem | 2× + 5 Sparks |
+| `pc_20_neurons` | Buy 20 neurons before P3 | 1 Mem | 2× + 2 Sparks |
+| `pc_no_tap_idle` | Complete cycle without tapping | 3 Mem | 2× + 8 Sparks |
+| `pc_max_focus_3x` | Fill Focus to 100% three times | 1 Mem | 2× + 2 Sparks |
+| `pc_spontaneous_hunter` | Witness 3 Spontaneous events | 2 Mem | 2× + 5 Sparks |
+
+**PRECOMMIT-1:** Pre-commits available from P5+ (when Prefrontal region mini-panel becomes active).
+
+**PRECOMMIT-2:** A single Pre-commit is active per cycle. Player can cancel before first tap (refunds wager) but not after cycle has meaningful progress.
+
+**PRECOMMIT-3:** Streak resets on failure. Genius Pass waives the failure penalty (treats failure as 0% reward, but streak still resets).
+
+**PRECOMMIT-4:** Pre-commit state stored in `activePrecommitment: { goalId, wager } | null`. Streak count in `precommitmentStreak: number`. History derived from `diaryEntries` (type `'precommit'`).
+
+**Prefrontal panel extras (non-wager features):**
+- "Plan Ahead" — queue next cycle's Polarity/Mutation/Pathway selection during current cycle (smooths Awakening flow).
+- `funciones_ejecutivas` upgrade (preserved, Memoria-priced) — thought-cost upgrades −20%. Still present in §24 as the last surviving region-upgrade.
+
+---
+
+## 16.3 Sistema Límbico — Moodometer
+
+**Theme:** Emotional weather that colors your mind's productivity. Persistent state shifted by play events.
+
+**Mechanic:**
+- Moodometer: 0-100, starts at 50 (Calm). Visible in HUD as a tier icon; full 0-100 bar in Límbico panel.
+- 5 tiers with distinct production / focus / discharge effects.
+- Mood persists across prestige. **Resets to 50 on Transcendence** (fresh Run = fresh emotional slate).
+
+**Mood tiers:**
+
+| Range | Tier | Production | Focus fill | Max Discharges | Insight potential | Narrative |
+|---|---|---|---|---|---|---|
+| 0-19 | **Numb** | ×0.90 | ×1.00 | +0 | +0 | "Your mind feels distant." |
+| 20-39 | **Calm** | ×1.00 | ×1.00 | +0 | +0 | "Your mind rests at baseline." |
+| 40-59 | **Engaged** | ×1.05 | ×1.10 | +0 | +0 | "Your mind is warming." |
+| 60-79 | **Elevated** | ×1.15 | ×1.10 | +1 | +0 | "Your mind is lit." |
+| 80-100 | **Euphoric** | ×1.30 | ×1.10 | +1 | +1 | "Your mind is singing." |
+
+**Mood event deltas (MOOD-2):**
+
+| Event | Δ Mood |
+|---|---|
+| Cascade triggered | +5 |
+| Prestige complete | +10 |
+| Fragment first-read | +3 |
+| Resonant Pattern discovered | +15 |
+| Weekly Challenge complete | +20 |
+| Pre-commit failure | −15 |
+| Dormancy Mental State entry | −5 |
+| Long idle (no session for 6h+) | decays 2/hour until Calm |
+| Anti-spam penalty fires | −10 |
+
+**Mood tier effect application (MOOD-1):**
+- Production mult applies POST-softCap in `effectiveProductionPerSecond` (same layer as Mental States + Insight).
+- Mental State and Mood stack multiplicatively (Euphoric 1.30 × Flow 1.20 = 1.56×).
+- Offline calculation uses the AVERAGE Mood during the away period (not current), preventing ramp-farming.
+
+**Límbico panel features:**
+- Moodometer full 0-100 bar with tier boundaries visually marked
+- 24h mood history chart (circular buffer `moodHistory` max 48 samples at 30min spacing)
+- Event log (last 10 mood-affecting events)
+- 6 Límbico upgrades purchased in Memorias:
+
+| ID | Cost | Effect | Unlock |
+|---|---|---|---|
+| `lim_steady_heart` | 3 Mem | Mood decay during offline halved (1/hour instead of 2) | P5 |
+| `lim_empathic_spark` | 5 Mem | Cascade Mood bonus +5 (→ +10 total) | P5 |
+| `lim_resilience` | 8 Mem | Mood never drops below 25 (anti-despair floor) | P8 |
+| `lim_elevation` | 12 Mem | Engaged→Elevated boundary shifts from 60→55 (easier tier climb) | P10 |
+| `lim_euphoric_echo` | 20 Mem | Euphoric tier Production mult boosted 1.30 → 1.40 | P13 |
+| `lim_emotional_wisdom` | 30 Mem | Each mood tier crossed this Run grants +1 lifetime Memoria | P15 |
+
+**MOOD-1:** Tier boundaries and multipliers are constants (not hardcoded). Tuneable via Sprint 8c TEST-5.
+
+**MOOD-2:** Event deltas live in `SYNAPSE_CONSTANTS.moodDelta*` constants, cited by `src/engine/mood.ts`.
+
+**MOOD-3:** Offline decay per §19 — Mood drifts toward Calm (50) at 2/hour. Empática archetype gets 1/hour decay (half rate). Genius Pass subscribers' Mood never drops below 40 (Calm floor).
+
+---
+
+## 16.4 Corteza Visual — Foresight Tiers
+
+**Theme:** Perception of hidden structure. Each tier reveals more of the game's internal state to the player.
+
+**Mechanic:**
+- 4 tiers unlock sequentially at specific prestige gates.
+- Tier 1 active at P0; subsequent tiers unlock at listed prestige OR earlier if specific Memoria upgrade is bought.
+- Foresight is powerful — preserves surprise by adding WARNINGS, not eliminating events.
+
+**Foresight tiers:**
+
+| Tier | Unlock | Power |
+|---|---|---|
+| **T1** | P0 (always on) | What-if Preview extended from "next cycle" to "3 cycles ahead" — forecasting horizon triples |
+| **T2** | P5 or `vis_pattern_sight` upgrade (2 Mem) | Mutation pool preview: see the 3 candidate Mutations BEFORE prestiging (enables pre-plan) |
+| **T3** | P12 or `vis_deep_sight` upgrade (8 Mem) | Spontaneous events show 20s countdown badge before firing — player positions for them |
+| **T4** | P19 or `vis_prophet_sight` upgrade (20 Mem) | Era 3 event preview 1 cycle ahead — player knows what's coming at next prestige |
+
+**FORESIGHT-1:** T1 is always active. Visual panel's state is `visualInsightTier: 1..4` (DERIVED from regionsUnlocked + purchased Visual upgrades + prestigeCount — NOT a stored field, keeps 119 count).
+
+**FORESIGHT-2:** T2 requires MUT-2 mutation seed refactor to compute at prestige-END (not prestige-START) — so seed is known before player prestiges. See §13 for updated MUT-2.
+
+**FORESIGHT-3:** T3 countdown activated inside `stepSpontaneousEventTrigger` — 20 seconds before the roll fires, emit a "Spontaneous event approaching" badge to HUD.
+
+**FORESIGHT-4:** T4 preview renders in Awakening screen showing next Era 3 event name + narrative snippet (mechanical summary hidden).
+
+**Visual panel extras (non-tier features):**
+- **Pattern Recognition** — highlights optimal next upgrade in Upgrades tab (replaces old `procesamiento_visual`). Toggle in Visual panel settings.
+- **Compare Runs** — overlay current Run vs personal-best Run at same prestige. Unlocked at T4.
+
+---
+
+## 16.5 Área de Broca — Inner Voice Engine
+
+**Theme:** Language and self-narration. The player's mind learns to speak, and those words persist.
+
+**Mechanic:**
+- 5 **Named Moment** slots activate at key narrative points. At each, the player picks from 3 thematic phrase templates OR enters free-text (up to 40 chars, profanity-filtered).
+- Named phrases persist across prestige AND Transcendence (lifetime identity).
+- Named phrases weave into Awakening Log entries, Diary prose, and the final Ending paragraph.
+
+**5 Named Moments:**
+
+| Moment | Trigger | When it surfaces |
+|---|---|---|
+| 1. First Awakening | First prestige completed | Awakening screen prose |
+| 2. Archetype Voice | Archetype chosen (P7) | Archetype confirmation + Diary |
+| 3. Resonance Found | First Resonant Pattern discovered | RP celebration + Awakening log |
+| 4. Era 3 Entry | P19 — Era 3 begins | First Era 3 modal prose |
+| 5. The Last Choice | P26 — ending selection | Final ending paragraph |
+
+**VOICE-1:** Named phrases stored in `brocaNamedMoments: { momentId: string; phrase: string }[]` (preserved across Transcendence).
+
+**VOICE-2:** If player skips a Named Moment, a default archetype-keyed phrase is used. Skip is always valid.
+
+**Broca panel features (P14+ unlock, but Inner Voice moments start earlier):**
+- Named Moments archive — 5 cards showing each moment's phrase + reread context
+- "Name your mind" — free-text field (max 20 chars, existing pre-redesign feature)
+- Voice History — shows past Runs' named phrases (cross-Run memory per NARRATIVE.md cross-Run fragments)
+- +1 passive Memoria/cycle (`brocaPassiveMemoryPerCycle` constant — existing, preserved)
+
+**Inner Voice engine (cross-cutting, unified in §39):**
+- Named Moments (5 per Run) — Broca-driven
+- Oneiric Dreams (5 in v1.0, 25 more v1.5+) — mood-gated returning greetings + offline narrative payloads
+- Cross-Run Memory fragments — Broca speaks in prior Run's voice at each new Run's P5
+- All drive off `brocaNamedMoments` + `narrativeFragmentsSeen` (with prefix `dream_*`, `voice_*`, `crossrun_*`)
+
+---
+
+## 16.6 Amplitud de Banda — Integrated Mind
+
+**Theme:** When multiple regions cohere, the mind becomes more than the sum of its parts.
+
+**Mechanic:** Synergy bonuses unlock based on the number of "actively-engaged" regions this Run. A region counts as "active" when the player has purchased at least 1 of its upgrades or crossed a tier threshold:
+- **Hipocampo active:** ≥1 shard upgrade owned
+- **Prefrontal active:** ≥1 successful Pre-commit this Run
+- **Límbico active:** Mood has reached Engaged (40+) at least once this Run
+- **Visual active:** ≥T2 unlocked this Run
+- **Broca active:** ≥1 Named Moment authored this Run
+
+**Integrated Mind tiers:**
+
+| Active regions | Bonus |
+|---|---|
+| 3 | +1 permanent max Discharge charge |
+| 4 | +10% Memoria gain globally (multiplies Memoria table rewards) |
+| 5 | Secret cycle-end narrative beat: "Your mind is whole." + unique ending variant + +5 Sparks (once per Run) |
+
+**INTEGRATED-1:** Integrated Mind status recomputes at each prestige. UI shows progress ("3 of 5 regions engaged") in the Regions tab canvas.
+
+**INTEGRATED-2:** The "5 regions" narrative beat counts as a separate NARR fragment (`integrated_mind_whole`) — grants +1 Memoria on first-read per NARR-8.
+
+---
+
+## 16.7 Regions Tab UI (Sprint 7.5 spec)
+
+Replaces the Sprint 5 list-of-cards RegionsPanel with a **brain-diagram canvas**:
+- Stylized brain outline rendered on Canvas 2D (not DOM/SVG) per CODE-4
+- 5 region nodes positioned anatomically (Hipocampo front-middle, Prefrontal top-front, Límbico center, Visual back, Broca front-side)
+- Unlocked regions glow softly in their theme color; locked regions outlined but dark
+- Tap a region → its sub-system mini-panel slides up with the specific UI surface
+
+Panel-per-region UIs:
+- **Hipocampo:** 3 shard counters + 8-upgrade tree
+- **Prefrontal:** active Pre-commit (or "Accept Pre-commit" CTA) + streak counter + history + `funciones_ejecutivas` upgrade
+- **Límbico:** Moodometer bar + 24h chart + event log + 6 Límbico upgrades
+- **Visual:** 4 tier cards (locked/unlocked) + Pattern Recognition toggle + Compare Runs
+- **Broca:** 5 Named Moment cards + "Name your mind" field + Voice History
+
+**REG-7:** Amplitud de Banda rendered as a footer strip on the Regions tab showing current Integrated Mind tier.
+
+---
+
+## 16.8 Migration from Sprint 5 Regions
+
+Sprint 5 shipped 5 region upgrades (`consolidacion_memoria`, `regulacion_emocional`, `procesamiento_visual`, `funciones_ejecutivas`, `amplitud_banda`). Sprint 6.8 re-architecture handles them as follows:
+
+| Old upgrade | Sprint 6.8 disposition |
+|---|---|
+| `consolidacion_memoria` | **Retired** — effect absorbed into Hipocampo shard upgrades (`shard_emo_resonance` grants +2 Memory vs +1) |
+| `regulacion_emocional` | **Retired** — offline effect moved to new `ondas_theta` upgrade (§24) + Mood-applies-to-offline (§19) |
+| `procesamiento_visual` | **Retired** — effect folded into Visual panel Pattern Recognition toggle (T1) |
+| `funciones_ejecutivas` | **Preserved** — rehomed into Prefrontal panel as Memoria-priced upgrade |
+| `amplitud_banda` | **Preserved but reinterpreted** — this is now the Integrated Mind cross-region tracker, no longer a simple +50% multiplier |
+
+Migration code: `migrateState()` checks for retired upgrade IDs in `state.upgrades` and silently drops them (preserves Memorias refund? NO — the effects of old upgrades were value-neutral to sunset per Transcendence). A one-time Sprint 7.5 migration modal notifies affected save-game players.
+
+---
+
+## 16.9 All REG / SUB-SYSTEM rules index
+
+- **REG-1..7** — Region unlock and UI rules (above)
+- **SHARD-1..3** — Shard drip + conversion + typed mechanics
+- **PRECOMMIT-1..4** — Pre-commit activation, resolution, streak
+- **MOOD-1..3** — Mood layer application, event deltas, offline decay
+- **FORESIGHT-1..4** — Visual tier unlock and preview semantics
+- **VOICE-1..2** — Broca Named Moments persistence
+- **INTEGRATED-1..2** — Amplitud de Banda synergy tracking
+
+See §35 for full rule IDs index.
 
 ---
 
@@ -1876,9 +2143,11 @@ export const SYNAPSE_CONSTANTS = {
 
 Continues in Part 3 (sections 32-36)...
 
-# 32. GameState (110 fields, fully enumerated)
+# 32. GameState (119 fields, fully enumerated)
 
-**CRITICAL:** This interface must match `DEFAULT_STATE` in `src/store/gameStore.ts` exactly. Sprint 1 unit test asserts `Object.keys(DEFAULT_STATE).length === 110`.
+**CRITICAL:** This interface must match `DEFAULT_STATE` in `src/store/gameStore.ts` exactly. Consistency test asserts `Object.keys(DEFAULT_STATE).length === 119`.
+
+**Sprint 6.8 re-architecture (2026-04-22):** field count grew 110 → 119 (+9 net) to support the Region redesign. New fields: `memoryShards`, `memoryShardUpgrades`, `activePrecommitment`, `precommitmentStreak`, `mood`, `moodHistory`, `brocaNamedMoments`, `mastery`, `autoBuyConfig`. Derived state (NOT new fields): `visualInsightTier` (from regionsUnlocked + Visual upgrades), stats dashboard (from existing aggregates), precommitmentHistory (from diaryEntries filter), oneiric dreams seen (extend narrativeFragmentsSeen with `dream_*` prefix).
 
 ```ts
 interface GameState {
@@ -2009,6 +2278,27 @@ interface GameState {
   // === Neural Diary (1) ===
   diaryEntries: DiaryEntry[];                   // NEVER resets, max 500
 
+  // === Hipocampo — Memory Shards (2) — Sprint 6.8 re-architecture ===
+  memoryShards: { emotional: number; procedural: number; episodic: number }; // PRESERVE (lifetime)
+  memoryShardUpgrades: string[];                // PRESERVE (lifetime)
+
+  // === Prefrontal — Pre-commitments (2) — Sprint 6.8 ===
+  activePrecommitment: { goalId: string; wager: number } | null; // RESETS (cycle-scoped)
+  precommitmentStreak: number;                  // PRESERVE on prestige, RESET on Transcendence
+
+  // === Límbico — Mood (2) — Sprint 6.8 ===
+  mood: number;                                 // 0-100, PRESERVE on prestige, RESET to 50 on Transcendence
+  moodHistory: { timestamp: number; mood: number }[]; // circular buffer 48, PRESERVE on prestige, RESET on Transcendence
+
+  // === Broca — Named Moments (1) — Sprint 6.8 ===
+  brocaNamedMoments: { momentId: string; phrase: string }[]; // PRESERVE (lifetime identity, survives Transcendence)
+
+  // === Mastery — unified lifetime tracking (1) — Sprint 6.8 §38 ===
+  mastery: Record<string, number>;              // id → use count, NEVER resets (Mutations + Upgrades + Pathways + Archetypes)
+
+  // === Auto-buy config (1) — Sprint 6.8 QoL pull-in from v1.1 ===
+  autoBuyConfig: Record<string, { enabled: boolean; cap: number }>; // per-neuron-type auto-buy, PRESERVE, unlocks P10+
+
   // === What-if Preview (2) ===
   lastCycleTimes: number[];                     // Circular buffer 3 — PRESERVE on prestige, RESET on transcendence
   lastCycleConfig: { polarity: string; mutation: string; pathway: string } | null;
@@ -2109,12 +2399,20 @@ interface GameState {
 - Retention: 3
 - Tab badges: 1 (added `tabBadgesDismissed` — UI-3)
 - System: 2
+- Hipocampo Shards: 2 (Sprint 6.8)
+- Prefrontal Pre-commits: 2 (Sprint 6.8)
+- Límbico Mood: 2 (Sprint 6.8)
+- Broca Named Moments: 1 (Sprint 6.8)
+- Mastery: 1 (Sprint 6.8 §38)
+- Auto-buy config: 1 (Sprint 6.8 QoL pull-in)
 
-**Total: 110 fields.**
+**Total: 119 fields.**
 
-Breakdown verification: 5+2+2+5+4+1+4+2+1+11+1+2+3+1+1+3+3+1+1+6+5+7+3+2+1+2+2+2+4+4+7+2+2+1+1+3+1+2 = 110 ✓
+Breakdown verification: 5+2+2+5+4+1+4+2+1+11+1+2+3+1+1+3+3+1+1+6+5+7+3+2+1+2+2+2+4+4+7+2+2+1+1+3+1+2+2+2+2+1+1+1 = 119 ✓
 
-Historical note: old docs claimed 105, actual interface had 104 (BUG-D discrepancy). This revision removed 1 deprecated field (`productionPerSecond`) and added 7 new fields (`lastCycleEndProduction`, `pendingHyperfocusBonus`, `cycleMicroChallengesAttempted`, `cycleDischargesUsed`, `cycleNeuronPurchases`, `endingsSeen`, `tabBadgesDismissed`) across bug and gap fixes. Net: 104 − 1 + 7 = 110.
+Historical notes:
+- Pre-Sprint-6.8: 110 fields after second-audit reconciliation (old docs claimed 105, actual interface had 104 — BUG-D discrepancy. That revision removed 1 deprecated `productionPerSecond` and added 7 fields across bug/gap fixes. Net: 104 − 1 + 7 = 110.)
+- **Sprint 6.8 re-architecture (2026-04-22):** +9 fields for Region redesign + Mastery + Auto-buy QoL. Net: 110 + 9 = 119.
 
 ### DEFAULT_STATE non-trivial initial values (second audit 2B-1b)
 
