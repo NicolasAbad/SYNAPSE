@@ -8,6 +8,7 @@ import { SplashScreen } from './ui/modals/SplashScreen';
 import { GdprModal, isEU } from './ui/modals/GdprModal';
 import { TutorialHints } from './ui/modals/TutorialHints';
 import { FragmentOverlay } from './ui/modals/FragmentOverlay';
+import { EchoLayer } from './ui/canvas/EchoLayer';
 
 export function App() {
   // Sequential mount: load saved state first, then init timestamps ONLY if no
@@ -51,6 +52,7 @@ export function App() {
       <NeuronCanvas />
       <HUD />
       <TutorialHints />
+      <EchoLayer />
       <FragmentOverlay />
       {!splashDone && <SplashScreen onComplete={() => setSplashDone(true)} />}
       {splashDone && isEU && !gdprDone && <GdprModal onComplete={() => setGdprDone(true)} />}

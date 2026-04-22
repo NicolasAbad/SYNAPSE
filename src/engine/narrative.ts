@@ -35,12 +35,15 @@ function matchesTrigger(def: FragmentDef, state: GameState, event: FragmentEvent
   const tr = def.trigger;
   switch (tr.kind) {
     case 'first_neuron':
-      // BASE-01 fires on the transition 0→1 total neurons.
-      return event.kind === 'neuron_bought' && totalNeurons(state) === 1;
+      // BASE-01 fires on the player's first *purchased* neuron (the bootstrap
+      // basica present at cycle start doesn't count — cycleNeuronsBought is
+      // the buy counter). NARR-4 filter blocks subsequent cycles' first-buys
+      // via narrativeFragmentsSeen membership.
+      return event.kind === 'neuron_bought' && state.cycleNeuronsBought === 1;
     case 'neurons_owned':
-      // BASE-02 "5 neurons owned" — total count across any types.
-      // NARRATIVE.md is ambiguous on count-vs-types; total-count chosen per
-      // Sprint 6 pre-code research for simpler player progression.
+      // BASE-02 "5 neurons owned" — total count across any types (bootstrap
+      // included). NARRATIVE.md ambiguous count-vs-types; total-count chosen
+      // per Sprint 6 pre-code research.
       return event.kind === 'neuron_bought' && totalNeurons(state) >= tr.count;
     case 'first_discharge':
       // BASE-03 fires on lifetime discharge #1 (lifetimeDischarges increments
@@ -93,6 +96,25 @@ export function applyFragmentRead(state: GameState, id: string): Partial<GameSta
 /** Lookup helper — UI renderer needs full def (text) after receiving an id. */
 export function getFragment(id: string): FragmentDef | null {
   return FRAGMENTS_BY_ID[id] ?? null;
+}
+
+/**
+ * One-shot dispatcher called from store actions (buyNeuron, discharge,
+ * prestige, setArchetype, checkRegionUnlock). Fires any matching fragment
+ * triggers + applies the first-read effects atomically. Returns the merged
+ * Partial<GameState> the caller should spread into its set() call.
+ */
+export function dispatchNarrative(state: GameState, event: FragmentEvent): Partial<GameState> {
+  const fired = checkFragmentTriggers(state, event);
+  if (fired.length === 0) return {};
+  let updates: Partial<GameState> = {};
+  let working = state;
+  for (const id of fired) {
+    const read = applyFragmentRead(working, id);
+    updates = { ...updates, ...read };
+    working = { ...working, ...read };
+  }
+  return updates;
 }
 
 /**

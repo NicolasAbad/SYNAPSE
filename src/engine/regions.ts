@@ -14,6 +14,7 @@
 import type { GameState } from '../types/GameState';
 import { SYNAPSE_CONSTANTS } from '../config/constants';
 import { REGIONS } from '../config/regions';
+import { dispatchNarrative } from './narrative';
 
 /**
  * REG-1 (GDD §16): start-tier regions auto-unlock at 1% of currentThreshold.
@@ -35,5 +36,10 @@ export function checkRegionUnlock(s: GameState): void {
     if (region.id === 'hipocampo') {
       s.memories += SYNAPSE_CONSTANTS.hipocampoUnlockMemoriasBonus;
     }
+    // NARRATIVE.md BASE-04 (Hippocampus unlocks). Fragment first-read grants
+    // +1 Memory per NARR-8; id logged in narrativeFragmentsSeen.
+    const narrative = dispatchNarrative(s, { kind: 'region_unlocked', regionId: region.id });
+    if (narrative.narrativeFragmentsSeen) s.narrativeFragmentsSeen = narrative.narrativeFragmentsSeen;
+    if (narrative.memories !== undefined) s.memories = narrative.memories;
   }
 }

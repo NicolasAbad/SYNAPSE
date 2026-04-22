@@ -59,14 +59,14 @@ describe('Canonical counts (NARRATIVE.md)', () => {
 });
 
 describe('checkFragmentTriggers — per-trigger-kind', () => {
-  test('first_neuron fires BASE-01 on 1st neuron (total count === 1)', () => {
-    const s = freshState({ neurons: [{ type: 'basica', count: 1 }, { type: 'sensorial', count: 0 }, { type: 'piramidal', count: 0 }, { type: 'espejo', count: 0 }, { type: 'integradora', count: 0 }] });
+  test('first_neuron fires BASE-01 when cycleNeuronsBought === 1 (first *buy*)', () => {
+    const s = freshState({ cycleNeuronsBought: 1 });
     const fired = checkFragmentTriggers(s, { kind: 'neuron_bought' });
     expect(fired).toContain('base_01');
   });
 
-  test('first_neuron does NOT fire when total > 1', () => {
-    const s = freshState({ neurons: [{ type: 'basica', count: 2 }, { type: 'sensorial', count: 0 }, { type: 'piramidal', count: 0 }, { type: 'espejo', count: 0 }, { type: 'integradora', count: 0 }] });
+  test('first_neuron does NOT fire on second buy (cycleNeuronsBought > 1)', () => {
+    const s = freshState({ cycleNeuronsBought: 2 });
     const fired = checkFragmentTriggers(s, { kind: 'neuron_bought' });
     expect(fired).not.toContain('base_01');
   });

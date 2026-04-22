@@ -21,6 +21,7 @@ import { applyTap } from './tap';
 import { performDischarge, type DischargeOutcome } from '../engine/discharge';
 import { handlePrestige, type PrestigeOutcome } from '../engine/prestige';
 import { applyPermanentPatternDecisionsToState } from '../engine/patternDecisions';
+import { dispatchNarrative } from '../engine/narrative';
 import { MUTATIONS_BY_ID } from '../config/mutations';
 
 /**
@@ -381,9 +382,12 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
   setActiveMindSubtab: (subtab) => set({ activeMindSubtab: subtab }),
   setAnalyticsConsent: (consent) => set({ analyticsConsent: consent }),
   buyNeuron: (type, nowTimestamp) => {
-    const result = tryBuyNeuron(get(), type, nowTimestamp);
+    const state = get();
+    const result = tryBuyNeuron(state, type, nowTimestamp);
     if (!result.ok) return result.reason;
-    set({ ...result.updates, undoToast: result.undoToast });
+    const mid = { ...state, ...result.updates };
+    const narrative = dispatchNarrative(mid, { kind: 'neuron_bought' });
+    set({ ...result.updates, ...narrative, undoToast: result.undoToast });
     return 'ok';
   },
   buyUpgrade: (id, nowTimestamp) => {
@@ -399,8 +403,12 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
   },
   dismissUndoToast: () => set({ undoToast: null }),
   discharge: (nowTimestamp) => {
-    const { updates, outcome } = performDischarge(get(), nowTimestamp);
-    if (outcome.fired) set(updates);
+    const state = get();
+    const { updates, outcome } = performDischarge(state, nowTimestamp);
+    if (!outcome.fired) return outcome;
+    const mid = { ...state, ...updates };
+    const narrative = dispatchNarrative(mid, { kind: 'discharge_fired' });
+    set({ ...updates, ...narrative });
     return outcome;
   },
   prestige: (nowTimestamp) => {
@@ -411,8 +419,10 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
     const { state: nextState, outcome } = handlePrestige(state, nowTimestamp);
     // Merge mode (no `true` flag) — preserves action bindings per CLAUDE.md
     // Zustand pitfall rule. undoToast cleared since pre-prestige purchases no
-    // longer apply to the new cycle.
-    set({ ...nextState, undoToast: null });
+    // longer apply to the new cycle. Narrative triggers fire on the POST-reset
+    // state (prestigeCount already incremented) per NARR-4 ordering.
+    const narrative = dispatchNarrative(nextState, { kind: 'prestige_done' });
+    set({ ...nextState, ...narrative, undoToast: null });
     return { fired: true, outcome };
   },
   resetPatternDecisions: () => {
@@ -485,10 +495,14 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
     if (state.archetype !== null) {
       return { fired: false };
     }
-    set({
+    const pending: Partial<GameState> = {
       archetype,
       archetypeHistory: [...state.archetypeHistory, archetype],
-    });
+    };
+    // Fire ARC-01 fragment (archetype_chosen event against post-set state).
+    const mid = { ...state, ...pending };
+    const narrative = dispatchNarrative(mid, { kind: 'archetype_chosen' });
+    set({ ...pending, ...narrative });
     return { fired: true };
   },
 }));

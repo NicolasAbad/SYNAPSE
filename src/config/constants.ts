@@ -214,7 +214,8 @@ export const SYNAPSE_CONSTANTS = {
   undoExpensiveThresholdPct: 0.1, // >10% of thoughts triggers undo
   splashDurationMs: 2_000, // UI-9 step 1: 2s branded splash (Sprint 2 kickoff)
   firstOpenTutorialHintIdleMs: 2_000, // UI-9 step 4: 2s idle → "Tap the neuron" (Sprint 2 kickoff)
-  narrativeFragmentDisplayMs: 4_000, // UI-9 step 5: BASE-01 hold duration (fade-in/out use TOKENS.MOTION.durSlow) — Sprint 2 Phase 6
+  narrativeFragmentDisplayMs: 4_000, // UI-9 step 5: fragment hold duration (fade-in/out use TOKENS.MOTION.durSlow) — Sprint 2 Phase 6
+  echoCooldownMs: 90_000, // NARR-3: max 1 Echo per 90 seconds
 
   // ── Canvas caps (Sprint 2 Phase 7, CODE-4 policy values) ──
   maxVisibleNodes: 80, // CODE-4 "Max 80 visible nodes" + SPRINTS.md §Sprint 2 line 229; renderer clamps min(totalCount, maxVisibleNodes)
