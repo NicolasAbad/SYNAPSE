@@ -145,6 +145,36 @@ export interface PathwayDef {
   };
 }
 
+// Sprint 6 Phase 6.3 — Narrative data definitions (GDD NARRATIVE.md).
+// 57 fragments (12 base + 15 × 3 archetypes) + 30 Echoes.
+// Text is canonical English (NARRATIVE.md NARR-1 — not localized in v1.0).
+// BASE-01..12 mapped by trigger kind; ANA/EMP/CRE fragments use archetype_prestige.
+export type FragmentTrigger =
+  | { kind: 'first_neuron' }
+  | { kind: 'neurons_owned'; count: number }
+  | { kind: 'first_discharge' }
+  | { kind: 'region_unlock'; regionId: string }
+  | { kind: 'prestige_at'; prestigeCount: number }
+  | { kind: 'archetype_prestige'; archetype: Archetype; prestigeCount: number };
+
+export interface FragmentDef {
+  /** Stable id (e.g. 'base_01', 'ana_05') — written into narrativeFragmentsSeen. */
+  id: string;
+  trigger: FragmentTrigger;
+  /** English narrative text (NARR-1). Rendered by FragmentLayer with fade (NARR-2). */
+  text: string;
+}
+
+export type EchoCategory = 'gameplay' | 'rp_hint' | 'philosophical' | 'late_game';
+
+export interface EchoDef {
+  id: string;
+  text: string;
+  category: EchoCategory;
+  /** Minimum prestigeCount for this echo to be eligible (NARR-3 filter). */
+  minPrestige: number;
+}
+
 // Sprint 6 Phase 6.1 — Archetype data definition. Display name + bonuses live
 // in `src/config/archetypes.ts`; this is the structural shape only. Player
 // picks ONE at P5, permanent for the entire Run (cannot change until
