@@ -339,8 +339,10 @@ Higher levels are more powerful but shorter, rewarding focused burst play.
 2. If yes, flag Cascade, apply ×cascadeMult
 3. Execute Discharge burst
 4. Set `focusBar = 0`
-5. THEN apply any post-Discharge effects (Sincronización Total +0.18 bonus)
+5. THEN apply any post-Discharge effects (Sincronización Total +0.25 bonus per Sprint 6.8 rebalance)
 6. Second consecutive Discharge cannot be Cascade unless player fills Focus naturally again
+
+**DISCHARGE-1 (Sprint 6.8 Phase 6 R1 decision):** Max Discharge charges have a HARD CAP of 5 (`dischargeMaxChargesHardCap` constant). Without this, late-game compound stacks (base 3 P10 + Descarga Neural +1 + Arquitecto Neural +1 P8 + Amplificador P15 +1 + Mood Elevated/Euphoric +1 + Integrated Mind 3-region +1 + Pattern Decision Node 6 B +1) could reach 9 charges, breaking pacing scarcity. The hard cap is applied AFTER all bonuses sum, so individual bonuses still feel meaningful but total is clamped. Effect: max(2, min(5, sumOfBonuses)). Min floor preserves base 2 charges at P0.
 
 ---
 
@@ -813,6 +815,8 @@ Typical cycle: 5-10 Resonance. Perfect cycle: ~18. Max/run: ~260.
 
 **PRECOMMIT-4:** Pre-commit state stored in `activePrecommitment: { goalId, wager } | null`. Streak count in `precommitmentStreak: number`. History derived from `diaryEntries` (type `'precommit'`).
 
+**PRECOMMIT-5 (Sprint 6.8 Phase 6 R4 decision):** Time-based goal checks (e.g. `pc_under_12min`) use **lenient `<=`** comparison, not strict `<`. A cycle reaching threshold at 11:59.999 counts as success for "under 12 min". Rewards close-finish optimization; sub-second margins shouldn't kill bonuses.
+
 **Prefrontal panel extras (non-wager features):**
 - "Plan Ahead" — queue next cycle's Polarity/Mutation/Pathway selection during current cycle (smooths Awakening flow).
 - `funciones_ejecutivas` upgrade (preserved, Memoria-priced) — thought-cost upgrades −20%. Still present in §24 as the last surviving region-upgrade.
@@ -878,6 +882,8 @@ Typical cycle: 5-10 Resonance. Perfect cycle: ~18. Max/run: ~260.
 
 **MOOD-3:** Offline decay per §19 — Mood drifts toward Calm (50) at 2/hour. Empática archetype gets 1/hour decay (half rate). Genius Pass subscribers' Mood never drops below 40 (Calm floor).
 
+**MOOD-4 (Sprint 6.8 Phase 6 R3 decision):** Mood event delta scaling stacks **ADDITIVELY**, not multiplicatively. Formula: `effectiveDelta = baseDelta × (1 + sum(activeBonuses))`. With both `shard_emo_deep` (+0.5) and `red_emotiva` (+0.5) active, deltas are ×2.0 not ×2.25. Simpler, predictable, easier to balance. Genius Pass +0.0 (no mood-magnitude perk; instead grants the floor MOOD-3 perk).
+
 ---
 
 ## 16.4 Corteza Visual — Foresight Tiers
@@ -901,6 +907,8 @@ Typical cycle: 5-10 Resonance. Perfect cycle: ~18. Max/run: ~260.
 **FORESIGHT-1:** T1 is always active. Visual panel's state is `visualInsightTier: 1..4` (DERIVED from regionsUnlocked + purchased Visual upgrades + prestigeCount — NOT a stored field, keeps 119 count).
 
 **FORESIGHT-2:** T2 requires MUT-2 mutation seed refactor to compute at prestige-END (not prestige-START) — so seed is known before player prestiges. See §13 for updated MUT-2.
+
+**FORESIGHT-2a (Sprint 6.8 Phase 6 R2 decision — placement):** The Mutation pool preview UI surface is the **Pattern Tree screen** (between the Awakening animation and CycleSetupScreen, post-prestige). Rationale: Pattern Tree is the "mind reflecting on itself" beat where strategic next-cycle thinking belongs naturally. Three preview cards render below the Pattern Tree visualization with the next cycle's three Mutation candidates. Player can tap a card to "favorite" it (no commitment — CycleSetupScreen still requires explicit pick). Sprint 7.5.5 implements.
 
 **FORESIGHT-3:** T3 countdown activated inside `stepSpontaneousEventTrigger` — 20 seconds before the roll fires, emit a "Spontaneous event approaching" badge to HUD.
 
@@ -934,6 +942,8 @@ Typical cycle: 5-10 Resonance. Perfect cycle: ~18. Max/run: ~260.
 **VOICE-1:** Named phrases stored in `brocaNamedMoments: { momentId: string; phrase: string }[]` (preserved across Transcendence).
 
 **VOICE-2:** If player skips a Named Moment, a default archetype-keyed phrase is used. Skip is always valid.
+
+**VOICE-2a (Sprint 6.8 Phase 6 R5 decision):** Named Moments fire at their natural triggers (e.g. Moment 1 "First Prestige" at P1) **regardless of whether the Broca region UI is unlocked**. The Inner Voice engine is engine-level. Broca panel unlock at P14 only opens the archive viewer UI — past Moments authored before P14 retroactively populate the archive when the panel opens. This avoids losing the emotional weight of "First Prestige" naming because of a UI gate.
 
 **Broca panel features (P14+ unlock, but Inner Voice moments start earlier):**
 - Named Moments archive — 5 cards showing each moment's phrase + reread context
@@ -1192,6 +1202,7 @@ function applyOfflineProgress(state: GameState, now: number): GameState {
 - **OFFLINE-8 (Sprint 6.8 — Mood during offline):** Mood decays toward Calm (50) at 2/hour while offline (1/hour for Empática archetype; never below 40 for Genius Pass subscribers). The `moodTierMod` used in the offline efficiency stack is the AVERAGE mood across the offline window (computed from `moodHistory` 30min samples), NOT the current mood — prevents ramp-farming by checking in for 1 minute to spike Mood before going offline.
 - **OFFLINE-9 (Sprint 6.8 — Shard drip):** Offline contributes Procedural shards (§16.1) at 50% rate. Emotional and Episodic shards do NOT drip offline (they require active play triggers).
 - **OFFLINE-10 (Sprint 6.8 — Returning-player greeting):** On return after ≥30 min offline, a Broca Inner Voice greeting (§16.5 + §39) prepends the Sleep screen with mood-gated prose — "Your mind welcomes you back, still alight" (Euphoric) / "Your mind was quiet. It missed you" (Calm) / "Your mind has been waiting" (Numb).
+- **OFFLINE-11 (Sprint 6.8 Phase 6 R6 decision — cap raised):** `maxOfflineEfficiencyRatio` raised from 2.0 → **2.5** to preserve invest value with new Mood + Ondas Theta + Guardian del Tiempo + Time Dilation Resonance stacks. Without the raise, super-invested players hit the cap with ~5 stacked sources and the rest is wasted multiplier. Sprint 7.5 Phase 7.5.3 lands the constant bump alongside Mood-applies-offline integration. Sprint 8c TEST-2 validates the new cap holds across all archetype configurations.
 
 ---
 

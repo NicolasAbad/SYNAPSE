@@ -55,6 +55,13 @@ export const SYNAPSE_CONSTANTS = {
   sincroniaNeuralMult: 2, // GDD §24 `sincronia_neural`: "Connection multipliers ×2" (Phase 1 literal reading)
 
   // ── Cascade & Discharge ──
+  // Sprint 6.8 Phase 6 R1 decision: hard cap on summed Discharge max charges.
+  // Without this, late-game stacks (base 3 P10 + Descarga Neural +1 + Arquitecto
+  // Neural +1 P8 + Amplificador P15 +1 + Mood Elevated/Euphoric +1 + Integrated
+  // Mind 3-region +1 + Pattern Node 6 B +1) reach 9 — breaks pacing scarcity.
+  // GDD §7 + Sprint 8c TEST-3 validate. Consumers added in Sprint 7.5 Phase 7.5.3.
+  dischargeMaxChargesHardCap: 5,
+
   cascadeThreshold: 0.75,
   cascadeMultiplier: 2.5,
   cascadaEternaMult: 3.0, // GDD §15 Resonance: sets cascadeMult base 2.5 → 3.0 (Sprint 8b owns set)
@@ -95,7 +102,12 @@ export const SYNAPSE_CONSTANTS = {
   baseOfflineEfficiency: 0.5,
   baseOfflineCapHours: 4,
   maxOfflineHours: 16, // max achievable (REM→8, Distribuida→12, sueno_profundo→16)
-  maxOfflineEfficiencyRatio: 2.0,
+  // Sprint 6.8 Phase 6 R6 decision: cap raised 2.0 → 2.5 to preserve invest
+  // value with new Mood (×1.30 Euphoric) + Ondas Theta (×2.0) + Guardian del
+  // Tiempo (×1.5 at 5h+) stacks. Code bump lands with Sprint 7.5 Phase 7.5.3
+  // (Mood-applies-offline integration); current value stays 2.0 to keep offline
+  // tests green until that phase. GDD §19 + Sprint 8c TEST-2 validate.
+  maxOfflineEfficiencyRatio: 2.0, // Sprint 7.5: bump to 2.5
   offlineMinMinutes: 1, // skip calc if <1 min
 
   // ── Memories ──

@@ -83,9 +83,20 @@
   **Total Sprint 7-13 ~93 days** (+5.5 weeks vs original). No schedule constraint per Nico direction.
 
 - **Pending Nico actions BEFORE Sprint 7 kickoff:**
-  1. Review the Sprint 6.8 commits (`5ecd9b3`, `5236da7`, `dd3f720`, `65f7c45`, Phase 5 this commit).
+  1. Review the Sprint 6.8 commits (`5ecd9b3`, `5236da7`, `dd3f720`, `65f7c45`, `b3abd1c`, Phase 6).
   2. Approve the revised sprint plan above (or cherry-pick overrides).
   3. Proceed to Sprint 7 Phase 7.1 (Achievements data + engine — catalog already ready in Sprint 7 kickoff prompt).
+
+- **Locked decisions (Sprint 6.8 Phase 6, 2026-04-22 — Nico approved):**
+  - **R1: Discharge max charges hard cap = 5** (`dischargeMaxChargesHardCap` constant added; consumer in Sprint 7.5.3). GDD §7 DISCHARGE-1 documents.
+  - **R2: Foresight T2 Mutation preview rendered on Pattern Tree screen** (between Awakening and CycleSetupScreen). GDD §16.4 FORESIGHT-2a documents. Sprint 7.5.5 implements.
+  - **R3: Mood event delta scaling stacks ADDITIVELY** (1 + sum of bonuses), not multiplicatively. GDD §16.3 MOOD-4 documents.
+  - **R4: Pre-commit time-based goals use lenient `<=` comparison.** Sub-second margins succeed. GDD §16.2 PRECOMMIT-5 documents.
+  - **R5: Broca Named Moments fire at natural triggers** regardless of Broca region UI unlock at P14. Past Moments retroactively populate archive when P14 panel opens. GDD §16.5 VOICE-2a documents.
+  - **R6: maxOfflineEfficiencyRatio raised 2.0 → 2.5.** Constant change deferred to Sprint 7.5.3 alongside Mood-applies-offline integration to keep current offline tests green. GDD §19 OFFLINE-11 + §31 documents target. Sprint 8c TEST-2 validates.
+  - **R7: Cross-Run memory fragments split between Sprint 7.9 (prose content) and Sprint 8b (firing trigger).** Trigger requires Transcendence to exist — Sprint 8b is the natural integration point.
+
+- **Phase 6 commit (this commit):** Locks the 7 R-decisions into GDD + constants + PROGRESS. No code behavior changes — `maxOfflineEfficiencyRatio` stays 2.0 in code with target 2.5 documented in comment + GDD; `dischargeMaxChargesHardCap = 5` added as standalone constant pending Sprint 7.5.3 consumer.
 
 - **Remaining doc work deferred to future sessions (NOT blocking Sprint 7):**
   - SPRINTS.md full rewrite adding Sprint 7.5/7.6/7.7/7.8/7.9 phase-by-phase AI checks — recommended as FIRST task of next session
