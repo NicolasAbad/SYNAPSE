@@ -22,33 +22,20 @@ This roadmap is a living document. Priorities shift based on launch metrics and 
 
 ---
 
-## v1.1 — Quality of Life (Month 2 post-launch)
+## v1.1 — Quality of Life (Month 2 post-launch) — Sprint 6.8 SHRUNK
 
-**Focus:** friction reduction, measured retention improvements.
+**Sprint 6.8 re-architecture pulled MOST v1.1 items into v1.0** per Nico's "no MVP — full game at launch" directive. What remains here is the niche residual.
 
-### Auto-buy neurons
-Unlock at P10. Settings toggle. When a neuron type becomes affordable, auto-buy up to a player-set cap. No gameplay impact, just friction reduction for late-game.
+**Pulled to v1.0 (no longer v1.1 content):**
+- ✅ Auto-buy neurons → v1.0 Sprint 7.8 (P10+ unlock)
+- ✅ Stats panel / Meta-progression dashboard → v1.0 Sprint 7.8 (Mind → Stats sub-tab)
+- ✅ Mini-map / production overview → v1.0 Sprint 7.8 (P15+ HUD overlay)
+- ✅ Search in Neural Diary → v1.0 Sprint 7.8 (integrated into Diary sub-tab)
+- ✅ Ending share target (OS native share) → v1.0 Sprint 10 polish
+- ✅ Keyboard navigation + full accessibility → v1.0 Sprint 10 polish
 
-### Stats panel
-New subtab in Mind. Shows: total thoughts generated, total taps, average cycle time per prestige, best cycle time, upgrades purchased, most-used Mutation, most-used Pathway, etc. Player-facing dashboard with charts.
-
-### Mini-map / production overview
-HUD addition at P15+. Small fixed panel showing: neurons owned / connection multiplier / production rate change over last 60s. Helps late-game players feel optimization effects.
-
-### Cloud save conflict UI
-If Firebase save + local save differ significantly, present a "Which to keep?" modal instead of silent merge. Per MIG-1 clarification.
-
-### Search in Neural Diary
-Text search on all diary entries. Filter by type.
-
-### Ending share target (OS native share)
-v1.0 ships the on-screen ending share-frame (Sprint 8b + 10 polish). v1.1 adds native share integration — tap the frame, OS share sheet opens with the image + pre-filled caption. iOS `UIActivityViewController` + Android `ACTION_SEND`. Friction-free virality for the Secret Ending moment.
-
-### Meta-progression stats screen
-New subtab in Mind (pairs with the "Stats panel" item above — they may merge). Player-facing dashboard of identity: total runs completed, best cycle time per prestige, favorite archetype, lifetime taps, ending-completion grid. This was scoped by the Sprint 3 gap audit as "out of v1.0 budget but worth naming" — lands here.
-
-### Keyboard navigation (desktop preview + accessibility)
-Tab order through HUD buttons, Enter/Space activation, visible focus rings. Currently the game is touch-first and desktop is an incidental preview mode. Sprint 10's accessibility pass covers screen reader + colorblind + reduced motion; keyboard nav is the one item deferred to v1.1 because desktop audience is a small minority and testing surface is large.
+### Cloud save conflict UI (stays v1.1)
+If Firebase save + local save differ significantly, present a "Which to keep?" modal instead of silent merge. Per MIG-1 clarification. Deferred because v1.0's Preferences-primary storage with silent MIG-1 merge is safe — conflict UI is polish, not correctness.
 
 ### Sentry + source maps (deferred from audit)
 If Firebase Crashlytics non-fatal logging proves insufficient during soft launch, add Sentry with source maps for JS error tracking in Capacitor WebView. Free tier (5K events/mo) sufficient.
@@ -73,9 +60,16 @@ Full version (snapshot auto-extraction from docs) remains v1.1+.
 
 ---
 
-## v1.5 — The Expansion (Month 3-4)
+## v1.5 — The Expansion (Month 3-4) — Sprint 6.8 SHRUNK
 
-**Focus:** new archetype, new region, new narrative arc.
+Sprint 6.8 pulled significant v1.5 content into v1.0:
+
+**Pulled to v1.0 (no longer v1.5 content):**
+- ✅ Upgrade Mastery → v1.0 Sprint 7.7 (unified into Mastery system covering Mutations + Upgrades + Pathways + Archetypes, see GDD §38)
+- ✅ Resonance tree expansion (+5 upgrades) → v1.0 Sprint 7.9 (all 5 shipped: Deep Listening, Cosmic Voice, Time Dilation, Meta Consciousness, Eternal Witness)
+- ✅ Dream System (Oneiric) → v1.0 Sprint 7.9 partial (5 seed dreams ship in v1.0 Inner Voice engine GDD §39; 25 more expansion stays v1.5)
+
+**Remaining v1.5 scope:**
 
 ### Observer archetype (Observadora)
 
@@ -124,26 +118,19 @@ New Mutations tied to Observer gameplay:
 5. **Accelerating Time** (Temporal): Each minute of cycle adds ×1.01 production, compounding
 6. **Prism** (Especial): 3 random effects stack each cycle
 
-### Upgrade Mastery (cross-run progression)
+### Upgrade Mastery (cross-run progression) — PULLED TO v1.0
+Pulled to v1.0 Sprint 7.7 as part of unified Mastery system (§38). Covers Mutations + Upgrades + Pathways + Archetypes at +0.5% per level, max +5% per entity. v1.5 adds new Observer-specific entities to the Mastery tracking.
 
-Each upgrade gains a "Mastery" level based on lifetime purchases (e.g., buying Dopamina 100 times = Mastery 5). Mastery grants +1% effectiveness per level, max Mastery 10. Permanent.
-
-### Resonance tree expansion (+5 upgrades)
-
-5 new Resonance upgrades unlocked at P25+:
-- **Deep Listening**: Observation windows ×2 frequency
-- **Cosmic Voice**: Fragments glow permanently, +1 Memory per fragment reread
-- **Eternal Witness**: +1 archetype slot (can combine 2 archetypes per Run)
-- **Time Dilation**: Offline cap +4h (permanent addition on top of in-Run upgrades)
-- **Meta Consciousness**: Patterns earn ×1.5
+### Resonance tree expansion (+5 upgrades) — PULLED TO v1.0
+All 5 upgrades shipped in v1.0 Sprint 7.9 (GDD §15 updated). v1.5 adds Observer-archetype-specific Resonance options if needed but core expansion is complete.
 
 ### 8 new upgrades tied to Observer
 
 All tagged `obs` for new Pathway gating rules. Not listed here in detail.
 
-### Dream System (Oneiric System) — parallel offline progression
+### Dream System (Oneiric) — v1.5 expansion only (v1.0 ships 5 seed dreams)
 
-A dream system runs while the app is closed, generating narrative moments the player sees on return. 30 possible dream sequences, player experiences them in random order. Each dream is 15-30 seconds of canvas animation + text. Progression unlocks more dreams. Purely cosmetic — no mechanical effect.
+v1.0 Sprint 6.8 re-architecture pulled 5 seed dreams into the Inner Voice engine (GDD §39). v1.5 expands the pool from 5 → 30 (+25 new dreams) plus adds canvas animation sequences. Dreams are purely cosmetic — no mechanical effect.
 
 **Estimated dev:** 3-4 sprints (15-20 days). ~15% production increase max for players who engage with Observer.
 
@@ -223,14 +210,17 @@ All cost Enlightenment Points, not thoughts.
 
 ---
 
-## Proposals for evaluation (not committed)
+## Proposals for evaluation (Sprint 6.8 shrunk — most pulled to v1.0)
 
-- **Watch-ad-for-Discharge-charge** — rewarded-ad surface giving a free Discharge charge on demand. Sourced from Sprint 4c.6.7 Nico playtest finding #5: with `chargeIntervalMinutes: 20` and 7-9 min tutorial cycles, players never see a charge land naturally. Sprint 4c.6.7 fix shipped a live MM:SS countdown so players at least see the timer; this proposal would let them skip the wait. Pairs cleanly with Sprint 9 monetization (RevenueCat + AdMob) — slot it as one of the 3-4 rewarded-ad placements (~10 min cooldown, daily cap of 3-5 charges).
-- **Recurring Dreams system** — each Run could have 3-5 "recurring dreams" that the player experiences at specific prestiges, evolving with each Run
-- **Mind Diary** (extended) — more detail than v1.0's Neural Diary, with editable notes from the player
+**Pulled to v1.0 (no longer proposals):**
+- ✅ Watch-ad-for-Discharge-charge → Sprint 9a rewarded ad slot 8
+- ✅ Recurring Dreams → unified into v1.0 Inner Voice engine (GDD §39)
+- ✅ Mind Diary extended → v1.0 Sprint 7 + Sprint 7.8 (search + editable notes + timeline visualization, all in v1.0 Diary)
+- ✅ Memory System (typed Memories) → v1.0 Sprint 7.5 (Shards have 3 types: Emotional, Procedural, Episodic per GDD §16.1)
+
+**Remaining proposals (stays post-launch):**
 - **Latent Neuron** (7th type, v2.5) — a neuron that only produces during Enlightenment prestiges
-- **Memory System** — Memories could have types (Emotional, Procedural, Episodic) with different effects
-- **Live Event system** — time-limited world events (e.g., "Cascade Week": Cascade threshold 50% everywhere for 7 days)
+- **Live Event system** — time-limited server-side world events (e.g., "Cascade Week": Cascade threshold 50% everywhere for 7 days). Requires server infrastructure not in v1.0 scope.
 
 ---
 

@@ -70,8 +70,8 @@ docs/
 ## Architecture rules (CODE-1 through CODE-9)
 - **CODE-1:** ZERO hardcoded game values. Every number in `config/constants.ts`, every player-facing string in `config/strings/{lang}.ts` via `t('key')`. Only exceptions: 0, 1, -1, array indices, CSS values.
 - **CODE-2:** MAX 200 lines per file, MAX 50 lines per function. One file = one purpose. Dependency flow: `config → engine → store → ui` (never backward). No circular imports.
-  - **Exception A (file-level):** pure type definition files with >100 fields may exceed the 200-line cap IF the excess is entirely from documentation/section comments that aid audit and cross-reference. The exception must be documented in a file-level docstring citing this clause. As of post-2nd-audit, the only file under this exception is `src/types/GameState.ts` (214 lines, 110 fields).
-  - **Exception B (function-level):** pure object-literal constructors that mirror a type interface with >100 fields may exceed the 50-line function cap IF the body is exclusively one flat object literal (no logic, no branches). Splitting into sub-factories would add indirection without improving anything; the counterpart type exists under Exception A, and the function preserves the invariant `Object.keys(factory()).length === fieldCount`. As of Phase 3.5 Sprint 3 audit, the only function under this exception is `createDefaultState()` in `src/store/gameStore.ts` (166 lines, 110 fields).
+  - **Exception A (file-level):** pure type definition files with >100 fields may exceed the 200-line cap IF the excess is entirely from documentation/section comments that aid audit and cross-reference. The exception must be documented in a file-level docstring citing this clause. As of post-2nd-audit, the only file under this exception is `src/types/GameState.ts` (214 lines, 110 fields; bumps to ~230 lines / 119 fields in Sprint 7.5 per GDD §32 Sprint 6.8 re-architecture).
+  - **Exception B (function-level):** pure object-literal constructors that mirror a type interface with >100 fields may exceed the 50-line function cap IF the body is exclusively one flat object literal (no logic, no branches). Splitting into sub-factories would add indirection without improving anything; the counterpart type exists under Exception A, and the function preserves the invariant `Object.keys(factory()).length === fieldCount`. As of Phase 3.5 Sprint 3 audit, the only function under this exception is `createDefaultState()` in `src/store/gameStore.ts` (166 lines, 110 fields; bumps to ~180 lines / 119 fields in Sprint 7.5).
 - **CODE-3:** Sprint is NOT done until every checkbox in `docs/SPRINTS.md` for that sprint is checked (AI checks + Player tests + Sprint tests).
 - **CODE-4:** Canvas — rAF at 60fps (visual only), separate 100ms game tick. Touch via `touchstart` not `click`. `touch-action: manipulation`. Safe areas via `env(safe-area-inset-*)`. Max 80 visible nodes. Pre-render glow.
 - **CODE-5:** Mobile — AudioContext unlock on first tap. `overscroll-behavior: none`. Android back button closes modals or minimizes. `Math.floor()` all displayed numbers. Epsilon tolerance for threshold comparisons.
@@ -244,6 +244,14 @@ The Spanish column below is preserved as historical reference for the design her
 | Sueño / Sueño REM / Sueño Lúcido | Sleep / REM Sleep / Lucid Dream | `sleep`, `remSleep`, `lucidDream` |
 | Síntesis Cognitiva | Cognitive Synthesis | (upgrade) |
 | Cargas | Charges | `dischargeCharges` |
+| Fragmentos de Memoria | Memory Shards (Emotional / Procedural / Episodic) | `memoryShards.{emotional\|procedural\|episodic}` (Sprint 6.8 §16.1) |
+| Pre-compromiso | Pre-commitment | `activePrecommitment`, `precommitmentStreak` (Sprint 6.8 §16.2) |
+| Ánimo (Moodómetro) | Mood (Moodometer) — 5 tiers Numb/Calm/Engaged/Elevated/Euphoric | `mood`, `moodHistory`, `moodTier*` (Sprint 6.8 §16.3) |
+| Previsión Visual | Foresight — T1/T2/T3/T4 tiers | `visualInsightTier` (derived, Sprint 6.8 §16.4) |
+| Momento Nombrado / Voz Interior | Named Moment / Inner Voice | `brocaNamedMoments`, `voice_*` / `dream_*` / `greeting_*` / `crossrun_*` fragment prefixes (Sprint 6.8 §16.5 + §39) |
+| Mente Integrada | Integrated Mind (Amplitud de Banda 3/4/5-region synergy) | derived from `regionsUnlocked` + upgrade state (Sprint 6.8 §16.6) |
+| Maestría | Mastery (cross-system lifetime tracking) | `mastery: Record<id, uses>` (Sprint 6.8 §38) |
+| Auto-compra | Auto-buy neurons (P10+) | `autoBuyConfig` (Sprint 6.8 Sprint 7.8 QoL pull-in from v1.1) |
 
 ## Language translation — sprint-level ownership
 
