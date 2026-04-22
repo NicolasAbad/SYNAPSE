@@ -23,6 +23,9 @@ import { handlePrestige, type PrestigeOutcome } from '../engine/prestige';
 import { applyPermanentPatternDecisionsToState } from '../engine/patternDecisions';
 import { dispatchNarrative, applyFragmentRead } from '../engine/narrative';
 import { MUTATIONS_BY_ID } from '../config/mutations';
+import { checkAllAchievements, achievementRewardSum } from '../engine/achievements';
+import { ACHIEVEMENTS_BY_ID } from '../config/achievements';
+import type { DiaryEntry } from '../types';
 
 /**
  * Pure default state. Matches GDD §32 100-field enumeration exactly.
@@ -231,6 +234,13 @@ export interface UIState {
    * effectiveness penalty without recomputing. UI-local — not persisted.
    */
   antiSpamActive: boolean;
+  /**
+   * Sprint 7 Phase 7.2 (ACH-3): toast surface for achievement unlocks.
+   * Set by the internal `processAchievementUnlocks` helper after any action
+   * that can change achievement-relevant state. Auto-cleared after 3s by the
+   * AchievementToast component (dismissAchievementToast action). UI-local.
+   */
+  achievementToast: { achievementId: string; expiresAt: number } | null;
 }
 
 /** Actions on the store. Sprint 1 ships INIT-1, reset, and Phase 7 save/load. */
@@ -351,6 +361,45 @@ export interface GameStoreActions {
    * Diary entry (Sprint 7) but not the GameState per §32 field budget.
    */
   chooseEnding: (id: EndingID, option: 'a' | 'b') => void;
+  /**
+   * Sprint 7 Phase 7.2 (ACH-3): dismiss the achievement toast (player tapped
+   * elsewhere or expiry timer fired). Idempotent — no-op if no toast active.
+   */
+  dismissAchievementToast: () => void;
+}
+
+/**
+ * Internal helper: after any state change, check for newly-unlocked achievements
+ * and apply their side effects (sparks reward, achievementsUnlocked append, diary
+ * entries, toast surface). Returns a Partial<GameState> + UI-toast slice the
+ * action can spread into its set() call. ACH-1: event-driven, called only after
+ * actions that can change achievement-relevant state.
+ */
+function processAchievementUnlocks(
+  nextState: GameState,
+  nowTimestamp: number,
+): Partial<GameState> & { achievementToast: { achievementId: string; expiresAt: number } | null } {
+  const result = checkAllAchievements(nextState);
+  if (result.newlyUnlocked.length === 0) {
+    return { achievementToast: null };
+  }
+  const sparkBonus = achievementRewardSum(result.newlyUnlocked);
+  const newDiaryEntries: DiaryEntry[] = result.newlyUnlocked.map((id) => ({
+    timestamp: nowTimestamp,
+    type: 'achievement' as const,
+    data: { achievementId: id, reward: ACHIEVEMENTS_BY_ID[id]?.reward ?? 0 },
+  }));
+  // Diary cap: 500 entries circular, drop from head when over (Sprint 7.5 spec).
+  const allDiary = [...nextState.diaryEntries, ...newDiaryEntries];
+  const trimmed = allDiary.length > 500 ? allDiary.slice(allDiary.length - 500) : allDiary; // CONST-OK §24.5 nar_diary_50 + Sprint 7.5 cap
+  // Toast: show first newly-unlocked. If multiple unlock atomically, the rest
+  // populate the diary but only the first surfaces as toast (avoids overlap).
+  return {
+    achievementsUnlocked: [...nextState.achievementsUnlocked, ...result.newlyUnlocked],
+    sparks: nextState.sparks + sparkBonus,
+    diaryEntries: trimmed,
+    achievementToast: { achievementId: result.newlyUnlocked[0], expiresAt: nowTimestamp + SYNAPSE_CONSTANTS.undoToastDurationMs },
+  };
 }
 
 export const useGameStore = create<GameState & UIState & GameStoreActions>((set, get) => ({
@@ -359,6 +408,7 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
   activeMindSubtab: 'home',
   undoToast: null,
   antiSpamActive: false,
+  achievementToast: null,
   initSessionTimestamps: (nowTimestamp) => {
     set((state) => {
       // Per INIT-1: only populate if field is still at the pure default sentinel.
@@ -371,7 +421,7 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
       return updates;
     });
   },
-  reset: () => set(() => ({ ...createDefaultState(), activeTab: 'mind' as TabId, activeMindSubtab: 'home' as MindSubtabId, undoToast: null, antiSpamActive: false })),
+  reset: () => set(() => ({ ...createDefaultState(), activeTab: 'mind' as TabId, activeMindSubtab: 'home' as MindSubtabId, undoToast: null, antiSpamActive: false, achievementToast: null })),
   loadFromSave: async () => {
     const loaded = await loadGame();
     if (loaded === null) return false;
@@ -385,11 +435,12 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
     // `antiSpamActive` are all transient per session; actions are dropped by
     // JSON.stringify naturally. Keeps the persisted payload at exactly
     // 110 GameState fields per §32 invariant.
-    const { activeTab: _a, activeMindSubtab: _m, undoToast: _u, antiSpamActive: _s, ...rest } = get();
+    const { activeTab: _a, activeMindSubtab: _m, undoToast: _u, antiSpamActive: _s, achievementToast: _at, ...rest } = get();
     void _a;
     void _m;
     void _u;
     void _s;
+    void _at;
     await saveGame(rest as GameState);
   },
   onTap: (nowTimestamp) =>
@@ -403,13 +454,18 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
     if (!result.ok) return result.reason;
     const mid = { ...state, ...result.updates };
     const narrative = dispatchNarrative(mid, { kind: 'neuron_bought' });
-    set({ ...result.updates, ...narrative, undoToast: result.undoToast });
+    const post = { ...mid, ...narrative };
+    const ach = processAchievementUnlocks(post as GameState, nowTimestamp);
+    set({ ...result.updates, ...narrative, ...ach, undoToast: result.undoToast });
     return 'ok';
   },
   buyUpgrade: (id, nowTimestamp) => {
-    const result = tryBuyUpgrade(get(), id, nowTimestamp);
+    const state = get();
+    const result = tryBuyUpgrade(state, id, nowTimestamp);
     if (!result.ok) return result.reason;
-    set({ ...result.updates, undoToast: result.undoToast });
+    const post = { ...state, ...result.updates };
+    const ach = processAchievementUnlocks(post as GameState, nowTimestamp);
+    set({ ...result.updates, ...ach, undoToast: result.undoToast });
     return 'ok';
   },
   undoLastPurchase: () => {
@@ -424,7 +480,9 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
     if (!outcome.fired) return outcome;
     const mid = { ...state, ...updates };
     const narrative = dispatchNarrative(mid, { kind: 'discharge_fired' });
-    set({ ...updates, ...narrative });
+    const post = { ...mid, ...narrative };
+    const ach = processAchievementUnlocks(post as GameState, nowTimestamp);
+    set({ ...updates, ...narrative, ...ach });
     return outcome;
   },
   prestige: (nowTimestamp, force = false) => {
@@ -432,13 +490,57 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
     if (!force && state.cycleGenerated < state.currentThreshold) {
       return { fired: false, outcome: null };
     }
+    // Pre-reset achievement check: catches cycle-scoped achievements (cyc_*) that
+    // depend on cycleCascades/cycleNeuronPurchases/cycleDischargesUsed before
+    // PRESTIGE_RESET zeros them. cyc_under_10 reads outcome.cycleDurationMs from
+    // the awakeningLog entry that handlePrestige writes — so we run the check
+    // on a synthetic pre-reset+latest-log state.
+    const cycleEndState: GameState = {
+      ...state,
+      // Preview the awakening log entry that handlePrestige will append, so
+      // cyc_under_10 can read it without waiting for handlePrestige to commit.
+      awakeningLog: [...state.awakeningLog, { prestigeCount: state.prestigeCount, timestamp: nowTimestamp, cycleDurationMs: nowTimestamp - state.cycleStartTimestamp, endProduction: state.effectiveProductionPerSecond, polarity: state.currentPolarity, mutationId: state.currentMutation?.id ?? null, pathway: state.currentPathway, patternsGained: 0, memoriesGained: 0, wasPersonalBest: false }],
+    };
+    const preCheck = checkAllAchievements(cycleEndState);
+
     const { state: nextState, outcome } = handlePrestige(state, nowTimestamp);
+    // Push prestige diary entry BEFORE post-reset achievement check so
+    // hid_no_discharge_full_cycle can count this cycle's tail entry.
+    const prestigeDiary: DiaryEntry = {
+      timestamp: nowTimestamp,
+      type: 'prestige',
+      data: {
+        prestigeCount: outcome.newPrestigeCount,
+        cycleDurationMs: outcome.cycleDurationMs,
+        memoriesGained: outcome.memoriesGained,
+        wasPersonalBest: outcome.wasPersonalBest,
+        dischargesUsed: state.cycleDischargesUsed,
+      },
+    };
+    const withDiary = { ...nextState, diaryEntries: [...nextState.diaryEntries, prestigeDiary], achievementsUnlocked: [...nextState.achievementsUnlocked, ...preCheck.newlyUnlocked] };
     // Merge mode (no `true` flag) — preserves action bindings per CLAUDE.md
     // Zustand pitfall rule. undoToast cleared since pre-prestige purchases no
     // longer apply to the new cycle. Narrative triggers fire on the POST-reset
     // state (prestigeCount already incremented) per NARR-4 ordering.
-    const narrative = dispatchNarrative(nextState, { kind: 'prestige_done' });
-    set({ ...nextState, ...narrative, undoToast: null });
+    const narrative = dispatchNarrative(withDiary, { kind: 'prestige_done' });
+    const post = { ...withDiary, ...narrative };
+    // Post-reset check: catches meta_first_awakening (lifetimePrestiges incremented)
+    // and any other persistent-field achievements. Pre-check IDs are already in
+    // achievementsUnlocked so processAchievementUnlocks won't double-count.
+    const ach = processAchievementUnlocks(post as GameState, nowTimestamp);
+    // Merge pre-check rewards into the diary + sparks too (processAchievementUnlocks
+    // only handled the post-check; pre-check unlocks need their own diary+spark side
+    // effects). Compute pre-check side effects manually:
+    const preReward = achievementRewardSum(preCheck.newlyUnlocked);
+    const preDiary: DiaryEntry[] = preCheck.newlyUnlocked.map((id) => ({
+      timestamp: nowTimestamp,
+      type: 'achievement' as const,
+      data: { achievementId: id, reward: ACHIEVEMENTS_BY_ID[id]?.reward ?? 0 },
+    }));
+    const finalDiary = [...(ach.diaryEntries ?? withDiary.diaryEntries), ...preDiary];
+    const trimmedDiary = finalDiary.length > 500 ? finalDiary.slice(finalDiary.length - 500) : finalDiary; // CONST-OK Sprint 7.5 cap
+    const finalToast = ach.achievementToast ?? (preCheck.newlyUnlocked.length > 0 ? { achievementId: preCheck.newlyUnlocked[0], expiresAt: nowTimestamp + SYNAPSE_CONSTANTS.undoToastDurationMs } : null);
+    set({ ...withDiary, ...narrative, ...ach, sparks: (ach.sparks ?? post.sparks) + preReward, diaryEntries: trimmedDiary, achievementToast: finalToast, undoToast: null });
     return { fired: true, outcome };
   },
   resetPatternDecisions: () => {
@@ -473,7 +575,9 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
     if (state.prestigeCount < SYNAPSE_CONSTANTS.polarityUnlockPrestige) {
       return { fired: false };
     }
-    set({ currentPolarity: polarity });
+    const post = { ...state, currentPolarity: polarity };
+    const ach = processAchievementUnlocks(post as GameState, Date.now());
+    set({ currentPolarity: polarity, ...ach });
     return { fired: true };
   },
   setPathway: (pathway) => {
@@ -481,7 +585,9 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
     if (state.prestigeCount < SYNAPSE_CONSTANTS.pathwayUnlockPrestige) {
       return { fired: false };
     }
-    set({ currentPathway: pathway });
+    const post = { ...state, currentPathway: pathway, uniquePathwaysUsed: state.uniquePathwaysUsed.includes(pathway) ? state.uniquePathwaysUsed : [...state.uniquePathwaysUsed, pathway] };
+    const ach = processAchievementUnlocks(post as GameState, Date.now());
+    set({ currentPathway: pathway, uniquePathwaysUsed: post.uniquePathwaysUsed, ...ach });
     return { fired: true };
   },
   setMutation: (mutationId) => {
@@ -498,7 +604,10 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
       const carry = state.lastCycleConfig?.upgrades ?? [];
       upgrades = carry.map((id) => ({ id, purchased: true, purchasedAt: 0 }));
     }
-    set({ currentMutation: { id: mutationId }, mutationSeed: mutationId === '' ? 0 : state.mutationSeed, upgrades });
+    const uniqueMuts = state.uniqueMutationsUsed.includes(mutationId) ? state.uniqueMutationsUsed : [...state.uniqueMutationsUsed, mutationId];
+    const post = { ...state, currentMutation: { id: mutationId }, upgrades, uniqueMutationsUsed: uniqueMuts };
+    const ach = processAchievementUnlocks(post as GameState, Date.now());
+    set({ currentMutation: { id: mutationId }, mutationSeed: mutationId === '' ? 0 : state.mutationSeed, upgrades, uniqueMutationsUsed: uniqueMuts, ...ach });
     return { fired: true };
   },
   setArchetype: (archetype) => {
@@ -518,18 +627,31 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
     // Fire ARC-01 fragment (archetype_chosen event against post-set state).
     const mid = { ...state, ...pending };
     const narrative = dispatchNarrative(mid, { kind: 'archetype_chosen' });
-    set({ ...pending, ...narrative });
+    const post = { ...mid, ...narrative };
+    const ach = processAchievementUnlocks(post as GameState, Date.now());
+    set({ ...pending, ...narrative, ...ach });
     return { fired: true };
   },
   readFragment: (id) => {
     const state = get();
     const updates = applyFragmentRead(state, id);
-    if (Object.keys(updates).length > 0) set(updates);
+    if (Object.keys(updates).length === 0) return;
+    const post = { ...state, ...updates };
+    const ach = processAchievementUnlocks(post as GameState, Date.now());
+    set({ ...updates, ...ach });
   },
   chooseEnding: (id, option) => {
     const state = get();
     if (state.endingsSeen.includes(id)) return;
-    void option; // Reserved for Sprint 7 Diary entry; not in §32 GameState shape.
-    set({ endingsSeen: [...state.endingsSeen, id] });
+    const now = Date.now();
+    const endingDiary: DiaryEntry = {
+      timestamp: now,
+      type: 'ending',
+      data: { endingId: id, option },
+    };
+    const post = { ...state, endingsSeen: [...state.endingsSeen, id], diaryEntries: [...state.diaryEntries, endingDiary] };
+    const ach = processAchievementUnlocks(post as GameState, now);
+    set({ endingsSeen: post.endingsSeen, diaryEntries: post.diaryEntries, ...ach });
   },
+  dismissAchievementToast: () => set({ achievementToast: null }),
 }));
