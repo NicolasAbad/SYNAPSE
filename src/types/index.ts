@@ -145,6 +145,30 @@ export interface PathwayDef {
   };
 }
 
+// Sprint 6 Phase 6.1 — Archetype data definition. Display name + bonuses live
+// in `src/config/archetypes.ts`; this is the structural shape only. Player
+// picks ONE at P5, permanent for the entire Run (cannot change until
+// Transcendence). Unlocks 15 archetype-exclusive narrative fragments.
+export interface ArchetypeDef {
+  id: Archetype;
+  /** i18n key — `archetypes.${id}.name`. */
+  nameKey: string;
+  /** i18n key — `archetypes.${id}.description`. */
+  descriptionKey: string;
+  /** Optional bonuses applied for the entire Run once chosen. */
+  bonuses: {
+    activeProductionMult?: number; // Analítica ×1.15 / Empática ×0.85
+    focusFillRateMult?: number; // Analítica ×1.25
+    insightDurationAddSec?: number; // Analítica +2s
+    offlineEfficiencyMult?: number; // Empática ×2.5
+    lucidDreamRate?: number; // Empática 1.0 (vs 0.33 default)
+    memoryMult?: number; // Empática ×1.25
+    mutationBonusOptions?: number; // Creativa +1 (mirrors SYNAPSE_CONSTANTS.creativaMutationBonusOptions)
+    resonanceGainMult?: number; // Creativa ×1.5
+    spontaneousEventRateMult?: number; // Creativa ×1.5
+  };
+}
+
 // Sprint 5 Phase 5.1 — Region data definition. 5 entries in
 // `src/config/regions.ts`. UpgradeIds reference entries in upgrades.ts.
 export type RegionId = 'hipocampo' | 'prefrontal' | 'limbico' | 'visual' | 'broca';

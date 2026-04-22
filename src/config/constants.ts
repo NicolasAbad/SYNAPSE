@@ -125,6 +125,10 @@ export const SYNAPSE_CONSTANTS = {
   pathwayUnlockPrestige: 10, // GDD §14: "Each cycle, player chooses 1 Pathway (P10+)"
   pathwayEquilibradaBonusMult: 0.85, // GDD §14 "all upgrade bonuses ×0.85"
 
+  // ── Archetypes ──
+  // Per-archetype tuning lives in src/config/archetypes.ts. Cross-cutting only here.
+  archetypeUnlockPrestige: 5, // GDD §12: "Archetype choice at P5+"
+
   // ── Resonance ──
   resonanceBasePerPrestige: 1,
   resonanceMaxCascadesCount: 3,

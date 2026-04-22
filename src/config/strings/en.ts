@@ -323,6 +323,30 @@ export const en = {
     estimate_label: 'Est. cycle time',
     disclaimer: 'Estimate excludes offline, taps, Cascades, and Spontaneous events.',
   },
+  // Sprint 6 Phase 6.1 — 3 Archetypes (GDD §12). Display names + effects.
+  // Permanent for the entire Run — the identity-defining choice.
+  archetypes: {
+    analitica: {
+      name: 'Analytical',
+      description: 'The speed-focused mind. Active ×1.15, Focus fills ×1.25, Insight +2s. Strong for short cycles and active play.',
+    },
+    empatica: {
+      name: 'Empathic',
+      description: 'The idle-focused mind. Offline ×2.5, Memories ×1.25, guaranteed Lucid Dreams (P10+). Active ×0.85 tradeoff.',
+    },
+    creativa: {
+      name: 'Creative',
+      description: 'The variety-focused mind. +1 Mutation option, Resonance ×1.5, Spontaneous events ×1.5. Strong for experimentation.',
+    },
+  },
+  // Sprint 6 Phase 6.1 — Archetype selection modal strings (Phase 6.2 renders it).
+  archetype_choice: {
+    title: 'Choose your Archetype',
+    subtitle: "Your mind's identity for the entire Run. Permanent until Transcendence.",
+    confirm: 'Confirm choice',
+    confirm_warning: 'This choice cannot be changed until Transcendence.',
+    cancel: 'Back',
+  },
 
   // Sprint 3+ adds keys as new features ship — do NOT preload
   // empty keys for future features (CODE-1 anti-pattern is
