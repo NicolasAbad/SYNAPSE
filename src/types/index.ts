@@ -325,7 +325,10 @@ export type DiaryEntryType =
   | 'personal_best'
   | 'ending'
   | 'fragment'
-  | 'achievement';
+  | 'achievement'
+  | 'spontaneous'; // Sprint 7.1 D4 decision (Sprint 6.8 audit) — separate from 'fragment' to avoid
+                   // overcounting fragment-based achievements (nar_ten_fragments, nar_diary_50).
+                   // Used by hid_spontaneous_hunter to track 12 unique spontaneous event IDs lifetime.
 
 export interface DiaryEntry {
   timestamp: number;
@@ -335,5 +338,33 @@ export interface DiaryEntry {
 
 // v1.0 ships 4 endings. 'resonance' (Observer) is v1.5+ — widening the union is forward-compatible.
 export type EndingID = 'equation' | 'chorus' | 'seed' | 'singularity';
+
+// === Achievements (Sprint 7 §24.5 + Sprint 6.8 +5 region cat) ===
+// Categories per GDD §24.5: 6 cyc + 6 meta + 6 nar + 6 hid + 6 mas + 5 reg = 35 total.
+export type AchievementCategory = 'cyc' | 'meta' | 'nar' | 'hid' | 'mas' | 'reg';
+
+import type { GameState as _GS } from './GameState';
+/**
+ * AchievementDef — canonical Achievement record per GDD §24.5.
+ * `trigger` is a pure function of GameState (CODE-9 deterministic). Region-category
+ * triggers ship STUBBED to false in Sprint 7.1; Sprint 7.5 wires real conditions
+ * once the Region sub-systems exist.
+ */
+export interface AchievementDef {
+  id: string; // matches /^(cyc|meta|nar|hid|mas|reg)_[a-z_0-9]+$/
+  category: AchievementCategory;
+  nameKey: string;
+  descriptionKey: string;
+  reward: number; // Sparks
+  isHidden: boolean; // Sprint 7 ACH-2 — Hidden displays as ??? until unlocked
+  trigger: (state: _GS) => boolean;
+}
+
+/** Result of checkAllAchievements — IDs newly unlocked this tick. */
+export interface AchievementCheckResult {
+  newlyUnlocked: string[];
+  // Caller (store) handles: append IDs to achievementsUnlocked, sparks += sum(rewards),
+  // toast for each, append diary entry per ACH-3.
+}
 
 export type EraVisualTheme = 'bioluminescent' | 'digital' | 'cosmic';

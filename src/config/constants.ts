@@ -224,6 +224,14 @@ export const SYNAPSE_CONSTANTS = {
   tutorialTrackCycleCount: 5, // 5 cycles of progressive disclosure
   tutorialSparksRewardPerStep: 2, // +2 Sparks per tutorial goal completion
 
+  // ── Achievements thresholds (Sprint 7 §24.5 — values match GDD spec) ──
+  achievementCycUnder10Ms: 600_000, // cyc_under_10: complete cycle in <10 min
+  achievementNarTenFragmentsCount: 10, // nar_ten_fragments: read 10 fragments
+  achievementNarDiary50Count: 50, // nar_diary_50: 50 diary entries
+  achievementMasResonance50Count: 50, // mas_resonance_50: peak 50 Resonance in one Run
+  achievementHidNoDischargeStreakCount: 3, // hid_no_discharge_full_cycle: 3 cycles in a row
+  achievementShardCollectorCount: 100, // reg_shard_collector: 100 shards (any type) — Sprint 7.5
+
   // ── Mood event deltas (per MOOD-2 rule — shifts from play events) ──
   moodDeltaCascade: 5, // +5 on Cascade
   moodDeltaPrestige: 10, // +10 on Prestige complete

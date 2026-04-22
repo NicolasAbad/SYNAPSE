@@ -452,6 +452,52 @@ export const en = {
     interferencia: { name: 'Interference', description: 'Focus Bar resets (max once per cycle).' },
   },
 
+  // Sprint 7.1 — 35 Achievements (GDD §24.5 + Sprint 6.8 +5 region). Total Spark
+  // reward pool = 175. All names + descriptions in English; IDs per §24.5 regex.
+  achievements: {
+    // Cycle (6)
+    cyc_first_spark: { name: 'First Spark', description: 'Use your first Discharge.' },
+    cyc_first_cascade: { name: 'First Cascade', description: 'Trigger your first Cascade.' },
+    cyc_full_focus: { name: 'Fully Focused', description: 'Fill the Focus Bar completely.' },
+    cyc_under_10: { name: 'Quick Mind', description: 'Complete a cycle in under 10 minutes.' },
+    cyc_five_types: { name: 'Full Orchestra', description: 'Own all 5 neuron types at once in a cycle.' },
+    cyc_eureka_rush: { name: 'Eureka Rush', description: 'Trigger the Flujo Eureka Mental State.' },
+    // Meta (6)
+    meta_first_awakening: { name: 'First Awakening', description: 'Complete your first prestige.' },
+    meta_polarity_picked: { name: 'First Choice', description: 'Pick your first Polarity at P3.' },
+    meta_archetype_chosen: { name: 'First Identity', description: 'Pick your first Archetype at P7.' },
+    meta_mutation_picked: { name: 'First Mutation', description: 'Pick your first Mutation at P7.' },
+    meta_pathway_picked: { name: 'First Pathway', description: 'Pick your first Pathway at P10.' },
+    meta_era_3: { name: 'Threshold of Truth', description: 'Reach Era 3 (P19).' },
+    // Narrative (6)
+    nar_first_fragment: { name: 'First Fragment', description: 'Read your first narrative fragment.' },
+    nar_ten_fragments: { name: 'Ten Truths', description: 'Read 10 narrative fragments.' },
+    nar_all_base: { name: 'The Foundation', description: 'Read all 12 BASE fragments.' },
+    nar_first_ending: { name: 'First Resolution', description: 'See your first ending.' },
+    nar_diary_50: { name: 'Chronicler', description: 'Reach 50 entries in your Neural Diary.' },
+    nar_all_archetype_frags: { name: 'Full Voice', description: 'Read all 15 fragments of your current archetype.' },
+    // Hidden (6) — ACH-2: display as ??? until unlocked; descriptions still exist for post-unlock view
+    hid_no_tap_cycle: { name: 'The Still Mind', description: 'Complete a cycle without tapping.' },
+    hid_no_discharge_full_cycle: { name: 'Silent Power', description: 'Complete 3 cycles in a row without Discharge.' },
+    hid_insight_trasc: { name: 'Transcendent Thought', description: 'Trigger a Level 3 (Trascendente) Insight.' },
+    hid_max_connection: { name: 'Perfect Network', description: 'Reach the maximum connection multiplier.' },
+    hid_spontaneous_hunter: { name: 'Golden Cookie', description: 'Experience all 12 spontaneous event types.' },
+    hid_first_rp: { name: 'Resonance Detected', description: 'Discover your first Resonant Pattern.' },
+    // Mastery (6)
+    mas_first_transcendence: { name: 'Ascended', description: 'Complete your first Transcendence.' },
+    mas_all_archetypes: { name: 'Three Minds', description: 'Play all 3 archetypes across Runs.' },
+    mas_all_pathways: { name: 'Walking All Ways', description: 'Use all 3 Pathways.' },
+    mas_all_mutations: { name: 'The Variety', description: 'Use all 15 Mutations at least once.' },
+    mas_resonance_50: { name: 'Resonant Mind', description: 'Accumulate 50 Resonance in one Run.' },
+    mas_all_endings: { name: 'Full Spectrum', description: 'See all 4 v1.0 endings.' },
+    // Regions (5 — Sprint 6.8 re-architecture)
+    reg_shard_collector: { name: 'Shard Collector', description: 'Accumulate 100 shards of any type.' },
+    reg_precommit_streak: { name: 'Committed Mind', description: 'Achieve 5 consecutive Pre-commit successes.' },
+    reg_euphoric: { name: 'Euphoric', description: 'Reach peak Mood (Euphoric tier).' },
+    reg_foresight_master: { name: 'Foresight Master', description: 'Unlock all 4 Visual Foresight tiers.' },
+    reg_integrated_mind: { name: 'Integrated Mind', description: 'Activate all 5 regions in a single Run.' },
+  },
+
   // Sprint 3+ adds keys as new features ship — do NOT preload
   // empty keys for future features (CODE-1 anti-pattern is
   // hardcoding; empty keys anticipating features is NOT a
