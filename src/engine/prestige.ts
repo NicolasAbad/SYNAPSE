@@ -7,6 +7,7 @@ import { PRESTIGE_RESET } from '../config/prestige';
 import { UPGRADES_BY_ID } from '../config/upgrades';
 import { calculateThreshold } from './production';
 import { applyPermanentPatternDecisionsToState, memoriesPerPrestigeDecisionAdd } from './patternDecisions';
+import { pathwayMemoriesPerPrestigeMult } from './pathways';
 import type { GameState } from '../types/GameState';
 import type { AwakeningEntry, PatternNode } from '../types';
 
@@ -27,21 +28,15 @@ function ownedUpgradeIds(upgrades: GameState['upgrades']): Set<string> {
   return out;
 }
 
-/**
- * GDD §6: base +2 Memorias per prestige; Consolidación de Memoria
- * (§24 `basica_mult_and_memory_gain`) contributes `memoryGainAdd` as a
- * multiplicative "+X%" — base × (1 + memoryGainAdd). With the canonical
- * `memoryGainAdd: 0.5`, owned → 2 × 1.5 = 3, matching the §2 "+1 more"
- * table entry.
- */
-export function computeMemoriesGained(state: Pick<GameState, 'upgrades' | 'patternDecisions'>): number {
+/** GDD §6: base × (1 + memoryGainAdd) × pathwayMult + Node 24 B add. */
+export function computeMemoriesGained(state: Pick<GameState, 'upgrades' | 'patternDecisions' | 'currentPathway'>): number {
   let mult = 1;
   for (const id of ownedUpgradeIds(state.upgrades)) {
     const effect = UPGRADES_BY_ID[id]?.effect;
     if (effect?.kind === 'basica_mult_and_memory_gain') mult += effect.memoryGainAdd;
   }
-  // GDD §10 Node 24 B: +2 Memories per prestige (additive flat, post-mult).
-  return SYNAPSE_CONSTANTS.baseMemoriesPerPrestige * mult + memoriesPerPrestigeDecisionAdd(state);
+  // GDD §14 Profunda ×2 + GDD §10 Node 24 B (+2 flat, post-mult).
+  return SYNAPSE_CONSTANTS.baseMemoriesPerPrestige * mult * pathwayMemoriesPerPrestigeMult(state as GameState) + memoriesPerPrestigeDecisionAdd(state);
 }
 
 /** CORE-8 amended cap: raw × 30s clamped at nextThreshold × maxMomentumPct (§35 4A-2). */

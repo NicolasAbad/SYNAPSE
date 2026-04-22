@@ -14,7 +14,7 @@
 import { create } from 'zustand';
 import { SYNAPSE_CONSTANTS } from '../config/constants';
 import type { GameState } from '../types/GameState';
-import type { NeuronType, Polarity } from '../types';
+import type { NeuronType, Polarity, Pathway } from '../types';
 import { loadGame, saveGame } from './saveGame';
 import { tryBuyNeuron, tryBuyUpgrade, type BuyReason, type UndoToast } from './purchases';
 import { applyTap } from './tap';
@@ -319,6 +319,14 @@ export interface GameStoreActions {
    * mutationUpgradeCostMod in tryBuyUpgrade).
    */
   setMutation: (mutationId: string) => { fired: boolean };
+  /**
+   * Sprint 5 Phase 5.3: pick a Pathway for the current cycle (GDD §14).
+   * Pre-P10 returns fired=false. PATH-2: defaults to last choice via
+   * `lastCycleConfig.pathway` snapshot — but engine consumers read
+   * `state.currentPathway` directly. POLAR-1 / SAME AS LAST flow in 5.5
+   * pre-fills the picker from the snapshot.
+   */
+  setPathway: (pathway: Pathway) => { fired: boolean };
 }
 
 export const useGameStore = create<GameState & UIState & GameStoreActions>((set, get) => ({
@@ -433,6 +441,14 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
       return { fired: false };
     }
     set({ currentPolarity: polarity });
+    return { fired: true };
+  },
+  setPathway: (pathway) => {
+    const state = get();
+    if (state.prestigeCount < SYNAPSE_CONSTANTS.pathwayUnlockPrestige) {
+      return { fired: false };
+    }
+    set({ currentPathway: pathway });
     return { fired: true };
   },
   setMutation: (mutationId) => {

@@ -25,6 +25,7 @@ import { NEURON_BASE_RATES } from '../config/neurons';
 import { UPGRADES_BY_ID } from '../config/upgrades';
 import { patternCycleBonusAdd } from './patternDecisions';
 import { mutationProdMult } from './mutations';
+import { dampenUpgradeBonus, pathwayUpgradeBonusDamp } from './pathways';
 import type { GameState } from '../types/GameState';
 import type { NeuronState, NeuronType, Polarity, UpgradeEffect } from '../types';
 
@@ -179,12 +180,12 @@ export function calculateProduction(state: GameState): { base: number; effective
   // to the pre-multiplier sum so the upgrade × connection chain multiplies it too.
   sum += state.totalPatterns * SYNAPSE_CONSTANTS.patternFlatBonusPerNode;
 
-  const globalMult = computeGlobalUpgradeMult(state, ownedIds);
+  // GDD §14 Equilibrada: dampen the upgrade-bonus delta by 0.85 cross-cutting.
+  // Identity for Rápida / Profunda / no-pathway. Wired Sprint 5 Phase 5.3.
+  const globalMult = dampenUpgradeBonus(computeGlobalUpgradeMult(state, ownedIds), pathwayUpgradeBonusDamp(state));
   // Stubs for Sprint 6-7: archetypeMod × regionMult (all identity until wired).
-  // GDD §11 polarityMod wired Sprint 4c Phase 4c.2.
-  // GDD §13 mutationStaticMod wired Sprint 5 Phase 5.2 — covers #1 Eficiencia,
-  // #2 Hiperestimulación. Time-based (#11 Sprint, #12 Crescendo) and per-type
-  // (#6 Especialización) effects ride on top in Phase 5.6 / Sprint 6.
+  // Mutation static mod wired Phase 5.2; polarity wired 4c.2; pathway dampening
+  // applied above on globalMult, so rawMult below stays a clean product.
   const rawMult = state.connectionMult * globalMult * polarityProdMult(state.currentPolarity) * mutationProdMult(state);
   const finalMult = softCap(rawMult);
   // Pattern cycle bonus: multiplicative post-softCap, capped at patternCycleCap.

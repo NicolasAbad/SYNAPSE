@@ -122,7 +122,7 @@ export const SYNAPSE_CONSTANTS = {
 
   // ── Pathways ──
   // Per-pathway tuning lives in src/config/pathways.ts. Cross-cutting only here.
-  // Equilibrada multiplier hits ALL upgrade bonus magnitudes globally.
+  pathwayUnlockPrestige: 10, // GDD §14: "Each cycle, player chooses 1 Pathway (P10+)"
   pathwayEquilibradaBonusMult: 0.85, // GDD §14 "all upgrade bonuses ×0.85"
 
   // ── Resonance ──

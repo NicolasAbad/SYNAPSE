@@ -19,6 +19,7 @@ import { UPGRADES_BY_ID } from '../config/upgrades';
 import { SYNAPSE_CONSTANTS } from '../config/constants';
 import { computeConnectionMult } from '../engine/production';
 import { mutationNeuronCostMod, mutationUpgradeCostMod } from '../engine/mutations';
+import { pathwayCostMod } from '../engine/pathways';
 import type { GameState } from '../types/GameState';
 import type { NeuronState, NeuronType } from '../types';
 
@@ -60,9 +61,9 @@ function finalUpgradeCost(
       cost = cost * (1 - funcEjec.effect.pct);
     }
   }
-  // Pathway cost mod (Sprint 5 Phase 5.3 will plug a real helper). All v1.0
-  // pathways set pathwayCostMod=1.0 per GDD §14, so identity now is correct.
-  return cost;
+  // Pathway cost mod — Sprint 5 Phase 5.3. v1.0 pathways all carry 1.0 per
+  // GDD §14, so this is identity today; kept in formula for spec correctness.
+  return cost * pathwayCostMod(state);
 }
 
 /** Per-neuron cost with COST-1 modifiers applied (Sprint 3: no modifiers for neurons). */
@@ -82,9 +83,10 @@ export function isNeuronUnlocked(state: Pick<GameState, 'neurons' | 'prestigeCou
 /** Reason code + cost snapshot. UI uses this to grey out / show price without attempting a buy. */
 export function canBuyNeuron(state: GameState, type: NeuronType): { reason: BuyReason; cost: number } {
   if (!isNeuronUnlocked(state, type)) return { reason: 'locked', cost: 0 };
-  // COST-1: base × mutationNeuronCostMod. Wired Sprint 5 Phase 5.2 — covers
-  // Eficiencia Neural #1 (×0.6). Pathway/FE pieces don't apply to neurons.
-  const cost = neuronBuyCost(type, countOf(state.neurons, type)) * mutationNeuronCostMod(state);
+  // COST-1: base × mutationNeuronCostMod × pathwayCostMod. Wired Sprint 5
+  // Phase 5.2 (mutation) + Phase 5.3 (pathway, 1.0 in v1.0). FE doesn't
+  // apply to neurons.
+  const cost = neuronBuyCost(type, countOf(state.neurons, type)) * mutationNeuronCostMod(state) * pathwayCostMod(state);
   if (state.thoughts < cost) return { reason: 'insufficient_funds', cost };
   return { reason: 'ok', cost };
 }
