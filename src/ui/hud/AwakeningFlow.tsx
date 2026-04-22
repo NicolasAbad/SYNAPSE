@@ -4,10 +4,11 @@ import { SYNAPSE_CONSTANTS } from '../../config/constants';
 import type { PrestigeOutcome } from '../../engine/prestige';
 import { ConfirmModal } from '../modals/ConfirmModal';
 import { AwakeningScreen } from '../modals/AwakeningScreen';
-import { CycleSetupScreen } from '../modals/CycleSetupScreen';
+import { CycleSetupScreen, type CycleSetupChoice } from '../modals/CycleSetupScreen';
+import { getMutationOptions } from '../../engine/mutations';
 import { t } from '../../config/strings';
 import { HUD } from '../tokens';
-import type { Polarity } from '../../types';
+import type { Pathway, Polarity } from '../../types';
 
 /**
  * Orchestrates the prestige flow per SPRINTS.md §4a + §4c:
@@ -29,8 +30,17 @@ export const AwakeningFlow = memo(function AwakeningFlow() {
   const currentThreshold = useGameStore((s) => s.currentThreshold);
   const prestigeCount = useGameStore((s) => s.prestigeCount);
   const lastCyclePolarityStr = useGameStore((s) => s.lastCycleConfig?.polarity ?? '');
+  const lastCycleMutationStr = useGameStore((s) => s.lastCycleConfig?.mutation ?? '');
+  const lastCyclePathwayStr = useGameStore((s) => s.lastCycleConfig?.pathway ?? '');
+  const effectivePPS = useGameStore((s) => s.effectiveProductionPerSecond);
   const prestige = useGameStore((s) => s.prestige);
   const setPolarity = useGameStore((s) => s.setPolarity);
+  const setMutation = useGameStore((s) => s.setMutation);
+  const setPathway = useGameStore((s) => s.setPathway);
+  // Mutation options drawn at CycleSetupScreen open. ctx defaults to no-archetype
+  // / no-Genius-Pass / no-Pattern-bonus / no-Weekly-Challenge — Sprint 6/9 expand
+  // ctx fields when those features ship.
+  const mutationOptions = useGameStore((s) => getMutationOptions(s));
 
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [outcome, setOutcome] = useState<PrestigeOutcome | null>(null);
@@ -40,6 +50,11 @@ export const AwakeningFlow = memo(function AwakeningFlow() {
   const lastCyclePolarity: Polarity | null =
     lastCyclePolarityStr === 'excitatory' || lastCyclePolarityStr === 'inhibitory'
       ? lastCyclePolarityStr
+      : null;
+  const lastCycleMutation: string | null = lastCycleMutationStr || null;
+  const lastCyclePathway: Pathway | null =
+    lastCyclePathwayStr === 'rapida' || lastCyclePathwayStr === 'profunda' || lastCyclePathwayStr === 'equilibrada'
+      ? lastCyclePathwayStr
       : null;
   const polarityUnlocked = prestigeCount >= SYNAPSE_CONSTANTS.polarityUnlockPrestige;
 
@@ -58,10 +73,12 @@ export const AwakeningFlow = memo(function AwakeningFlow() {
       setShowCycleSetup(true);
     }
   }, [polarityUnlocked]);
-  const onCycleSetupChoose = useCallback((p: Polarity) => {
-    setPolarity(p);
+  const onCycleSetupChoose = useCallback((choice: CycleSetupChoice) => {
+    if (choice.polarity !== null) setPolarity(choice.polarity);
+    if (choice.mutationId !== null) setMutation(choice.mutationId);
+    if (choice.pathway !== null) setPathway(choice.pathway);
     setShowCycleSetup(false);
-  }, [setPolarity]);
+  }, [setPolarity, setMutation, setPathway]);
 
   const showReadyButton = ready && !confirmOpen && !outcome && !showCycleSetup;
 
@@ -113,6 +130,11 @@ export const AwakeningFlow = memo(function AwakeningFlow() {
         <CycleSetupScreen
           prestigeCount={prestigeCount}
           lastCyclePolarity={lastCyclePolarity}
+          lastCycleMutation={lastCycleMutation}
+          lastCyclePathway={lastCyclePathway}
+          mutationOptions={mutationOptions}
+          effectivePPS={effectivePPS}
+          currentThreshold={currentThreshold}
           onChoose={onCycleSetupChoose}
         />
       )}

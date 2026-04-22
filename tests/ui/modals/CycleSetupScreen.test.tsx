@@ -143,7 +143,8 @@ describe('CycleSetupScreen — SAME AS LAST button (Sprint 4c.3)', () => {
       <CycleSetupScreen prestigeCount={3} lastCyclePolarity="inhibitory" onChoose={onChoose} />,
     );
     fireEvent.pointerDown(getByTestId('cycle-setup-same-as-last'));
-    expect(onChoose).toHaveBeenCalledWith('inhibitory');
+    // Sprint 5 Phase 5.5: onChoose signature changed to CycleSetupChoice triple.
+    expect(onChoose).toHaveBeenCalledWith({ polarity: 'inhibitory', mutationId: null, pathway: null });
   });
 });
 
@@ -205,7 +206,8 @@ describe('CycleSetupScreen — Continue button (Sprint 4c.3)', () => {
     const { getByTestId } = render(<CycleSetupScreen prestigeCount={3} onChoose={onChoose} />);
     fireEvent.pointerDown(getByTestId('cycle-setup-polarity-inhibitory'));
     fireEvent.pointerDown(getByTestId('cycle-setup-continue'));
-    expect(onChoose).toHaveBeenCalledWith('inhibitory');
+    // Sprint 5 Phase 5.5: onChoose signature changed to CycleSetupChoice triple.
+    expect(onChoose).toHaveBeenCalledWith({ polarity: 'inhibitory', mutationId: null, pathway: null });
   });
 
   test('disabled pre-P3 (polarity slot locked)', () => {

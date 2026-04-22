@@ -8,27 +8,28 @@ import {
   useIsTabletWidth,
 } from './cycleSetupSlots';
 import { PolaritySlot } from './PolaritySlot';
+import { MutationSlot } from './MutationSlot';
+import { PathwaySlot } from './PathwaySlot';
+import { WhatIfPreview } from './WhatIfPreview';
 import { CycleSetupActionBar } from './cycleSetupActionBar';
-import type { Polarity } from '../../types';
+import type { Mutation, Pathway, Polarity } from '../../types';
 
-// CycleSetupScreen — LAYOUT SHELL ONLY (Sprint 2 Phase 6).
-// Responsive per CYCLE-2 (§29): ≥600px uses 1–3-column layout,
-// <600px uses step-by-step with Next button + progress dots.
+// Sprint 5 Phase 5.5: full Mutation + Pathway slot interactivity, with
+// What-if Preview below the columns. Polarity slot kept from Sprint 4c.
+// Sprint 4b stub-mode placeholders removed (no more "Sprint 5 — coming
+// soon" copy). lastCycleConfig snapshot now carries 3 fields (polarity,
+// mutation, pathway) — POLAR-1 / SAME AS LAST applies all three.
 //
-// SAME AS LAST is rendered but disabled — no prior choices exist in Sprint 2.
-// Not wired to App.tsx — real trigger lives in Sprint 4c (Awakening → Pattern
-// Tree → CycleSetupScreen → new cycle). Test in isolation via prop injection.
+// Layout responsiveness per CYCLE-2 (§29): ≥600px = N-column, <600px
+// = stepper with progress dots. Stepper logic unchanged from Sprint 4c.
 //
-// Unlock gates live in ./cycleSetupSlots.ts (helpers split per CODE-2).
+// onChoose signature widened from `(p: Polarity)` to a triple of choices.
+// AwakeningFlow (Sprint 5 Phase 5.5 update) calls setPolarity, setMutation,
+// setPathway in sequence based on which choices are present.
 
-/**
- * Label for non-polarity placeholder slots. Switch from the "unlocks at PN"
- * copy (which fires when prestigeCount < unlock) to the "coming in Sprint 5"
- * copy (which fires when the slot IS unlocked but not yet interactive).
- */
 function placeholderLabelKey(slot: Slot): string {
-  if (slot === 'mutation') return 'cycle_setup.slot_placeholder_mutation';
-  return 'cycle_setup.slot_placeholder_pathway';
+  if (slot === 'mutation') return 'cycle_setup.slot_locked_mutation';
+  return 'cycle_setup.slot_locked_pathway';
 }
 
 function SlotPlaceholder({ slot, mode }: { slot: Slot; mode: 'locked' | 'coming-soon' }) {
@@ -38,7 +39,7 @@ function SlotPlaceholder({ slot, mode }: { slot: Slot; mode: 'locked' | 'coming-
       style={{
         flex: 1,
         minHeight: HUD.touchTargetMin,
-        padding: 'var(--spacing-5)', // CONST-OK: CSS custom property ref (CODE-1 exception)
+        padding: 'var(--spacing-5)', // CONST-OK
         background: 'var(--color-bg-elevated)',
         border: '1px solid var(--color-border-subtle)',
         borderRadius: 'var(--radius-lg)',
@@ -56,77 +57,108 @@ function SlotPlaceholder({ slot, mode }: { slot: Slot; mode: 'locked' | 'coming-
   );
 }
 
-interface CycleSetupScreenProps {
+export interface CycleSetupChoice {
+  polarity: Polarity | null;
+  mutationId: string | null;
+  pathway: Pathway | null;
+}
+
+export interface CycleSetupScreenProps {
   prestigeCount: number;
-  /** POLAR-1 default: pre-selected polarity from `lastCycleConfig.polarity`. */
+  /** POLAR-1 default: pre-selected from `lastCycleConfig` snapshot. */
   lastCyclePolarity?: Polarity | null;
-  /** Fires when the player confirms (Continue or SAME AS LAST). Parent handles setPolarity + dismissal. */
-  onChoose?: (polarity: Polarity) => void;
+  lastCycleMutation?: string | null;
+  lastCyclePathway?: Pathway | null;
+  /** Mutation options drawn for this cycle (engine call upstream — getMutationOptions). */
+  mutationOptions?: readonly Mutation[];
+  /** What-if Preview inputs (effectivePPS + threshold from store). */
+  effectivePPS?: number;
+  currentThreshold?: number;
+  /** Fires when player confirms all selectable slots. Parent handles set* actions. */
+  onChoose?: (choice: CycleSetupChoice) => void;
 }
 
 export const CycleSetupScreen = memo(function CycleSetupScreen({
   prestigeCount,
   lastCyclePolarity = null,
+  lastCycleMutation = null,
+  lastCyclePathway = null,
+  mutationOptions = [],
+  effectivePPS = 0,
+  currentThreshold = 0,
   onChoose,
 }: CycleSetupScreenProps) {
   const isTablet = useIsTabletWidth();
   const slots = unlockedSlotsFor(prestigeCount);
   const [stepIndex, setStepIndex] = useState(0);
-  // POLAR-1 default — pre-select last cycle's polarity (if any).
+  // POLAR-1 + Sprint 5 SAME AS LAST: pre-select from lastCycleConfig snapshot.
   const [selectedPolarity, setSelectedPolarity] = useState<Polarity | null>(lastCyclePolarity);
+  const [selectedMutation, setSelectedMutation] = useState<string | null>(lastCycleMutation);
+  const [selectedPathway, setSelectedPathway] = useState<Pathway | null>(lastCyclePathway);
 
   const polarityUnlocked = slots.includes('polarity');
-  const canSameAsLast = polarityUnlocked && lastCyclePolarity !== null;
-  const canContinue = polarityUnlocked && selectedPolarity !== null;
+  const mutationUnlocked = slots.includes('mutation');
+  const pathwayUnlocked = slots.includes('pathway');
+
+  // SAME AS LAST is available iff we have any prior choice for any unlocked slot.
+  const canSameAsLast =
+    (polarityUnlocked && lastCyclePolarity !== null) ||
+    (mutationUnlocked && lastCycleMutation !== null) ||
+    (pathwayUnlocked && lastCyclePathway !== null);
+  // Continue requires every unlocked slot to have a current selection.
+  const canContinue =
+    (!polarityUnlocked || selectedPolarity !== null) &&
+    (!mutationUnlocked || selectedMutation !== null) &&
+    (!pathwayUnlocked || selectedPathway !== null) &&
+    slots.length > 0;
 
   const renderSlot = (slot: Slot) => {
     if (slot === 'polarity') {
       return <PolaritySlot key={slot} selected={selectedPolarity} onSelect={setSelectedPolarity} />;
     }
-    return <SlotPlaceholder key={slot} slot={slot} mode="coming-soon" />;
+    if (slot === 'mutation') {
+      return mutationOptions.length > 0
+        ? <MutationSlot key={slot} options={mutationOptions} selected={selectedMutation} onSelect={setSelectedMutation} />
+        : <SlotPlaceholder key={slot} slot={slot} mode="coming-soon" />;
+    }
+    return <PathwaySlot key={slot} selected={selectedPathway} onSelect={setSelectedPathway} />;
+  };
+
+  const onChooseConfirm = () => {
+    onChoose?.({
+      polarity: polarityUnlocked ? selectedPolarity : null,
+      mutationId: mutationUnlocked ? selectedMutation : null,
+      pathway: pathwayUnlocked ? selectedPathway : null,
+    });
+  };
+
+  const onSameAsLast = () => {
+    onChoose?.({
+      polarity: polarityUnlocked ? lastCyclePolarity : null,
+      mutationId: mutationUnlocked ? lastCycleMutation : null,
+      pathway: pathwayUnlocked ? lastCyclePathway : null,
+    });
   };
 
   const columnsLayout = (
-    <div
-      data-testid="cycle-setup-columns"
-      style={{
-        flex: 1,
-        display: 'flex',
-        gap: 'var(--spacing-4)', // CONST-OK: CSS custom property ref (CODE-1 exception)
-        alignItems: 'stretch',
-      }}
-    >
+    <div data-testid="cycle-setup-columns" style={{ flex: 1, display: 'flex', gap: 'var(--spacing-4)' /* CONST-OK */, alignItems: 'stretch' }}>
       {slots.map(renderSlot)}
     </div>
   );
 
   const stepperLayout = (
-    <div
-      data-testid="cycle-setup-stepper"
-      style={{
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 'var(--spacing-5)', // CONST-OK: CSS custom property ref (CODE-1 exception)
-      }}
-    >
+    <div data-testid="cycle-setup-stepper" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 'var(--spacing-5)' /* CONST-OK */ }}>
       {slots.length > 0 && renderSlot(slots[stepIndex] ?? slots[0])}
       {slots.length > 1 && (
-        <div
-          data-testid="cycle-setup-progress-dots"
-          style={{ display: 'flex', gap: 'var(--spacing-2)', justifyContent: 'center' }} // CONST-OK: CSS custom property ref (CODE-1 exception)
-        >
+        <div data-testid="cycle-setup-progress-dots" style={{ display: 'flex', gap: 'var(--spacing-2)' /* CONST-OK */, justifyContent: 'center' }}>
           {slots.map((slot, i) => (
             <span
               key={slot}
               data-testid={`cycle-setup-dot-${i}`}
               data-active={i === stepIndex}
               style={{
-                width: HUD.pipSize,
-                height: HUD.pipSize,
-                borderRadius: 'var(--radius-full)',
-                background:
-                  i === stepIndex ? 'var(--color-primary)' : 'var(--color-text-disabled)',
+                width: HUD.pipSize, height: HUD.pipSize, borderRadius: 'var(--radius-full)',
+                background: i === stepIndex ? 'var(--color-primary)' : 'var(--color-text-disabled)',
               }}
             />
           ))}
@@ -139,14 +171,10 @@ export const CycleSetupScreen = memo(function CycleSetupScreen({
           onPointerDown={() => setStepIndex((i) => Math.min(i + 1, slots.length - 1))}
           style={{
             minHeight: HUD.touchTargetMin,
-            padding: 'var(--spacing-3) var(--spacing-6)', // CONST-OK: CSS custom property ref (CODE-1 exception)
-            background: 'var(--color-primary)',
-            border: 'none',
-            borderRadius: 'var(--radius-md)',
-            color: 'var(--color-bg-deep)',
-            fontWeight: 'var(--font-weight-semibold)',
-            touchAction: 'manipulation',
-            alignSelf: 'center',
+            padding: 'var(--spacing-3) var(--spacing-6)', // CONST-OK
+            background: 'var(--color-primary)', border: 'none', borderRadius: 'var(--radius-md)',
+            color: 'var(--color-bg-deep)', fontWeight: 'var(--font-weight-semibold)',
+            touchAction: 'manipulation', alignSelf: 'center',
           }}
         >
           {t('cycle_setup.next')}
@@ -162,26 +190,25 @@ export const CycleSetupScreen = memo(function CycleSetupScreen({
       data-column-count={slots.length}
       style={{
         position: 'absolute',
-        top: 0, right: 0, bottom: 0, left: 0, // CONST-OK: CSS full-bleed (CODE-1 exception)
-        background: 'var(--color-bg-deep)',
-        padding: 'var(--spacing-6)', // CONST-OK: CSS custom property ref (CODE-1 exception)
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 'var(--spacing-6)', // CONST-OK: CSS custom property ref (CODE-1 exception)
-        color: 'var(--color-text-primary)',
-        fontFamily: 'var(--font-body)',
-        // Sprint 4c.6.7 BLOCKER fix — Mind subtab bar (z 880) was covering
-        // the upper portion of the polarity cards, eating taps. Lifted to
-        // 940 so it shares the modal-overlay tier with AwakeningScreen.
-        zIndex: 940, // CONST-OK: overlay stacking (CODE-1 exception)
+        top: 0, right: 0, bottom: 0, left: 0, // CONST-OK
+        background: 'var(--color-bg-deep)', padding: 'var(--spacing-6)' /* CONST-OK */,
+        display: 'flex', flexDirection: 'column', gap: 'var(--spacing-6)' /* CONST-OK */,
+        color: 'var(--color-text-primary)', fontFamily: 'var(--font-body)',
+        zIndex: 940, // CONST-OK: shares modal-overlay tier with AwakeningScreen (post-4c.6.7 fix)
       }}
     >
       {isTablet ? columnsLayout : stepperLayout}
+      <WhatIfPreview
+        effectivePPS={effectivePPS}
+        currentThreshold={currentThreshold}
+        selectedMutationId={selectedMutation}
+        selectedPathway={selectedPathway}
+      />
       <CycleSetupActionBar
         canSameAsLast={canSameAsLast}
         canContinue={canContinue}
-        onSameAsLast={() => { if (lastCyclePolarity !== null) onChoose?.(lastCyclePolarity); }}
-        onContinue={() => { if (selectedPolarity !== null) onChoose?.(selectedPolarity); }}
+        onSameAsLast={onSameAsLast}
+        onContinue={onChooseConfirm}
       />
     </div>
   );
