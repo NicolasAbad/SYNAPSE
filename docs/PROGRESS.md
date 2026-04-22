@@ -6,10 +6,85 @@
 
 ## Current status
 
-**Phase:** Sprint 4c Phase 4c.6.5 CLOSED — second playtest-feedback pass. Added post-prestige "buy first neuron" hint (fires outside tutorial cycle), Pattern Tree in-game explanation, persistent HUD Memories counter (hidden at 0), and stricter gating of DischargeButton / TutorialHints / FragmentOverlay to `home` subtab only. Subtab state lifted from React-local to Zustand (`UIState.activeMindSubtab`) so sibling HUD components can gate on it.
-**Last updated:** 2026-04-21 after Sprint 4c Phase 4c.6.5 close.
-**Active sprint:** Buffer 1 (2 days, MANDATORY per SCHED-1) — Prestige Integration. Re-run full 110-field assertion suite + PRESTIGE_RESET integrity tests; simulate 5-10 manual prestige cycles; verify Focus Persistente 25% edge case on device. Any bugs → fixed here, not pushed into Sprint 5.
-**Next action:** Run the mandatory Sprint 4c human playtest (blind-play P0→P4, see PLAYTEST-REQUIRED block below). Visual bugs are now fixed; playtest should focus on feel + pacing + mechanic comprehension, not rendering. If times land in the 7-9 min TUTOR-1 window, enter Buffer 1. If P1 > 10 min or P2 > 8 min, retune `tutorialThreshold` or boost tap before Buffer 1. Then Sprint 5 (Mutations + Pathways + Regions).
+**Phase:** Buffer 1 CLOSED. Sprint 4c.6.6 + 4c.6.7 (post-Mi-A3-audit + post-playtest fixes) + Buffer 1 (mandatory Prestige Integration) all complete. Sprint 5 next.
+**Last updated:** 2026-04-21 after Buffer 1 close.
+**Active sprint:** Sprint 5 ready to start (Mutations + Pathways + Regions, 4 days). Buffer 1 found 0 prestige-integration regressions across 20 simulated cycles. One UX observation flagged about Focus Persistente.
+**Next action:** Sprint 5 kickoff per SPRINTS.md §Sprint 5. 15 Mutations (§13) + 3 Pathways (§14) + 5 Regions (§16) + What-if Preview. Fills CycleSetupScreen Mutation/Pathway placeholders + Pattern Tree Node 48 stubs. ALSO: Nico hand-verifies Focus Persistente on Mi A3 (P12+ unlock) — see Buffer 1 dashboard for the procedure.
+
+### Buffer 1 closing dashboard
+
+- **Scope per SPRINTS.md §Buffer 1**: re-run 110-field assertions, PRESTIGE_RESET integrity, 5-10 manual prestige cycles, BUG-06 Focus Persistente verification, cold-open save-format regression check.
+- **Method**: shipped `scripts/buffer-1-prestige-sim.ts` driving `handlePrestige()` directly across 20 cycles (10 vanilla + 10 with Focus Persistente seeded each cycle). Asserts: field count = 110, prestigeCount monotonic, baseMemoriesPerPrestige=2 + patternsPerPrestige=3 deltas, TUTOR-2 one-way flip holds, no NaN/Infinity, dischargeLastTimestamp guard (BUG-02), focusBar retention math (BUG-06), basica reset to 0.
+- **Result**: **0 errors, 0 warnings** across all 20 cycles. All prestige invariants stable.
+- **Incidental DOC-VS-CODE alignment confirmed**: PRESTIGE_RESET wipes `upgrades: []` per GDD §33 line 2236 — this is the design, not a bug. Implication for Focus Persistente: the upgrade itself is wiped on prestige along with all other 35 upgrades. **Focus Persistente only retains Focus at the prestige IMMEDIATELY after purchase** (effectively a one-shot per buy). To use across multiple cycles, player must re-purchase every cycle. Document this in any future Focus Persistente tooltip (Sprint 10 polish backlog).
+- **Other Buffer 1 checks**:
+  - 110-field assertions in tests/consistency.test.ts: 139 tests PASS (including BLOCKED-SPRINT-X gates; 43 still skipped per design).
+  - PRESTIGE_RESET integrity in tests/engine/prestige.test.ts: 37 tests PASS.
+  - PRESTIGE_RESET property invariants in tests/properties/prestige-invariants.test.ts: 9 fast-check properties PASS (covers ~100 random prestige inputs each).
+  - Cold-open save-format regression in tests/store/saveGame.test.ts: 26 tests PASS (validateLoadedState boundary defense + corrupted-payload rejection + 110-field roundtrip).
+  - BUG-06 Focus Persistente edge case: covered by both engine unit test (focusBarAfterReset) AND Buffer 1 sim. Both green.
+- **Hand-verification deferred to Nico**: Focus Persistente unlocks at P12+ — long enough that a from-scratch playtest is impractical. Recommended: in dev console, set `prestigeCount=12` + buy Focus Persistente + tap to fill Focus to 1.0 + prestige + observe focusBar=0.25 in HUD.
+- **Buffer 1 absorbed**: per SPRINTS.md "If 4a-4c finished cleanly and these 2 days aren't needed, they absorb into Sprint 9a-9b platform delay contingency." Buffer 1 shipped today (~1 hour automation work; 1.9 days remain absorbed into Sprint 9 contingency).
+
+### Sprint 5 readiness
+
+Per SPRINTS.md §Sprint 5 prompt:
+- 15 Mutations (§13) with seeded selection (MUT-2 RNG-1 mulberry32), first-cycle-of-Run filter (MUT-3), weekly challenge filter (MUT-4)
+- 3 Pathways (§14) with enable/block category lists + `pathwayCostMod`
+- 5 Regions (Hipocampo, Prefrontal, Límbico, Visual, Broca P14) + 5 region upgrades priced in Memorias (§16)
+- What-if Preview on CycleSetupScreen
+- Populates Sprint 4c CycleSetupScreen Mutation + Pathway "Sprint 5" placeholders
+- Fills 3 Sprint 4b decision stubs: Node 15 A offline_efficiency_mult (8a), Node 48 A region_mult (here), Node 48 B mutation_options_add (here)
+
+Pre-Sprint-5 baseline (run from cold state):
+- `git status` — clean
+- `npm run typecheck` — 0 errors
+- `npm run lint` — 0 warnings
+- `bash scripts/check-invention.sh` — 4/4 PASS, ratio 0.82
+- `npm test` — 927 passed / 43 skipped / 0 failing
+- `grep "BLOCKED-SPRINT-5" tests/` — un-skip targets in tests/consistency.test.ts
+
+### Sprint 4c.6.6 + 4c.6.7 closing dashboard
+
+- **Sprint 4c.6.6** (commit `6dedb94`) — Mi A3 deep-smoke audit fixes:
+  - MindPanel subtab buttons: `minHeight: var(--spacing-12)` (48px, Android tap-target minimum). Was 28px tall, below WCAG.
+  - MindPanel subtab bar: top offset bumped from `spacing-8` to `spacing-16` to clear MemoriesCounter (4c.6.5 collision, 531 px² overlap on Mi A3).
+  - AndroidManifest: `android:screenOrientation="portrait"` on MainActivity per UI-6.
+  - Tooling shipped: `window.__SYNAPSE_STORE__` dev hook in perfInstrument.ts; `scripts/smoke-playtest-mi-a3.mjs` (basic), `scripts/smoke-playtest-mi-a3-deep.mjs` (full 14-step probe + UX diagnostics), `scripts/verify-fixes-mi-a3.mjs`.
+
+- **Sprint 4c.6.7** (commit `7f242e8`) — post-playtest critical fixes from Nico's blind P0→P4 (timings within target):
+  - **#12 BLOCKER** — CycleSetupScreen z-index `800 → 940`. MindPanel subtab bar (z 880) was overlaying polarity cards, eating taps. Player had to force-close to escape. Real bug.
+  - **#5** — Discharge MM:SS countdown wired in `DischargeCharges` (deferred from Sprint 3 per the file's own docstring). Player now sees regen progress even when first charge won't land in tutorial cycle.
+  - **#9** — ThoughtsCounter subtitle "to Awakening" → "of Awakening threshold". Player thought 100% meant "25K thoughts in hand" but cumulative `cycleGenerated` was already past threshold while balance was 300 (working as designed per GDD §9 THRES-1; copy clarified).
+  - **#1** — NeuronsPanel footer with `+X.X/s` global effective production. Per-row keeps showing base (`count × baseRate`) for arithmetic clarity.
+  - POSTLAUNCH addition: "Watch-ad-for-Discharge-charge" filed under "Proposals for evaluation" — pairs with Sprint 9 monetization.
+
+- **Verified gates**: typecheck 0, lint 0, gates 4/4 ratio 0.82 (62 const / 14 lit), **927 tests pass / 43 skipped / 0 failing**.
+
+### Playtest finding audit (Sprint 4c.6.7 — 2026-04-21)
+
+Nico's manual P0→P4 (timing within TUTOR-1 target). 12 findings audited via Explore agent against docs/SPRINTS.md + docs/POSTLAUNCH.md + docs/GDD.md. Verdict mapping:
+
+| # | Finding | Verdict | Status |
+|---|---|---|---|
+| 1 | NeuronsPanel hides effective production | GAP-UNPLANNED | ✅ FIXED 4c.6.7 (footer added) |
+| 2 | Focus bar has no in-game explanation | SPRINT-10-POLISH | ⏭ deferred (line 935) |
+| 3 | Neurons list scroll discoverability | SPRINT-10-POLISH | ⏭ deferred (TabPanelContainer DOES scroll, just not obvious) |
+| 4 | Buy ×1/×10/Max buttons reportedly broken | NEEDS-DEVICE-REPRO | ⏳ 12 unit tests pass; cannot fix blindly |
+| 5 | Discharge regen invisible across prestiges | NOW-FIX (was flagged Sprint 3 close) | ✅ FIXED 4c.6.7 (countdown wired) |
+| 6 | No "thoughts per tap" display | SPRINT-10-POLISH | ⏭ deferred |
+| 7 | Neuron unlock doesn't pulse Neurons tab | SPRINT-7-OWNED | ⏭ deferred (TabBadge wiring per Sprint 7) |
+| 8 | Explainer overlay overlaps Focus bar | SPRINT-10-POLISH | ⏭ deferred |
+| 9 | Awakening at cycleGenerated≥threshold (not balance) | NOW-FIX (copy) | ✅ FIXED 4c.6.7 (subtitle reworded) |
+| 10 | CycleSetupScreen polarity cards lack rich text | SPRINT-10-POLISH | ⏭ deferred |
+| 11 | Cascade unexplained in-game | SPRINT-10-POLISH | ⏭ deferred |
+| 12 | **BLOCKER** P4 polarity unselectable | NOW-FIX (real bug) | ✅ FIXED 4c.6.7 (z-index 800→940) |
+
+**Sprint 7 backlog item planted**: TabBadge needs to fire on neuron unlock event (per finding #7). Not currently wired — Sprint 3.6.5 shipped the badge renderer; Sprint 7 owns priority feed + event sources.
+
+**Sprint 10 polish backlog**: 6 findings (#2 Focus bar tooltip, #3 scroll affordance, #6 per-tap display, #8 Focus bar overlap, #10 polarity card detail, #11 Cascade tooltip). All ride together as a post-Sprint-9 UX polish pass.
+
+**On-device #4 repro plan**: when Mi A3 next plugged in, run `node scripts/verify-fixes-mi-a3.mjs` adapted to: (a) seed thoughts ≥ neuronCost('basica', 9) × 10, (b) tap mode-x10 button, (c) tap buy-basica button, (d) verify basicaCount jump >1 in single click. If reproduces, debug; if not, suspect playtest UX confusion (mode toggle visual contrast).
 
 ### Sprint 4c closing dashboard
 
