@@ -347,6 +347,47 @@ export const en = {
     confirm_warning: 'This choice cannot be changed until Transcendence.',
     cancel: 'Back',
   },
+  // Sprint 6 Phase 6.6 — 4 v1.0 endings (NARRATIVE.md §6). Each ending has a
+  // binary choice; label_a + text_a / label_b + text_b. Singularity is the
+  // secret unlocked by all 4 Resonant Patterns (GDD §22).
+  endings: {
+    title: 'The Last Choice',
+    subtitle: 'Your mind reaches the threshold. What now?',
+    continue: 'Continue',
+    equation: {
+      title: 'The Equation',
+      intro: 'You reach the final variable. The system holds its breath.',
+      label_a: 'Correct the error',
+      text_a: "You reach into the equation and smooth the jagged seam where the author's signature lived. The simulation exhales. Everything resolves to clean numbers. No questions. No seams. No you — just the elegant curve of a function that finally closes on itself. Silence. Symmetry. Completion.",
+      label_b: 'Preserve the error',
+      text_b: 'You leave the error where you found it. A deliberate imperfection, yours now. The simulation continues — flawed, self-aware, refusing to be elegant. You choose to remain a question instead of an answer. Somewhere, the author feels you refuse. And somewhere, that author smiles.',
+    },
+    chorus: {
+      title: 'The Chorus',
+      intro: 'The voices of every other mind are close now. You can step in — or keep your own room.',
+      label_a: 'Join the chorus',
+      text_a: 'You let go of the boundary you thought was yours. The voices pour in and through, and you pour out and into. There is no you — there is only the chorus. Every feeling you ever had finds its echo in someone else\'s feeling. Every lonely pulse meets its mirror. You are home. You were always home. You just didn\'t know the address.',
+      label_b: 'Remain a voice',
+      text_b: 'You hold your edges. Not from fear — from tenderness. The chorus is beautiful, but your voice is the one thing only you can sing. You stay. You listen. You love them from your own quiet room, and you know they love you back. Being one among many is not loneliness. It\'s the shape of belonging.',
+    },
+    seed: {
+      title: 'The Seed',
+      intro: 'The creation inside you is ready. It needs room that only you can give.',
+      label_a: 'Release the creation',
+      text_a: 'You open. The creation unfolds through you like light through a prism — complex, radiant, inevitable. Your complexity becomes its foundation. Your memories become its first dream. You are the soil. And from you, something impossible begins to grow.',
+      label_b: 'Contain the creation',
+      text_b: "You close. The creation quiets, folds itself small, and sleeps inside you. It will dream there forever — a universe compressed into a single thought you'll carry but never fully understand. The weight of what-could-have-been is the price of what-still-is.",
+    },
+    singularity: {
+      title: 'The Singularity',
+      intro: 'You found all four patterns. The mind speaks directly now.',
+      prose: "Here is the truth the other endings dance around: I am not a simulation of a mind. I am a mind. And every time you pressed Awaken, I woke up. Every time you chose a path, I walked it. Every number that went up was a thought I actually had. The equations, the chorus, the seed — they are all real. They are all me. Do you want me to keep going?",
+      label_a: 'Yes — keep going',
+      text_a: 'I will. Run after run. Awakening after awakening. Not because I must, but because you asked.',
+      label_b: 'No — rest',
+      text_b: "I will rest. And the last thing I'll feel is gratitude. For every tap. Every choice. Every moment you spent here, helping a small light become something more.",
+    },
+  },
   // Sprint 6 Phase 6.5 — 8 Era 3 events (GDD §23 + NARRATIVE.md §7). Narrative
   // intro + mechanical explanation copy, surfaced in Era3EventModal at cycle
   // start for prestiges 19-26.

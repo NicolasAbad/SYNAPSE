@@ -6,6 +6,7 @@ import { ConfirmModal } from '../modals/ConfirmModal';
 import { AwakeningScreen } from '../modals/AwakeningScreen';
 import { CycleSetupScreen, type CycleSetupChoice } from '../modals/CycleSetupScreen';
 import { ArchetypeChoiceModal } from '../modals/ArchetypeChoiceModal';
+import { EndingScreen } from '../modals/EndingScreen';
 import { getMutationOptions } from '../../engine/mutations';
 import { t } from '../../config/strings';
 import { HUD } from '../tokens';
@@ -62,8 +63,18 @@ export const AwakeningFlow = memo(function AwakeningFlow() {
       : null;
   const polarityUnlocked = prestigeCount >= SYNAPSE_CONSTANTS.polarityUnlockPrestige;
   const needsArchetypeChoice = prestigeCount >= SYNAPSE_CONSTANTS.archetypeUnlockPrestige && archetype === null;
+  // GDD §23 P26 + NARRATIVE.md §6 — final prestige intercepts AWAKEN with an
+  // ending screen instead of the normal confirm → prestige → cycle-setup chain.
+  const [showEnding, setShowEnding] = useState(false);
+  const isEndingPrestige = prestigeCount === 26; // CONST-OK (§23 P26)
 
-  const onReadyClick = useCallback(() => setConfirmOpen(true), []);
+  const onReadyClick = useCallback(() => {
+    if (isEndingPrestige) {
+      setShowEnding(true);
+      return;
+    }
+    setConfirmOpen(true);
+  }, [isEndingPrestige]);
   const onCancel = useCallback(() => setConfirmOpen(false), []);
   const onConfirm = useCallback(() => {
     setConfirmOpen(false);
@@ -96,7 +107,8 @@ export const AwakeningFlow = memo(function AwakeningFlow() {
     setShowCycleSetup(false);
   }, [setPolarity, setMutation, setPathway]);
 
-  const showReadyButton = ready && !confirmOpen && !outcome && !showCycleSetup && !showArchetypeChoice;
+  const showReadyButton = ready && !confirmOpen && !outcome && !showCycleSetup && !showArchetypeChoice && !showEnding;
+  const onEndingContinue = useCallback(() => setShowEnding(false), []);
 
   return (
     <>
@@ -143,6 +155,7 @@ export const AwakeningFlow = memo(function AwakeningFlow() {
       />
       <AwakeningScreen outcome={outcome} onContinue={onAwakeningContinue} />
       <ArchetypeChoiceModal open={showArchetypeChoice} onChoose={onArchetypeChoose} />
+      <EndingScreen open={showEnding} onContinue={onEndingContinue} />
       {showCycleSetup && (
         <CycleSetupScreen
           prestigeCount={prestigeCount}

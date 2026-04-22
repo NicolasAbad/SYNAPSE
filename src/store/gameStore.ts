@@ -14,7 +14,7 @@
 import { create } from 'zustand';
 import { SYNAPSE_CONSTANTS } from '../config/constants';
 import type { GameState } from '../types/GameState';
-import type { NeuronType, Polarity, Pathway, Archetype } from '../types';
+import type { NeuronType, Polarity, Pathway, Archetype, EndingID } from '../types';
 import { loadGame, saveGame } from './saveGame';
 import { tryBuyNeuron, tryBuyUpgrade, type BuyReason, type UndoToast } from './purchases';
 import { applyTap } from './tap';
@@ -344,6 +344,13 @@ export interface GameStoreActions {
    * NOT grant. Idempotent — re-reads are no-ops.
    */
   readFragment: (id: string) => void;
+  /**
+   * Sprint 6 Phase 6.6: log the player's P26 ending choice. Appends
+   * `EndingID` to `endingsSeen` (idempotent — duplicates not re-added).
+   * `option` is the A/B choice the player made; currently stored in the
+   * Diary entry (Sprint 7) but not the GameState per §32 field budget.
+   */
+  chooseEnding: (id: EndingID, option: 'a' | 'b') => void;
 }
 
 export const useGameStore = create<GameState & UIState & GameStoreActions>((set, get) => ({
@@ -518,5 +525,11 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
     const state = get();
     const updates = applyFragmentRead(state, id);
     if (Object.keys(updates).length > 0) set(updates);
+  },
+  chooseEnding: (id, option) => {
+    const state = get();
+    if (state.endingsSeen.includes(id)) return;
+    void option; // Reserved for Sprint 7 Diary entry; not in §32 GameState shape.
+    set({ endingsSeen: [...state.endingsSeen, id] });
   },
 }));

@@ -1,6 +1,5 @@
 // Implements GDD.md §9 (prestige + THRES-1), §33 (45/60/4/1 split), §6 (Memorias),
-// §10 (Patterns — 4b.2), §35 rules PREST-1, BUG-01/02/04/06, CORE-8, TUTOR-2.
-// Pure CODE-9 (timestamp as parameter). Resonance/RP stubs for 8b/8c.
+// §10 (Patterns 4b.2), §22 (RP 6.6), §35 PREST-1/BUG-01/02/04/06/CORE-8/TUTOR-2.
 
 import { SYNAPSE_CONSTANTS } from '../config/constants';
 import { PRESTIGE_RESET } from '../config/prestige';
@@ -9,6 +8,7 @@ import { calculateThreshold } from './production';
 import { applyPermanentPatternDecisionsToState, memoriesPerPrestigeDecisionAdd } from './patternDecisions';
 import { pathwayMemoriesPerPrestigeMult } from './pathways';
 import { archetypeMemoryMult } from './archetypes';
+import { checkAllResonantPatterns } from './resonantPatterns';
 import type { GameState } from '../types/GameState';
 import type { AwakeningEntry, PatternNode } from '../types';
 
@@ -105,10 +105,11 @@ export function handlePrestige(state: GameState, timestamp: number): { state: Ga
     state.prestigeCount,
     cycleMinutes,
   );
-  // Steps 4-6 — patterns (Sprint 4b) / resonance (Sprint 8b) / RP (Sprint 8c).
+  // Steps 4-6: patterns (4b) / resonance (8b) / RP (6.6, grants +5 Sparks each).
   const newPatterns = grantPatterns(state, timestamp);
   const patternsGained = newPatterns.length;
   const resonanceGain = 0;
+  const rp = checkAllResonantPatterns(state);
   // Step 7 — Memories.
   const memoriesGained = computeMemoriesGained(state);
   // Step 8 — capture Focus Persistente retention BEFORE applying RESET defaults.
@@ -154,6 +155,9 @@ export function handlePrestige(state: GameState, timestamp: number): { state: Ga
     // Step 7 + step 11 side effects on PRESERVE fields.
     memories: state.memories + memoriesGained,
     resonance: state.resonance + resonanceGain,
+    // GDD §22 RP rewards — flip discovered flags + bump Sparks for new ones.
+    resonantPatternsDiscovered: rp.resonantPatternsDiscovered,
+    sparks: rp.sparks,
     awakeningLog: [...state.awakeningLog, awakeningEntry],
     personalBests,
     personalBestsBeaten: state.personalBestsBeaten + (wasPersonalBest ? 1 : 0),

@@ -45,6 +45,8 @@ const PRESERVE_UPDATED_BY_HANDLEPRESTIGE = new Set<keyof GameState>([
   'patterns',        // 4b.2: +patternsPerPrestige nodes appended.
   'totalPatterns',   // 4b.2: incremented by patternsPerPrestige.
   'lastCycleConfig', // 4c.1: POLAR-1 / SAME AS LAST snapshot of just-ended cycle.
+  'sparks',                      // 6.6: +5 per newly-discovered Resonant Pattern.
+  'resonantPatternsDiscovered', // 6.6: RP check flips false→true on discovery.
 ]);
 
 describe('handlePrestige — PRESTIGE_RESET field-level behavior (§33)', () => {
