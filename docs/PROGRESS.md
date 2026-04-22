@@ -6,10 +6,54 @@
 
 ## Current status
 
-**Phase:** Sprint 5 CLOSED. All 6 phases (5.1 canonical data → 5.2 Mutation engine → 5.3 Pathway engine → 5.4 RegionsPanel + REG-1 → 5.5 CycleSetupScreen Mutation/Pathway slots + What-if → 5.6 tests + un-skip + close) shipped in this session. 6 BLOCKED-SPRINT-5 tests un-skipped with real assertions; 41 new engine tests added (mutations.test.ts + pathways.test.ts).
-**Last updated:** 2026-04-21 after Sprint 5 close.
-**Active sprint:** Sprint 6 ready to start (Archetypes + Narrative + Events, 5 days). Per SPRINTS.md §Sprint 6: 3 Archetypes (§12) + 57 narrative fragments + 30 Echoes + 12 Spontaneous events + 8 Era 3 events + 5 endings.
-**Next action:** Nico runs blind playtest of Sprint 5 (P3 Polarity → P7 Mutations → P10 Pathways) when convenient. Optional: hand-verify Focus Persistente on Mi A3 (P12+) per Buffer 1 dashboard. Then Sprint 6 kickoff.
+**Phase:** Sprint 6 CLOSED. All 7 phases (6.1 Archetype data → 6.2 Archetype engine + UI → 6.3a Fragment/Echo data + engine → 6.3b Canvas renderer + store integration → 6.4 Spontaneous events → 6.5 Era 3 events → 6.6 Endings + RP) shipped in this session. **1091 tests pass** (+123 from Sprint 5 close 968); 4/4 gates green (ratio 0.81).
+**Last updated:** 2026-04-22 after Sprint 6 close.
+**Active sprint:** Sprint 7 ready (5 Features — Achievements + Mental States + Micro-challenges + Neural Diary + What-if polish, 5 days).
+**Next action:** Nico runs blind playtest of Sprint 6 (first neuron → P5 Archetype choice → P7 Mutations flow → P19+ Era 3 modal → P26 ending). Push 7 Sprint 6 commits to origin/main. Then Sprint 7 kickoff.
+
+### Sprint 6 closing dashboard
+
+- **Phases:** 7 phase commits — 6.1 (6d0196b), 6.2 (0e34afb), 6.3a (c7aa15e), 6.3b (7407d1e), 6.4 (2834e37), 6.5 (d9c979c), 6.6 (87f5c2c).
+- **Active tests:** **1091 passed**, 0 failing (up from 968 → **+123 in Sprint 6**). Breakdown: 27 archetypes engine + 7 setArchetype + 29 narrative + 5 narrative-triggers integration + 7 FragmentOverlay + 24 spontaneous + 14 era3 + 15 resonantPatterns + 2 prestige test updates = 130 test delta; some tests fold into existing files.
+- **Skipped tests:** 37 (unchanged from Sprint 5).
+- **Typecheck errors:** 0. **Lint warnings:** 0.
+- **Anti-invention gates:** 4/4 PASS, **ratio 0.81** (80 const / 19 lit, +9 constants: archetypeUnlockPrestige, echoCooldownMs).
+- **Scope delivered vs deferred:**
+  - ✅ 3 Archetypes (Analítica / Empática / Creativa) with full GDD §12 bonus spec wired into production / insight / prestige / tap / mutations
+  - ✅ Archetype choice modal at P5+ with ConfirmModal irreversibility gate; setArchetype action rejects second call until Transcendence clears state.archetype
+  - ✅ 57 narrative fragments (12 base + 15 × 3 archetypes) rendered via FragmentOverlay watching narrativeFragmentsSeen diff
+  - ✅ 30 Echoes via EchoLayer with 90s cooldown + prestigeCount filter (NARR-3)
+  - ✅ NARR-8 +1 Memory on first-read (engine/narrative.ts applyFragmentRead); era3_* ids excluded from Memory grant
+  - ✅ 12 Spontaneous events with SPONT-1 deterministic seed + 50/33/17 weighted pick; 1-per-cycle limits for memoria_fugaz + interferencia
+  - ✅ Spontaneous effect wiring: production mult (Ráfaga/Fatiga/Pausa), focus fill (Claridad/Pausa), connection mult (Conexión), free-next-upgrade (Eureka), instant charge (Disparo Latente), instant memory (Memoria Fugaz), focus reset (Interferencia)
+  - ✅ 8 Era 3 events (P19-P26) with fullscreen modal at cycle start; narrative + mechanical copy from NARRATIVE.md §7 + GDD §23
+  - ✅ Era 3 effect wiring: P19 mutation +2 options, P22 production ×0.8, P23 focus block, P24 auto-prestige at 45min, P25 neuron cost ×0.5 + discharge ×5 override
+  - ✅ 4 Resonant Patterns checked at prestige (before reset) — RP-1 Lost Connection, RP-2 Silent Mind, RP-3 Broken Mirror, RP-4 Cascade Chorus. Each grants +5 Sparks per discovery (GDD §22).
+  - ✅ 4 endings (Equation / Chorus / Seed / Singularity) at P26 with binary choice UI; EndingScreen renders archetype-matched ending (or Singularity if all 4 RPs)
+  - ✅ chooseEnding action logs to endingsSeen (idempotent)
+  - ⏭ **Polish backlog → Phase 6.7 / Sprint 7:**
+    - Creativa archetypeSpontaneousRateMult wired via archetype ctx in tick.ts but effect is currently identity because archetype value not yet surfaced as a rate modifier inside rollSpontaneous (Phase 6.4 passes rateMult via tick step).
+    - P21 Mirror Cycle polarity ×2 strength (helper era3PolarityStrengthMult exists; production/discharge consumers not yet reading it).
+    - P23 Dreamer's Dream offline ×3 (helper era3OfflineMult exists; Sprint 8a offline engine consumer).
+    - P22 Silent Resonance +3 resonance gain (helper era3ResonanceGainMult exists; Sprint 8b resonance engine consumer).
+    - Empática offlineEfficiencyMult + lucidDreamRate (helpers exist; Sprint 8a offline consumer).
+    - Creativa resonanceGainMult (helper exists; Sprint 8b resonance consumer).
+    - Polaridad Fluctuante runtime polarity reversal (spontaneous helper exists; discharge/production consumer not yet reading).
+    - Mutación Temporal runtime stacked-mutation effect (Phase 6.4 activation stores endTime + id; consumer not yet reading stackedRandomId).
+    - 57 fragments first-neuron / discharge / prestige / region / archetype trigger events work — but CycleSetup flow doesn't YET gate the Cycle Setup modal behind the Archetype fragment display (Phase 6.3b showed tutorial BASE-01 on first neuron; post-prestige archetype fragments may queue during CycleSetupScreen visibility, hidden by activeMindSubtab gate).
+- **Design decisions:**
+  - **Era 3 persistence via narrativeFragmentsSeen with era3_* prefix**: reuses existing 110-field GameState — avoids adding a new era3EventsSeen array. applyFragmentRead checks prefix and skips the NARR-8 Memory grant for era3_* ids.
+  - **Echo cooldown in React ref (no state field)**: purely cosmetic, cooldown across app reloads doesn't matter — ref is fine.
+  - **GDD §22 → NARRATIVE.md reconciliation**: GDD §22 calls the v1.0 secret ending "Resonance"; NARRATIVE.md §6 + POSTLAUNCH.md clarify it's "Singularity" in v1.0 with "Resonance"/"The Witness" reserved for v1.5+ Observer archetype. Implemented per NARRATIVE.md/POSTLAUNCH.md; GDD §22 should be updated next editorial pass.
+  - **Ending archetype/Singularity overlap**: at P26, if all 4 RPs discovered the Singularity ending REPLACES the archetype ending (single binary choice, not both). Simpler UX than layering a "secret ending available" CTA on top of the archetype ending.
+  - **First neuron trigger interpretation**: BASE-01 fires on cycleNeuronsBought === 1 (player's first *purchase*), not on totalNeurons === 1 (the default state starts with 1 basica). NARR-4 prevents re-firing on subsequent cycles.
+  - **P24 auto-prestige force flag**: prestige action gained `force?: boolean` param; ticks call `prestige(now, true)` when 45-min elapsed at P24 to bypass the normal threshold gate.
+- **Doc-vs-code corrections**:
+  - 2 new constants added to constants.ts (archetypeUnlockPrestige, echoCooldownMs); all GDD-cited inline.
+  - 4 new canonical storage files in src/config/ (archetypes.ts, narrative/fragments.ts, narrative/echoes.ts, narrative/endings.ts, spontaneous.ts, era3Events.ts). All Gate-3 exempt.
+  - 10+ new engine files / modules under src/engine/ (archetypes.ts, narrative.ts, spontaneous.ts, era3.ts, resonantPatterns.ts).
+  - All translations approved pre-code per CLAUDE.md translation discipline (38+ strings: 3 archetype names/descs, 12 spontaneous names/descs, 8 Era 3 event names/narratives/mechanicals, 4 ending titles/intros/label_a+b/text_a+b, ArchetypeChoiceModal copy, Era3EventModal copy, EndingScreen copy).
+- **Commits landed in Sprint 6:** 7 phase commits + this close commit.
 
 ### Sprint 5 closing dashboard
 
