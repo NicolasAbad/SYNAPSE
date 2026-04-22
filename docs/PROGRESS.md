@@ -6,10 +6,85 @@
 
 ## Current status
 
-**Phase:** Buffer 1 CLOSED. Sprint 4c.6.6 + 4c.6.7 (post-Mi-A3-audit + post-playtest fixes) + Buffer 1 (mandatory Prestige Integration) all complete. Sprint 5 next.
-**Last updated:** 2026-04-21 after Buffer 1 close.
-**Active sprint:** Sprint 5 ready to start (Mutations + Pathways + Regions, 4 days). Buffer 1 found 0 prestige-integration regressions across 20 simulated cycles. One UX observation flagged about Focus Persistente.
-**Next action:** Sprint 5 kickoff per SPRINTS.md §Sprint 5. 15 Mutations (§13) + 3 Pathways (§14) + 5 Regions (§16) + What-if Preview. Fills CycleSetupScreen Mutation/Pathway placeholders + Pattern Tree Node 48 stubs. ALSO: Nico hand-verifies Focus Persistente on Mi A3 (P12+ unlock) — see Buffer 1 dashboard for the procedure.
+**Phase:** Sprint 5 CLOSED. All 6 phases (5.1 canonical data → 5.2 Mutation engine → 5.3 Pathway engine → 5.4 RegionsPanel + REG-1 → 5.5 CycleSetupScreen Mutation/Pathway slots + What-if → 5.6 tests + un-skip + close) shipped in this session. 6 BLOCKED-SPRINT-5 tests un-skipped with real assertions; 41 new engine tests added (mutations.test.ts + pathways.test.ts).
+**Last updated:** 2026-04-21 after Sprint 5 close.
+**Active sprint:** Sprint 6 ready to start (Archetypes + Narrative + Events, 5 days). Per SPRINTS.md §Sprint 6: 3 Archetypes (§12) + 57 narrative fragments + 30 Echoes + 12 Spontaneous events + 8 Era 3 events + 5 endings.
+**Next action:** Nico runs blind playtest of Sprint 5 (P3 Polarity → P7 Mutations → P10 Pathways) when convenient. Optional: hand-verify Focus Persistente on Mi A3 (P12+) per Buffer 1 dashboard. Then Sprint 6 kickoff.
+
+### Sprint 5 closing dashboard
+
+- **Phases:** 6 sub-phases (5.1 canonical data → 5.2 Mutation engine → 5.3 Pathway engine → 5.4 RegionsPanel + REG-1 → 5.5 CycleSetupScreen + What-if → 5.6 tests + un-skip + close) + this close commit.
+- **Active tests:** **968 passed**, 0 failing (up from 927 at Buffer 1 close → **+41 in Sprint 5**). Breakdown: 23 mutations.test.ts (mutationSeed deterministic, getMutationOptions MUT-2/3/4 filters, 11 per-effect helpers) + 16 pathways.test.ts (isUpgradeBlocked × 4 pathways, dampenUpgradeBonus, 4 bonus accessors) + 2 fixed CycleSetupScreen onChoose-signature assertions = 41.
+- **Skipped tests:** **37** (down from 43 — all 6 BLOCKED-SPRINT-5 un-skipped: 3 mutation pool consistency, 3 pathway consistency).
+- **Typecheck errors:** 0. **Lint warnings:** 0.
+- **Anti-invention gates:** 4/4 PASS, **ratio 0.83** (71 const / 15 lit, +9 constants from Sprint 5: mutationUnlockPrestige, pathwayUnlockPrestige, pathwayEquilibradaBonusMult, hipocampoUnlockMemoriasBonus, brocaPassiveMemoryPerCycle, brocaNameMaxChars, creativaMutationBonusOptions, geniusPassMutationBonusOptions, sinestesiaTapMult was already there).
+- **Scope delivered vs deferred:**
+  - ✅ 15 Mutations with structured MutationEffect discriminated union (15 kinds, parallel to UpgradeEffect)
+  - ✅ MUT-2 deterministic seed via mutationSeed(timestamp, prestigeCount); sample-without-replacement via mulberry32
+  - ✅ MUT-3 first-cycle filter (Déjà Vu + Neuroplasticidad)
+  - ✅ MUT-4 Weekly Challenge swap-replace for Especialización (Sprint 7 wires Weekly Challenge state → integrated)
+  - ✅ Mutation effect helpers wired into production / discharge / charge interval / cost paths (5 of 15 mutations have CYCLE-TIME-INDEPENDENT effects fully wired now: #1 Eficiencia, #2 Hiperestimulación, #3 Descarga Rápida, #4 Disparo Concentrado, #5 Neuroplasticidad, #14 Déjà Vu)
+  - ⏭ Time-based mutations (#11 Sprint, #12 Crescendo, #6 Especialización per-type, #10 Memoria Frágil 20-min penalty, #15 Mente Dividida 2-bars) — engine helpers return identity, headline effects deferred to Sprint 6 / Phase 5.6 polish
+  - ✅ 3 Pathways with full enables/blocks/bonuses per GDD §14
+  - ✅ Equilibrada ×0.85 dampening wired into production globalMult (cross-cutting via dampenUpgradeBonus)
+  - ✅ Rápida charge rate ×1.5 wired into tick step 6
+  - ✅ Profunda Memories per prestige ×2 wired into computeMemoriesGained
+  - ⏭ Equilibrada damp on discharge/charge/focus (Phase 5.6 polish backlog) — production damp is the headline
+  - ⏭ Profunda focusFillRateMult ×0.5 (helper exposed; focus engine integration deferred to Sprint 6)
+  - ⏭ Rápida Insight duration ×2 (helper exposed; insight engine integration deferred to Sprint 6)
+  - ✅ COST-1 chain complete: base × mutationCostMod × funcionesEjecutivasMod × pathwayCostMod
+  - ✅ 5 Regions visible with REG-1 unlock (cycleGenerated >= 0.01 × threshold for 4 starters; prestigeCount >= 14 for Broca)
+  - ✅ Hipocampo +3 Memories one-time bonus on first unlock
+  - ✅ 5 Region upgrades render in RegionsPanel (existing entries in upgrades.ts; UI surface this sprint)
+  - ✅ Amplitud de Banda meta upgrade in dedicated "Cross-region" section
+  - ⏭ Área de Broca "Name your mind" input UI — deferred to Sprint 10 polish (mechanic ships now via brocaPassiveMemoryPerCycle constant; identity layer is UI-only)
+  - ✅ What-if Preview on CycleSetupScreen — projects EFFECTIVE PPS through chosen Mutation's prod multiplier
+  - ✅ CycleSetupScreen Mutation + Pathway slots interactive (Sprint 4c stub-mode placeholders REMOVED)
+  - ✅ POLAR-1 / SAME AS LAST extends to Mutation + Pathway via lastCycleConfig snapshot
+  - ✅ Pattern Tree Node 48 B `mutation_options_add` consumed in getMutationOptions ctx (Sprint 4b stub filled)
+  - ⏭ Pattern Tree Node 48 A `region_mult` (helper exists in patternDecisions; consumer in production needs wiring) — Sprint 6 / 5.6 polish
+- **Design decisions:**
+  - **Mutation effect = discriminated union (15 kinds)**, not per-id switch. Parallels UpgradeEffect — every mutation's runtime behavior is type-checked at consumer sites. Adds verbosity but eliminates the "did I forget a case?" class of bugs.
+  - **Phase scope cut**: time-based / state-mutating mutations (Sprint, Crescendo, Sinestesia, Memoria Frágil 20-min, Especialización per-type, Mente Dividida 2-bars) ship as identity-returning helpers in Phase 5.2, not as half-implemented headline features. Player who picks them gets the discriminated-union effect entry (so engine code can branch later) but doesn't see the time-/state-driven behavior — Sprint 6 or a Sprint 5.6 polish round adds the time/threshold integrations.
+  - **lastCycleConfig schema extension**: added `upgrades: string[]` to support Mutation #14 Déjà Vu carry-upgrades. Same field, wider object — 110-field invariant intact (covered by tests/consistency.test.ts boundary defense + Buffer 1 sim).
+  - **Equilibrada damp scope**: Phase 5.3 wires production globalMult only; discharge/charge/focus damp deferred. Production is the highest-impact surface and matches typical player perception of "upgrade strength".
+  - **What-if formula**: simple `threshold / (currentPPS × mutationProdMult)`. Doesn't model time-based mutations (would show false precision). Disclaimer makes the limitation explicit.
+- **Doc-vs-code corrections**:
+  - lastCycleConfig schema extension documented in PROGRESS.md "Approved decisions" before code (no GDD §32 update needed — same field count).
+  - 6 new constants added to constants.ts; all GDD-cited inline.
+  - 9 mutation category labels added to en.ts (canonical Spanish union strings stay in TS; English labels via i18n keys per CLAUDE.md).
+- **Commits landed in Sprint 5:** 6 phase commits + this close commit = 7 total.
+  - `dfa77d0` Phase 5.1 canonical Mutation/Pathway/Region data
+  - `f4feaad` Phase 5.2 Mutation engine + COST-1 wiring
+  - `7cafa49` Phase 5.3 Pathway engine + COST-1 completion
+  - `182e545` Phase 5.4 RegionsPanel + REG-1 unlock trigger
+  - `b8a4801` Phase 5.5 CycleSetupScreen Mutation + Pathway slots + What-if
+  - `(this commit)` Phase 5.6 tests + un-skip 6 BLOCKED-SPRINT-5 + Sprint 5 close
+- **Reviewer fabrications tracked:** 0 this sprint (8+ sprints clean).
+
+**Sprint 5.6 polish backlog** (slot into Sprint 6 / 10 as appropriate):
+- Time-based / state-mutating mutations: #11 Sprint earlyMult/lateMult split-min, #12 Crescendo linear-with-consciousness, #6 Especialización per-type prod split, #10 Memoria Frágil 20-min penalty, #15 Mente Dividida 2 focus bars
+- Equilibrada damp on discharge mult / charge rate / focus upgrades (currently production-only)
+- Profunda focusFillRateMult ×0.5 wiring into focus accumulation
+- Rápida pathwayInsightDurationMult ×2 wiring into insight engine
+- Pattern Tree Node 48 A `region_mult` wiring into production formula (helper exists, consumer needed)
+- NeuronsPanel + UpgradesPanel UI cost displays use `canBuy*(state, ...).cost` (currently show base; engine charges discounted) — minor UX inconsistency, Sprint 10 cleanup
+- Área de Broca "Name your mind" input UI (mechanic ships; UI surface deferred)
+
+**Frozen for Sprint 6** (Sprint 5 exports — don't touch unless bug found):
+- src/config/mutations.ts (15 entries + MUT3_FIRST_CYCLE_FILTER)
+- src/config/pathways.ts (3 entries + bonuses + cost mod)
+- src/config/regions.ts (5 entries + REGION_META_UPGRADE_ID)
+- src/engine/mutations.ts (getMutationOptions + 6 wired effect helpers)
+- src/engine/pathways.ts (isUpgradeBlocked + 6 helpers)
+- src/engine/regions.ts (checkRegionUnlock)
+- src/store/gameStore.ts setMutation + setPathway actions
+- src/ui/modals/MutationSlot.tsx, PathwaySlot.tsx, WhatIfPreview.tsx
+- src/ui/modals/CycleSetupScreen.tsx (full refactor with CycleSetupChoice triple)
+- src/ui/panels/RegionsPanel.tsx (full implementation)
+- src/ui/hud/AwakeningFlow.tsx (Mutation/Pathway plumbing)
+
+
 
 ### Buffer 1 closing dashboard
 

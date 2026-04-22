@@ -396,10 +396,27 @@ describe('Consistency: Neuron configuration (GDD §5)', () => {
 });
 
 describe('Consistency: Mutation pool (GDD §13)', () => {
-  // BLOCKED-SPRINT-5: MUTATIONS + getMutationOptions exports land in Sprint 5.
-  test.skip('BLOCKED-SPRINT-5: Pool has exactly 15 mutations', () => {});
-  test.skip('BLOCKED-SPRINT-5: Each mutation has required fields', () => {});
-  test.skip('BLOCKED-SPRINT-5: MUT-3 filters Déjà Vu + Neuroplasticidad at prestigeCount=0', () => {});
+  test('Pool has exactly 15 mutations', async () => {
+    const { MUTATIONS } = await import('../src/config/mutations');
+    expect(MUTATIONS).toHaveLength(15);
+  });
+  test('Each mutation has required fields', async () => {
+    const { MUTATIONS } = await import('../src/config/mutations');
+    for (const m of MUTATIONS) {
+      expect(typeof m.id).toBe('string');
+      expect(typeof m.nameKey).toBe('string');
+      expect(typeof m.descriptionKey).toBe('string');
+      expect(typeof m.category).toBe('string');
+      expect(typeof m.affectsOffline).toBe('boolean');
+      expect(m.effect).toBeDefined();
+      expect(typeof m.effect.kind).toBe('string');
+    }
+  });
+  test('MUT-3 filters Déjà Vu + Neuroplasticidad at prestigeCount=0', async () => {
+    const { MUT3_FIRST_CYCLE_FILTER } = await import('../src/config/mutations');
+    expect(MUT3_FIRST_CYCLE_FILTER.has('deja_vu')).toBe(true);
+    expect(MUT3_FIRST_CYCLE_FILTER.has('neuroplasticidad')).toBe(true);
+  });
 });
 
 describe('Consistency: Archetypes (GDD §12)', () => {
@@ -411,10 +428,25 @@ describe('Consistency: Archetypes (GDD §12)', () => {
 });
 
 describe('Consistency: Pathways (GDD §14)', () => {
-  // BLOCKED-SPRINT-5: PATHWAYS export lands in Sprint 5.
-  test.skip('BLOCKED-SPRINT-5: Exactly 3 pathways', () => {});
-  test.skip('BLOCKED-SPRINT-5: Rápida enables [tap, foc, syn, met]', () => {});
-  test.skip('BLOCKED-SPRINT-5: Equilibrada enables all categories but bonus × 0.85', () => {});
+  test('Exactly 3 pathways', async () => {
+    const { PATHWAYS } = await import('../src/config/pathways');
+    expect(PATHWAYS).toHaveLength(3);
+  });
+  test('Rápida enables [tap, foc, syn, met]', async () => {
+    const { PATHWAYS_BY_ID } = await import('../src/config/pathways');
+    const rapida = PATHWAYS_BY_ID['rapida'];
+    expect(rapida).toBeDefined();
+    expect([...rapida.enables].sort()).toEqual(['foc', 'met', 'syn', 'tap']);
+    expect([...rapida.blocks].sort()).toEqual(['con', 'new', 'reg']);
+  });
+  test('Equilibrada enables all categories but bonus × 0.85', async () => {
+    const { PATHWAYS_BY_ID } = await import('../src/config/pathways');
+    const equilibrada = PATHWAYS_BY_ID['equilibrada'];
+    expect(equilibrada).toBeDefined();
+    expect([...equilibrada.enables].sort()).toEqual(['con', 'foc', 'met', 'neu', 'new', 'reg', 'syn', 'tap']);
+    expect(equilibrada.blocks).toEqual([]);
+    expect(equilibrada.bonuses.upgradeBonusMult).toBe(0.85);
+  });
 });
 
 describe('Consistency: Upgrades (GDD §24)', () => {
