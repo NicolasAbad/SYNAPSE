@@ -6,10 +6,96 @@
 
 ## Current status
 
-**Phase:** Sprint 6 CLOSED. All 7 phases (6.1 Archetype data → 6.2 Archetype engine + UI → 6.3a Fragment/Echo data + engine → 6.3b Canvas renderer + store integration → 6.4 Spontaneous events → 6.5 Era 3 events → 6.6 Endings + RP) shipped in this session. **1091 tests pass** (+123 from Sprint 5 close 968); 4/4 gates green (ratio 0.81).
-**Last updated:** 2026-04-22 after Sprint 6 close.
-**Active sprint:** Sprint 7 ready (5 Features — Achievements + Mental States + Micro-challenges + Neural Diary + What-if polish, 5 days).
-**Next action:** Nico runs blind playtest of Sprint 6 (first neuron → P5 Archetype choice → P7 Mutations flow → P19+ Era 3 modal → P26 ending). Push 7 Sprint 6 commits to origin/main. Then Sprint 7 kickoff.
+**Phase:** Sprint 6.8 Re-architecture CLOSED. 5 phase commits spec'd the full-game v1.0 re-architecture (Region redesign + v1.1/v1.5 pull-ins + Upgrades audit + Phase 5 upgrade additions). **1091 tests pass** across all 5 commits; 4/4 gates green. No Region sub-system code yet — those ship in Sprint 7.5.
+**Last updated:** 2026-04-22 after Sprint 6.8 Phase 5 close.
+**Active sprint:** Sprint 7 ready, plus new Sprint 7.5/7.6/7.7/7.8/7.9 inserted by Sprint 6.8 re-architecture. Total sprint 7-13 work estimate: ~93 days (+5.5 weeks vs original).
+**Next action:** Start Sprint 7 implementation per the pre-code research catalog already prepared (Achievements + Mental States + Micro-challenges + Diary + What-if polish, 5 days). Sprint 7.5 Region Deepening follows immediately.
+
+### Sprint 6.8 Re-architecture dashboard (this session, 2026-04-22)
+
+- **Phases:** 5 phase commits
+  - Phase 1 (`5ecd9b3`) — GDD §16 full Region rewrite (5 sub-systems) + 28 new constants + §32 field count 110→119
+  - Phase 2 (`5236da7`) — GDD §3/§4/§9/§12/§13/§15/§17/§18/§19/§20 core updates
+  - Phase 3 (`dd3f720`) — GDD §24 upgrades reorg + §24.5 achievements 30→35 + new §37/§38/§39 sections + **UpgradesPanel.tsx sort UX fix** (addresses Nico playtest finding)
+  - Phase 4 (`65f7c45`) — POSTLAUNCH.md shrink + CLAUDE.md glossary + Exception A/B 110→119 note
+  - Phase 5 *(this commit)* — GDD §24 upgrades audit additions (+6 new upgrades, 3 rebalances, new `mem` category, Pathway recalibration, UPGRADES-2..6 UX polish spec)
+
+- **Scope delivered:**
+  - ✅ 5 Region sub-systems spec'd (Hipocampo Shards / Prefrontal Pre-commits / Límbico Mood / Visual Foresight / Broca Inner Voice)
+  - ✅ Amplitud de Banda → Integrated Mind synergy (3/4/5 region tiers)
+  - ✅ Mood system (0-100, 5 tiers, post-softCap effectiveMult, +10 event deltas)
+  - ✅ Memory Shards (3 types: Emotional/Procedural/Episodic) with 8-upgrade Hipocampo tree
+  - ✅ Pre-commitments (8 goal templates, 1-3 Memoria wagers, 2×/-15% reward, 5-streak bonus)
+  - ✅ Visual Foresight tiers T1-T4 (What-if 3-cycle, Mutation preview, Spontaneous countdown, Era 3 preview)
+  - ✅ Broca Inner Voice engine (5 Named Moments + unified with Oneiric dreams + mood-gated greetings + cross-Run memories)
+  - ✅ Mastery system (unified cross-system lifetime tracking for 54 entities)
+  - ✅ Onboarding 5-cycle tutorial track (§37)
+  - ✅ Pulled from v1.1: auto-buy neurons, stats dashboard, mini-map, ending share, Diary search, keyboard nav/accessibility
+  - ✅ Pulled from v1.5: Upgrade Mastery (→unified Mastery), Resonance +5 upgrades (13 total), Oneiric Dreams seed (5 in v1.0)
+  - ✅ Pulled from proposals: Watch-ad-Discharge, Recurring Dreams, Memory typed system, Mind Diary extensions
+  - ✅ Archetype P5→P7 migration planned (Sprint 7.6)
+  - ✅ MUT-2 seed refactor (prestige-END compute, enables Visual T2)
+  - ✅ Empática offline preserved via ondas_theta + Mood application
+  - ✅ GDD §32 invariant 110 → 119 fields (+9: memoryShards, memoryShardUpgrades, activePrecommitment, precommitmentStreak, mood, moodHistory, brocaNamedMoments, mastery, autoBuyConfig)
+  - ✅ Upgrades 35 → 39 (retired 3, added 7 — including Wave 2 audit +6) + 3 rebalances + new `mem` category (8→9 categories)
+  - ✅ Achievements 30 → 35 (+5 region achievements, Sparks pool 145→175)
+  - ✅ UpgradesPanel.tsx sort bug fixed (Memory-before-Thoughts UX issue addressed)
+
+- **Sprint 6.8 Wave 2 — Upgrades audit additions (GDD §24):**
+  - 6 new upgrades: `neurotrofinas` (P7 neu), `reflexion_metacognitiva` (P7 met), `arquitecto_neural` (P8 syn), `acervo_memorias` (P5 mem-new), `red_emotiva` (P6 mem-new), `guardian_del_tiempo` (P12 con)
+  - 3 rebalances (effect changes, same IDs): `sincronizacion_total` (+0.18→+0.25 Focus + Mood +2 on Cascade), `umbral_consciencia` (removed ≥50% conditional), `potencial_latente` (additive → multiplicative scaling)
+  - New `mem` category added to Pathway gating (Deep enables, Swift blocks, Balanced enables)
+  - UPGRADES-2..6 UX polish spec (owned drawer, category grouping, mastery badges, newly-unlocked pulse, tap-hold preview)
+
+- **Design decisions (locked 2026-04-22):**
+  - Mood applies POST-softCap as effectiveMult (stacks multiplicatively with Mental States)
+  - Memory Shards are sub-Memoria drip with 3 types; 100 shards → 1 Memoria conversion via Memory Weave
+  - Archetype migrates P5→P7 (Sprint 7.6 implementation landing with test updates; docs document target state)
+  - Field count 110→119 documented in GDD §32; code bump lands with Sprint 7.5 Phase 7.5.1
+  - Pre-commit failure penalty softened from -25% to -15%
+  - Mastery unified (Mutations + Upgrades + Pathways + Archetypes in one system, §38)
+  - Inner Voice engine unified (Broca Named Moments + Oneiric Dreams + Greetings + Cross-Run, §39)
+  - DiaryEntryType already covers 'fragment' + 'achievement' — Shard/precommit/mood events route through fragment subtypes via ID prefixes
+  - RP-5 not added (4 RPs stay clean)
+  - Upgrade count 35→39 (retired 3 + added 7)
+
+- **Sprint plan (revised 2026-04-22):**
+  | Sprint | Days | Scope |
+  |---|---|---|
+  | 7 | 5 | Five Features (Achievements 35 incl 5 region + Mental States + Micro-challenges + Diary + What-if polish) |
+  | **7.5** | 10-12 | Region Deepening (5 sub-systems + Amplitud de Banda + brain canvas panel) |
+  | **7.6** | 5 | Onboarding + Archetype P5→P7 migration + Pathway expansion UI |
+  | **7.7** | 4 | Mastery system (unified lifetime tracking + Mind→Mastery sub-tab) |
+  | **7.8** | 7 | QoL Pull-ins (auto-buy + Stats + Mini-map + Diary search + Ending share + Keyboard nav) |
+  | **7.9** | 4 | Content Expansion (+22 fragments + 5 echoes + Resonance 8→13 + ondas_theta + 5 Oneiric dreams) |
+  | **Phase 5 Wave 2 upgrade rollout** | — | Distributed: rebalances in Sprint 7.5; +6 new upgrades in Sprint 7.7; UX polish in Sprint 7.8 |
+  | 8a | 4 | Offline + Sleep + Lucid Dream + Mood-offline integration |
+  | 8b | 4 | Transcendence + 4 run-exclusive + Mastery PRESERVE + cross-Run fragments |
+  | 8c | 4 | TEST-5 rebalance (critical after Mood/Shards/Pre-commits added) |
+  | 9a | 6 | Platform integration (IAP + 10 rewarded ads + Genius Pass expansion + Foresight Pack + Mastery Boost) |
+  | 9b | 3 | Store submission |
+  | 10 | 7 | UX polish (colorblind + reduced motion + keyboard nav + Awakening Log timeline + Pathway expansion) |
+  | 11a | 3 | Instrumentation + Gate 5 |
+  | 11b | 5 | Device matrix |
+  | 12 | 7 | Beta + bug bash |
+  | 13 | 3 | Launch |
+
+  **Total Sprint 7-13 ~93 days** (+5.5 weeks vs original). No schedule constraint per Nico direction.
+
+- **Pending Nico actions BEFORE Sprint 7 kickoff:**
+  1. Review the Sprint 6.8 commits (`5ecd9b3`, `5236da7`, `dd3f720`, `65f7c45`, Phase 5 this commit).
+  2. Approve the revised sprint plan above (or cherry-pick overrides).
+  3. Proceed to Sprint 7 Phase 7.1 (Achievements data + engine — catalog already ready in Sprint 7 kickoff prompt).
+
+- **Remaining doc work deferred to future sessions (NOT blocking Sprint 7):**
+  - SPRINTS.md full rewrite adding Sprint 7.5/7.6/7.7/7.8/7.9 phase-by-phase AI checks — recommended as FIRST task of next session
+  - NARRATIVE.md new §10-14 (region unlock fragments + Broca prose + Oneiric dreams + cross-Run + mood beats) — content writing, can happen during Sprint 7.5 implementation
+  - GDD §26 Monetization expansion (Foresight Pack, Mastery Boost, new Genius Pass perks) — lands with Sprint 9a
+  - GDD §27 Analytics +9 events — lands with Sprint 9a
+  - GDD §29 HUD redesign full spec — captured partially in §16.7 + §37; dedicated section during Sprint 7.5.7
+  - GAMESTATE_FIELD_COUNT constant bump 110→119 — lands with Sprint 7.5 Phase 7.5.1 when GameState interface gets the 9 new fields
+
+### Sprint 6 closing dashboard
 
 ### Sprint 6 closing dashboard
 

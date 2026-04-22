@@ -1373,11 +1373,22 @@ Each of the 8 final cycles has a unique narrative event that changes the cycle's
 
 ---
 
-# 24. Upgrades (33 v1.0, categorized) — Sprint 6.8 re-architected
+# 24. Upgrades (39 v1.0, categorized) — Sprint 6.8 re-architected
 
-**Sprint 6.8 re-architecture:** Count changed 35 → 33. Three region-priced upgrades retired into the Region sub-systems (§16.8) — effects absorbed by Hipocampo shards (`consolidacion_memoria`), Límbico mood + offline stack (`regulacion_emocional` → new `ondas_theta`), and Visual Foresight T1 (`procesamiento_visual`). Net: -3 retired + 1 new (`ondas_theta`) = 33 total v1.0 upgrades. `funciones_ejecutivas` and `amplitud_banda` are preserved but rehomed in Regions panel UI.
+**Sprint 6.8 re-architecture — TWO waves of change:**
 
-Categories used by Pathway gating: `tap`, `foc`, `syn`, `neu`, `reg`, `con`, `met`, `new`.
+**Wave 1 — Region redesign retirements + ondas_theta:** Count changed 35 → 33 initially. Three region-priced upgrades retired into the Region sub-systems (§16.8) — effects absorbed by Hipocampo shards (`consolidacion_memoria`), Límbico mood + offline stack (`regulacion_emocional` → new `ondas_theta`), and Visual Foresight T1 (`procesamiento_visual`). `funciones_ejecutivas` and `amplitud_banda` are preserved but rehomed in Regions panel UI.
+
+**Wave 2 — Pacing + thematic additions (5 new upgrades + new category + 3 rebalances):**
+- Fills P7-P9 "dead zone" where player had no new upgrades to unlock (3 new upgrades: `neurotrofinas` P7, `reflexion_metacognitiva` P7, `arquitecto_neural` P8)
+- Fills thematic holes created by Sprint 6.8 — Memoria generation path + Mood synergy path for Thoughts-focused players (2 new upgrades: `acervo_memorias` P5, `red_emotiva` P6)
+- Rewards genuine offline play (1 new: `guardian_del_tiempo` P12)
+- 3 existing upgrades rebalanced (effect changes, same IDs): `sincronizacion_total`, `umbral_consciencia`, `potencial_latente` (see §24.6)
+- New `mem` category for Memoria-generation-focused upgrades (8 → 9 categories)
+
+**Final count: 33 + 6 new = 39 upgrades.**
+
+Categories used by Pathway gating: `tap`, `foc`, `syn`, `neu`, `reg`, `con`, `met`, `mem` *(new Sprint 6.8)*, `new`. Pathway §14 category lists updated: Deep now enables `mem` by default (thematic fit); Swift blocks `mem` (speed pathway avoids meta buildup); Balanced enables all.
 
 **UX ordering rule (UPGRADES-1):** The Upgrades tab shows Thoughts-priced upgrades FIRST, then Memoria-priced in a separate subsection. Within each subsection, sort by cost ascending. Previously (pre-Sprint-6.8) the Sprint 3.6.3 sort compared numeric values directly — a 2-Memoria upgrade sorted before a 3000-Thought upgrade because `2 < 3000`, which was visually jarring ("why are these memory things at the top?"). Fix: sort by `(currencyRank, cost)` where `currencyRank(thoughts)=0, currencyRank(memorias)=1`. This keeps sections coherent and puts the player's most-common decision (thought-priced next buy) at the top.
 
@@ -1393,16 +1404,17 @@ Categories used by Pathway gating: `tap`, `foc`, `syn`, `neu`, `reg`, `con`, `me
 |---|---|---|---|
 | Concentración Profunda | 25K | Focus fill rate ×2. Insight duration +5s. | P4+ |
 
-### Synapsis / Discharge (◎, 5)
+### Synapsis / Discharge (◎, 6 — Sprint 6.8 added arquitecto_neural)
 | Upgrade | Cost | Effect | Tier |
 |---|---|---|---|
 | Descarga Neural | 8K | Max Discharge charges +1 | P0 |
 | Amplificador de Disparo | 40K | Discharge bonus ×1.5 | P2+ |
 | Red de Alta Velocidad | 100K | Charges accumulate 25% faster | P2+ |
 | Cascada Profunda | 200K | `cascadeMult` ×2 (base 2.5→5.0, or 3.0→6.0 with cascada_eterna) | P4+ |
-| Sincronización Total | 500K | After Cascada, Focus regains +0.18 | P5+ |
+| Sincronización Total | 500K | After Cascada, Focus regains **+0.25** *(rebalanced from +0.18 Sprint 6.8)* + **Mood +2 on Cascade** *(new)* | P5+ |
+| **Arquitecto Neural** *(NEW Sprint 6.8)* | 300K | Max Discharge charges +1 (stacks with Descarga Neural → **4 charges pre-P15**). Fills P8 dead zone. | **P8+** |
 
-### Neurons (⬡, 8)
+### Neurons (⬡, 9 — Sprint 6.8 added neurotrofinas)
 | Upgrade | Cost | Effect | Tier |
 |---|---|---|---|
 | Red Neuronal Densa | 3K | All neurons rate ×1.25 | P0 |
@@ -1413,6 +1425,7 @@ Categories used by Pathway gating: `tap`, `foc`, `syn`, `neu`, `reg`, `con`, `me
 | LTP Potenciación Larga | 2M | All neurons ×1.5 | P3+ |
 | Espejo Resonantes | 150K | Espejos ×4 | P2+ |
 | Neurogénesis | 5M | All neuron rates ×1.10 + visual hint (greyed 6th slot appears — v1.5 foreshadowing) | P5+ |
+| **Neurotrofinas** *(NEW Sprint 6.8)* | 400K | All neuron rates +10% per unique neuron type owned (max +50% with all 5) — rewards diversity, fills P7 dead zone | **P7+** |
 
 ### Regions (◈, 2 — Memoria-priced, Sprint 6.8 reduced from 5)
 
@@ -1427,37 +1440,87 @@ Plus Sprint 6.8 NEW `ondas_theta` (`con` category below, Thoughts-priced).
 
 ### Consciousness & Offline (✦, 5) — one more than v1.0 original
 
-### Consciousness & Offline (✦, 5 — Sprint 6.8 added ondas_theta)
+### Consciousness & Offline (✦, 6 — Sprint 6.8 added ondas_theta + guardian_del_tiempo)
 | Upgrade | Cost | Effect | Tier |
 |---|---|---|---|
 | Sueño REM | 50K | Offline cap 4h → 8h | P0 |
-| Umbral de Consciencia | 100K | Consciousness bar fills ×1.3 | P0 (at ≥50% bar) |
+| Umbral de Consciencia | 100K | Consciousness bar fills ×1.3 **(always on** *— rebalanced Sprint 6.8, removed "at ≥50% bar" conditional for clarity)* | P0 |
 | Ritmo Circadiano | 200K | Offline ×1.5 efficiency + auto-charge on return if ≥cap | P2+ |
 | Hiperconciencia | 500K | Consciousness bar fills ×2 | P4+ |
 | **Ondas Theta** *(NEW Sprint 6.8)* | 300K | Offline efficiency ×2 (replaces retired `regulacion_emocional`; stacks into OFFLINE-4 cap) | P3+ |
+| **Guardian del Tiempo** *(NEW Sprint 6.8)* | 1M | Offline efficiency +10% per hour offline (max +50% at 5+ hours). Rewards genuine offline stretches, not 30-min check-ins. | **P12+** |
 
-### Meta (∞, 3) — unlock P6+
+### Meta (∞, 4 — Sprint 6.8 added reflexion_metacognitiva)
 | Upgrade | Cost | Effect | Tier |
 |---|---|---|---|
 | Retroalimentación Positiva | 1M | ×2 all production | P6+ |
 | Emergencia Cognitiva | 3M | Production ×1.5 per 5 upgrades owned, max ×5 | P6+ |
 | Singularidad | 10M | ×1.01 per prestigeCount (multiplicative) | P8+ |
+| **Reflexión Meta-Cognitiva** *(NEW Sprint 6.8)* | 2M | Mutation effects ×1.15 (first upgrade in game that buffs Mutations — thematic: "mind reflecting on its own mutations") | **P7+** |
+
+### Memory (🧠, 2 — NEW category Sprint 6.8 `mem`)
+
+New category created to separate Memoria-generation-focused upgrades from Meta upgrades. Pathway §14: Deep enables `mem` by default (thematic), Swift blocks `mem`, Balanced enables all.
+
+| Upgrade | Cost | Effect | Tier |
+|---|---|---|---|
+| **Acervo de Memorias** *(NEW Sprint 6.8)* | 500K | Memorias per prestige +1 (base 2 → 3). Replaces the retired `consolidacion_memoria` path for Thoughts-focused players who want Memoria acceleration. | **P5+** |
+| **Red Emotiva** *(NEW Sprint 6.8)* | 1.5M | Mood shift event magnitudes ×1.5 (both positive and negative amplified — the mind feels MORE. Commitment to emotional play.) | **P6+** |
 
 ### Tier P10 — Era 2 (★, 6) — new upgrades for Era 2
 | Upgrade | Cost | Effect | Tier |
 |---|---|---|---|
 | Convergencia Sináptica | 200K | +1.5% per lifetime prestige, max +40% *(uses `lifetimePrestiges`, fix from INT-3)* | P10+ |
 | Consciencia Distribuida | 150K | Offline cap 8h → 12h | P10+ |
-| Potencial Latente | 300K | Each Discharge: +1,000 × prestigeCount | P10+ |
+| Potencial Latente | 300K | Discharge burst **× (1 + prestigeCount × 0.02)** *(rebalanced Sprint 6.8 — was +1000 × prestigeCount additive, now multiplicative so it scales properly against late-game base production)* | P10+ |
 | Resonancia Acumulada | 350K | +5% to first post-offline Discharge per hour offline (max +100%) | P10+ |
 | Síntesis Cognitiva | 800K | Pattern flat bonus ×2 | P13+ |
 | Focus Persistente | 600K | Retain 25% Focus across prestige *(fix from BUG-06 — was 50%)* | P12+ |
 
-**Total: 33 upgrades (Sprint 6.8, was 35).**
+**Total: 39 upgrades (Sprint 6.8 final — was 35 pre-rearchitecture).**
 
-Breakdown: Tap 3 + Focus 1 + Syn 5 + Neurons 8 + Regions 2 (reduced from 5 per §16.8) + Consciousness 5 (added ondas_theta) + Meta 3 + Tier P10 6 = **33**.
+Breakdown:
+- Tap 3 (unchanged)
+- Focus 1 (unchanged)
+- Synapsis 6 (added arquitecto_neural)
+- Neurons 9 (added neurotrofinas)
+- Regions 2 (reduced from 5 per §16.8)
+- Consciousness & Offline 6 (added ondas_theta + guardian_del_tiempo)
+- Meta 4 (added reflexion_metacognitiva)
+- **Memory (NEW) 2** (acervo_memorias + red_emotiva)
+- Tier P10 6 (unchanged)
 
-**Sprint 5 upgrade IDs retired in Sprint 6.8:** `consolidacion_memoria`, `regulacion_emocional`, `procesamiento_visual`. Code will continue to understand these IDs (`migrateState()` drops them from `state.upgrades` silently) — their effects are preserved via the Region sub-systems.
+Sum: 3+1+6+9+2+6+4+2+6 = **39**.
+
+**Sprint 5 upgrade IDs retired in Sprint 6.8 Wave 1:** `consolidacion_memoria`, `regulacion_emocional`, `procesamiento_visual`. Code will continue to understand these IDs (`migrateState()` drops them from `state.upgrades` silently) — their effects are preserved via the Region sub-systems.
+
+**Sprint 6.8 Wave 2 additions (6 new IDs):** `neurotrofinas`, `reflexion_metacognitiva`, `arquitecto_neural`, `acervo_memorias`, `red_emotiva`, `guardian_del_tiempo`. String keys for i18n: `upgrades.{id}` name, `upgrades_desc.{id}` description.
+
+**Sprint 6.8 Wave 2 rebalances (3 existing IDs, effect changed no ID change):**
+- `sincronizacion_total`: +0.18 → +0.25 Focus post-Cascade, + "Mood +2 on Cascade" tie
+- `umbral_consciencia`: removed "at ≥50%" conditional; always on now
+- `potencial_latente`: +1000 × prestigeCount (additive) → × (1 + prestigeCount × 0.02) (multiplicative)
+
+## 24.6 Upgrades tab UX polish spec (Sprint 7.8)
+
+Beyond the Sprint 6.8 sort fix (UPGRADES-1), the Upgrades tab gets a small polish pass:
+
+1. **UPGRADES-2 Owned drawer (collapsible footer).** Currently hidden entirely ("panel focuses on purchase decisions" per Sprint 3.6.3 comment). Add "Owned (N)" collapsible footer so players can see their build at a glance. Collapsed by default to preserve focus.
+
+2. **UPGRADES-3 Category-grouping toggle.** Primary grouping stays Affordable/Teaser/Locked. Secondary toggle: "Group by category" (Tap / Focus / Synapsis / Neurons / Regions / Consciousness / Meta / Memory / P10). Helps organized-mind players.
+
+3. **UPGRADES-4 Mastery level badges.** When §38 Mastery ships, each owned upgrade card shows a small L{1-10} badge with subtle ring fill. Reinforces lifetime-progression loop.
+
+4. **UPGRADES-5 Newly-unlocked pulse.** When an upgrade crosses Locked → Teaser → Affordable on a prestige, pulse the card edge with the category color for 3s. Current UI renders silently, missing a celebration beat.
+
+5. **UPGRADES-6 Estimated-payoff preview (tap-hold).** On long-press of an upgrade card, show an estimated payoff line ("+X thoughts/sec projected" or "+1 Cascade reachable per cycle"). Helps players evaluate buys without calculator-level thinking.
+
+## 24.7 Pathway recalibration note (Sprint 6.8)
+
+With the `mem` category addition and upgrade count 33 → 39, Pathway §14 enable/block lists need refresh:
+- **Rápida (Swift):** enables `tap`, `foc`, `syn`, `met`. Blocks `reg`, `con`, `new`, `mem` (+1 new block). Unchanged bonuses (Insight ×2, Discharge charge rate ×1.5).
+- **Profunda (Deep):** enables `neu`, `reg`, `con`, `new`, `mem` (+1 new enable). Blocks `tap`, `foc`, `syn`. Unchanged bonuses (Memories ×2, Focus fill ×0.5).
+- **Equilibrada (Balanced):** enables ALL including `mem`. No blocks. Unchanged bonus (all upgrade bonuses ×0.85).
 
 ---
 
