@@ -6,10 +6,28 @@
 
 ## Current status
 
-**Phase:** Sprint 7.8 Phase 7.8.2 CLOSED (Upgrade Mastery consumer wiring — 7.7.4-deferred item pulled forward per 7.8.1 V7). **1482 tests pass** (+7 from Sprint 7.7 close); 4/4 gates green (ratio 0.81); typecheck + lint clean.
-**Last updated:** 2026-04-23 after Phase 7.8.2 close.
-**Active sprint:** Sprint 7.8 in-flight (7.8.1 catalog ✓, 7.8.2 Upgrade Mastery ✓, 7.8.3-7.8.6 pending).
-**Next action:** Phase 7.8.3 — Balance Scout Sim engine + runner. `src/sim/balanceScoutSim.ts` (creates the sim dir per CLAUDE.md:55) + `scripts/run-balance-scout.ts`.
+**Phase:** Sprint 7.8 Phase 7.8.3 CLOSED (Balance Scout Sim engine + runner + 27-config sweep). **1492 tests pass** (+10 from 7.8.2); 4/4 gates green (ratio 0.81); typecheck + lint clean. Scout sim 0 anomalies / 0 timeouts across 27 configs.
+**Last updated:** 2026-04-23 after Phase 7.8.3 close.
+**Active sprint:** Sprint 7.8 in-flight (7.8.1 ✓, 7.8.2 ✓, 7.8.3 ✓, 7.8.4-7.8.6 pending).
+**Next action:** Phase 7.8.4 — Full 27-config × 5-run sweep + Markdown + CSV output. Then Phase 7.8.5 analysis.
+
+### Sprint 7.8 Phase 7.8.3 dashboard (2026-04-23 — Balance Scout Sim engine)
+
+**Scope shipped:** pure deterministic single-Run pacing + anomaly sim, plus a 27-config sweep runner. Combined with Phase 7.8.4's sweep execution per 7.8.1 V2 (initial smoke run completed; full 5-run × 27-config pending Phase 7.8.4 explicit close).
+
+**Changes applied:**
+- `src/sim/balanceScoutSim.ts` (NEW, ~180 lines) — runs P0→P26 via direct `tick()` + `handlePrestige()` invocation. Heuristic player: tap at configured rate, buy cheapest affordable neuron, buy cheapest unlocked upgrade, discharge at full-charges or focus ≥ cascade-threshold. Mirrors the store's prestige-action Mastery XP dispatcher inline (sim bypasses the store for speed). Creates the `src/sim/` directory per CLAUDE.md:55. CODE-2 compliant.
+- `scripts/run-balance-scout.ts` (NEW, ~140 lines) — 27-config generator (3 tap rates × 3 archetypes × 3 pathways). CLI: `--single` / `--quick` / (default full 5×). Outputs `docs/balance-scout-report.md` (aggregate + per-config detail) and `docs/balance-scout-raw.csv` (per-cycle rows).
+- `tests/sim/balanceScoutSim.test.ts` (NEW, 10 tests) — determinism (identical telemetry on re-run), 26-cycle completion, no anomalies, archetype/pathway graceful defaults, Sprint 7.5-7.7 systems exercised (Mastery accumulates, shards accumulate, mood drifts), archetype differentiation (Empática slower than Analítica), tap-rate differentiation (higher tap = faster sim).
+
+**Smoke results (27 configs × 1 run = 27 runs, ~9s real time):**
+- 26/26 cycles completed: **27/27 configs** ✓
+- Timeouts: **0**
+- Anomalies (NaN/Infinity/negative): **0**
+- Pacing flags (cycles >20% off GDD §9 target minutes): **687** — running 60-99% FASTER than targets
+- Sim time spread: 21–57 sim-minutes per full run (Empática longest, tap=10 shortest — both expected)
+
+**Preliminary finding (to be formalized in Phase 7.8.5):** Sprint 7.5-7.7 multiplicative stack (Mood +5-20%, Shard effects, Mastery +5%, Integrated Mind bonuses) + greedy-buyer heuristic produces 3-15× faster pacing than 2026-04 pre-sim baseline targets. **Not a crisis** — targets are for "engaged player" not speedrunner, and TEST-5 authoritative simulation requires Sprint 8a/8b/8c engines unshipped. Flagging for Sprint 8c canonical TEST-5 tuning pass per 7.8.1 V4 "flag only; do not tune" discipline.
 
 ### Sprint 7.8 Phase 7.8.2 dashboard (2026-04-23 — Upgrade Mastery consumers)
 
