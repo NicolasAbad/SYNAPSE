@@ -108,6 +108,12 @@ export const SYNAPSE_CONSTANTS = {
   // Sprint 8c TEST-2 validate the final ratio holds.
   maxOfflineEfficiencyRatio: 2.5,
   offlineMinMinutes: 1, // skip calc if <1 min
+  // Sprint 7.10 Phase 7.10.2 — offline-efficiency stack components per GDD §19
+  // formula (§19 lines 1141-1154). Previously hardcoded in the formula; lifted
+  // to constants so consumer stack is Gate-1 clean.
+  empaticaOfflineEfficiencyMult: 2.5, // GDD §19 Empática archetype offline mult
+  geniusPassOfflineEfficiencyMult: 1.25, // GDD §19 Genius Pass +25% offline (stub flag; full Pass Sprint 9b)
+  offlineTimeAnomalyOverCapMult: 2, // GDD §19 OFFLINE-5: elapsed > cap × this → hard-cap + anomaly log
 
   // ── Memories ──
   baseMemoriesPerPrestige: 2, // GDD §2 Memory generation table: +2 per prestige baseline. Consolidación de Memoria upgrade adds +50% via `memoryGainAdd: 0.5` (§24).

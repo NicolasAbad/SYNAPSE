@@ -6,10 +6,44 @@
 
 ## Current status
 
-**Phase:** Sprint 7.9 CLOSED (Mood online drift — Sprint 7.8 F2 closure). **1509 tests pass** (+17 from Sprint 7.8 close 1492); 4/4 gates green (ratio 0.81); buffer-1 sim 0/0; Balance Scout Sim 27×5 = 135 runs confirm drift working; typecheck + lint clean.
-**Last updated:** 2026-04-23 after Sprint 7.9 close.
-**Active sprint:** Sprint 7.10 ready (candidates: Sprint 8a Offline engine / GDD docs sweep / v1.1 pull-ins).
-**Next action:** Sprint 7.10 kickoff — Nico to approve scope.
+**Phase:** Sprint 7.10 Phase 7.10.2 CLOSED (Offline engine core). **1532 tests pass** (+23 from Sprint 7.9 close 1509); 4/4 gates green (ratio 0.82); typecheck + lint clean.
+**Last updated:** 2026-04-23 after Phase 7.10.2 commit.
+**Active sprint:** Sprint 7.10 — Sprint 8a Offline engine (Option 1 of Sprint 7.10 scope, Nico-approved 2026-04-23).
+**Next action:** Phase 7.10.3 — Mood AVG anti-ramp-farming consumer + Procedural shard drip (OFFLINE-9) + Mutation temporal averaging + Lucid Dream RNG roll. STOP-for-approval at kickoff.
+
+### Sprint 7.10 Phase 7.10.2 (2026-04-23) — Offline engine core
+
+**Scope shipped:**
+- `src/engine/offline.ts` NEW (128 lines) — pure helpers: `computeOfflineCapHours`, `computeOfflineEfficiencyMult`, `detectTimeAnomaly`, `applyOfflineProgress` orchestrator. CODE-9 pure, no `Math.random`/`Date.now`.
+- `src/config/constants.ts` — 3 new constants: `empaticaOfflineEfficiencyMult: 2.5`, `geniusPassOfflineEfficiencyMult: 1.25`, `offlineTimeAnomalyOverCapMult: 2`.
+- `tests/engine/offline.test.ts` NEW (192 lines, 23 tests) — cap resolution, efficiency stack (upgrades/archetype/Pass/decisions/mood), time anomaly detection (backward/over-cap/normal), orchestrator flow (skip <1min, 30min base, OFFLINE-2 cycle cap, OFFLINE-7 enhanced Discharge, timestamp advance on anomaly).
+
+**OfflineSummary return shape (reserved for Phase 7.10.4 pendingOfflineSummary field):**
+`elapsedMs`, `gained`, `efficiency`, `avgMood`, `avgMoodTier`, `capHours`, `cappedHit`, `timeAnomaly` ('backward'|'over_cap'|null), `enhancedDischargeAvailable`, `lucidDreamTriggered` (wired in 7.10.3).
+
+**V-point decisions applied (from 7.10.1 catalog, Nico `ok all` 2026-04-23):**
+- V1 cap 2.5 ✓ (already in constants.ts per Sprint 7.5.3 R6)
+- V2 `empaticaOfflineEfficiencyMult: 2.5` ✓
+- V3 `geniusPassOfflineEfficiencyMult: 1.25` ✓
+- V4 Pattern Decision 15A offline mult ✓ (reuses existing `PATTERN_DECISIONS[15].A.effect` — no new constant; effect kind matches upgrade stack pathway)
+- V5 `moodTierProductionMults` reused for offline avg-tier ✓
+- V14 `OfflineSummary` shape returned as tuple `{ state, summary }` (mirrors `tick()` pattern) ✓
+- V15–V17 (store hook + integration order + save-on-resume) — deferred to Phase 7.10.4 per plan
+- V18 Lucid Dream RNG seed — deferred to Phase 7.10.3 per plan
+
+**Engineering:**
+- `computeOfflineEfficiencyMult` takes `avgMoodTierIndex` as typed `0 | 1 | 2 | 3 | 4` (mirrors `MoodTierIndex` from mood.ts). `applyOfflineProgress` computes the avg via existing `averageMoodOverWindow(state, windowStartMs)` helper (built in Sprint 7.5.3 for exactly this use).
+- OFFLINE-5 anomaly detection returns typed union `'backward' | 'over_cap' | null` + clamped elapsed; `applyOfflineProgress` still advances `lastActiveTimestamp` on backward clock (prevents repeated anomaly triggering).
+- OFFLINE-2 cycle-cap guard: if gained ≥ `currentThreshold - cycleGenerated`, gained = remaining + `cappedHit: true`. NEVER auto-prestige (per GDD).
+- OFFLINE-7 signal: `cappedHit && nextDischargeBonus > 0` → `enhancedDischargeAvailable: true` (UI consumer in Phase 7.10.5).
+
+**Test growth:** 1509 → 1532 (+23). 1 new file: `tests/engine/offline.test.ts`.
+
+**Gates:** 4/4 PASS, ratio 0.82 (186 constants / 40 literals — up from 0.81). ESLint clean. Typecheck clean.
+
+**Next phase (7.10.3):** Mood AVG anti-ramp-farming consumer (already using avg internally, but extend tests to prove it stops 1-min ramp-farming pattern), Procedural shard drip (OFFLINE-9, 50% rate), Mutation temporal averaging for `affectsOffline: true` mutations (sprint + crescendo), Lucid Dream deterministic RNG roll (P10+, 33%/100% Empática). ~12 tests expected.
+
+---
 
 ### Sprint 7.9 close dashboard (2026-04-23 — Mood online drift, F2 resolution)
 
