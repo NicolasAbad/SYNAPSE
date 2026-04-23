@@ -6,10 +6,76 @@
 
 ## Current status
 
-**Phase:** Sprint 7.8 Phase 7.8.3 CLOSED (Balance Scout Sim engine + runner + 27-config sweep). **1492 tests pass** (+10 from 7.8.2); 4/4 gates green (ratio 0.81); typecheck + lint clean. Scout sim 0 anomalies / 0 timeouts across 27 configs.
-**Last updated:** 2026-04-23 after Phase 7.8.3 close.
-**Active sprint:** Sprint 7.8 in-flight (7.8.1 ✓, 7.8.2 ✓, 7.8.3 ✓, 7.8.4-7.8.6 pending).
-**Next action:** Phase 7.8.4 — Full 27-config × 5-run sweep + Markdown + CSV output. Then Phase 7.8.5 analysis.
+**Phase:** Sprint 7.8 CLOSED (all 5 implementation phases + close shipped: catalog + Upgrade Mastery + sim engine + sweep + findings). **1492 tests pass** (+17 from Sprint 7.7 close); 4/4 gates green (ratio 0.81); buffer-1 sim 0/0 across 20 prestige cycles; typecheck + lint clean.
+**Last updated:** 2026-04-23 after Sprint 7.8 close.
+**Active sprint:** Sprint 7.9 ready (scope TBD — Sprint 8a Offline engine is the natural next block since it unblocks Empática OFFLINE-4 validation + gets us closer to Sprint 8c canonical TEST-5).
+**Next action:** Sprint 7.9 kickoff — Nico to approve scope.
+
+### Sprint 7.8 close dashboard (2026-04-23 — Balance Scout Sim + Upgrade Mastery wiring)
+
+**Phases shipped (5/5 + close):**
+- **7.8.1** Pre-code catalog with scope reality check (TEST-5 is Sprint 8c canonical; 7.8 is scouting pre-pass)
+- **7.8.2** Upgrade Mastery consumer wiring (7.7.4-deferred item pulled forward per V7)
+- **7.8.3** Balance Scout Sim engine + runner + 27-config sweep smoke
+- **7.8.4** Full 27-config × 5-run sweep (135 runs, deterministic)
+- **7.8.5** Analysis pass + findings report
+- **7.8.6** Sprint close + dashboard
+
+**Test growth:** Sprint 7.7 close: 1475 → Sprint 7.8 close: 1492 (+17). Per-phase: 7.8.2 +7 (upgrade consumers) / 7.8.3 +10 (sim engine). New test files: 2 (mastery-upgrade-consumers, balanceScoutSim).
+
+**Sweep results (docs/balance-scout-report.md + docs/balance-scout-raw.csv):**
+- **135 runs** completed (27 configs × 5 runs); 100% reached P26; 0 timeouts; 0 anomalies (no NaN / Infinity / negative balances)
+- **Real execution time:** ~50s across all 135 runs (~370ms per run average)
+- **Determinism validated:** all 5 runs per config produced byte-identical telemetry — sim engine is pure per CODE-9. To get stochastic variance for Sprint 8c canonical TEST-5, seed inputs must be varied per-run
+- **Pacing flags (>20% off GDD §9 target minutes):** 3435 / (135 × 26 ≈ 3510) = 98% of cycles flagged — systemic overtuning signal
+
+**Findings (flagged for Sprint 8c per 7.8.1 V4 "flag-only; don't tune")**
+
+| # | Finding | Severity | Owner |
+|---|---|---|---|
+| F1 | All cycles running 60–99% faster than GDD §9 target minutes across all 27 configs | HIGH | Sprint 8c canonical TEST-5 tuning pass — rebalance `baseThresholdTable` or dampen Sprint 7.5-7.7 multiplicative stack |
+| F2 | Mood saturates at cap 100 by ~P7 and stays there for remaining 19 cycles | MEDIUM | Mood decay missing from online play; `MOOD-1` spec review for §16.3 Sprint 7.9+ |
+| F3 | Empática consistently slowest (as designed: ×0.85 active production penalty + ×1.25 memory) — relative ordering is correct; absolute pacing still overtuned | LOW | Sprint 8c rebalance naturally addresses |
+| F4 | `integradora` neurons never purchased in sim (P10+ gate not hit by greedy heuristic before player auto-prestiges) | LOW (sim artifact) | Sim-behavior tune for richer heuristic in Sprint 8c |
+| F5 | Discharge never fires in sim (heuristic gate: full-charges OR focus ≥ cascade threshold) — cycles complete before either condition is reached | MEDIUM (sim artifact) | Sim heuristic needs upgrade for Sprint 8c; not a balance issue |
+
+**Positive validations (NOT flagged — these confirmed expected behavior):**
+- Mastery accrual: +2/prestige (archetype + pathway each +1), scales exactly per §38.2
+- Mastery cap at 10: verified L10 bonus of +5% applied correctly (from Sprint 7.8.2 consumer tests)
+- Shard drip: Episodic +2/prestige baseline matches `episodicShardPerPrestige` constant
+- Pathway × Archetype differentiation preserved (Empática slowest, Rápida fastest at high tap rates)
+- `handlePrestige` stability: 0 engine crashes across 135 × 26 = 3510 prestige cycles
+
+**Sprint 7.5-7.7 stack stability (the real Sprint 7.8 validation goal):** ✓
+- No invariant violations (GameState stays at 119 fields end-to-end)
+- No arithmetic anomalies (NaN / Infinity / negative balance)
+- Mood / Pre-commits / Shards / Visual / Broca / Integrated Mind / Mastery all exercised in simulation without crashes
+
+**Commits this sprint (4 phase commits):**
+- `6dbb890` Phase 7.8.2 — Upgrade Mastery consumer wiring
+- `902ba53` Phase 7.8.3 — Balance Scout Sim engine + runner
+- (this commit) Phase 7.8.6 — Sprint 7.8 close (includes 7.8.4 full sweep + 7.8.5 findings)
+
+**Decisions applied from 7.8.1 catalog (V1-V8):**
+- V1 "Balance Scout Sim" naming (not "TEST-5") ✓
+- V2 27 × 5 = 135 runs ✓ (determinism revealed 5-run multiplier adds no variance; Sprint 8c needs seeded variance)
+- V3 Simple greedy heuristic (cheapest-first) ✓
+- V4 Flag-only, no tuning in 7.8 ✓ — all 5 findings filed for Sprint 8c
+- V5 Markdown + CSV output ✓
+- V6 `src/sim/balanceScoutSim.ts` + `scripts/run-balance-scout.ts` ✓
+- V7 Upgrade Mastery pulled forward (Phase 7.8.2) ✓
+- V8 (Nico override) — none taken
+
+**Artifacts shipped:**
+- `src/sim/balanceScoutSim.ts` (~180 lines) — deterministic single-Run sim engine
+- `scripts/run-balance-scout.ts` (~140 lines) — 27-config sweep runner
+- `src/engine/mastery.ts` — new `upgradeMasteryMult` helper
+- 5 consumer sites wired (production × 3, discharge, tap, tick charge-rate)
+- `docs/balance-scout-report.md` + `docs/balance-scout-raw.csv` (sweep outputs committed for reference)
+
+**Pending Nico actions:**
+- Push Sprint 7.8 commits to origin/main (~5 ahead: `6dbb890`, `902ba53`, + Sprint 7.8 close)
+- Approve Sprint 7.9 scope. Senior-dev recommendation: **Sprint 8a Offline engine** is the natural next block — canonical TEST-5 needs it, and Empática's identity is offline-centric. Alternative: GDD §16.3 Mood decay spec review (addresses F2) or Sprint 7.9 GDD docs sweep.
 
 ### Sprint 7.8 Phase 7.8.3 dashboard (2026-04-23 — Balance Scout Sim engine)
 
