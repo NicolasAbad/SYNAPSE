@@ -42,7 +42,7 @@ function warn(msg: string): void {
 function freshState(): GameState {
   // Reuse the store's createDefaultState via reset() to avoid divergence.
   // Strip UI-state fields + bound action methods so we get the pure GameState
-  // shape (119 fields per §32 invariant post-Sprint-7.5.1).
+  // shape (121 fields per §32 invariant post-Sprint-7.10.5).
   useGameStore.getState().reset();
   const raw = useGameStore.getState() as unknown as Record<string, unknown>;
   const out: Record<string, unknown> = {};
@@ -89,7 +89,7 @@ function runCycles(label: string, withFocusPersistente: boolean): void {
   console.log(`━━━ ${label} ━━━`);
   let state = freshState();
   // Pre-flight invariants.
-  check(fieldCount(state) === 119, `pre: field count = ${fieldCount(state)}, expected 119`);
+  check(fieldCount(state) === 121, `pre: field count = ${fieldCount(state)}, expected 121`);
   check(state.prestigeCount === 0, `pre: prestigeCount = ${state.prestigeCount}, expected 0`);
   check(state.memories === 0, `pre: memories = ${state.memories}, expected 0`);
   check(state.isTutorialCycle === true, `pre: isTutorialCycle = ${state.isTutorialCycle}, expected true`);
@@ -152,7 +152,7 @@ function runCycles(label: string, withFocusPersistente: boolean): void {
     }
 
     // Field count stable.
-    check(fieldCount(state) === 119, `cycle ${i}: field count = ${fieldCount(state)}, expected 119`);
+    check(fieldCount(state) === 121, `cycle ${i}: field count = ${fieldCount(state)}, expected 121`);
 
     // No NaN / Infinity.
     const bad = hasNaNOrInfinity(state);
@@ -237,13 +237,13 @@ function runCycles(label: string, withFocusPersistente: boolean): void {
 
 // Verify exported field-set constants haven't drifted from §33 invariants.
 console.log('━━━ Field-set invariants ━━━');
-// Sprint 7.5.1 bumped these counts: 45/60 → 46/68 alongside the 110→119 field bump.
-check(PRESTIGE_RESET_FIELDS.length === 46, `PRESTIGE_RESET_FIELDS length = ${PRESTIGE_RESET_FIELDS.length}, expected 46`);
+// Sprint 7.5.1: 45/60 → 46/68 (110→119). Sprint 7.10.4 + 7.10.5: 46→48 (119→121).
+check(PRESTIGE_RESET_FIELDS.length === 48, `PRESTIGE_RESET_FIELDS length = ${PRESTIGE_RESET_FIELDS.length}, expected 48`);
 check(PRESTIGE_PRESERVE_FIELDS.length === 68, `PRESTIGE_PRESERVE_FIELDS length = ${PRESTIGE_PRESERVE_FIELDS.length}, expected 68`);
 check(PRESTIGE_UPDATE_FIELDS.length === 4, `PRESTIGE_UPDATE_FIELDS length = ${PRESTIGE_UPDATE_FIELDS.length}, expected 4`);
 check(
-  PRESTIGE_RESET_FIELDS.length + PRESTIGE_PRESERVE_FIELDS.length + PRESTIGE_UPDATE_FIELDS.length === 118,
-  `46 + 68 + 4 = 118 (lifetime field is the 119th, not in any tuple)`,
+  PRESTIGE_RESET_FIELDS.length + PRESTIGE_PRESERVE_FIELDS.length + PRESTIGE_UPDATE_FIELDS.length === 120,
+  `48 + 68 + 4 = 120 (lifetime field is the 121st, not in any tuple)`,
 );
 
 runCycles('Run A — vanilla 10-cycle prestige loop (no upgrades)', false);

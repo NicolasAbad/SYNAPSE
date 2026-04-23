@@ -6,10 +6,119 @@
 
 ## Current status
 
-**Phase:** Sprint 7.10 Phase 7.10.5 CLOSED (Sleep screen UI + Lucid Dream Option A buff). **1602 tests pass** (+22 + 22 cascade-updated from Phase 7.10.4); 4/4 gates green (ratio 0.82); typecheck + lint clean. **GameState invariant bumped: 120 → 121 fields.**
-**Last updated:** 2026-04-23 after Phase 7.10.5 commit.
-**Active sprint:** Sprint 7.10 — Sprint 8a Offline engine (Option 1).
-**Next action:** Phase 7.10.6 — OFFLINE-10 Returning-player greeting fragments (5 mood-tier-gated Broca Inner Voice strings with `greeting_*` prefix, per-line Nico approval in kickoff). Idempotent fire-once via `narrativeFragmentsSeen`. ~6 tests. STOP-for-approval at kickoff.
+**Phase:** Sprint 7.10 CLOSED (Sprint 8a Offline engine, Phases 7.10.1 → 7.10.7). **1587 tests pass** (+78 from Sprint 7.9 close 1509); 4/4 gates green (ratio 0.82); buffer-1 sim 0/0; typecheck + lint clean. **GameState invariant: 119 → 121 (+2 across two phases).**
+**Last updated:** 2026-04-23 after Sprint 7.10 close.
+**Active sprint:** Sprint 7.10 CLOSED. Awaiting next-sprint scope decision.
+**Next action:** Sprint 7.11 / 8b kickoff — Nico to choose: (a) Sprint 8b Transcendence + Resonance + Run 2-3 (canonical critical-path), (b) Sprint 8c Resonant Patterns + TEST-5 (requires 8b first), (c) GDD docs sync sweep (5 deferred §16 deviations + §32 line 2320 update for 121 fields), (d) v1.1 pull-ins.
+
+### Sprint 7.10 close dashboard (2026-04-23 — Sprint 8a Offline engine)
+
+**Scope shipped (full Sprint 8a per SPRINTS.md §683-721 + GDD §19 OFFLINE-1..11):**
+- Phase 7.10.1: pre-code research catalog (V1-V18 decisions, all Nico-approved)
+- Phase 7.10.2: engine core (`computeOfflineCapHours`, `computeOfflineEfficiencyMult`, `detectTimeAnomaly`, `applyOfflineProgress`)
+- Phase 7.10.3: MUT-1 temporal averaging + OFFLINE-9 Procedural shard drip + Lucid Dream RNG roll
+- Phase 7.10.4: store action `applyOfflineReturn`, Capacitor `@capacitor/app` plugin install + listener wiring, `pendingOfflineSummary` field (119 → 120)
+- Phase 7.10.5: SleepScreen.tsx UI + Lucid Dream Option A buff (`lucidDreamActiveUntil` field 120 → 121, engine helper `lucidDreamProductionMult` + tick.ts wiring)
+- Phase 7.10.6: OFFLINE-10 returning-player greetings (5 mood-tier-gated Broca Inner Voice strings)
+- Phase 7.10.7: Sprint close (this dashboard, buffer-1 sim re-run, doc sync)
+
+**Files created (8 new):**
+- `src/engine/offline.ts` (189 lines) — pure engine
+- `src/ui/modals/SleepScreen.tsx` (160 lines) — modal with greeting + stats + Lucid + dismiss
+- `tests/engine/offline.test.ts` (23 tests) — Phase 7.10.2 engine tests
+- `tests/engine/offline.phase3.test.ts` (18 tests) — Phase 7.10.3 extensions
+- `tests/engine/lucidDreamBuff.test.ts` (7 tests) — Phase 7.10.5 buff helper + tick wiring
+- `tests/store/applyOfflineReturn.test.ts` (8 tests) — Phase 7.10.4 store action integration
+- `tests/store/lucidDreamChoices.test.ts` (5 tests) — Phase 7.10.5 A/B store actions
+- `tests/ui/modals/SleepScreen.test.tsx` + `tests/ui/modals/sleepScreenGreeting.test.tsx` (17 tests) — Phase 7.10.5 + 7.10.6 component tests
+
+**Files modified (lockstep updates):**
+- `src/types/GameState.ts` — 2 new fields (`pendingOfflineSummary`, `lucidDreamActiveUntil`); 119 → 121
+- `src/types/index.ts` — `OfflineSummary` interface hoisted to types module
+- `src/store/gameStore.ts` — `applyOfflineReturn`, `dismissOfflineSummary`, `chooseLucidDreamOptionA`, `chooseLucidDreamOptionB` actions; createDefaultState fields
+- `src/store/migrate.ts` — backfills 2 new fields for legacy 110/119/120-field saves
+- `src/store/initSession.ts` — reverted to simple form (App.tsx owns orchestration)
+- `src/App.tsx` — applyOfflineReturn after load + Capacitor App + visibilitychange listeners
+- `src/config/constants.ts` — 12 new constants (offline efficiency stack, Lucid Dream group, shard drip rate, modal gate, time anomaly factor, GAMESTATE_FIELD_COUNT 120→121)
+- `src/config/prestige.ts` — `pendingOfflineSummary` + `lucidDreamActiveUntil` cleared on prestige (PRESTIGE_RESET 46 → 48)
+- `src/config/strings/en.ts` — new `sleep` namespace (16 UI strings: stats labels, banners, Lucid options, dismiss, 5 greetings)
+- `src/engine/tick.ts` — `lucidDreamProductionMult` wired into step 8 (post-Mood mult); `stepExpireModifiers` clears expired buff
+- `CLAUDE.md` — CODE-2 Exception A + B updated for 121-field invariant
+- `tests/consistency.test.ts` — 3 spots (count, PRESTIGE_RESET 48, union 121)
+- `tests/store/{gameStore,migrate,saveGame,saveScheduler}.test.ts` — 119 → 121 cascade
+- `tests/engine/{tick,tick-order}.test.ts` — added 2 new field literals
+- `scripts/buffer-1-prestige-sim.ts` — field-count assertions 119 → 121, PRESTIGE_RESET 46 → 48
+
+**12 new constants (CODE-1 compliant, all GDD §19 backed):**
+| Constant | Value | Purpose |
+|---|---|---|
+| `empaticaOfflineEfficiencyMult` | 2.5 | Empática archetype offline mult |
+| `geniusPassOfflineEfficiencyMult` | 1.25 | Genius Pass +25% offline (stub flag) |
+| `offlineTimeAnomalyOverCapMult` | 2 | OFFLINE-5 hard-cap factor |
+| `shardDripOfflineRateMult` | 0.5 | OFFLINE-9 Procedural drip rate |
+| `lucidDreamUnlockPrestige` | 10 | P10+ unlock |
+| `lucidDreamBaseProbability` | 0.33 | Default fire rate |
+| `lucidDreamEmpaticaProbability` | 1.0 | Empática always triggers |
+| `lucidDreamMinOfflineMinutes` | 30 | Lucid Dream + rewarded ad gate |
+| `lucidDreamOptionAProductionMult` | 1.10 | +10% buff |
+| `lucidDreamOptionADurationMs` | 3_600_000 | 1h buff duration |
+| `lucidDreamOptionBMemoryGain` | 2 | +2 Memories one-shot |
+| `offlineModalMinSeconds` | 60 | Welcome-back modal gate |
+
+**OFFLINE-10 greetings (UI-only, render-time computed):**
+- `greeting.numb`: "Your mind has been waiting." (verbatim from GDD §19 example)
+- `greeting.calm`: "Your mind was quiet. It missed you." (verbatim from GDD §19 example)
+- `greeting.engaged`: "Your mind has stirred awake." (DRAFT — flagged for tone review)
+- `greeting.elevated`: "Your mind is brighter today." (DRAFT — flagged for tone review)
+- `greeting.euphoric`: "Your mind welcomes you back, still alight." (verbatim from GDD §19 example)
+
+**Architectural decisions documented:**
+- **MUT-1 averaging = arithmetic mean** (Sprint vs time-weighted integration). Exploit-resistant, matches `mutations.ts` "averaged production" phrasing. One-function swap if Nico prefers time-weighted later.
+- **Lucid Dream Option B `+3 with Regulación Emocional` variant DROPPED** — `regulacion_emocional` was retired Sprint 7.5.3. Option B stays at +2 Memories.
+- **App.tsx owns offline-return orchestration** (not `useInitSession` hook). Avoids Phase 7 Finding B race. `initSession.ts` is back to its simple pre-7.10.4 form.
+- **OFFLINE-10 greetings are UI-only** (render-time computed from `summary.avgMoodTier`), NOT fragment-system entries. Spec frames them as "prepends the Sleep screen". Avoids unnecessary `narrativeFragmentsSeen` writes + Memory side effects.
+- **`pendingOfflineSummary` clears on prestige** (Nico-approved 2026-04-23). Stale summary from pre-prestige cycle would be UI noise.
+- **`lucidDreamActiveUntil` clears on prestige** (consistent with above + matches existing `eurekaExpiry` reset semantics).
+
+**Spec interpretation flagged:**
+- **GDD §19 OFFLINE-4 cap** — SPRINTS.md says 2.0; GDD says 2.5 (per OFFLINE-11 Sprint 7.5.3 raise); code uses 2.5. SPRINTS.md §Sprint 8a checklist line 698 "max ratio 2.0" is now stale — should be updated to 2.5 in next docs sync.
+
+**Test growth (Sprint 7.10 total):**
+- Sprint 7.9 close: 1509
+- Phase 7.10.2: +23 (1532)
+- Phase 7.10.3: +18 (1550)
+- Phase 7.10.4: +8 (1558)
+- Phase 7.10.5: +22 (1580) [originally claimed 1602 — that was a sum error; corrected here]
+- Phase 7.10.6: +7 (1587)
+- **Sprint 7.10 close: 1587 (+78 from Sprint 7.9 close)**
+
+**Validations:**
+- 4/4 gates PASS (ratio 0.82, 198 constants / 44 literals)
+- ESLint clean
+- Typecheck clean (tsc -b --noEmit)
+- Buffer-1 prestige sim: 0 errors / 0 warnings across 20 cycles (vanilla + Focus Persistente)
+- Balance Scout Sim: skipped this close (Sprint 8c canonical re-run will validate)
+- 1587 tests / 0 fail / 37 skipped / 104 files
+
+**Commits this sprint (6 phase commits + close):**
+- `22b3c14` Phase 7.10.2 — engine core
+- `11116dd` Phase 7.10.3 — MUT-1 + OFFLINE-9 + Lucid Dream RNG
+- `7775078` Phase 7.10.4 — store wiring + GameState 119→120
+- `174ce4e` Phase 7.10.5 — Sleep screen UI + Lucid Dream buff + GameState 120→121
+- `fc74b06` Phase 7.10.6 — OFFLINE-10 greetings
+- (this commit) Phase 7.10.7 — Sprint 7.10 close + buffer-1 sim sync + docs
+
+**Reviewer fabrications: 0** across 6 phase commits (consistent with Sprint 7.9 baseline).
+
+**Pending Nico actions:**
+- Push 6+ Sprint 7.10 commits to origin/main when convenient
+- Tone-pass review for 3 draft greeting strings (engaged/elevated/elevated currently "Your mind has stirred awake" / "Your mind is brighter today")
+- Tone-pass review for 11 Sleep screen UI strings (`sleep.*` namespace)
+- Update SPRINTS.md §Sprint 8a line 698 to "max ratio 2.5" (matches OFFLINE-11)
+- Update GDD §32 line 2320+ for 121-field count + add `pendingOfflineSummary` + `lucidDreamActiveUntil` to enumeration
+- Approve next-sprint scope: 8b / 8c / GDD-sync / v1.1
+
+### Sprint 7.10 Phase 7.10.5 (2026-04-23) — Sleep screen UI + Lucid Dream buff
 
 ### Sprint 7.10 Phase 7.10.5 (2026-04-23) — Sleep screen UI + Lucid Dream buff
 
