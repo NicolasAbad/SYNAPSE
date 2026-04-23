@@ -2,6 +2,7 @@ import { memo } from 'react';
 import { ThoughtsCounter } from './ThoughtsCounter';
 import { RateCounter } from './RateCounter';
 import { MemoriesCounter } from './MemoriesCounter';
+import { MoodIndicator } from './MoodIndicator';
 import { ConnectionChip } from './ConnectionChip';
 import { DischargeCharges } from './DischargeCharges';
 import { FocusBar } from './FocusBar';
@@ -47,6 +48,7 @@ export const HUD = memo(function HUD() {
     >
       <ThoughtsCounter />
       <MemoriesCounter />
+      <MoodIndicator />
       <RateCounter />
       <ConnectionChip />
       <DischargeCharges />

@@ -14,10 +14,8 @@
 //
 // Internal IDs (snake_case) stay in the project's prefix style (`shard_*`).
 //
-// Sprint 7.5.2 ships 6 of 8 upgrades. The 2 deferred ones land with their
-// consumers per CLAUDE.md "no half-shipped features":
-//   - shard_emo_deep   (Mood-event scaling) ships Sprint 7.5.3 with Mood engine
-//   - shard_proc_mastery (Mastery XP ×1.25) ships Sprint 7.7  with Mastery system
+// Sprint 7.5.2 shipped 6 of 8 upgrades. Sprint 7.5.3 lands shard_emo_deep
+// alongside the Mood engine consumer. shard_proc_mastery still deferred to 7.7.
 
 import type { UpgradeDef } from '../types';
 
@@ -27,9 +25,10 @@ import type { UpgradeDef } from '../types';
  * Branch counts: 2 Emotional + 2 Procedural + 2 Episodic.
  */
 export const SHARD_UPGRADES: readonly UpgradeDef[] = [
-  // ── Emotional (2 of 3 — shard_emo_deep deferred to 7.5.3) ──
+  // ── Emotional (3 of 3 — shard_emo_deep landed Sprint 7.5.3 with Mood engine) ──
   { id: 'shard_emo_pulse',     category: 'mem', cost: 20,  costCurrency: 'emotional_shards',  unlockPrestige: 1, effect: { kind: 'cascade_spark_bonus',     sparks: 1 } },
   { id: 'shard_emo_resonance', category: 'mem', cost: 50,  costCurrency: 'emotional_shards',  unlockPrestige: 3, effect: { kind: 'fragment_memory_bonus',   memory: 2 } },
+  { id: 'shard_emo_deep',      category: 'mem', cost: 120, costCurrency: 'emotional_shards',  unlockPrestige: 7, effect: { kind: 'mood_event_scaling',      scale: 0.5 } },
   // ── Procedural (2 of 3 — shard_proc_mastery deferred to 7.7) ──
   { id: 'shard_proc_flow',     category: 'mem', cost: 20,  costCurrency: 'procedural_shards', unlockPrestige: 1, effect: { kind: 'tap_contribution_pct_add', pct: 0.05 } },
   { id: 'shard_proc_pattern',  category: 'mem', cost: 50,  costCurrency: 'procedural_shards', unlockPrestige: 3, effect: { kind: 'charge_interval_mult',     mult: 0.90 } },

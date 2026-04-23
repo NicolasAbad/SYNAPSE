@@ -48,6 +48,8 @@ const PRESERVE_UPDATED_BY_HANDLEPRESTIGE = new Set<keyof GameState>([
   'sparks',                      // 6.6: +5 per newly-discovered Resonant Pattern.
   'resonantPatternsDiscovered', // 6.6: RP check flips false→true on discovery.
   'memoryShards',               // 7.5.2: Episodic burst at prestige (+N base + +5/RP).
+  'mood',                       // 7.5.3: prestige (+10) + per-RP (+15) deltas applied.
+  'moodHistory',                // 7.5.3: appends sample(s) with each Mood event.
 ]);
 
 describe('handlePrestige — PRESTIGE_RESET field-level behavior (§33)', () => {
@@ -225,12 +227,16 @@ describe('handlePrestige — Sprint 7.5.1 region/mastery/auto-buy fields', () =>
     expect(next.precommitmentStreak).toBe(3);
   });
 
-  test('mood + moodHistory PRESERVE across prestige (§16.3 MOOD-1)', () => {
-    const history = [{ timestamp: 100, mood: 60 }, { timestamp: 200, mood: 65 }];
-    const before: GameState = { ...createDefaultState(), mood: 73, moodHistory: history };
+  test('mood updates with prestige delta + per-RP delta (Sprint 7.5.3 §16.3 MOOD-2)', () => {
+    // Prestige +10 mood. Default state's cycleDischargesUsed=0 → RP-2 fires → +15 mood (1 RP).
+    // 73 + 10 + 15 = 98 (capped at 100).
+    const before: GameState = { ...createDefaultState(), mood: 73, moodHistory: [] };
     const { state: next } = handlePrestige(before, 1_000_000);
-    expect(next.mood).toBe(73);
-    expect(next.moodHistory).toEqual(history);
+    expect(next.mood).toBe(98);
+    // moodHistory gets 2 samples (prestige + 1 RP).
+    expect(next.moodHistory.length).toBe(2);
+    expect(next.moodHistory[0].mood).toBe(83);  // prestige +10
+    expect(next.moodHistory[1].mood).toBe(98);  // +15 RP
   });
 
   test('brocaNamedMoments PRESERVE across prestige (§16.5 lifetime identity)', () => {

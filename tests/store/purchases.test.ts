@@ -146,23 +146,24 @@ describe('canBuyUpgrade / tryBuyUpgrade', () => {
     expect(check.cost).toBeCloseTo(3_000 * 0.8, 6); // 2400
   });
   test('COST-1 does NOT apply to memoria-cost region upgrades', () => {
-    // Sprint 7.5.2: consolidacion_memoria retired; using regulacion_emocional (5 Mem, P0+).
+    // Sprint 7.5.3: regulacion_emocional retired; using procesamiento_visual (8 Mem, P0+).
+    // procesamiento_visual itself retires in Sprint 7.5.5 — refactor target then.
     const state = withUpgrades({ ...createDefaultState(), memories: 100, prestigeCount: 2 }, ['funciones_ejecutivas']);
-    expect(canBuyUpgrade(state, 'regulacion_emocional').cost).toBe(5); // unchanged
+    expect(canBuyUpgrade(state, 'procesamiento_visual').cost).toBe(8); // unchanged
   });
 
   test('Memoria-cost upgrade deducts from memories, not thoughts', () => {
-    const state = { ...createDefaultState(), memories: 10 };
-    const result = tryBuyUpgrade(state, 'regulacion_emocional', 0);
+    const state = { ...createDefaultState(), memories: 20 };
+    const result = tryBuyUpgrade(state, 'procesamiento_visual', 0);
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    expect(result.updates.memories).toBe(5);
+    expect(result.updates.memories).toBe(12); // 20 - 8
     expect(result.updates.thoughts).toBeUndefined();
   });
 
   test('insufficient memoria rejects region upgrade', () => {
     const state = { ...createDefaultState(), memories: 1 };
-    expect(canBuyUpgrade(state, 'regulacion_emocional').reason).toBe('insufficient_funds');
+    expect(canBuyUpgrade(state, 'procesamiento_visual').reason).toBe('insufficient_funds');
   });
 });
 
@@ -200,9 +201,9 @@ describe('Immediate state side-effects on purchase', () => {
     // 3 types × 2 (Sincronía) = 1.15 × 2 = 2.30
     expect(result.updates.connectionMult).toBeCloseTo(2.30, 6);
   });
-  test('Regulación Emocional: offline efficiency ×2', () => {
-    const state = { ...createDefaultState(), memories: 10 };
-    const result = tryBuyUpgrade(state, 'regulacion_emocional', 0);
+  test('Ondas Theta: offline efficiency ×2 (Sprint 7.5.3 — replaces retired regulacion_emocional)', () => {
+    const state = { ...createDefaultState(), thoughts: 1_000_000, prestigeCount: 3 };
+    const result = tryBuyUpgrade(state, 'ondas_theta', 0);
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.updates.currentOfflineEfficiency).toBeCloseTo(1.0, 6); // 0.5 × 2

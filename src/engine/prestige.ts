@@ -10,6 +10,7 @@ import { pathwayMemoriesPerPrestigeMult } from './pathways';
 import { archetypeMemoryMult } from './archetypes';
 import { checkAllResonantPatterns } from './resonantPatterns';
 import { episodicShardsAtPrestige } from './shards';
+import { applyMoodEvent } from './mood';
 import type { GameState } from '../types/GameState';
 import type { AwakeningEntry, PatternNode } from '../types';
 
@@ -93,23 +94,17 @@ function grantPatterns(state: Pick<GameState, 'totalPatterns'>, timestamp: numbe
 export function handlePrestige(state: GameState, timestamp: number): { state: GameState; outcome: PrestigeOutcome } {
   // Step 1 — capture pre-reset PPS for Momentum Bonus.
   const lastCycleEndProduction = state.effectiveProductionPerSecond;
-  // Step 2 — cycle duration.
   const cycleDurationMs = timestamp - state.cycleStartTimestamp;
   const cycleMinutes = cycleDurationMs / 60_000; // CONST-OK (ms→min)
-  // Step 3 — personal best at CURRENT prestigeCount, BEFORE increment (BUG-04).
-  const { next: personalBests, wasPersonalBest } = updatePersonalBests(
-    state.personalBests,
-    state.prestigeCount,
-    cycleMinutes,
-  );
-  // Steps 4-6: patterns (4b) / resonance (8b) / RP (6.6, grants +5 Sparks each).
+  // Step 3 — personal best at PRE-increment prestigeCount (BUG-04).
+  const { next: personalBests, wasPersonalBest } = updatePersonalBests(state.personalBests, state.prestigeCount, cycleMinutes);
+  // Steps 4-7: patterns (4b) / resonance (8b stub) / RP (6.6) / Memories.
   const newPatterns = grantPatterns(state, timestamp);
   const patternsGained = newPatterns.length;
   const resonanceGain = 0;
   const rp = checkAllResonantPatterns(state);
-  // Step 7 — Memories.
   const memoriesGained = computeMemoriesGained(state);
-  // Step 8 — capture Focus Persistente retention BEFORE applying RESET defaults.
+  // Step 8 — Focus Persistente retention captured BEFORE applying RESET defaults.
   const focusBarRetained = focusBarAfterReset(state);
   // POLAR-1 + Sprint 5 Mutation #14 Déjà Vu snapshot. Pre-RESET so array isn't empty.
   const lastCycleConfig = { polarity: state.currentPolarity ?? '', mutation: state.currentMutation?.id ?? '', pathway: state.currentPathway ?? '', upgrades: state.upgrades.filter((u) => u.purchased).map((u) => u.id) };
@@ -131,14 +126,12 @@ export function handlePrestige(state: GameState, timestamp: number): { state: Ga
     wasPersonalBest,
   };
 
-  // Build post-prestige state: preserve everything, then override RESET fields,
-  // then override timestamp/upgrade-dependent fields, then UPDATE + lifetime,
-  // then reapply state-mutating pattern decisions (Node 6 B dischargeMaxCharges).
-  const permanentDecisionUpdates = applyPermanentPatternDecisionsToState({
-    patternDecisions: state.patternDecisions,
-    // PRESTIGE_RESET resets dischargeMaxCharges to 2 — we re-bump from there.
-    dischargeMaxCharges: PRESTIGE_RESET.dischargeMaxCharges ?? 0,
-  });
+  const permanentDecisionUpdates = applyPermanentPatternDecisionsToState({ patternDecisions: state.patternDecisions, dischargeMaxCharges: PRESTIGE_RESET.dischargeMaxCharges ?? 0 });
+  // Sprint 7.5.3 §16.3 MOOD-2: prestige (+10) + per newly-discovered RP (+15 each).
+  let moodAccum = applyMoodEvent(state, 'prestige', timestamp);
+  for (let i = 0; i < rp.newlyDiscovered.length; i++) {
+    moodAccum = applyMoodEvent({ ...state, mood: moodAccum.mood, moodHistory: moodAccum.moodHistory }, 'resonant_pattern', timestamp);
+  }
   const next: GameState = {
     ...state,
     ...PRESTIGE_RESET,
@@ -158,6 +151,9 @@ export function handlePrestige(state: GameState, timestamp: number): { state: Ga
       procedural: state.memoryShards.procedural,
       episodic: state.memoryShards.episodic + episodicShardsAtPrestige(rp.newlyDiscovered.length),
     },
+    // Sprint 7.5.3 §16.3 MOOD-2: prestige + per-RP mood deltas (accumulated).
+    mood: moodAccum.mood,
+    moodHistory: moodAccum.moodHistory,
     awakeningLog: [...state.awakeningLog, awakeningEntry],
     personalBests,
     personalBestsBeaten: state.personalBestsBeaten + (wasPersonalBest ? 1 : 0),

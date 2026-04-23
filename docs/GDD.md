@@ -1109,7 +1109,7 @@ Optional mid-cycle challenges. Unlock at P15 (Era 2 mid-game). Appear when `cycl
 baseOfflineCapHours:     4           // initial cap, no upgrades
 maxOfflineHours:         16          // max achievable (REM → 8, Consciencia Distribuida → 12, Sueño Profundo → 16)
 baseOfflineEfficiency:   0.50        // 50% of base production
-maxOfflineEfficiencyRatio: 2.0       // final ratio cap (OFFLINE-4)
+maxOfflineEfficiencyRatio: 2.5       // final ratio cap (OFFLINE-11, raised from 2.0 in Sprint 7.5.3 R6)
 ```
 
 **Formula:**
@@ -2219,7 +2219,7 @@ export const SYNAPSE_CONSTANTS = {
   baseOfflineEfficiency: 0.50,
   baseOfflineCapHours: 4,
   maxOfflineHours: 16,                  // max achievable (REM→8, Distribuida→12, sueno_profundo→16)
-  maxOfflineEfficiencyRatio: 2.0,
+  maxOfflineEfficiencyRatio: 2.5,
   offlineMinMinutes: 1,                  // skip calc if <1 min
 
   // Patterns

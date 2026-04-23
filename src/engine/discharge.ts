@@ -17,6 +17,7 @@ import { cascadeThresholdOverride, dischargeDamageDecisionMult } from './pattern
 import { mutationDischargeMult } from './mutations';
 import { era3DischargeMultOverride } from './era3';
 import { cascadeSparkBonus } from './shards';
+import { applyMoodEvent } from './mood';
 import type { GameState } from '../types/GameState';
 import type { Polarity } from '../types';
 
@@ -162,9 +163,11 @@ export function performDischarge(
     // Sprint 7.5.2 §16.1 shard_emo_pulse: +1 Spark per Cascade.
     const sparkBonus = cascadeSparkBonus(state);
     if (sparkBonus > 0) updates.sparks = state.sparks + sparkBonus;
+    // Sprint 7.5.3 §16.3 MOOD-2: Cascade event delta (+5 base; lim_empathic_spark adds +5 more).
+    const moodUpdate = applyMoodEvent(state, 'cascade', nowTimestamp);
+    updates.mood = moodUpdate.mood;
+    updates.moodHistory = moodUpdate.moodHistory;
   }
-  // lastPurchaseTimestamp NOT touched — Discharge isn't a purchase; Mental State
-  // Dormancy triggers on idle taps+purchases, Discharge doesn't count (per §17).
-  void nowTimestamp; // reserved for future analytics / per-Discharge timing
+  // lastPurchaseTimestamp NOT touched — Discharge isn't a purchase per §17.
   return { updates, outcome: { fired: true, isCascade, burst } };
 }

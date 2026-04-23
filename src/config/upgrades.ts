@@ -21,12 +21,13 @@
 import type { UpgradeDef } from '../types';
 
 /**
- * The 34 upgrades per GDD §24 (v1.0, excluding the 4 run-exclusive in §21 and
- * the Resonance upgrades in §15 — those ship in Sprints 8b / 8c). Sprint 7.5.2
- * retired `consolidacion_memoria` (Hipocampo Shard refactor, §16.8); the count
- * dropped 35 → 34.
+ * The 40 upgrades per GDD §24 (v1.0, excluding the 4 run-exclusive in §21, the
+ * Resonance upgrades in §15, and the 6 Hipocampo shard upgrades in shards.ts).
+ * Sprint 7.5.2 retired `consolidacion_memoria`; Sprint 7.5.3 retired
+ * `regulacion_emocional` AND added 6 Límbico mood upgrades + ondas_theta.
  *
- * Category counts: tap=3, foc=1, syn=5, neu=8, reg=4, con=4, met=3, new=6.
+ * Category counts: tap=3, foc=1, syn=5, neu=8, reg=9 (3 surviving regions +
+ * 6 Límbico mood markers), con=5 (incl. ondas_theta), met=3, new=6. Total=40.
  */
 export const UPGRADES: readonly UpgradeDef[] = [
   // ── Tap (⚡, 3) ──
@@ -54,20 +55,35 @@ export const UPGRADES: readonly UpgradeDef[] = [
   { id: 'espejo_resonantes', category: 'neu', cost: 150_000, costCurrency: 'thoughts', unlockPrestige: 2, effect: { kind: 'neuron_type_mult', neuronType: 'espejo', mult: 4 } },
   { id: 'neurogenesis', category: 'neu', cost: 5_000_000, costCurrency: 'thoughts', unlockPrestige: 5, effect: { kind: 'all_neurons_mult', mult: 1.10 } },
 
-  // ── Regions (◈, 4) — costs in Memorias per GDD §16. Sprint 7.5.2 retired
+  // ── Regions (◈, 3) — costs in Memorias per GDD §16. Sprint 7.5.2 retired
   // `consolidacion_memoria` (effect absorbed into Hipocampo shard_emo_resonance,
-  // GDD §16.8). regulacion_emocional retires Sprint 7.5.3 with the Mood engine;
+  // GDD §16.8). Sprint 7.5.3 retired `regulacion_emocional` (offline path moved
+  // to new `ondas_theta` upgrade in `con` category + Mood-applies-offline §19);
   // procesamiento_visual retires Sprint 7.5.5 with the Visual Foresight engine. ──
-  { id: 'regulacion_emocional', category: 'reg', cost: 5, costCurrency: 'memorias', unlockPrestige: 0, effect: { kind: 'offline_efficiency_mult', mult: 2 } },
   { id: 'procesamiento_visual', category: 'reg', cost: 8, costCurrency: 'memorias', unlockPrestige: 0, effect: { kind: 'best_upgrade_indicator' } },
   { id: 'funciones_ejecutivas', category: 'reg', cost: 3, costCurrency: 'memorias', unlockPrestige: 2, effect: { kind: 'upgrade_cost_reduction', pct: 0.20 } },
   { id: 'amplitud_banda', category: 'reg', cost: 15, costCurrency: 'memorias', unlockPrestige: 2, effect: { kind: 'region_upgrades_boost', mult: 1.5 } },
 
-  // ── Consciousness & Offline (✦, 4) ──
+  // ── Límbico (lim, 6) — Sprint 7.5.3 §16.3 Mood upgrades, Memorias-priced.
+  // Effects consumed by src/engine/mood.ts (lim_steady_heart for offline mood
+  // decay halving, others wired via ownsLimUpgrade helper). All have inline
+  // tuning literals justified by GDD §16.3 table cell values (CONST-OK at
+  // engine-side helpers). Effect kind 'limbico_passive' is a marker — engine
+  // consumers branch on owned-id, not effect.kind shape. ──
+  { id: 'lim_steady_heart',     category: 'reg', cost: 3,  costCurrency: 'memorias', unlockPrestige: 5,  effect: { kind: 'mood_passive_marker' } },
+  { id: 'lim_empathic_spark',   category: 'reg', cost: 5,  costCurrency: 'memorias', unlockPrestige: 5,  effect: { kind: 'mood_passive_marker' } },
+  { id: 'lim_resilience',       category: 'reg', cost: 8,  costCurrency: 'memorias', unlockPrestige: 8,  effect: { kind: 'mood_passive_marker' } },
+  { id: 'lim_elevation',        category: 'reg', cost: 12, costCurrency: 'memorias', unlockPrestige: 10, effect: { kind: 'mood_passive_marker' } },
+  { id: 'lim_euphoric_echo',    category: 'reg', cost: 20, costCurrency: 'memorias', unlockPrestige: 13, effect: { kind: 'mood_passive_marker' } },
+  { id: 'lim_emotional_wisdom', category: 'reg', cost: 30, costCurrency: 'memorias', unlockPrestige: 15, effect: { kind: 'mood_passive_marker' } },
+
+  // ── Consciousness & Offline (✦, 5) — Sprint 7.5.3 added `ondas_theta` (replaces
+  // retired `regulacion_emocional`'s offline path; Thoughts-priced per GDD §24 Wave 2). ──
   { id: 'sueno_rem', category: 'con', cost: 50_000, costCurrency: 'thoughts', unlockPrestige: 0, effect: { kind: 'offline_cap_set', hours: 8 } },
   { id: 'umbral_consciencia', category: 'con', cost: 100_000, costCurrency: 'thoughts', unlockPrestige: 0, effect: { kind: 'consciousness_fill_mult', mult: 1.3 } },
   { id: 'ritmo_circadiano', category: 'con', cost: 200_000, costCurrency: 'thoughts', unlockPrestige: 2, effect: { kind: 'offline_efficiency_and_autocharge', mult: 1.5 } },
   { id: 'hiperconciencia', category: 'con', cost: 500_000, costCurrency: 'thoughts', unlockPrestige: 4, effect: { kind: 'consciousness_fill_mult', mult: 2 } },
+  { id: 'ondas_theta', category: 'con', cost: 300_000, costCurrency: 'thoughts', unlockPrestige: 3, effect: { kind: 'offline_efficiency_mult', mult: 2 } },
 
   // ── Meta (∞, 3) ──
   { id: 'retroalimentacion_positiva', category: 'met', cost: 1_000_000, costCurrency: 'thoughts', unlockPrestige: 6, effect: { kind: 'all_production_mult', mult: 2 } },

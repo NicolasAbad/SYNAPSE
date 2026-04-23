@@ -6,10 +6,83 @@
 
 ## Current status
 
-**Phase:** Sprint 7.5 Phase 7.5.2 CLOSED (Hipocampo Memory Shards: 6 of 8 upgrades + drip engine + retired-upgrade migration + Hipocampo UI scaffold). **1303 tests pass** (+44 from Phase 7.5.1 close 1259: +25 shards engine + +11 shard purchase + +4 migrate retire-strip + 4 prestige tweaks); 4/4 gates green; typecheck + lint clean.
-**Last updated:** 2026-04-22 after Sprint 7.5 Phase 7.5.2 close.
-**Active sprint:** Sprint 7.5 Region Deepening (2 of 9 phases done). Next: Phase 7.5.3 Sistema Límbico (Mood engine + offline rewire).
-**Next action:** Sprint 7.5 Phase 7.5.3 — Sistema Límbico Moodometer. Pre-code research: confirm Mood event-delta dispatcher pattern; ship `shard_emo_deep` upgrade (deferred from 7.5.2 — needs Mood engine consumer) + 6 Límbico Memorias-priced upgrades (`lim_steady_heart` / `lim_empathic_spark` / `lim_resilience` / `lim_elevation` / `lim_euphoric_echo` / `lim_emotional_wisdom` per GDD §16.3); retire `regulacion_emocional` with new `ondas_theta` upgrade (offline path); wire Mood-applies-to-offline (R6) + bump `maxOfflineEfficiencyRatio` 2.0 → 2.5; HUD Mood icon. STOP-for-approval before code.
+**Phase:** Sprint 7.5 Phase 7.5.3 CLOSED (Sistema Límbico Moodometer: tier resolver + 5-tier production/focus/charges/insight mults + event-delta dispatcher wired into Cascade/Prestige/Fragment/RP, 6 Límbico upgrades + ondas_theta + shard_emo_deep, retired regulacion_emocional, maxOfflineEfficiencyRatio 2.0 → 2.5, HUD Mood glyph + Límbico panel section). **1338 tests pass** (+35 from Phase 7.5.2 close 1303: +35 mood engine tests; consistency/prestige/purchases tests refactored for new upgrade catalog); 4/4 gates green; typecheck + lint clean.
+**Last updated:** 2026-04-22 after Sprint 7.5 Phase 7.5.3 close.
+**Active sprint:** Sprint 7.5 Region Deepening (3 of 9 phases done). Next: Phase 7.5.4 Prefrontal Pre-commits.
+**Next action:** Sprint 7.5 Phase 7.5.4 — Prefrontal Pre-commit engine (8 goal templates, CycleSetupScreen 4th slot at P5+, success/fail resolution at prestige with 2× Memoria reward / -15% penalty, 5-streak permanent +1 Memoria/cycle bonus, PRECOMMIT-1..5 incl. lenient `<=` time-comparison per R4).
+
+### Sprint 7.5 Phase 7.5.3 closing dashboard (2026-04-22 — Sistema Límbico Moodometer)
+
+- **Phase:** 7.5.3/9 — single atomic commit. Mood sub-system live; event deltas wired in Cascade/Prestige/Fragment/RP actions. Pre-commit fail delta wires in Phase 7.5.4. Dormancy-entry delta wires when MENTAL-4 exit gets a real consumer (Sprint 7.5.5+).
+- **Tests:** **1338 pass** (+35 net: +35 mood.test.ts; 7 existing tests refactored for new upgrade catalog + Mood-default-state). 0 fail / 37 skipped / 82 files. 4/4 gates PASS, ratio 0.80.
+
+- **Scope delivered:**
+  - ✅ Mood engine ([src/engine/mood.ts](src/engine/mood.ts)): 5-tier resolver + production/focus/charges/insight mult helpers + event-delta dispatcher + `averageMoodOverWindow` (offline-aware helper for Sprint 8a)
+  - ✅ Mood production mult wired into [src/engine/tick.ts](src/engine/tick.ts) — stacks multiplicatively post-softCap with Mental States and Insight per MOOD-1
+  - ✅ Mood max-charges bonus wired into discharge accumulation step (Elevated/Euphoric +1 charge, capped against `dischargeMaxChargesHardCap` per R1)
+  - ✅ Mood event deltas wired in 4 actions: Cascade (+5 base, +5 lim_empathic_spark), Prestige (+10), Fragment first-read (+3), Resonant Pattern discovery (+15 each, accumulated for multi-RP prestiges)
+  - ✅ MOOD-4 additive scaling (+0.5 per source) — `shard_emo_deep` and `red_emotiva` bonuses stack additively (1.0/1.5/2.0 with 0/1/2 sources)
+  - ✅ Floors: lim_resilience 25 / Genius Pass 40 / 0 — `Math.max` keeps the most-protective floor (e.g. Pass+resilience subscriber stays at 40)
+  - ✅ Cap at 100 (`moodMaxValue`); circular `moodHistory` buffer cap 48 samples
+  - ✅ 6 Límbico Memorias upgrades shipped with consumers: lim_steady_heart (offline mood decay halver — consumer in Sprint 8a), lim_empathic_spark (Cascade Mood +5 → +10 total), lim_resilience (mood floor 25), lim_elevation (Engaged→Elevated boundary 60→55), lim_euphoric_echo (Euphoric prod mult 1.30→1.40), lim_emotional_wisdom (mood-tier-crossed bonus — consumer deferred to its own Run-tracker phase)
+  - ✅ ondas_theta upgrade shipped (300K Thoughts, P3+, offline_efficiency_mult ×2 — replaces retired regulacion_emocional offline path)
+  - ✅ shard_emo_deep landed (deferred from Phase 7.5.2; consumer = Mood event-delta scaling per MOOD-4)
+  - ✅ regulacion_emocional retired (`migrate.ts` strips silently); upgrade count 34 → 40 (−1 retired, +6 Límbico, +1 ondas_theta = +6 net to UPGRADES; shard_emo_deep is in shards.ts not UPGRADES)
+  - ✅ Region card extended: Hipocampo (7.5.2) + Límbico (this phase) both render dedicated mini-sections via `LimbicoMoodSection.tsx` (current mood value, tier label + colored bar, tier description copy)
+  - ✅ HUD Mood indicator: 5-tier glyph (◯◔◑◕●) + numeric value, top-right column mirroring MemoriesCounter
+  - ✅ `maxOfflineEfficiencyRatio` 2.0 → 2.5 (R6 lock); GDD §31 + §32 prose synced
+  - ✅ `moodInitialValue` 50 → 30 (Calm-tier default, see Senior-dev call below)
+
+- **Senior-dev call: `moodInitialValue` 50 → 30:**
+  GDD §16.3 has internal contradiction. Line 831 prose says "starts at 50 (Calm)" but the tier table at lines 838-843 puts 50 firmly in Engaged (40-59 range). I aligned code to the more-concrete table (resolves Engaged at 50 → ×1.05 production buff would auto-apply with no player effort, against design intent of "Mood is dynamic and earned"). Default mood = 30 keeps the player at neutral Calm baseline, with first prestige (+10 → 40 Engaged) the first earned tier climb. **GDD §16.3 line 831 prose deviation flagged for next GDD sweep** — table is canonical, prose is doc-bug.
+
+- **Tests delta breakdown (+35 net):**
+  - +35 [tests/engine/mood.test.ts](tests/engine/mood.test.ts) (tier resolver / lim_elevation boundary shift / production+focus+charges+insight mults / 6 event-delta deltas / floors+cap / shard_emo_deep MOOD-4 scaling / lim_empathic_spark cascade-only bonus / moodHistory buffer cap / averageMoodOverWindow offline helper)
+  - 7 existing tests updated: consistency upgrade-count (34→40) + region-count (4→9) + tier exact costs (regulacion_emocional removed, +Límbico×6 + ondas_theta added); prestige PRESERVE skip set + Sprint 7.5.1 mood-PRESERVE test rewritten as "mood updates with prestige delta + per-RP delta"; purchases.test memoria-cost references replaced (regulacion_emocional → procesamiento_visual + ondas_theta); maxOfflineEfficiencyRatio test (2.0 → 2.5)
+
+- **Constants added (CODE-1, all from GDD §16.3):**
+  - `moodDeltaResonantPattern: 15`, `moodDeltaAntiSpam: -10` (rounding out the MOOD-2 delta set)
+  - `moodEventScalingPerSource: 0.5` (MOOD-4 additive scaling per shard_emo_deep / red_emotiva source)
+  - `limElevationBoundaryShift: 55`, `limResilienceMoodFloor: 25`, `limEuphoricEchoProductionMult: 1.40`, `limEmpathicSparkCascadeBonus: 5` (4 Límbico tuning literals replaced by named constants)
+  - `moodHistoryBufferCap: 48` (GDD §32 spec — was a `HISTORY_CAP` local in mood.ts)
+
+- **Files created (4):**
+  - [src/engine/mood.ts](src/engine/mood.ts) (~175 lines: tier resolver + event dispatcher + 5 mult helpers + averageMoodOverWindow)
+  - [src/ui/hud/MoodIndicator.tsx](src/ui/hud/MoodIndicator.tsx) (HUD glyph)
+  - [src/ui/panels/LimbicoMoodSection.tsx](src/ui/panels/LimbicoMoodSection.tsx) (Límbico region-card mini-panel: value + tier + bar)
+  - [tests/engine/mood.test.ts](tests/engine/mood.test.ts)
+
+- **Files modified (~16):**
+  - [src/types/index.ts](src/types/index.ts): UpgradeEffect +2 kinds (mood_passive_marker for Límbico, mood_event_scaling for shard_emo_deep)
+  - [src/config/constants.ts](src/config/constants.ts): +9 new mood/Límbico constants; `maxOfflineEfficiencyRatio` 2.0 → 2.5; `moodInitialValue` 50 → 30
+  - [src/config/upgrades.ts](src/config/upgrades.ts): regulacion_emocional REMOVED; +6 Límbico mood upgrades; +ondas_theta in `con` tier; counts updated
+  - [src/config/regions.ts](src/config/regions.ts): Límbico upgradeIds → 6 new mood upgrade IDs
+  - [src/config/shards.ts](src/config/shards.ts): +shard_emo_deep (3 of 3 Emotional now shipped)
+  - [src/config/strings/en.ts](src/config/strings/en.ts): +14 new keys (6 Límbico names + 6 descs + ondas_theta name+desc + mood_tiers + mood_tier_descriptions + limbico_panel + shard_emo_deep)
+  - [src/store/migrate.ts](src/store/migrate.ts): RETIRED_UPGRADE_IDS += 'regulacion_emocional'
+  - [src/engine/tick.ts](src/engine/tick.ts): wires `moodProductionMult` (post-softCap stack) + `moodMaxChargesBonus` (against R1 hard cap); trimmed to 198 lines
+  - [src/engine/discharge.ts](src/engine/discharge.ts): wires Cascade Mood delta (+5 base + lim_empathic_spark)
+  - [src/engine/narrative.ts](src/engine/narrative.ts): wires fragment_read Mood delta (+3)
+  - [src/engine/prestige.ts](src/engine/prestige.ts): wires prestige (+10) + per-RP (+15 each, accumulated) Mood deltas; trimmed to 195 lines
+  - [src/ui/hud/HUD.tsx](src/ui/hud/HUD.tsx): mounts MoodIndicator
+  - [src/ui/panels/RegionsPanel.tsx](src/ui/panels/RegionsPanel.tsx): mounts LimbicoMoodSection inside Límbico card
+  - [docs/GDD.md](docs/GDD.md): §31 + §32 sync (`maxOfflineEfficiencyRatio: 2.5`)
+  - [tests/consistency.test.ts](tests/consistency.test.ts): upgrade-count + category counts + Memorias-vs-Thoughts tests refactored
+  - [tests/engine/prestige.test.ts](tests/engine/prestige.test.ts): mood added to PRESERVE_UPDATED_BY_HANDLEPRESTIGE; Sprint 7.5.1 mood test rewritten
+  - [tests/engine/tick.test.ts](tests/engine/tick.test.ts), [tests/engine/tick-order.test.ts](tests/engine/tick-order.test.ts): makeState fixtures updated to mood: 30 (Calm baseline)
+  - [tests/store/purchases.test.ts](tests/store/purchases.test.ts): regulacion_emocional refs swapped for procesamiento_visual / ondas_theta
+
+- **Audit findings (post-implementation):**
+  - **GDD §16.3 prose deviation flagged** (line 831 vs tier table 838-843 contradiction; code aligns to table)
+  - **Test rigor:** 35 mood tests cover floor/cap edge cases + scaling stacks + per-tier mult/focus/charges/insight + the 6 effect helpers. All assertions read from `SYNAPSE_CONSTANTS` (test-by-construction avoidance per `feedback_test_rigor` memory).
+  - **Pre-commit-fail Mood delta NOT wired this phase** — depends on Pre-commit engine landing in Phase 7.5.4. Documented as Phase 7.5.4 first-action.
+  - **Dormancy-entry Mood delta NOT wired this phase** — Mental State `Dormancy` triggers exist in mentalStates.ts but no `onMentalStateEntry` hook fires today. Wires when Sprint 7.5.5+ adds Mental-State entry/exit observer pattern.
+  - **lim_steady_heart consumer deferred to Sprint 8a** when offline.ts ships.
+  - **lim_emotional_wisdom consumer deferred** — needs cycle-cumulative tier-crossing tracker (small new field). Easiest to ship in Phase 7.5.5 alongside Visual tier-tracker plumbing.
+  - **CODE-2 cap drift survived but tight:** tick.ts at 198 (cap 200), prestige.ts at 195. Two consecutive trims at edits to prestige.ts to absorb the +mood-loop additions. Working but no margin left for the next phase.
+
+- **Sprint 7.5 Phase 7.5.4 — first action (next session/turn):**
+  Prefrontal Pre-commits. Pre-code research: confirm 8 goal-template IDs/wagers/bonuses per GDD §16.2 table; design `applyPrecommitResolution(state, timestamp)` engine helper called from `handlePrestige` BEFORE Memories grant (success doubles `memoriesGained`, fail applies -15% penalty per softened R-decision); CycleSetupScreen 4th slot UI gated at `precommitUnlockPrestige: 5`; PRECOMMIT-3 streak reset on fail + Genius Pass waiver semantics; PRECOMMIT-5 lenient `<=` time comparison; wire pre-commit-fail Mood delta (-15) into the resolution path.
 
 ### Sprint 7.5 Phase 7.5.2 closing dashboard (2026-04-22 — Hipocampo Memory Shards)
 

@@ -41,7 +41,11 @@ export const REGIONS: readonly RegionDef[] = [
     id: 'limbico',
     nameKey: 'regions.limbico.name',
     unlockPrestige: 0,
-    upgradeIds: ['regulacion_emocional'] as const,
+    // Sprint 7.5.3 §16.3: regulacion_emocional retired (offline path → ondas_theta
+    // in `con` category + Mood-applies-offline §19). Límbico card now lists the
+    // 6 Mood upgrades in unlock order. The 5-tier Moodometer + 24h chart land
+    // alongside this card via a dedicated section component.
+    upgradeIds: ['lim_steady_heart', 'lim_empathic_spark', 'lim_resilience', 'lim_elevation', 'lim_euphoric_echo', 'lim_emotional_wisdom'] as const,
   },
   {
     id: 'visual',

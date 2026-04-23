@@ -12,12 +12,13 @@ import { checkMentalState, mentalStateProductionMult, mentalStateDuration, updat
 import { shouldTriggerMicroChallenge, rollMicroChallenge, activateMicroChallenge, isMicroChallengeFailed, isMicroChallengeComplete, clearMicroChallenge } from './microChallenges';
 import { MICRO_CHALLENGES_BY_ID } from '../config/microChallenges';
 import { stepShardDrip, chargeIntervalShardMult } from './shards';
+import { moodProductionMult, moodMaxChargesBonus } from './mood';
 import type { GameState } from '../types/GameState';
 
-// Structural intrinsics (not designer-tunable). Changing breaks determinism / spec.
-const TICK_MS = 100; // CONST-OK (§35 TICK-1 fixed dt)
-const HYPERFOCUS_BONUS_WINDOW_MS = 5_000; // CONST-OK (§35 MENTAL-5)
-const RP_WINDOW_MS = 120_000; // CONST-OK (§22 RP-1 window)
+// Structural intrinsics. Changing breaks determinism / spec.
+const TICK_MS = 100; // CONST-OK §35 TICK-1
+const HYPERFOCUS_BONUS_WINDOW_MS = 5_000; // CONST-OK §35 MENTAL-5
+const RP_WINDOW_MS = 120_000; // CONST-OK §22 RP-1
 
 export type TickResult = Readonly<{ state: GameState; antiSpamActive: boolean }>;
 
@@ -83,12 +84,9 @@ function stepProduce(s: GameState): void {
   }
 }
 
-/** Step 5: CORE-10 — flip consciousnessBarUnlocked once when cycleGenerated crosses 50% of the threshold. */
+/** Step 5: CORE-10 — flip consciousnessBarUnlocked at 50% of the threshold crossing. */
 function stepConsciousnessBarUnlock(s: GameState): void {
-  if (
-    !s.consciousnessBarUnlocked &&
-    s.cycleGenerated >= SYNAPSE_CONSTANTS.consciousnessBarTriggerRatio * s.currentThreshold
-  ) {
+  if (!s.consciousnessBarUnlocked && s.cycleGenerated >= SYNAPSE_CONSTANTS.consciousnessBarTriggerRatio * s.currentThreshold) {
     s.consciousnessBarUnlocked = true;
   }
 }
@@ -101,9 +99,9 @@ function stepDischargeChargeAccumulation(s: GameState, nowTimestamp: number): vo
     const e = UPGRADES_BY_ID[u.id]?.effect;
     if (e?.kind === 'charge_rate_mult') intervalMs = intervalMs / e.mult;
   }
-  // GDD §14 Rápida + §13 #3 Descarga Rápida + §16.1 shard_proc_pattern stack.
   intervalMs = mutationChargeIntervalMs(s, intervalMs / pathwayChargeRateMult(s)) * chargeIntervalShardMult(s);
-  const effectiveMax = mutationMaxChargesOverride(s) ?? s.dischargeMaxCharges;
+  const baseMax = mutationMaxChargesOverride(s) ?? s.dischargeMaxCharges;
+  const effectiveMax = Math.min(baseMax + moodMaxChargesBonus(s), SYNAPSE_CONSTANTS.dischargeMaxChargesHardCap);
   if (nowTimestamp - s.dischargeLastTimestamp >= intervalMs) {
     s.dischargeCharges = Math.min(effectiveMax, s.dischargeCharges + 1);
     s.dischargeLastTimestamp = nowTimestamp;
@@ -119,7 +117,7 @@ function stepResonantPatternPrune(s: GameState, nowTimestamp: number): void {
   }
 }
 
-/** Step 8: Mental State triggers per §17 + MENTAL-7 priority resolver. */
+/** Step 8: Mental State + Mood mults per §17 / §16.3 — both stack post-softCap. */
 function stepMentalStateTriggers(s: GameState, n: number): void {
   Object.assign(s, updateHyperfocusTracking(s, n));
   const ms = checkMentalState(s, n);
@@ -128,10 +126,11 @@ function stepMentalStateTriggers(s: GameState, n: number): void {
     s.mentalStateExpiry = ms === null ? null : n + mentalStateDuration(ms);
   }
   if (ms !== null) s.effectiveProductionPerSecond *= mentalStateProductionMult(s, n);
+  s.effectiveProductionPerSecond *= moodProductionMult(s);
 }
 
-/** Step 9: Era 3 event activation on first tick of cycle (§23). UI layer dispatches modal. */
-function stepEra3EventActivation(_s: GameState, _nowTimestamp: number): void { /* no-op; UI reads prestigeCount + cycleAge */ }
+/** Step 9: Era 3 event activation (§23). No-op; UI reads prestigeCount + cycleAge. */
+function stepEra3EventActivation(_s: GameState, _nowTimestamp: number): void {}
 
 /** Step 10: Spontaneous event scheduling (SPONT-1). */
 function stepSpontaneousEventTrigger(s: GameState, nowTimestamp: number): void {

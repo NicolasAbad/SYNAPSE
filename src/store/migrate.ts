@@ -14,6 +14,8 @@
 //   - Sprint 7.5.2: strips `consolidacion_memoria` from saved upgrades (retired
 //     per GDD §16.8 — effect absorbed into Hipocampo `shard_emo_resonance`).
 //     Memorias spent are NOT refunded ("value-neutral to sunset").
+//   - Sprint 7.5.3: strips `regulacion_emocional` (offline path moved to new
+//     `ondas_theta` upgrade per GDD §24 + Mood-applies-offline §19).
 
 import { SYNAPSE_CONSTANTS } from '../config/constants';
 
@@ -25,6 +27,7 @@ import { SYNAPSE_CONSTANTS } from '../config/constants';
  */
 const RETIRED_UPGRADE_IDS = new Set<string>([
   'consolidacion_memoria', // Sprint 7.5.2 — replaced by shard_emo_resonance
+  'regulacion_emocional',  // Sprint 7.5.3 — replaced by ondas_theta + Mood-applies-offline
 ]);
 
 function stripRetiredUpgrades(value: unknown): unknown {

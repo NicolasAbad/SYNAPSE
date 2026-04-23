@@ -68,7 +68,13 @@ export type UpgradeEffect =
   | { kind: 'tap_contribution_pct_add'; pct: number }          // shard_proc_flow
   | { kind: 'charge_interval_mult'; mult: number }             // shard_proc_pattern
   | { kind: 'memory_per_prestige_add'; memory: number }        // shard_epi_imprint
-  | { kind: 'rp_spark_bonus'; sparks: number };                // shard_epi_reflection
+  | { kind: 'rp_spark_bonus'; sparks: number }                 // shard_epi_reflection
+  // Sprint 7.5.3 — Límbico Mood upgrade markers (GDD §16.3). Engine reads them
+  // by owned-id lookup in src/engine/mood.ts (not by effect.kind branch), so
+  // all 6 Límbico + shard_emo_deep share a single payload-less marker kind.
+  | { kind: 'mood_passive_marker' }                            // 6 Límbico upgrades + shard_emo_deep
+  // Sprint 7.5.3 — shard_emo_deep ships now alongside its Mood consumer.
+  | { kind: 'mood_event_scaling'; scale: number };             // shard_emo_deep (deferred from 7.5.2)
 
 export interface UpgradeDef {
   id: string;

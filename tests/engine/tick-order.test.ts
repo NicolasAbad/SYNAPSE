@@ -130,7 +130,7 @@ function makeState(overrides: Partial<GameState> = {}): GameState {
     memoryShardUpgrades: [],
     activePrecommitment: null,
     precommitmentStreak: 0,
-    mood: 50,
+    mood: 30,
     moodHistory: [],
     brocaNamedMoments: [],
     mastery: {},

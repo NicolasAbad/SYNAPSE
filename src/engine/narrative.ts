@@ -15,6 +15,7 @@ import { FRAGMENTS, FRAGMENTS_BY_ID } from '../config/narrative/fragments';
 import { ECHOES } from '../config/narrative/echoes';
 import { mulberry32 } from './rng';
 import { fragmentMemoryBonus, emoShardsOnFragmentRead } from './shards';
+import { applyMoodEvent } from './mood';
 import type { GameState } from '../types/GameState';
 import type { FragmentDef, EchoDef } from '../types';
 
@@ -95,9 +96,10 @@ export function applyFragmentRead(state: GameState, id: string, nowTimestamp = 0
   const diary = [...state.diaryEntries, { timestamp: nowTimestamp, type: 'fragment' as const, data: { fragmentId: id } }];
   const trimmed = diary.length > 500 ? diary.slice(diary.length - 500) : diary; // CONST-OK: nar_diary_50 + Sprint 7.5 cap
   // Sprint 7.5.2 §16.1: +1 base Memory + (shard_emo_resonance ? +2 : 0) Memory bonus.
-  // Also +N Emo shard burst (in addition to drip-flag flip via diary scan).
+  // Also +N Emo shard burst + Sprint 7.5.3 §16.3 MOOD-2 Mood +3 (fragment_read).
   const memoryBonus = fragmentMemoryBonus(state);
   const emoBurst = emoShardsOnFragmentRead();
+  const moodUpdate = applyMoodEvent(state, 'fragment_read', nowTimestamp);
   return {
     narrativeFragmentsSeen: seen,
     memories: state.memories + 1 + memoryBonus,
@@ -107,6 +109,8 @@ export function applyFragmentRead(state: GameState, id: string, nowTimestamp = 0
       procedural: state.memoryShards.procedural,
       episodic: state.memoryShards.episodic,
     },
+    mood: moodUpdate.mood,
+    moodHistory: moodUpdate.moodHistory,
   };
 }
 

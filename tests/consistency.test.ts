@@ -108,8 +108,8 @@ describe('Consistency: GDD ↔ constants.ts invariants', () => {
     expect(SYNAPSE_CONSTANTS.baseOfflineEfficiency).toBe(0.5);
   });
 
-  test('maxOfflineEfficiencyRatio = 2.0 (GDD §19, OFFLINE-4)', () => {
-    expect(SYNAPSE_CONSTANTS.maxOfflineEfficiencyRatio).toBe(2.0);
+  test('maxOfflineEfficiencyRatio = 2.5 (Sprint 7.5.3 R6 lock; was 2.0 pre-Mood, GDD §19 OFFLINE-11)', () => {
+    expect(SYNAPSE_CONSTANTS.maxOfflineEfficiencyRatio).toBe(2.5);
   });
 
   test('runThresholdMult = [1.0, 3.5, 6.0, 8.5, 12.0, 15.0] (GDD §20)', () => {
@@ -451,8 +451,8 @@ describe('Consistency: Pathways (GDD §14)', () => {
 
 describe('Consistency: Upgrades (GDD §24)', () => {
   // Un-skipped Sprint 3 Phase 1: UPGRADES data ships here.
-  test('Total 34 upgrades (Sprint 7.5.2: consolidacion_memoria retired, was 35)', () => {
-    expect(UPGRADES.length).toBe(34);
+  test('Total 40 upgrades (Sprint 7.5.3: +6 Límbico mood + ondas_theta - regulacion_emocional, was 34)', () => {
+    expect(UPGRADES.length).toBe(40);
   });
   test('Each upgrade has a valid category', () => {
     const validCategories: ReadonlySet<UpgradeCategory> = new Set<UpgradeCategory>([
@@ -462,7 +462,7 @@ describe('Consistency: Upgrades (GDD §24)', () => {
       expect(validCategories.has(u.category)).toBe(true);
     }
   });
-  test('Upgrade category counts match GDD §24 post-7.5.2 (tap=3, foc=1, syn=5, neu=8, reg=4, con=4, met=3, new=6)', () => {
+  test('Upgrade category counts match GDD §24 post-7.5.3 (tap=3, foc=1, syn=5, neu=8, reg=9, con=5, met=3, new=6)', () => {
     const counts = UPGRADES.reduce<Record<string, number>>((acc, u) => {
       acc[u.category] = (acc[u.category] ?? 0) + 1;
       return acc;
@@ -471,8 +471,8 @@ describe('Consistency: Upgrades (GDD §24)', () => {
     expect(counts.foc).toBe(1);
     expect(counts.syn).toBe(5);
     expect(counts.neu).toBe(8);
-    expect(counts.reg).toBe(4); // Sprint 7.5.2: was 5, consolidacion_memoria retired
-    expect(counts.con).toBe(4);
+    expect(counts.reg).toBe(9); // Sprint 7.5.3: 3 surviving regions + 6 Límbico mood markers
+    expect(counts.con).toBe(5); // Sprint 7.5.3: +ondas_theta
     expect(counts.met).toBe(3);
     expect(counts.new).toBe(6);
   });
@@ -480,16 +480,16 @@ describe('Consistency: Upgrades (GDD §24)', () => {
     const ids = UPGRADES.map((u) => u.id);
     expect(new Set(ids).size).toBe(ids.length);
   });
-  test('Region upgrades are priced in Memorias (GDD §16, Sprint 7.5.2: 4 surviving)', () => {
+  test('Region upgrades are priced in Memorias (GDD §16, Sprint 7.5.3: 9 incl. 6 Límbico)', () => {
     const regionUpgrades = UPGRADES.filter((u) => u.category === 'reg');
-    expect(regionUpgrades.length).toBe(4);
+    expect(regionUpgrades.length).toBe(9);
     for (const u of regionUpgrades) {
       expect(u.costCurrency).toBe('memorias');
     }
   });
   test('Non-region upgrades are priced in Thoughts', () => {
     const nonRegion = UPGRADES.filter((u) => u.category !== 'reg');
-    expect(nonRegion.length).toBe(30);
+    expect(nonRegion.length).toBe(31); // Sprint 7.5.3: +ondas_theta in `con`
     for (const u of nonRegion) {
       expect(u.costCurrency).toBe('thoughts');
     }
@@ -528,14 +528,25 @@ describe('Consistency: Upgrades (GDD §24)', () => {
     expect(UPGRADES.find((u) => u.id === 'ltp_potenciacion_larga')!.effect).toEqual({ kind: 'all_neurons_mult', mult: 1.5 });
     expect(UPGRADES.find((u) => u.id === 'neurogenesis')!.effect).toEqual({ kind: 'all_neurons_mult', mult: 1.10 });
   });
-  test('§16 Regions tier: exact cost in Memorias + effect params (Sprint 7.5.2: consolidacion_memoria retired)', () => {
-    // Sprint 7.5.2 §16.8 — consolidacion_memoria removed; 5 region upgrades → 4.
+  test('§16 Regions tier: surviving region + Límbico mood upgrades (Sprint 7.5.3: regulacion_emocional retired)', () => {
+    // Sprint 7.5.2: consolidacion_memoria removed. Sprint 7.5.3: regulacion_emocional removed.
     expect(UPGRADES.find((u) => u.id === 'consolidacion_memoria')).toBeUndefined();
-    expect(UPGRADES.find((u) => u.id === 'regulacion_emocional')!.cost).toBe(5);
+    expect(UPGRADES.find((u) => u.id === 'regulacion_emocional')).toBeUndefined();
     expect(UPGRADES.find((u) => u.id === 'procesamiento_visual')!.cost).toBe(8);
     expect(UPGRADES.find((u) => u.id === 'funciones_ejecutivas')!).toEqual(expect.objectContaining({ cost: 3, unlockPrestige: 2 }));
     expect(UPGRADES.find((u) => u.id === 'funciones_ejecutivas')!.effect).toEqual({ kind: 'upgrade_cost_reduction', pct: 0.20 });
     expect(UPGRADES.find((u) => u.id === 'amplitud_banda')!.cost).toBe(15);
+    // Sprint 7.5.3 — 6 Límbico mood upgrades all priced in Memorias with mood_passive_marker effect.
+    for (const id of ['lim_steady_heart', 'lim_empathic_spark', 'lim_resilience', 'lim_elevation', 'lim_euphoric_echo', 'lim_emotional_wisdom']) {
+      const u = UPGRADES.find((up) => up.id === id);
+      expect(u, `${id} should exist`).toBeDefined();
+      expect(u!.costCurrency).toBe('memorias');
+      expect(u!.effect.kind).toBe('mood_passive_marker');
+    }
+    // Sprint 7.5.3 — ondas_theta replaces regulacion_emocional offline path (Thoughts-priced).
+    const ot = UPGRADES.find((u) => u.id === 'ondas_theta');
+    expect(ot).toEqual(expect.objectContaining({ cost: 300_000, costCurrency: 'thoughts', unlockPrestige: 3 }));
+    expect(ot!.effect).toEqual({ kind: 'offline_efficiency_mult', mult: 2 });
   });
   test('§24 Consciousness/Offline tier: offline cap + consciousness fill match', () => {
     expect(UPGRADES.find((u) => u.id === 'sueno_rem')!.effect).toEqual({ kind: 'offline_cap_set', hours: 8 });

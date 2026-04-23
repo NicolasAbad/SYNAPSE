@@ -194,7 +194,15 @@ export const en = {
     ltp_potenciacion_larga: 'Long-Term Potentiation',
     espejo_resonantes: 'Resonant Mirrors',
     neurogenesis: 'Neurogenesis',
-    regulacion_emocional: 'Emotional Regulation',
+    // Sprint 7.5.3 §16.3 — Límbico Mood upgrades (Memorias-priced, marker effects).
+    lim_steady_heart: 'Steady Heart',
+    lim_empathic_spark: 'Empathic Spark',
+    lim_resilience: 'Resilience',
+    lim_elevation: 'Elevation',
+    lim_euphoric_echo: 'Euphoric Echo',
+    lim_emotional_wisdom: 'Emotional Wisdom',
+    // Sprint 7.5.3 — Ondas Theta replaces retired regulacion_emocional offline path.
+    ondas_theta: 'Theta Waves',
     procesamiento_visual: 'Visual Processing',
     funciones_ejecutivas: 'Executive Function',
     amplitud_banda: 'Bandwidth',
@@ -239,8 +247,16 @@ export const en = {
     ltp_potenciacion_larga: 'All neurons ×1.5',
     espejo_resonantes: 'Mirror neurons ×4',
     neurogenesis: 'All neurons ×1.10',
-    // Regions (4, Memorias) — Sprint 7.5.2 retired consolidacion_memoria
-    regulacion_emocional: 'Offline efficiency ×2',
+    // Regions (3, Memorias) — Sprint 7.5.2 retired consolidacion_memoria;
+    // Sprint 7.5.3 retired regulacion_emocional (offline path → ondas_theta).
+    // Plus 6 Sprint 7.5.3 Límbico mood upgrades:
+    lim_steady_heart: 'Mood decay halved during offline',
+    lim_empathic_spark: 'Cascade Mood bonus +5 (total +10)',
+    lim_resilience: 'Mood floor 25 (anti-despair)',
+    lim_elevation: 'Engaged→Elevated boundary 60→55',
+    lim_euphoric_echo: 'Euphoric production mult 1.30→1.40',
+    lim_emotional_wisdom: 'Each mood tier crossed this Run grants +1 lifetime Memoria',
+    ondas_theta: 'Offline efficiency ×2',
     procesamiento_visual: 'Highlights best upgrade',
     funciones_ejecutivas: 'Thought-cost upgrades −20%',
     amplitud_banda: 'All region upgrades +50%',
@@ -267,6 +283,7 @@ export const en = {
   shard_upgrades: {
     shard_emo_pulse: 'Emotional Pulse',
     shard_emo_resonance: 'Emotional Resonance',
+    shard_emo_deep: 'Deep Emotion',
     shard_proc_flow: 'Procedural Flow',
     shard_proc_pattern: 'Procedural Pattern',
     shard_epi_imprint: 'Episodic Imprint',
@@ -275,6 +292,7 @@ export const en = {
   shard_upgrades_desc: {
     shard_emo_pulse: 'Each Cascade also grants +1 Spark',
     shard_emo_resonance: 'Fragment first-read grants +2 Memory (total +3)',
+    shard_emo_deep: 'Mood event deltas ±50% stronger',
     shard_proc_flow: 'Tap contribution +5%',
     shard_proc_pattern: 'Discharge charge interval −10%',
     shard_epi_imprint: '+1 Memoria per prestige',
@@ -289,6 +307,25 @@ export const en = {
     title: 'Hipocampo — Memory Shards',
     drip_paused: 'Drip paused (cycle complete)',
     weave_locked: 'Memory Weave unlocks with Integrated Mind',
+  },
+  // Sprint 7.5.3 §16.3 — Mood UI strings.
+  mood_tiers: {
+    numb: 'Numb',
+    calm: 'Calm',
+    engaged: 'Engaged',
+    elevated: 'Elevated',
+    euphoric: 'Euphoric',
+  },
+  mood_tier_descriptions: {
+    numb: 'Your mind feels distant.',
+    calm: 'Your mind rests at baseline.',
+    engaged: 'Your mind is warming.',
+    elevated: 'Your mind is lit.',
+    euphoric: 'Your mind is singing.',
+  },
+  limbico_panel: {
+    title: 'Límbico — Moodometer',
+    current_mood: 'Mood',
   },
   // Sprint 5 — 15 Mutations (GDD §13). Player-facing display name + concise
   // mechanical description. Internal ids stay Spanish snake_case in mutations.ts;

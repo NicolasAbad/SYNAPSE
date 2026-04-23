@@ -6,6 +6,7 @@ import { canBuyUpgrade } from '../../store/purchases';
 import { formatCurrency } from '../util/formatNumber';
 import { t } from '../../config/strings';
 import { HipocampoShardSection } from './HipocampoShardSection';
+import { LimbicoMoodSection } from './LimbicoMoodSection';
 import type { GameState } from '../../types/GameState';
 import type { RegionDef } from '../../types';
 
@@ -88,6 +89,8 @@ function RegionCard({ region, state }: RegionCardProps) {
       )}
       {/* Sprint 7.5.2 §16.1 — Hipocampo Shard tree (typed-shard upgrades). */}
       {unlocked && region.id === 'hipocampo' && <HipocampoShardSection state={state} />}
+      {/* Sprint 7.5.3 §16.3 — Límbico Mood section (renders above the 6 mood upgrades). */}
+      {unlocked && region.id === 'limbico' && <LimbicoMoodSection state={state} />}
     </li>
   );
 }

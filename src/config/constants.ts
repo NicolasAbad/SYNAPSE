@@ -102,12 +102,11 @@ export const SYNAPSE_CONSTANTS = {
   baseOfflineEfficiency: 0.5,
   baseOfflineCapHours: 4,
   maxOfflineHours: 16, // max achievable (REM→8, Distribuida→12, sueno_profundo→16)
-  // Sprint 6.8 Phase 6 R6 decision: cap raised 2.0 → 2.5 to preserve invest
-  // value with new Mood (×1.30 Euphoric) + Ondas Theta (×2.0) + Guardian del
-  // Tiempo (×1.5 at 5h+) stacks. Code bump lands with Sprint 7.5 Phase 7.5.3
-  // (Mood-applies-offline integration); current value stays 2.0 to keep offline
-  // tests green until that phase. GDD §19 + Sprint 8c TEST-2 validate.
-  maxOfflineEfficiencyRatio: 2.0, // Sprint 7.5: bump to 2.5
+  // Sprint 7.5.3 R6 decision (Phase 6 lock 2026-04-22, applied 7.5.3): cap
+  // raised 2.0 → 2.5 to preserve investment value with new Mood (×1.30 Euphoric)
+  // + Ondas Theta (×2.0) + Guardian del Tiempo (×1.5 at 5h+) stacks. GDD §19 +
+  // Sprint 8c TEST-2 validate the final ratio holds.
+  maxOfflineEfficiencyRatio: 2.5,
   offlineMinMinutes: 1, // skip calc if <1 min
 
   // ── Memories ──
@@ -172,7 +171,11 @@ export const SYNAPSE_CONSTANTS = {
   // GDD §16 Sistema Límbico + MOOD-1..3 rules. Mood applies post-softCap as
   // effectiveMult (stacks multiplicatively with Mental States).
   moodMaxValue: 100, // GDD §16 Moodometer range 0-100
-  moodInitialValue: 50, // Calm tier default for new games
+  // moodInitialValue: 30 (NOT 50 as per GDD §16.3 line 831 prose). The §16.3
+  // tier table puts 50 in Engaged (40-59) but the prose says "starts at 50 (Calm)"
+  // — code aligns to the table (more concrete spec) and Sprint 7.5.3 puts the
+  // default firmly in Calm (20-39). GDD prose deviation flagged in PROGRESS.md.
+  moodInitialValue: 30,
   moodTierBoundaries: [20, 40, 60, 80] as const, // Numb<20 / Calm<40 / Engaged<60 / Elevated<80 / Euphoric
   moodTierProductionMults: [0.90, 1.00, 1.05, 1.15, 1.30] as const, // per tier, post-softCap
   moodTierFocusFillMults: [1.00, 1.00, 1.10, 1.10, 1.10] as const, // Engaged+ only
@@ -249,9 +252,20 @@ export const SYNAPSE_CONSTANTS = {
   moodDeltaCascade: 5, // +5 on Cascade
   moodDeltaPrestige: 10, // +10 on Prestige complete
   moodDeltaFragmentRead: 3, // +3 on fragment read
+  moodDeltaResonantPattern: 15, // +15 on Resonant Pattern discovery (Sprint 7.5.3)
   moodDeltaPrecommitFail: -15, // -15 on Pre-commit fail
   moodDeltaLongIdle: -5, // -5 per Dormancy entry
   moodDeltaWeeklyChallenge: 20, // +20 on Weekly Challenge complete
+  moodDeltaAntiSpam: -10, // -10 on anti-spam penalty (Sprint 7.5.3 §16.3)
+  // Sprint 7.5.3 §16.3 — Mood event-delta scaling per source (MOOD-4 additive stack).
+  moodEventScalingPerSource: 0.5,
+  // Sprint 7.5.3 §16.3 — Límbico upgrade tuning literals (lim_elevation/_resilience/_euphoric_echo/_empathic_spark).
+  limElevationBoundaryShift: 55,
+  limResilienceMoodFloor: 25,
+  limEuphoricEchoProductionMult: 1.40,
+  limEmpathicSparkCascadeBonus: 5,
+  // Sprint 7.5.3 §32 — moodHistory circular buffer cap.
+  moodHistoryBufferCap: 48,
 
   // ── Mental States ──
   mentalStateFlowTapCount: 10,
