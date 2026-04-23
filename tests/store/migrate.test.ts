@@ -1,8 +1,9 @@
-// Tests for src/store/migrate.ts — Sprint 7.5.1 schema backfill (110 → 119).
+// Tests for src/store/migrate.ts — schema backfill (110 → 120 current).
+// Originally 7.5.1 (110→119, +9 region/mastery fields); extended 7.10.4 (+pendingOfflineSummary).
 //
 // These tests are intentionally adversarial and mostly black-box:
-// - Verify legacy 110-field saves load cleanly with all 9 new fields backfilled.
-// - Verify the migration is idempotent (re-running on a 119-field payload changes nothing).
+// - Verify legacy 110-field saves load cleanly with all 10 new fields backfilled.
+// - Verify the migration is idempotent (re-running on a 120-field payload changes nothing).
 // - Verify pre-existing values for the new fields are NOT clobbered (player progress wins).
 // - Verify defensive behavior on bad inputs (null, array, primitives) — pass-through.
 // - Verify defaults match the canonical constants (no invented values).
@@ -22,9 +23,10 @@ const NEW_FIELDS = [
   'brocaNamedMoments',
   'mastery',
   'autoBuyConfig',
+  'pendingOfflineSummary', // Sprint 7.10.4
 ] as const;
 
-/** Build a synthetic legacy 110-field payload by stripping the 9 new fields from a current default. */
+/** Build a synthetic legacy 110-field payload by stripping the 10 new fields from a current default. */
 function legacy110(): Record<string, unknown> {
   const current = createDefaultState() as unknown as Record<string, unknown>;
   const stripped: Record<string, unknown> = { ...current };
@@ -32,15 +34,15 @@ function legacy110(): Record<string, unknown> {
   return stripped;
 }
 
-describe('migrateState — 110 → 119 backfill (Sprint 7.5.1)', () => {
-  test('legacy 110-field payload becomes a 119-field payload', () => {
+describe('migrateState — 110 → 120 backfill (Sprint 7.5.1 + 7.10.4)', () => {
+  test('legacy 110-field payload becomes a 120-field payload', () => {
     const legacy = legacy110();
     expect(Object.keys(legacy).length).toBe(110);
     const migrated = migrateState(legacy) as Record<string, unknown>;
-    expect(Object.keys(migrated).length).toBe(119);
+    expect(Object.keys(migrated).length).toBe(120);
   });
 
-  test('all 9 new fields are present after migration', () => {
+  test('all 10 new fields are present after migration', () => {
     const migrated = migrateState(legacy110()) as Record<string, unknown>;
     for (const key of NEW_FIELDS) {
       expect(key in migrated).toBe(true);
@@ -58,6 +60,7 @@ describe('migrateState — 110 → 119 backfill (Sprint 7.5.1)', () => {
     expect(migrated.brocaNamedMoments).toEqual([]);
     expect(migrated.mastery).toEqual({});
     expect(migrated.autoBuyConfig).toEqual({});
+    expect(migrated.pendingOfflineSummary).toBeNull();
   });
 
   test('migration preserves all pre-existing 110 fields untouched', () => {
@@ -73,10 +76,10 @@ describe('migrateState — 110 → 119 backfill (Sprint 7.5.1)', () => {
 });
 
 describe('migrateState — idempotency', () => {
-  test('a fully-formed 119-field payload passes through unchanged', () => {
+  test('a fully-formed 120-field payload passes through unchanged', () => {
     const current = createDefaultState() as unknown as Record<string, unknown>;
     const migrated = migrateState(current) as Record<string, unknown>;
-    expect(Object.keys(migrated).length).toBe(119);
+    expect(Object.keys(migrated).length).toBe(120);
     // Deep-equal — defaults didn't override the existing values.
     expect(migrated).toEqual(current);
   });

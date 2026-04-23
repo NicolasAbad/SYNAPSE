@@ -11,19 +11,9 @@ import { PATTERN_DECISIONS } from '../config/patterns';
 import { effectiveMoodTier, averageMoodOverWindow } from './mood';
 import { seededRandom, hash } from './rng';
 import type { GameState } from '../types/GameState';
+import type { OfflineSummary } from '../types';
 
-export interface OfflineSummary {
-  readonly elapsedMs: number;
-  readonly gained: number;
-  readonly efficiency: number;
-  readonly avgMood: number;
-  readonly avgMoodTier: number;
-  readonly capHours: number;
-  readonly cappedHit: boolean;
-  readonly timeAnomaly: 'backward' | 'over_cap' | null;
-  readonly enhancedDischargeAvailable: boolean;
-  readonly lucidDreamTriggered: boolean; // next phase wires the Lucid Dream roll
-}
+export type { OfflineSummary };
 
 const EMPTY_SUMMARY: OfflineSummary = {
   elapsedMs: 0, gained: 0, efficiency: 0, avgMood: 0, avgMoodTier: 0, capHours: 0,

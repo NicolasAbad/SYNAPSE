@@ -175,9 +175,9 @@ describe('Consistency: GDD ↔ constants.ts invariants', () => {
     expect(SYNAPSE_CONSTANTS.sinestesiaTapMult).toBe(0.4);
   });
 
-  test('GameState has exactly 119 fields (GDD §32, post-Sprint-7.5.1)', () => {
+  test('GameState has exactly 120 fields (GDD §32, post-Sprint-7.10.4)', () => {
     const state = createDefaultState();
-    expect(Object.keys(state).length).toBe(119);
+    expect(Object.keys(state).length).toBe(120);
   });
 });
 
@@ -290,9 +290,9 @@ describe('Consistency: PRESTIGE_RESET / PRESERVE / UPDATE split (GDD §33)', () 
   // Field-set data un-skipped in Sprint 4a Phase 4a.1 (src/config/prestige.ts
   // defines the 4 tuples). handlePrestige() behavior tests un-skip in Phase 4a.4.
 
-  test('PRESTIGE_RESET has exactly 46 fields (Sprint 7.5.1: +activePrecommitment)', () => {
-    expect(PRESTIGE_RESET_FIELDS.length).toBe(46);
-    expect(Object.keys(PRESTIGE_RESET).length).toBe(46);
+  test('PRESTIGE_RESET has exactly 47 fields (Sprint 7.10.4: +pendingOfflineSummary)', () => {
+    expect(PRESTIGE_RESET_FIELDS.length).toBe(47);
+    expect(Object.keys(PRESTIGE_RESET).length).toBe(47);
     // Tuple and data object must name the same fields.
     expect(new Set(PRESTIGE_RESET_FIELDS)).toEqual(new Set(Object.keys(PRESTIGE_RESET)));
   });
@@ -301,16 +301,16 @@ describe('Consistency: PRESTIGE_RESET / PRESERVE / UPDATE split (GDD §33)', () 
     expect(PRESTIGE_PRESERVE_FIELDS.length).toBe(68);
   });
 
-  test('RESET + PRESERVE + UPDATE + lifetime covers all 119 GameState fields', () => {
+  test('RESET + PRESERVE + UPDATE + lifetime covers all 120 GameState fields', () => {
     const union = new Set<string>([
       ...PRESTIGE_RESET_FIELDS,
       ...PRESTIGE_PRESERVE_FIELDS,
       ...PRESTIGE_UPDATE_FIELDS,
       ...PRESTIGE_LIFETIME_FIELDS,
     ]);
-    expect(union.size).toBe(119); // also asserts no duplicates across all 4 sets
+    expect(union.size).toBe(120); // also asserts no duplicates across all 4 sets
     const gameStateKeys = new Set(Object.keys(createDefaultState()));
-    expect(gameStateKeys.size).toBe(119);
+    expect(gameStateKeys.size).toBe(120);
     expect(union).toEqual(gameStateKeys);
   });
 

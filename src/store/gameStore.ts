@@ -5,11 +5,11 @@
 // Mount-time timestamps are populated via initSessionTimestamps action
 // per INIT-1 — see src/store/initSession.ts for the React boundary.
 //
-// CODE-2 exception: enumerating all 119 fields with section comments
+// CODE-2 exception: enumerating all 120 fields with section comments
 // and per-field inline rationale pushes this file above the 200-line
 // cap. Same justification as src/types/GameState.ts — the interface is
 // a single-source-of-truth artifact; splitting it would lose the
-// invariant that Object.keys(createDefaultState()).length === 119.
+// invariant that Object.keys(createDefaultState()).length === 120.
 
 import { create } from 'zustand';
 import { SYNAPSE_CONSTANTS } from '../config/constants';
@@ -29,11 +29,12 @@ import { dispatchNarrative, applyFragmentRead } from '../engine/narrative';
 import { MUTATIONS_BY_ID } from '../config/mutations';
 import { checkAllAchievements, achievementRewardSum } from '../engine/achievements';
 import { applyMasteryXpGain } from '../engine/mastery';
+import { applyOfflineProgress } from '../engine/offline';
 import { ACHIEVEMENTS_BY_ID } from '../config/achievements';
 import type { DiaryEntry } from '../types';
 
 /**
- * Pure default state. Matches GDD §32 119-field enumeration exactly.
+ * Pure default state. Matches GDD §32 120-field enumeration exactly.
  * 13 non-trivial initial values per §32 "DEFAULT_STATE non-trivial initial values"
  * (Phase 7.5.1 added `mood: 50` as the 13th, from SYNAPSE_CONSTANTS.moodInitialValue).
  * 4 impure timestamp fields stay at 0/null per INIT-1; mount effect populates them.
@@ -76,9 +77,10 @@ export function createDefaultState(): GameState {
     currentMutation: null,
     mutationSeed: 0,
     currentPathway: null,
-    // === Offline (2) ===
+    // === Offline (3) — Sprint 7.10 Phase 7.10.4 added pendingOfflineSummary ===
     currentOfflineCapHours: 4, // CONST-OK — §32 DEFAULT_STATE: baseOfflineCapHours
     currentOfflineEfficiency: 0.5, // CONST-OK — §32 DEFAULT_STATE: baseOfflineEfficiency
+    pendingOfflineSummary: null,
     // === Session (1) ===
     sessionStartTimestamp: null, // INIT-1 impure — mount effect populates
     // === Prestige & progression (11) ===
@@ -267,6 +269,15 @@ export interface UIState {
 export interface GameStoreActions {
   /** INIT-1: populate the 4 impure timestamp fields with mount-time nowTimestamp. Idempotent. */
   initSessionTimestamps: (nowTimestamp: number) => void;
+  /**
+   * Sprint 7.10 Phase 7.10.4 — call on mount + every app-resume. Pure engine
+   * (applyOfflineProgress) produces `{ state, summary }`; action stashes
+   * summary on `pendingOfflineSummary` + triggers save-on-resume. Idempotent
+   * via OFFLINE-5 clamp + offlineMinMinutes skip branch.
+   */
+  applyOfflineReturn: (nowTimestamp: number) => void;
+  /** Phase 7.10.4 — UI consumer (Sleep screen / Welcome modal) dismiss handler. Clears pendingOfflineSummary. */
+  dismissOfflineSummary: () => void;
   /** Full reset to createDefaultState — placeholder for Sprint 7 save-load error path. */
   reset: () => void;
   /** Phase 7: load saved state from Capacitor Preferences; returns true if a save was applied. */
@@ -453,6 +464,17 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
       return updates;
     });
   },
+  applyOfflineReturn: (nowTimestamp) => {
+    const prev = get();
+    const { state: next, summary } = applyOfflineProgress(prev as GameState, nowTimestamp);
+    // No-op guard: if nothing changed (skip branch with already-current timestamp),
+    // don't overwrite pendingOfflineSummary. Keeps the flow cheap on rapid resumes.
+    if (next.lastActiveTimestamp === prev.lastActiveTimestamp && summary.gained === 0) return;
+    set({ ...next, pendingOfflineSummary: summary.elapsedMs >= SYNAPSE_CONSTANTS.offlineMinMinutes * 60_000 ? summary : prev.pendingOfflineSummary });
+    // Save-on-resume — anti-exploit per Phase 7.10.4 spec. Fire-and-forget.
+    saveGame(get() as GameState).catch((e) => console.error('[applyOfflineReturn] save failed:', e));
+  },
+  dismissOfflineSummary: () => set({ pendingOfflineSummary: null }),
   reset: () => set(() => ({ ...createDefaultState(), activeTab: 'mind' as TabId, activeMindSubtab: 'home' as MindSubtabId, undoToast: null, antiSpamActive: false, achievementToast: null })),
   loadFromSave: async () => {
     const loaded = await loadGame();

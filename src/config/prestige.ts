@@ -1,15 +1,15 @@
-// Implements docs/GDD.md §33 (PRESTIGE_RESET 46 / PRESTIGE_PRESERVE 68 /
-// PRESTIGE_UPDATE 4 / lifetime 1 = 119 total).
+// Implements docs/GDD.md §33 (PRESTIGE_RESET 47 / PRESTIGE_PRESERVE 68 /
+// PRESTIGE_UPDATE 4 / lifetime 1 = 120 total).
 //
 // Pure data file — no logic. handlePrestige() in src/engine/prestige.ts
 // (Sprint 4a Phase 4a.2) consumes these to produce a post-prestige state.
 //
 // Field-count invariants (asserted by tests/consistency.test.ts §33 block):
-//   PRESTIGE_RESET_FIELDS.length === 46
+//   PRESTIGE_RESET_FIELDS.length === 47
 //   PRESTIGE_PRESERVE_FIELDS.length === 68
 //   PRESTIGE_UPDATE_FIELDS.length === 4
 //   PRESTIGE_LIFETIME_FIELDS.length === 1
-//   46 + 68 + 4 + 1 === 119 === Object.keys(createDefaultState()).length
+//   47 + 68 + 4 + 1 === 120 === Object.keys(createDefaultState()).length
 //   RESET ∩ PRESERVE === ∅ (disjoint — no field in both)
 //
 // Ordering within each tuple mirrors GDD §33 for audit readability, but
@@ -93,9 +93,12 @@ export const PRESTIGE_RESET: Partial<GameState> = {
   activeMicroChallenge: null,
   lastMicroChallengeTime: 0,
   cycleMicroChallengesAttempted: 0,
-  // Offline (2) — reset to base; upgrades recalculate via OFFLINE-6
+  // Offline (3) — reset to base; upgrades recalculate via OFFLINE-6.
+  // pendingOfflineSummary cleared per Sprint 7.10 Phase 7.10.4 — stale summaries
+  // from pre-prestige state would be misleading UI noise after a fresh cycle begins.
   currentOfflineCapHours: 4,
   currentOfflineEfficiency: 0.5,
+  pendingOfflineSummary: null,
   // Resonant Pattern cycle trackers (2)
   cycleDischargesUsed: 0,
   cycleNeuronPurchases: [],
@@ -118,7 +121,7 @@ export const PRESTIGE_RESET_FIELDS = [
   'currentMentalState', 'mentalStateExpiry', 'lastTapTimestamps', 'lastPurchaseTimestamp',
   'insightTimestamps', 'focusAbove50Since', 'pendingHyperfocusBonus',
   'activeMicroChallenge', 'lastMicroChallengeTime', 'cycleMicroChallengesAttempted',
-  'currentOfflineCapHours', 'currentOfflineEfficiency',
+  'currentOfflineCapHours', 'currentOfflineEfficiency', 'pendingOfflineSummary',
   'cycleDischargesUsed', 'cycleNeuronPurchases',
   // Prefrontal Pre-commitment (1) — Sprint 6.8 §16.2
   'activePrecommitment',

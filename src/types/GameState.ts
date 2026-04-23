@@ -1,11 +1,12 @@
-// Implements docs/GDD.md §32 (GameState — 119 fields) — v1.0 post-Sprint-7.5.1
+// Implements docs/GDD.md §32 (GameState — 120 fields) — v1.0 post-Sprint-7.10.4
 //
-// CRITICAL: this interface must have EXACTLY 119 properties. Sprint 1 invariant
-// asserts `Object.keys(DEFAULT_STATE).length === 119`. Section-by-section count
-// per §32 breakdown sums to 119 (verified line-by-line in GDD §32).
+// CRITICAL: this interface must have EXACTLY 120 properties. Sprint 1 invariant
+// asserts `Object.keys(DEFAULT_STATE).length === 120`. Section-by-section count
+// per §32 breakdown sums to 120 (verified line-by-line in GDD §32).
+// Sprint 7.10.4 added `pendingOfflineSummary` to the Offline group (119 → 120).
 //
 /**
- * GameState — the canonical application state (119 fields).
+ * GameState — the canonical application state (120 fields).
  *
  * CODE-2 exception (second audit followup, refreshed Sprint 7.5.1):
  * this file exceeds the 200-line cap due to 119 one-line field
@@ -21,9 +22,9 @@
  *
  * This exception is documented in CLAUDE.md under CODE-2.
  *
- * Field count MUST remain 119. Adding/removing fields requires:
+ * Field count MUST remain 120. Adding/removing fields requires:
  * - updating docs/GDD.md §32
- * - updating the 46/68/4/1 PRESTIGE_RESET/PRESERVE/UPDATE split
+ * - updating the 47/68/4/1 PRESTIGE_RESET/PRESERVE/UPDATE split
  * - updating the consistency test that asserts exact count
  */
 
@@ -39,6 +40,7 @@ import type {
   NeuronSnapshot,
   NeuronState,
   NeuronType,
+  OfflineSummary,
   PatternNode,
   Pathway,
   Polarity,
@@ -85,9 +87,10 @@ export interface GameState {
   mutationSeed: number;
   currentPathway: Pathway | null;
 
-  // === Offline (2) ===
+  // === Offline (3) — pendingOfflineSummary added Sprint 7.10 Phase 7.10.4 ===
   currentOfflineCapHours: number;
   currentOfflineEfficiency: number;
+  pendingOfflineSummary: OfflineSummary | null;
 
   // === Session (1) ===
   sessionStartTimestamp: number | null;

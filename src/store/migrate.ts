@@ -16,6 +16,8 @@
 //     Memorias spent are NOT refunded ("value-neutral to sunset").
 //   - Sprint 7.5.3: strips `regulacion_emocional` (offline path moved to new
 //     `ondas_theta` upgrade per GDD §24 + Mood-applies-offline §19).
+//   - Sprint 7.10.4: 119 → 120 fields. Backfills `pendingOfflineSummary: null`
+//     so legacy saves load cleanly; null is the correct "no pending" default.
 
 import { SYNAPSE_CONSTANTS } from '../config/constants';
 
@@ -55,6 +57,7 @@ export function migrateState(parsed: unknown): unknown {
     brocaNamedMoments: [],
     mastery: {},
     autoBuyConfig: {},
+    pendingOfflineSummary: null,
   };
   const out: Record<string, unknown> = { ...obj };
   for (const key of Object.keys(defaults)) {

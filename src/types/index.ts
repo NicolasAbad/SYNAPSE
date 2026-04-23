@@ -327,6 +327,24 @@ export interface MutationActive {
   stackedExpiry?: number;
 }
 
+/**
+ * Offline summary persisted to `GameState.pendingOfflineSummary` — Sleep screen
+ * + Welcome-back modal + Lucid Dream choice read this. Sprint 7.10 Phase 7.10.4.
+ * Engine producer: src/engine/offline.ts applyOfflineProgress.
+ */
+export interface OfflineSummary {
+  readonly elapsedMs: number;
+  readonly gained: number;
+  readonly efficiency: number;
+  readonly avgMood: number;
+  readonly avgMoodTier: number;
+  readonly capHours: number;
+  readonly cappedHit: boolean;
+  readonly timeAnomaly: 'backward' | 'over_cap' | null;
+  readonly enhancedDischargeAvailable: boolean;
+  readonly lucidDreamTriggered: boolean;
+}
+
 export interface MicroChallenge {
   id: string;
   startTime: number;

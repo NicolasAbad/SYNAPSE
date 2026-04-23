@@ -386,8 +386,8 @@ export const SYNAPSE_CONSTANTS = {
   gameVersion: '1.0.0',
 
   // ── Field-count runtime verification (§32) ──
-  // 119 fields after Sprint 7.5 Phase 7.5.1 (was 110 pre-7.5.1). The +9 fields
-  // are: memoryShards, memoryShardUpgrades, activePrecommitment, precommitmentStreak,
-  // mood, moodHistory, brocaNamedMoments, mastery, autoBuyConfig. Per GDD §32.
-  GAMESTATE_FIELD_COUNT: 119,
+  // 120 fields after Sprint 7.10 Phase 7.10.4 (was 119 post-7.5.1). The +1 field
+  // is `pendingOfflineSummary`, stashed on GameState for Sleep screen + Welcome
+  // modal + Lucid Dream consumer surfaces. Per GDD §32.
+  GAMESTATE_FIELD_COUNT: 120,
 } as const;

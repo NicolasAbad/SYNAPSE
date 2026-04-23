@@ -40,6 +40,7 @@ function makeState(overrides: Partial<GameState> = {}): GameState {
     currentPathway: null,
     currentOfflineCapHours: 4,
     currentOfflineEfficiency: 0.5,
+    pendingOfflineSummary: null,
     sessionStartTimestamp: null,
     prestigeCount: 0,
     currentThreshold: 50_000,

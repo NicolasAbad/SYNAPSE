@@ -6,10 +6,54 @@
 
 ## Current status
 
-**Phase:** Sprint 7.10 Phase 7.10.3 CLOSED (Offline engine extensions — MUT-1 + OFFLINE-9 + Lucid Dream). **1550 tests pass** (+18 from Phase 7.10.2); 4/4 gates green (ratio 0.83); typecheck + lint clean.
-**Last updated:** 2026-04-23 after Phase 7.10.3 commit.
-**Active sprint:** Sprint 7.10 — Sprint 8a Offline engine (Option 1 of Sprint 7.10 scope, Nico-approved 2026-04-23).
-**Next action:** Phase 7.10.4 — Store action `applyOfflineReturn`, Capacitor `@capacitor/app` resume listener, `visibilitychange` fallback, `initSession` integration order, save-on-resume. +`pendingOfflineSummary` field (GameState 119 → 120). STOP-for-approval at kickoff.
+**Phase:** Sprint 7.10 Phase 7.10.4 CLOSED (Store action + Capacitor resume + `pendingOfflineSummary` field). **1558 tests pass** (+8 from Phase 7.10.3); 4/4 gates green (ratio 0.83); typecheck + lint clean. **GameState invariant bumped: 119 → 120 fields.**
+**Last updated:** 2026-04-23 after Phase 7.10.4 commit.
+**Active sprint:** Sprint 7.10 — Sprint 8a Offline engine (Option 1).
+**Next action:** Phase 7.10.5 — UI surfaces: Sleep screen (4s animation + particle cascade), Welcome-back modal (offlineModalMinSeconds gate), Lucid Dream binary-choice modal, OFFLINE-7 enhanced-Discharge banner, rewarded ad ×2 stub. ~10 tests + Vitest Browser Mode component tests. STOP-for-approval at kickoff.
+
+### Sprint 7.10 Phase 7.10.4 (2026-04-23) — Store + resume wiring + GameState field 120
+
+**Scope shipped (heaviest phase of the sprint):**
+- `@capacitor/app@^6.0.0` installed (matches core v6 — initial `@capacitor/app@latest` attempt failed on peer-dep conflict with core 6.x; pinned to v6 cleanly).
+- **GameState 119 → 120 fields.** New field `pendingOfflineSummary: OfflineSummary | null` added to the Offline group (3 fields now). All downstream invariants updated.
+- `OfflineSummary` interface promoted from `src/engine/offline.ts` → `src/types/index.ts` (avoids circular import from GameState ← offline).
+- `src/config/prestige.ts` — `pendingOfflineSummary` added to PRESTIGE_RESET (clears on prestige per Nico approval — stale summary noise prevention) + PRESTIGE_RESET_FIELDS tuple. Counts: 46 → 47 / 68 / 4 / 1 = 120.
+- `src/config/constants.ts GAMESTATE_FIELD_COUNT` 119 → 120.
+- `src/store/migrate.ts` — backfills `pendingOfflineSummary: null` for legacy saves. NEW_FIELDS_MIGRATED now 10 (9 Sprint 7.5.1 + 1 Sprint 7.10.4). Migration idempotent.
+- `src/store/gameStore.ts` — 2 new store actions:
+  - `applyOfflineReturn(nowTimestamp)` — calls `applyOfflineProgress`, writes summary to `pendingOfflineSummary`, fires `saveGame` (fire-and-forget, catches errors). No-op guard when elapsed < 1 min (skip branch yields gained=0).
+  - `dismissOfflineSummary()` — UI consumer clears `pendingOfflineSummary`.
+- `src/store/initSession.ts` — mount sequence now: `initSessionTimestamps(now)` → `applyOfflineReturn(now)` → attach listeners (Capacitor `App.addListener('appStateChange')` on native + `document.addEventListener('visibilitychange')` web fallback). All listeners cleanup on unmount.
+- `CLAUDE.md` — CODE-2 Exception A + B updated with 120-field count + Sprint 7.10.4 attribution.
+- `src/types/GameState.ts` — docstring 119 → 120. Field count invariant asserts `Object.keys(DEFAULT_STATE).length === 120`.
+
+**Tests added (all green on first run):**
+- `tests/store/applyOfflineReturn.test.ts` NEW (8 tests): fresh save (no-op), 30-min gap (summary stashed), atomic thoughts+timestamp advance, force-quit protection (2nd call is no-op), backward clock (timestamp advances, no gain), skip branch (<1min no summary), dismiss action clears, PRESTIGE_RESET clears summary on prestige.
+
+**Tests updated (119 → 120):**
+- `tests/consistency.test.ts` (3 spots: field count 120; PRESTIGE_RESET 47; union 120).
+- `tests/store/gameStore.test.ts` (2 spots: createDefaultState 120; JSON round-trip 120).
+- `tests/store/migrate.test.ts` (4 spots: NEW_FIELDS expanded to 10; migration 110→120; idempotency 120; default-value assertion for `pendingOfflineSummary: null`).
+- `tests/store/saveGame.test.ts` (5 spots: round-trip 120 / valid payload 120 / persisted file 120).
+- `tests/store/saveScheduler.test.ts` (1 spot: 120-field payload).
+- `tests/engine/tick.test.ts` + `tests/engine/tick-order.test.ts` — local `makeState` helpers needed `pendingOfflineSummary: null` added to the literal.
+
+**Integration sequencing (V16 confirmed):**
+1. Load save (`loadFromSave`) — hydrates store with persisted state
+2. `initSessionTimestamps(now)` — fills sentinel timestamps (0/null) ONLY; saved timestamps pass through
+3. `applyOfflineReturn(now)` — computes `now - state.lastActiveTimestamp`, applies offline delta, advances timestamp, fires save
+4. Tick loop starts
+
+Order tested implicitly via `applyOfflineReturn.test.ts` cases (no-op on fresh save where `lastActiveTimestamp === now`; delta applies on restored save where `lastActiveTimestamp` is old).
+
+**Test growth:** 1550 → 1558 (+8). 1 new test file.
+**Gates:** 4/4 PASS, ratio 0.83 (192 constants / 40 literals). ESLint + typecheck clean.
+
+**Stderr noise in tests (non-blocking):** `[applyOfflineReturn] save failed: ReferenceError: window is not defined` appears in test output — Capacitor Preferences has no browser env in node tests. The action's `.catch()` swallows it cleanly; no test failures. In prod the listener fires only after the browser/native env is up, so this stderr noise doesn't manifest.
+
+**Next phase (7.10.5):** UI surfaces. Sleep screen component (4s "brain dreaming" animation + particle cascade), Welcome-back modal (gated by `offlineModalMinSeconds` = 60s), Lucid Dream binary-choice modal (P10+, probability gate, Option A/B payout wiring), OFFLINE-7 enhanced-Discharge banner, rewarded ad ×2 button stub. Vitest Browser Mode for component tests. Expected ~10-12 tests.
+
+### Sprint 7.10 Phase 7.10.3 (2026-04-23) — Offline engine extensions
 
 ### Sprint 7.10 Phase 7.10.3 (2026-04-23) — Offline engine extensions
 
