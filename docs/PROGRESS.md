@@ -6,10 +6,71 @@
 
 ## Current status
 
-**Phase:** Sprint 7.8 CLOSED (all 5 implementation phases + close shipped: catalog + Upgrade Mastery + sim engine + sweep + findings). **1492 tests pass** (+17 from Sprint 7.7 close); 4/4 gates green (ratio 0.81); buffer-1 sim 0/0 across 20 prestige cycles; typecheck + lint clean.
-**Last updated:** 2026-04-23 after Sprint 7.8 close.
-**Active sprint:** Sprint 7.9 ready (scope TBD — Sprint 8a Offline engine is the natural next block since it unblocks Empática OFFLINE-4 validation + gets us closer to Sprint 8c canonical TEST-5).
-**Next action:** Sprint 7.9 kickoff — Nico to approve scope.
+**Phase:** Sprint 7.9 CLOSED (Mood online drift — Sprint 7.8 F2 closure). **1509 tests pass** (+17 from Sprint 7.8 close 1492); 4/4 gates green (ratio 0.81); buffer-1 sim 0/0; Balance Scout Sim 27×5 = 135 runs confirm drift working; typecheck + lint clean.
+**Last updated:** 2026-04-23 after Sprint 7.9 close.
+**Active sprint:** Sprint 7.10 ready (candidates: Sprint 8a Offline engine / GDD docs sweep / v1.1 pull-ins).
+**Next action:** Sprint 7.10 kickoff — Nico to approve scope.
+
+### Sprint 7.9 close dashboard (2026-04-23 — Mood online drift, F2 resolution)
+
+**Scope shipped (1 focused sprint addressing Sprint 7.8 F2):**
+- Phase 7.9.1 pre-code catalog with V1-V9 decisions
+- Phase 7.9.2 engine + tick hook + GDD §16.3 MOOD-3 update
+- Phase 7.9.3 Balance Scout Sim re-run validation
+- Phase 7.9.4 Sprint close
+
+**Changes applied:**
+- `src/config/constants.ts` — 4 new constants: `moodOnlineDriftPerMinute` (0.5/min), `moodDecayTargetValue` (50 midpoint), `moodDriftArchetypeEmpaticaMult` (0.5), `moodDriftSteadyHeartMult` (0.5).
+- `src/engine/mood.ts` — `moodOnlineDriftRate(state)` + `applyMoodDrift(state, dtMs)` pure helpers. Floor-aware (resilience 25, Genius Pass 40). Drift clamps direction: above 50 drifts down, below drifts up, at 50 stable.
+- `src/engine/tick.ts` — new `stepMoodDrift` inserted between `stepRecalcProduction` and `stepMentalStateTriggers` — drift fires BEFORE the mood mult reads `state.mood`, so this tick's production reflects the updated mood.
+- `docs/GDD.md §16.3 MOOD-3` — spec extended to cover both online (0.5/min) and offline (2/hour) drift, both converging to `moodDecayTargetValue` (50).
+- `tests/engine/moodDrift.test.ts` (NEW, 17 tests) — direction, target stability, floor interactions, rate math (1-minute accumulation), archetype + upgrade multipliers, bounds.
+
+**Balance Scout Sim re-run validation (27 configs × 5 runs = 135 runs):**
+- 0 timeouts, 0 anomalies, 100% complete 26 cycles ✓ (same as Sprint 7.8)
+- **F2 mood saturation closed architecturally** — drift firing every tick, mood no longer pinned flat at 100
+- Pre-drift (Sprint 7.8): mood = 100.00 from P7 onwards (pinned)
+- Post-drift (Sprint 7.9): mood = 96.38 → 99.00 → 99.02 → 99.22 … 99.70 (hovering, slight variance)
+- Archetype differentiation confirmed — Empática P1 mood 30.82 vs Analítica 31.30 (×0.5 halving visible)
+- Ramp-up extended — P1→P7 now shows gradual climb instead of jumping to 100 fast
+
+**Why the mood still hovers near 100 and not at the 85-95 predicted range:**
+The scout sim's cycles are 1-3 minutes long (per F1 pacing overtune). At that duration, per-cycle drift is only 0.5-1.5 mood points, while prestige +10 refills most of that. Net per-cycle delta: +8.5 to +9.5. Player pins at 99 instead of 100, but the RATE of approach and micro-variance confirm drift is working.
+
+**Under Sprint 8c's canonical 7-35 min target cycles (F1 fixed):** per-cycle drift will be 3.5-17.5 mood, creating visible tier transitions (Engaged→Elevated→Euphoric→Elevated→Engaged pattern). Full "emotional weather" metaphor restored. F2 is architecturally closed now; its full visible effect is gated on F1's resolution in Sprint 8c.
+
+**F2 status handoff to Sprint 8c:** CLOSED as an engine concern. Sprint 8c's canonical TEST-5 will validate mood distributes across multiple tiers per Run with the tuned cycle times.
+
+**Positive side effects validated:**
+- `lim_steady_heart` upgrade now dual-purpose (online + offline) — doubles its player value
+- Mood event deltas (pre-commit fail −15, anti-spam −10) now have persistent consequences instead of next-cycle-autorefill
+- Upgrade value tree for Límbico region more competitive relative to Hipocampo shards
+
+**Decisions applied from 7.9.1 catalog (V1-V9):**
+- V1 `moodOnlineDriftPerMinute: 0.5` ✓
+- V2 target 50 midpoint ✓
+- V3 shared `moodDecayTargetValue` for online + offline ✓
+- V4 Empática ×0.5 ✓
+- V5 `lim_steady_heart` ×0.5 ✓ (upgrade now dual-purpose)
+- V6 Step 7.5 placement (new `stepMoodDrift` between production recalc + mental state) ✓
+- V7 Per-tick fractional accumulation ✓
+- V8 Floor-aware drift (resilience 25, Genius Pass 40) ✓
+- V9 Sim re-run validated F2 closure ✓
+
+**Commits this sprint (2 phase commits + close):**
+- `0b583c4` Phase 7.9.2 — Mood online drift engine + tick hook + GDD update
+- (this commit) Phase 7.9.3/7.9.4 — Sprint close + sim re-run artifacts
+
+**Test growth:** Sprint 7.8 close: 1492 → Sprint 7.9 close: 1509 (+17 drift tests). 1 new test file: `tests/engine/moodDrift.test.ts`.
+
+**GameState invariant:** 119 fields preserved. 4 new constants, 2 new engine helpers, 1 new tick step, 0 new state fields.
+
+**Pending Nico actions:**
+- Push Sprint 7.9 commits (~11 ahead of origin/main across Sprints 7.7/7.8/7.9 combined)
+- Approve Sprint 7.10 scope. Options ranked by senior-dev priority:
+  1. **Sprint 8a Offline engine** — unblocks Empática OFFLINE-4 validation + preps Sprint 8c canonical TEST-5 (my top pick per Sprint 7.8 close)
+  2. GDD §16.3 line 831 prose fix + 5 GDD deviations docs sweep (Sprint 7.5.3+ lingering items)
+  3. v1.1 pull-ins from POSTLAUNCH.md (brain canvas / Memory Weave UI / etc.)
 
 ### Sprint 7.8 close dashboard (2026-04-23 — Balance Scout Sim + Upgrade Mastery wiring)
 
