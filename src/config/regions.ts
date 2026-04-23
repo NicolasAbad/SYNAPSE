@@ -51,7 +51,12 @@ export const REGIONS: readonly RegionDef[] = [
     id: 'visual',
     nameKey: 'regions.visual.name',
     unlockPrestige: 0,
-    upgradeIds: ['procesamiento_visual'] as const,
+    // Sprint 7.5.5 §16.4: procesamiento_visual retired (effect becomes T1
+    // always-on Pattern Recognition toggle). Visual now hosts 3 Foresight
+    // upgrades (vis_pattern_sight T2, vis_deep_sight T3, vis_prophet_sight T4)
+    // — buying any unlocks its corresponding Foresight tier even before the
+    // prestige-count gate. Tier resolver in src/engine/visual.ts.
+    upgradeIds: ['vis_pattern_sight', 'vis_deep_sight', 'vis_prophet_sight'] as const,
   },
   {
     id: 'broca',

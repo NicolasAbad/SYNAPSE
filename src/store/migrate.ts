@@ -28,6 +28,7 @@ import { SYNAPSE_CONSTANTS } from '../config/constants';
 const RETIRED_UPGRADE_IDS = new Set<string>([
   'consolidacion_memoria', // Sprint 7.5.2 — replaced by shard_emo_resonance
   'regulacion_emocional',  // Sprint 7.5.3 — replaced by ondas_theta + Mood-applies-offline
+  'procesamiento_visual',  // Sprint 7.5.5 — replaced by Visual Foresight T1 Pattern Recognition toggle
 ]);
 
 function stripRetiredUpgrades(value: unknown): unknown {

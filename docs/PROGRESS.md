@@ -6,10 +6,10 @@
 
 ## Current status
 
-**Phase:** Sprint 7.5 Phase 7.5.4 CLOSED (Prefrontal Pre-commits: 8 goal templates + resolution engine + 2 store actions + Mood-fail wiring + DiaryEntryType +'precommit'). **1356 tests pass** (+18 from Phase 7.5.3 close 1338); 4/4 gates green; typecheck + lint clean.
-**Last updated:** 2026-04-22 after Sprint 7.5 Phase 7.5.4 close.
-**Active sprint:** Sprint 7.5 Region Deepening (4 of 9 phases done). Next: Phase 7.5.5 Visual Foresight + MUT-2 seed refactor (BREAKING).
-**Next action:** Sprint 7.5 Phase 7.5.5 — Visual Foresight tier engine + MUT-2 seed refactor. Pre-code research: 4 tier resolver (T1 What-if 3-cycle / T2 Mutation-pool preview / T3 Spontaneous countdown / T4 Era 3 preview); MUT-2 mutationSeed compute moves prestige-START → prestige-END (BREAKING — 23 mutation tests need updates); What-if Preview UI extends from "next cycle" to "3 cycles ahead"; procesamiento_visual retirement migration; Pattern Recognition toggle (replaces procesamiento_visual visual indicator); Spontaneous-event 20s countdown badge; Visual panel UI scaffold inside RegionsPanel.
+**Phase:** Sprint 7.5 Phase 7.5.5 CLOSED (Visual Foresight engine: 4-tier resolver + 3 Visual upgrades + procesamiento_visual retired; MUT-2 BREAKING refactor SKIPPED via senior-dev correction). **1369 tests pass** (+13 from Phase 7.5.4 close 1356); 4/4 gates green; typecheck + lint clean.
+**Last updated:** 2026-04-22 after Sprint 7.5 Phase 7.5.5 close.
+**Active sprint:** Sprint 7.5 Region Deepening (5 of 9 phases done). Next: Phase 7.5.6 Broca Inner Voice.
+**Next action:** Sprint 7.5 Phase 7.5.6 — Broca Inner Voice engine. Ship 5 Named Moment slots (First Awakening / Archetype Voice / Resonance Found / Era 3 Entry / The Last Choice), free-text authoring (40 chars), persistence in `brocaNamedMoments`, fragment routing for `voice_*`/`dream_*`/`greeting_*`/`crossrun_*` prefixes per VOICE-2a (fire regardless of Broca region UI unlock). Oneiric Dreams seed (5 in v1.0).
 
 ### Sprint 7.5 Phase 7.5.4 closing dashboard (2026-04-22 — Prefrontal Pre-commits)
 

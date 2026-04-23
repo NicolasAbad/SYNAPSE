@@ -146,24 +146,24 @@ describe('canBuyUpgrade / tryBuyUpgrade', () => {
     expect(check.cost).toBeCloseTo(3_000 * 0.8, 6); // 2400
   });
   test('COST-1 does NOT apply to memoria-cost region upgrades', () => {
-    // Sprint 7.5.3: regulacion_emocional retired; using procesamiento_visual (8 Mem, P0+).
-    // procesamiento_visual itself retires in Sprint 7.5.5 — refactor target then.
+    // Sprint 7.5.5: procesamiento_visual retired. Using funciones_ejecutivas (3 Mem, P2+) as target.
     const state = withUpgrades({ ...createDefaultState(), memories: 100, prestigeCount: 2 }, ['funciones_ejecutivas']);
-    expect(canBuyUpgrade(state, 'procesamiento_visual').cost).toBe(8); // unchanged
+    // Cannot apply funciones_ejecutivas to itself (already owned). Use amplitud_banda instead.
+    expect(canBuyUpgrade(state, 'amplitud_banda').cost).toBe(15); // unchanged
   });
 
   test('Memoria-cost upgrade deducts from memories, not thoughts', () => {
-    const state = { ...createDefaultState(), memories: 20 };
-    const result = tryBuyUpgrade(state, 'procesamiento_visual', 0);
+    const state = { ...createDefaultState(), memories: 20, prestigeCount: 2 };
+    const result = tryBuyUpgrade(state, 'amplitud_banda', 0);
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    expect(result.updates.memories).toBe(12); // 20 - 8
+    expect(result.updates.memories).toBe(5); // 20 - 15
     expect(result.updates.thoughts).toBeUndefined();
   });
 
   test('insufficient memoria rejects region upgrade', () => {
-    const state = { ...createDefaultState(), memories: 1 };
-    expect(canBuyUpgrade(state, 'procesamiento_visual').reason).toBe('insufficient_funds');
+    const state = { ...createDefaultState(), memories: 1, prestigeCount: 2 };
+    expect(canBuyUpgrade(state, 'amplitud_banda').reason).toBe('insufficient_funds');
   });
 });
 

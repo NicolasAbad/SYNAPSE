@@ -203,7 +203,10 @@ export const en = {
     lim_emotional_wisdom: 'Emotional Wisdom',
     // Sprint 7.5.3 — Ondas Theta replaces retired regulacion_emocional offline path.
     ondas_theta: 'Theta Waves',
-    procesamiento_visual: 'Visual Processing',
+    // Sprint 7.5.5 §16.4 — Visual Foresight tier-unlock upgrades (3 of 3 shipped).
+    vis_pattern_sight: 'Pattern Sight',
+    vis_deep_sight: 'Deep Sight',
+    vis_prophet_sight: 'Prophet Sight',
     funciones_ejecutivas: 'Executive Function',
     amplitud_banda: 'Bandwidth',
     sueno_rem: 'REM Sleep',
@@ -257,7 +260,9 @@ export const en = {
     lim_euphoric_echo: 'Euphoric production mult 1.30→1.40',
     lim_emotional_wisdom: 'Each mood tier crossed this Run grants +1 lifetime Memoria',
     ondas_theta: 'Offline efficiency ×2',
-    procesamiento_visual: 'Highlights best upgrade',
+    vis_pattern_sight: 'Mutation pool preview at Pattern Tree (T2)',
+    vis_deep_sight: 'Spontaneous events show 20s countdown (T3)',
+    vis_prophet_sight: 'Era 3 event preview at Awakening (T4)',
     funciones_ejecutivas: 'Thought-cost upgrades −20%',
     amplitud_banda: 'All region upgrades +50%',
     // Consciousness & Offline (4)

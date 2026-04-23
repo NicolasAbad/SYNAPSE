@@ -21,13 +21,14 @@
 import type { UpgradeDef } from '../types';
 
 /**
- * The 40 upgrades per GDD §24 (v1.0, excluding the 4 run-exclusive in §21, the
- * Resonance upgrades in §15, and the 6 Hipocampo shard upgrades in shards.ts).
+ * The 42 upgrades per GDD §24 (v1.0, excluding the 4 run-exclusive in §21, the
+ * Resonance upgrades in §15, and the 7 Hipocampo shard upgrades in shards.ts).
  * Sprint 7.5.2 retired `consolidacion_memoria`; Sprint 7.5.3 retired
- * `regulacion_emocional` AND added 6 Límbico mood upgrades + ondas_theta.
+ * `regulacion_emocional` (+6 Límbico mood + ondas_theta); Sprint 7.5.5 retired
+ * `procesamiento_visual` (+3 Visual Foresight tier-unlock upgrades).
  *
- * Category counts: tap=3, foc=1, syn=5, neu=8, reg=9 (3 surviving regions +
- * 6 Límbico mood markers), con=5 (incl. ondas_theta), met=3, new=6. Total=40.
+ * Category counts: tap=3, foc=1, syn=5, neu=8, reg=11 (2 surviving regions +
+ * 6 Límbico mood + 3 Visual), con=5 (incl. ondas_theta), met=3, new=6. Total=42.
  */
 export const UPGRADES: readonly UpgradeDef[] = [
   // ── Tap (⚡, 3) ──
@@ -60,9 +61,16 @@ export const UPGRADES: readonly UpgradeDef[] = [
   // GDD §16.8). Sprint 7.5.3 retired `regulacion_emocional` (offline path moved
   // to new `ondas_theta` upgrade in `con` category + Mood-applies-offline §19);
   // procesamiento_visual retires Sprint 7.5.5 with the Visual Foresight engine. ──
-  { id: 'procesamiento_visual', category: 'reg', cost: 8, costCurrency: 'memorias', unlockPrestige: 0, effect: { kind: 'best_upgrade_indicator' } },
   { id: 'funciones_ejecutivas', category: 'reg', cost: 3, costCurrency: 'memorias', unlockPrestige: 2, effect: { kind: 'upgrade_cost_reduction', pct: 0.20 } },
   { id: 'amplitud_banda', category: 'reg', cost: 15, costCurrency: 'memorias', unlockPrestige: 2, effect: { kind: 'region_upgrades_boost', mult: 1.5 } },
+  // ── Visual Foresight (vis, 3) — Sprint 7.5.5 §16.4. Memorias-priced; effects
+  // are id-marker (visualInsightTier resolver in src/engine/visual.ts reads them
+  // via owned-id lookup, not effect.kind branch). procesamiento_visual retired
+  // here — its effect (highlight best upgrade) becomes a UI-side Pattern
+  // Recognition toggle wired via T1 always-on. ──
+  { id: 'vis_pattern_sight',  category: 'reg', cost: 2,  costCurrency: 'memorias', unlockPrestige: 5,  effect: { kind: 'mood_passive_marker' } },
+  { id: 'vis_deep_sight',     category: 'reg', cost: 8,  costCurrency: 'memorias', unlockPrestige: 12, effect: { kind: 'mood_passive_marker' } },
+  { id: 'vis_prophet_sight',  category: 'reg', cost: 20, costCurrency: 'memorias', unlockPrestige: 19, effect: { kind: 'mood_passive_marker' } },
 
   // ── Límbico (lim, 6) — Sprint 7.5.3 §16.3 Mood upgrades, Memorias-priced.
   // Effects consumed by src/engine/mood.ts (lim_steady_heart for offline mood

@@ -266,6 +266,11 @@ export const SYNAPSE_CONSTANTS = {
   limEmpathicSparkCascadeBonus: 5,
   // Sprint 7.5.3 §32 — moodHistory circular buffer cap.
   moodHistoryBufferCap: 48,
+  // Sprint 7.5.5 §16.4 — Visual Foresight tier prestige gates.
+  visualT2PrestigeGate: 5,
+  visualT3PrestigeGate: 12,
+  visualT4PrestigeGate: 19,
+  visualWhatIfHorizonCycles: 3,
 
   // ── Mental States ──
   mentalStateFlowTapCount: 10,

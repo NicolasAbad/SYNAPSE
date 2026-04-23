@@ -451,8 +451,8 @@ describe('Consistency: Pathways (GDD §14)', () => {
 
 describe('Consistency: Upgrades (GDD §24)', () => {
   // Un-skipped Sprint 3 Phase 1: UPGRADES data ships here.
-  test('Total 40 upgrades (Sprint 7.5.3: +6 Límbico mood + ondas_theta - regulacion_emocional, was 34)', () => {
-    expect(UPGRADES.length).toBe(40);
+  test('Total 42 upgrades (Sprint 7.5.5: +3 Visual - procesamiento_visual, was 40)', () => {
+    expect(UPGRADES.length).toBe(42);
   });
   test('Each upgrade has a valid category', () => {
     const validCategories: ReadonlySet<UpgradeCategory> = new Set<UpgradeCategory>([
@@ -462,7 +462,7 @@ describe('Consistency: Upgrades (GDD §24)', () => {
       expect(validCategories.has(u.category)).toBe(true);
     }
   });
-  test('Upgrade category counts match GDD §24 post-7.5.3 (tap=3, foc=1, syn=5, neu=8, reg=9, con=5, met=3, new=6)', () => {
+  test('Upgrade category counts match GDD §24 post-7.5.5 (tap=3, foc=1, syn=5, neu=8, reg=11, con=5, met=3, new=6)', () => {
     const counts = UPGRADES.reduce<Record<string, number>>((acc, u) => {
       acc[u.category] = (acc[u.category] ?? 0) + 1;
       return acc;
@@ -471,8 +471,8 @@ describe('Consistency: Upgrades (GDD §24)', () => {
     expect(counts.foc).toBe(1);
     expect(counts.syn).toBe(5);
     expect(counts.neu).toBe(8);
-    expect(counts.reg).toBe(9); // Sprint 7.5.3: 3 surviving regions + 6 Límbico mood markers
-    expect(counts.con).toBe(5); // Sprint 7.5.3: +ondas_theta
+    expect(counts.reg).toBe(11); // Sprint 7.5.5: 2 surviving regions + 6 Límbico + 3 Visual
+    expect(counts.con).toBe(5);
     expect(counts.met).toBe(3);
     expect(counts.new).toBe(6);
   });
@@ -480,9 +480,9 @@ describe('Consistency: Upgrades (GDD §24)', () => {
     const ids = UPGRADES.map((u) => u.id);
     expect(new Set(ids).size).toBe(ids.length);
   });
-  test('Region upgrades are priced in Memorias (GDD §16, Sprint 7.5.3: 9 incl. 6 Límbico)', () => {
+  test('Region upgrades are priced in Memorias (GDD §16, Sprint 7.5.5: 11 incl. 6 Límbico + 3 Visual)', () => {
     const regionUpgrades = UPGRADES.filter((u) => u.category === 'reg');
-    expect(regionUpgrades.length).toBe(9);
+    expect(regionUpgrades.length).toBe(11);
     for (const u of regionUpgrades) {
       expect(u.costCurrency).toBe('memorias');
     }
@@ -528,14 +528,18 @@ describe('Consistency: Upgrades (GDD §24)', () => {
     expect(UPGRADES.find((u) => u.id === 'ltp_potenciacion_larga')!.effect).toEqual({ kind: 'all_neurons_mult', mult: 1.5 });
     expect(UPGRADES.find((u) => u.id === 'neurogenesis')!.effect).toEqual({ kind: 'all_neurons_mult', mult: 1.10 });
   });
-  test('§16 Regions tier: surviving region + Límbico mood upgrades (Sprint 7.5.3: regulacion_emocional retired)', () => {
-    // Sprint 7.5.2: consolidacion_memoria removed. Sprint 7.5.3: regulacion_emocional removed.
+  test('§16 Regions tier: surviving region + Límbico mood + Visual Foresight (Sprint 7.5.5)', () => {
+    // Sprint 7.5.2: consolidacion_memoria removed. 7.5.3: regulacion_emocional. 7.5.5: procesamiento_visual.
     expect(UPGRADES.find((u) => u.id === 'consolidacion_memoria')).toBeUndefined();
     expect(UPGRADES.find((u) => u.id === 'regulacion_emocional')).toBeUndefined();
-    expect(UPGRADES.find((u) => u.id === 'procesamiento_visual')!.cost).toBe(8);
+    expect(UPGRADES.find((u) => u.id === 'procesamiento_visual')).toBeUndefined();
     expect(UPGRADES.find((u) => u.id === 'funciones_ejecutivas')!).toEqual(expect.objectContaining({ cost: 3, unlockPrestige: 2 }));
     expect(UPGRADES.find((u) => u.id === 'funciones_ejecutivas')!.effect).toEqual({ kind: 'upgrade_cost_reduction', pct: 0.20 });
     expect(UPGRADES.find((u) => u.id === 'amplitud_banda')!.cost).toBe(15);
+    // Sprint 7.5.5 — 3 Visual Foresight tier-unlock upgrades.
+    expect(UPGRADES.find((u) => u.id === 'vis_pattern_sight')).toEqual(expect.objectContaining({ cost: 2, unlockPrestige: 5 }));
+    expect(UPGRADES.find((u) => u.id === 'vis_deep_sight')).toEqual(expect.objectContaining({ cost: 8, unlockPrestige: 12 }));
+    expect(UPGRADES.find((u) => u.id === 'vis_prophet_sight')).toEqual(expect.objectContaining({ cost: 20, unlockPrestige: 19 }));
     // Sprint 7.5.3 — 6 Límbico mood upgrades all priced in Memorias with mood_passive_marker effect.
     for (const id of ['lim_steady_heart', 'lim_empathic_spark', 'lim_resilience', 'lim_elevation', 'lim_euphoric_echo', 'lim_emotional_wisdom']) {
       const u = UPGRADES.find((up) => up.id === id);
