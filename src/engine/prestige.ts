@@ -12,6 +12,7 @@ import { checkAllResonantPatterns } from './resonantPatterns';
 import { episodicShardsAtPrestige } from './shards';
 import { applyMoodEvent } from './mood';
 import { applyPrecommitResolution, streakPermanentMemoriaBonus } from './precommits';
+import { integratedMindMemoryMult, isFullyIntegrated } from './integratedMind';
 import type { GameState } from '../types/GameState';
 import type { AwakeningEntry, PatternNode, DiaryEntry } from '../types';
 
@@ -96,12 +97,13 @@ export function handlePrestige(state: GameState, timestamp: number): { state: Ga
   const resonanceGain = 0;
   const rp = checkAllResonantPatterns(state);
   const baseMemoriesGained = computeMemoriesGained(state);
-  // Sprint 7.5.4 §16.2 — resolve active Pre-commit BEFORE Memory grant.
+  // Sprint 7.5.4/7.5.8 — Pre-commit resolution + Integrated Mind Memoria mult applied BEFORE Memory grant.
   const pc = applyPrecommitResolution(state, cycleDurationMs, timestamp);
   const streakAfter = pc.streakDelta < 0 ? 0 : state.precommitmentStreak + pc.streakDelta;
-  const memoriesGained = Math.max(0, Math.round(baseMemoriesGained * pc.memoryMultiplier) + streakPermanentMemoriaBonus(streakAfter));
-  // Step 8 — Focus Persistente retention captured BEFORE applying RESET defaults.
-  const focusBarRetained = focusBarAfterReset(state);
+  const integratedMult = integratedMindMemoryMult(state);
+  const memoriesGained = Math.max(0, Math.round(baseMemoriesGained * pc.memoryMultiplier * integratedMult) + streakPermanentMemoriaBonus(streakAfter));
+  const fullyIntegrated = isFullyIntegrated(state);
+  const focusBarRetained = focusBarAfterReset(state); // PREST-1 Focus Persistente retention pre-RESET
   // POLAR-1 + Sprint 5 Mutation #14 Déjà Vu snapshot. Pre-RESET so array isn't empty.
   const lastCycleConfig = { polarity: state.currentPolarity ?? '', mutation: state.currentMutation?.id ?? '', pathway: state.currentPathway ?? '', upgrades: state.upgrades.filter((u) => u.purchased).map((u) => u.id) };
   // Step 9 + Step 11 — UPDATE values + capped Momentum Bonus.
@@ -151,7 +153,8 @@ export function handlePrestige(state: GameState, timestamp: number): { state: Ga
     mood: pc.moodAfter ?? moodAccum.mood,
     moodHistory: pc.moodHistoryAfter ?? moodAccum.moodHistory,
     // Sprint 7.5.4 §16.2 — Pre-commit resolution: Sparks bonus + streak update + diary.
-    sparks: rp.sparks + pc.sparksAwarded,
+    // Sprint 7.5.8 §16.6 — Integrated Mind full-synergy +5 Sparks (caller logs once-per-Run).
+    sparks: rp.sparks + pc.sparksAwarded + (fullyIntegrated ? SYNAPSE_CONSTANTS.integratedMindFullSynergySparks : 0),
     precommitmentStreak: streakAfter,
     diaryEntries: pc.diaryEntry === null ? state.diaryEntries : appendDiaryCapped(state.diaryEntries, pc.diaryEntry),
     awakeningLog: [...state.awakeningLog, awakeningEntry],

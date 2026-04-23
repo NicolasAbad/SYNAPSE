@@ -13,6 +13,7 @@ import { shouldTriggerMicroChallenge, rollMicroChallenge, activateMicroChallenge
 import { MICRO_CHALLENGES_BY_ID } from '../config/microChallenges';
 import { stepShardDrip, chargeIntervalShardMult } from './shards';
 import { moodProductionMult, moodMaxChargesBonus } from './mood';
+import { integratedMindMaxChargeBonus } from './integratedMind';
 import type { GameState } from '../types/GameState';
 
 // Structural intrinsics. Changing breaks determinism / spec.
@@ -101,7 +102,7 @@ function stepDischargeChargeAccumulation(s: GameState, nowTimestamp: number): vo
   }
   intervalMs = mutationChargeIntervalMs(s, intervalMs / pathwayChargeRateMult(s)) * chargeIntervalShardMult(s);
   const baseMax = mutationMaxChargesOverride(s) ?? s.dischargeMaxCharges;
-  const effectiveMax = Math.min(baseMax + moodMaxChargesBonus(s), SYNAPSE_CONSTANTS.dischargeMaxChargesHardCap);
+  const effectiveMax = Math.min(baseMax + moodMaxChargesBonus(s) + integratedMindMaxChargeBonus(s), SYNAPSE_CONSTANTS.dischargeMaxChargesHardCap);
   if (nowTimestamp - s.dischargeLastTimestamp >= intervalMs) {
     s.dischargeCharges = Math.min(effectiveMax, s.dischargeCharges + 1);
     s.dischargeLastTimestamp = nowTimestamp;

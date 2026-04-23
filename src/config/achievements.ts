@@ -18,6 +18,8 @@
 import type { GameState } from '../types/GameState';
 import type { AchievementDef } from '../types';
 import { SYNAPSE_CONSTANTS } from './constants';
+import { visualInsightTier } from '../engine/visual';
+import { isFullyIntegrated } from '../engine/integratedMind';
 
 // Base narrative fragments (BASE-01..BASE-12) — for nar_all_base check.
 const BASE_FRAGMENT_IDS = ['base_01', 'base_02', 'base_03', 'base_04', 'base_05', 'base_06', 'base_07', 'base_08', 'base_09', 'base_10', 'base_11', 'base_12'] as const;
@@ -367,10 +369,9 @@ export const ACHIEVEMENTS: readonly AchievementDef[] = [
     },
   },
 
-  // ═══════════════════ Category 6 — Regions (5, 30 Sparks) — Sprint 6.8 ══════
-  // All triggers STUBBED to false in Sprint 7.1. Sprint 7.5 wires real conditions
-  // once Region sub-system state (memoryShards, mood, precommitmentStreak,
-  // regionsUnlocked + Visual upgrade count for tier, Integrated Mind sync) exists.
+  // ═══════════════════ Category 6 — Regions (5, 30 Sparks) — Sprint 7.5.8 ════
+  // Triggers wired in Sprint 7.5.8 (Integrated Mind tier tracker). Sprint 7.1 had
+  // these stubbed to false; now they fire on real Region sub-system state.
   {
     id: 'reg_shard_collector',
     category: 'reg',
@@ -378,7 +379,9 @@ export const ACHIEVEMENTS: readonly AchievementDef[] = [
     descriptionKey: 'achievements.reg_shard_collector.description',
     reward: 5,
     isHidden: false,
-    trigger: (_s: GameState) => false, // Sprint 7.5: s.memoryShards.{emo|proc|epi} >= 100
+    trigger: (s: GameState) => s.memoryShards.emotional >= SYNAPSE_CONSTANTS.shardsToMemoriaConversion
+                            || s.memoryShards.procedural >= SYNAPSE_CONSTANTS.shardsToMemoriaConversion
+                            || s.memoryShards.episodic  >= SYNAPSE_CONSTANTS.shardsToMemoriaConversion,
   },
   {
     id: 'reg_precommit_streak',
@@ -387,7 +390,7 @@ export const ACHIEVEMENTS: readonly AchievementDef[] = [
     descriptionKey: 'achievements.reg_precommit_streak.description',
     reward: 7,
     isHidden: false,
-    trigger: (_s: GameState) => false, // Sprint 7.5: s.precommitmentStreak >= 5
+    trigger: (s: GameState) => s.precommitmentStreak >= SYNAPSE_CONSTANTS.precommitStreakBonusCycles,
   },
   {
     id: 'reg_euphoric',
@@ -396,7 +399,7 @@ export const ACHIEVEMENTS: readonly AchievementDef[] = [
     descriptionKey: 'achievements.reg_euphoric.description',
     reward: 5,
     isHidden: false,
-    trigger: (_s: GameState) => false, // Sprint 7.5: s.mood >= 100 (Euphoric tier peak)
+    trigger: (s: GameState) => s.mood >= SYNAPSE_CONSTANTS.moodMaxValue,
   },
   {
     id: 'reg_foresight_master',
@@ -405,7 +408,7 @@ export const ACHIEVEMENTS: readonly AchievementDef[] = [
     descriptionKey: 'achievements.reg_foresight_master.description',
     reward: 7,
     isHidden: false,
-    trigger: (_s: GameState) => false, // Sprint 7.5: visualInsightTier derives >= 4
+    trigger: (s: GameState) => visualInsightTier(s) >= 4, // CONST-OK VisualInsightTier T4
   },
   {
     id: 'reg_integrated_mind',
@@ -414,7 +417,7 @@ export const ACHIEVEMENTS: readonly AchievementDef[] = [
     descriptionKey: 'achievements.reg_integrated_mind.description',
     reward: 6,
     isHidden: false,
-    trigger: (_s: GameState) => false, // Sprint 7.5: all 5 regions actively engaged this Run
+    trigger: (s: GameState) => isFullyIntegrated(s),
   },
 ];
 

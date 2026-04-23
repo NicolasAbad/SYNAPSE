@@ -271,6 +271,10 @@ export const SYNAPSE_CONSTANTS = {
   visualT3PrestigeGate: 12,
   visualT4PrestigeGate: 19,
   visualWhatIfHorizonCycles: 3,
+  // Sprint 7.5.8 §16.6 — Integrated Mind 4-region tier Memoria gain bonus (×1.10).
+  integratedMindMemoryBonus: 1.10,
+  // Sprint 7.5.8 §16.6 — Integrated Mind 5-region tier one-per-Run Spark grant.
+  integratedMindFullSynergySparks: 5,
 
   // ── Mental States ──
   mentalStateFlowTapCount: 10,
