@@ -6,10 +6,63 @@
 
 ## Current status
 
-**Phase:** Sprint 7.7 Phase 7.7.5 CLOSED (Mind → Mastery sub-tab UI). **1475 tests pass** (+7 from 7.7.4); 4/4 gates green (ratio 0.81); typecheck + lint clean.
-**Last updated:** 2026-04-23 after Phase 7.7.5 close.
-**Active sprint:** Sprint 7.7 in-flight (7.7.1-7.7.5 ✓, 7.7.6 pending).
-**Next action:** Phase 7.7.6 — Sprint 7.7 close (buffer-1 sim verify + dashboard).
+**Phase:** Sprint 7.7 CLOSED (all 5 implementation phases + close shipped: engine + dispatcher + consumers + UI + close). **1475 tests pass** (+55 from Sprint 7.6 close 1420); 4/4 gates green (ratio 0.81); buffer-1 sim 0 errors/0 warnings across 20 prestige cycles (both variants); typecheck + lint clean.
+**Last updated:** 2026-04-23 after Sprint 7.7 close.
+**Active sprint:** Sprint 7.8 ready (scope TBD — candidates: Upgrade-Mastery consumer wiring + TEST-5 1000-run simulation + balance tuning, OR v1.1 pull-ins from POSTLAUNCH.md).
+**Next action:** Sprint 7.8 kickoff — Nico to approve scope. Priority recommendation: TEST-5 simulation (GDD §35, Sprint 8c historically) to validate all Sprint 7.5-7.7 balance additions before shipping more features.
+
+### Sprint 7.7 close dashboard (2026-04-23 — Mastery system)
+
+**Phases shipped (5/5 + close):**
+- **7.7.1** Pre-code research catalog (8 value decisions V1-V8 approved in one pass)
+- **7.7.2** Mastery engine + entity registry + shard_proc_mastery upgrade (pulled forward from 7.7.5 per "no half-shipped features")
+- **7.7.3** XP dispatcher: prestige hook (+1 mutation/pathway/archetype) + buyUpgrade hook (+1 upgrade)
+- **7.7.4** Consumer multipliers — Option C: Mutation + Pathway + Archetype × (1 + masteryBonus). Upgrade consumer deferred to Sprint 7.8
+- **7.7.5** Mind → Mastery sub-tab UI (4 section toggle, 63-entity reveal grid)
+- **7.7.6** Sprint close + buffer-1 sim verify + dashboard
+
+**Test growth:** Sprint 7.6 close: 1420 → Sprint 7.7 close: 1475 (+55). Per-phase: 7.7.2 +21 / 7.7.3 +11 / 7.7.4 +16 / 7.7.5 +7. New test files: 4 (mastery engine, mastery-xp-dispatch, mastery-consumers, MasterySubtab).
+
+**GameState invariant:** 119 fields preserved (V5 free-accumulation + existing scaffold `mastery: Record<string, number>` field prevented drift).
+
+**Canonical catalog growth:** 8 Hipocampo shard upgrades complete (was 7). New `mastery_xp_gain_mult` UpgradeEffect kind. 63 trackable entities (15 Mutations + 42 Upgrades + 3 Pathways + 3 Archetypes, derived from canonical arrays).
+
+**GDD §38 compliance:**
+- MASTERY-1 cap at 10: ✓ (level = floor(min(uses, 10)), uses accumulate freely past 10)
+- MASTERY-2 +0.5% per level max +5%: ✓ (masteryBonusPerLevel × masteryMaxLevel = 0.05)
+- §38.2 canonical example Hiperestimulación L10 → ×2.10: ✓ (mastery-consumers test asserts exact value)
+- §38.3 Mind → Mastery sub-tab with 4 sections + ??? locked state + "Use once to reveal" hint: ✓
+- §38.4 shard_proc_mastery ×1.25: ✓ wired through applyMasteryXpGain at all accrual sites
+- §38.4 Mastery PRESERVE through prestige: ✓ (existing PRESERVE slot + integration test asserts 5→6)
+- §38.4 mastery_level_up analytics: call-site ready via `masteryLevelUps` helper; Firebase emitter deferred to Sprint 11 §27
+
+**Commits this sprint (5 phase commits):**
+- `eb0eba4` Phase 7.7.2 — Mastery engine + entity registry
+- `54c0231` Phase 7.7.3 — XP dispatcher
+- `1087a4b` Phase 7.7.4 — Mutation/Pathway/Archetype consumers (Option C)
+- `2e6df8d` Phase 7.7.5 — Mind Mastery sub-tab UI
+- (this commit) Phase 7.7.6 — Sprint 7.7 close
+
+**Decisions applied from 7.7.1 catalog (V1-V8):**
+- V1 Per-prestige archetype XP trigger (Transcendence +1 in Sprint 11)
+- V2 Dynamic entity count 63 (not hardcoded 54) — GDD §38.1 synced
+- V3 Shard upgrades excluded from Mastery tracking (economy separation)
+- V4 Option C consumer scope (Mutation + Pathway + Archetype) — Upgrade consumer deferred
+- V5 Free-accumulating uses, floor at read-time (forward-compat)
+- V6 Mastery sub-tab appended to end (7th subtab after resonance)
+- V7 Analytics call-site stub (Firebase wiring in Sprint 11 §27)
+- V8 GDD §38.1 count synced 54→63 in Update Discipline same-commit
+
+**Deferred (not in scope for Sprint 7.7):**
+- Upgrade consumer multiplier wiring (Sprint 7.8, after TEST-5 shows balance need)
+- Entity display-name lookup in Mastery cards (Sprint 10 UX polish)
+- Next-level preview bar + per-entity description tooltips (Sprint 10)
+- Firebase analytics emission of `mastery_level_up` events (Sprint 11)
+- Sprint 11 Transcendence adds Archetype Mastery +1 per full Run completion
+
+**Pending Nico actions:**
+- Push Sprint 7.7 commits (5 ahead of origin/main: eb0eba4, 54c0231, 1087a4b, 2e6df8d, + 7.7.6 close)
+- Approve Sprint 7.8 scope. Senior-dev recommendation: TEST-5 simulation sprint to validate balance across all Sprint 7.5-7.7 additions (Hipocampo shards, Límbico mood, Pre-commits, Visual Foresight, Broca, Integrated Mind, Mastery) before continuing feature pulls from POSTLAUNCH.md.
 
 ### Sprint 7.7 Phase 7.7.5 dashboard (2026-04-23 — Mind Mastery sub-tab UI)
 
