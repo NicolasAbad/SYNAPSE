@@ -3204,11 +3204,11 @@ After a 30+ min absence, a Broca-voiced greeting prefaces the Sleep screen (per 
 
 Mastery applies to 4 entity classes:
 - **Mutations** — each of 15 tracks lifetime use (cycles played with that Mutation)
-- **Upgrades** — each of 33 tracks lifetime purchase count (across all Runs)
+- **Upgrades** — each of 42 tracks lifetime purchase count (across all Runs) — Sprint 7.5.3 grew the catalog 33→42 (+6 Límbico, +ondas_theta, +3 Visual); Sprint 7.7 derives the entity set live from `UPGRADES` (canonical array) so the count stays honest
 - **Pathways** — each of 3 tracks lifetime cycle count
-- **Archetypes** — each of 3 tracks lifetime Run count (+1 per full Run completed in that archetype)
+- **Archetypes** — each of 3 tracks lifetime Run count. Sprint 7.7 v1.0 trigger: +1 per prestige while archetype is set (interim until Sprint 11 Transcendence). Sprint 11 adds the per-Run +1 on TRANSCENDENCE_RESET.
 
-Total trackable entities: 15 + 33 + 3 + 3 = **54**. Storage: `mastery: Record<string, number>` (single field).
+Total trackable entities: 15 + 42 + 3 + 3 = **63** (post-Sprint-7.5.3). Storage: `mastery: Record<string, number>` (single field). Hipocampo shard upgrades (`src/config/shards.ts`, 7 entities) are **NOT** tracked — distinct typed-shard economy; counting them would double-reward a single player choice.
 
 ## 38.2 Rules
 

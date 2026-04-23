@@ -287,14 +287,14 @@ export const en = {
     focus_persistente: 'Keep 25% Focus across prestige',
   },
   // Sprint 7.5.2 — Hipocampo Memory Shard upgrades (GDD §16.1).
-  // 6 of 8 ship in 7.5.2; the remaining 2 land with consumer phases:
-  // shard_emo_deep → 7.5.3 (Mood), shard_proc_mastery → 7.7 (Mastery).
+  // Catalog complete at 8 upgrades post-Sprint-7.7 (shard_proc_mastery landed).
   shard_upgrades: {
     shard_emo_pulse: 'Emotional Pulse',
     shard_emo_resonance: 'Emotional Resonance',
     shard_emo_deep: 'Deep Emotion',
     shard_proc_flow: 'Procedural Flow',
     shard_proc_pattern: 'Procedural Pattern',
+    shard_proc_mastery: 'Procedural Mastery',
     shard_epi_imprint: 'Episodic Imprint',
     shard_epi_reflection: 'Episodic Reflection',
   },
@@ -304,6 +304,7 @@ export const en = {
     shard_emo_deep: 'Mood event deltas ±50% stronger',
     shard_proc_flow: 'Tap contribution +5%',
     shard_proc_pattern: 'Discharge charge interval −10%',
+    shard_proc_mastery: 'Mastery XP gain ×1.25 (accelerates all Mastery progression)',
     shard_epi_imprint: '+1 Memoria per prestige',
     shard_epi_reflection: 'Each Resonant Pattern grants +10 Sparks (total +15)',
   },

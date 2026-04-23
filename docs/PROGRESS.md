@@ -6,10 +6,30 @@
 
 ## Current status
 
-**Phase:** Sprint 7.6 CLOSED (all 5 phases shipped: pre-code catalog + archetype migration + onboarding tutorial + pathway refinement + close). **1420 tests pass** (+23 from Sprint 7.5 close 1397); 4/4 gates green (ratio 0.80); buffer-1 sim 0 errors/0 warnings across 20 prestige cycles (both variants); typecheck + lint clean.
-**Last updated:** 2026-04-23 after Sprint 7.6 close.
-**Active sprint:** Sprint 7.7 ready (Mastery system per GDD §38 — 54 trackable entities × 10 levels, Mind → Mastery sub-tab).
-**Next action:** Sprint 7.7 Phase 7.7.1 — pre-code research catalog for Mastery system (4 entity classes × level calculation × Mind sub-tab UI + shard_proc_mastery reward wiring deferred from Sprint 7.5.2).
+**Phase:** Sprint 7.7 Phase 7.7.2 CLOSED (Mastery engine + entity registry). **1441 tests pass** (+21 from Sprint 7.6 close 1420); 4/4 gates green (ratio 0.81); typecheck + lint clean.
+**Last updated:** 2026-04-23 after Phase 7.7.2 close.
+**Active sprint:** Sprint 7.7 in-flight (7.7.1 catalog ✓, 7.7.2 engine ✓, 7.7.3-7.7.6 pending).
+**Next action:** Phase 7.7.3 — Mastery XP dispatcher: wire `applyMasteryXpGain` into `prestige` action (mutation + pathway + archetype per-cycle +1) and `buyUpgrade` action (upgrade per-purchase +1).
+
+### Sprint 7.7 Phase 7.7.2 dashboard (2026-04-23 — Mastery engine)
+
+**Scope shipped:** pure engine module + canonical entity registry + `shard_proc_mastery` upgrade definition (catalog now complete at 8 Hipocampo shards).
+
+**Changes applied:**
+- `src/engine/mastery.ts` (NEW, 119 lines) — canonical registry `MASTERY_ENTITY_IDS` (15+42+3+3=63), `masteryClassOf`, `masteryUses`, `masteryLevel` (caps at 10), `masteryBonus` (0 to +5%), `masteryGainMult` (×1.25 when `shard_proc_mastery` owned), `applyMasteryXpGain` (pure dispatcher), `masteryLevelUps` (cross-snapshot detector for MASTERY-4 analytics).
+- `src/types/index.ts` — new UpgradeEffect kind `mastery_xp_gain_mult; mult: number` for `shard_proc_mastery`. Comment block updated to reflect catalog completion.
+- `src/config/shards.ts` — `shard_proc_mastery` upgrade definition added (120 Procedural Shards, P7 unlock, mult 1.25). Pulled forward from Phase 7.7.5 to honor "no half-shipped features" rule — engine function needed the effect kind.
+- `src/config/strings/en.ts` — `shard_proc_mastery` name + description strings.
+- `docs/GDD.md §38.1` — canonical count 54 → 63 (per Update Discipline V8). Shard exclusion documented explicitly.
+- `tests/engine/mastery.test.ts` (NEW, 21 tests) — entity registry, class lookup, shard exclusion, level + bonus accessors, cap semantics, gain mult, XP application, level-up detection + cap behavior.
+
+**Key decisions from 7.7.1 catalog applied:**
+- **V2 dynamic entity count** — `MASTERY_TOTAL_ENTITIES` derived from `MUTATIONS.length + UPGRADES.length + 3 + 3 = 63`.
+- **V3 shard exclusion** — engine header documents the exclusion; `masteryClassOf('shard_*')` returns null; test asserts.
+- **V5 freely-accumulating uses** — `mastery[id]` can exceed 10; `masteryLevel` floors at read-time. Forward-compat for future cap raises.
+- **V8 GDD sync** — §38.1 wording updated in same phase commit.
+
+**Invariants preserved:** GameState stays at 119 fields. `mastery: Record<string, number>` was already scaffolded in Sprint 7.5.1; now it has readers + a gain dispatcher.
 
 ### Sprint 7.6 close dashboard (2026-04-23 — Onboarding + Archetype + Pathway polish)
 

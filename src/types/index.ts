@@ -59,10 +59,9 @@ export type UpgradeEffect =
   | { kind: 'post_offline_discharge_bonus'; perHour: number; capAdd: number }
   | { kind: 'pattern_flat_mult'; mult: number }
   | { kind: 'focus_persist'; pct: number }
-  // Sprint 7.5.2 — Hipocampo Memory Shard upgrade effects (GDD §16.1).
-  // 2 of 8 shard upgrades deferred to consumer phases (shard_emo_deep → 7.5.3
-  // Mood; shard_proc_mastery → 7.7 Mastery). Their effect kinds will land
-  // alongside their consumers per CLAUDE.md "no half-shipped features".
+  // Sprint 7.5.2 — Hipocampo Memory Shard upgrade effects (GDD §16.1). Sprint
+  // 7.7 landed shard_proc_mastery alongside the Mastery engine, completing the
+  // 8-shard catalog.
   | { kind: 'cascade_spark_bonus'; sparks: number }            // shard_emo_pulse
   | { kind: 'fragment_memory_bonus'; memory: number }          // shard_emo_resonance
   | { kind: 'tap_contribution_pct_add'; pct: number }          // shard_proc_flow
@@ -74,7 +73,9 @@ export type UpgradeEffect =
   // all 6 Límbico + shard_emo_deep share a single payload-less marker kind.
   | { kind: 'mood_passive_marker' }                            // 6 Límbico upgrades + shard_emo_deep
   // Sprint 7.5.3 — shard_emo_deep ships now alongside its Mood consumer.
-  | { kind: 'mood_event_scaling'; scale: number };             // shard_emo_deep (deferred from 7.5.2)
+  | { kind: 'mood_event_scaling'; scale: number }              // shard_emo_deep (deferred from 7.5.2)
+  // Sprint 7.7 §38 — Mastery XP gain multiplier (shard_proc_mastery).
+  | { kind: 'mastery_xp_gain_mult'; mult: number };            // shard_proc_mastery
 
 export interface UpgradeDef {
   id: string;
