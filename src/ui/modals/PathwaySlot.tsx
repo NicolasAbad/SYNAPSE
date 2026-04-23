@@ -75,8 +75,14 @@ function PathwayCard({ pathway, selected, onSelect }: { pathway: Pathway; select
       }}
     >
       <span style={{ fontWeight: 'var(--font-weight-bold)' }}>{t(`pathways.${pathway}.name`)}</span>
-      <span style={{ fontSize: 'var(--text-xs)', opacity: 0.85 /* CONST-OK */ }}>
-        {t(`pathways.${pathway}.description`)}
+      <span style={{ fontSize: 'var(--text-xs)' }} data-testid={`cycle-setup-pathway-${pathway}-tagline`}>
+        {t(`pathways.${pathway}.tagline`)}
+      </span>
+      <span style={{ fontSize: 'var(--text-xs)', opacity: 0.85 /* CONST-OK: scannable sub-line opacity */ }} data-testid={`cycle-setup-pathway-${pathway}-bonuses`}>
+        {t(`pathways.${pathway}.bonuses`)}
+      </span>
+      <span style={{ fontSize: 'var(--text-xs)', opacity: 0.65 /* CONST-OK: muted sub-line opacity */ }} data-testid={`cycle-setup-pathway-${pathway}-blocks`}>
+        {t(`pathways.${pathway}.blocks`)}
       </span>
     </button>
   );

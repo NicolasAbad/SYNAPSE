@@ -6,10 +6,23 @@
 
 ## Current status
 
-**Phase:** Sprint 7.6 Phase 7.6.3 CLOSED (Onboarding 5-cycle tutorial track wired). **1417 tests pass** (+20 from 7.6.2 close); 4/4 gates green (ratio 0.80); typecheck + lint clean.
-**Last updated:** 2026-04-23 after Phase 7.6.3 close.
-**Active sprint:** Sprint 7.6 in-flight (7.6.1 catalog ✓, 7.6.2 Archetype migration ✓, 7.6.3 Onboarding tutorial track ✓, 7.6.4-7.6.5 pending).
-**Next action:** Phase 7.6.4 — Pathway UI card scannability refinement (split `pathways.{id}.description` into tagline/bonuses/blocks sub-strings + `PathwaySlot.tsx` 3-span render).
+**Phase:** Sprint 7.6 Phase 7.6.4 CLOSED (Pathway card scannability refinement). **1420 tests pass** (+3 from 7.6.3 close); 4/4 gates green (ratio 0.80); typecheck + lint clean.
+**Last updated:** 2026-04-23 after Phase 7.6.4 close.
+**Active sprint:** Sprint 7.6 in-flight (7.6.1 catalog ✓, 7.6.2 ✓, 7.6.3 ✓, 7.6.4 ✓, 7.6.5 pending).
+**Next action:** Phase 7.6.5 — Sprint 7.6 close: buffer-1 sim verify + PROGRESS.md 5-phase dashboard + gate/baseline snapshot.
+
+### Sprint 7.6 Phase 7.6.4 dashboard (2026-04-23 — Pathway card scannability)
+
+**Scope shipped:** per 7.6.1 V5 approval, minimal string-schema split.
+
+**Changes applied:**
+- `src/config/strings/en.ts` — each of `pathways.{rapida,profunda,equilibrada}` gains three new sub-keys: `tagline` (1-liner theme), `bonuses` (stat summary), `blocks` (blocked/tradeoff). Original `description` preserved for backward compatibility with `pathways.ts` `descriptionKey` consumer.
+- `src/ui/modals/PathwaySlot.tsx` — PathwayCard renders 3 stacked spans with distinct opacity levels: `tagline` (1.0) / `bonuses` (0.85) / `blocks` (0.65). Each span has its own `data-testid` for targeted UI testing.
+- `tests/ui/modals/PathwaySlot.test.tsx` (NEW, 3 tests) — covers all three cards rendering the new sub-spans, Swift copy correctness, and onSelect wiring unchanged.
+
+**Outcome:** Pathway picker cards now scannable at a glance (3 distinct visual tiers instead of one dense description string). No functional/behavioral change; pure readability refactor. Descriptions that previously wrapped 3-4 lines at mobile widths now present as a clean 3-tier card.
+
+**Intentionally deferred (per 7.6.1):** tooltip-style cycle-context preview → Sprint 10 UX polish.
 
 ### Sprint 7.6 Phase 7.6.3 dashboard (2026-04-23 — Onboarding 5-cycle tutorial track)
 

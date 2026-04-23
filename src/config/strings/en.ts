@@ -396,10 +396,32 @@ export const en = {
     especial: 'Special',
   },
   // Sprint 5 — 3 Pathways (GDD §14). Display names + tradeoff descriptions.
+  // Sprint 7.6 Phase 7.6.4: split each description into tagline/bonuses/blocks
+  // for card scannability. `description` preserved for legacy consumers
+  // (pathways.ts descriptionKey) — the PathwaySlot card now renders the 3
+  // sub-spans instead of the single compound string.
   pathways: {
-    rapida: { name: 'Swift', description: 'Speed specialist. Insight ×2, Discharge rate ×1.5. Blocks Regions, Connections, New upgrades.' },
-    profunda: { name: 'Deep', description: 'Idle specialist. Memories ×2 this cycle, Focus fill ×0.5. Blocks Tap, Focus, Synapse.' },
-    equilibrada: { name: 'Balanced', description: 'Flexible. All categories enabled — but every upgrade bonus ×0.85.' },
+    rapida: {
+      name: 'Swift',
+      tagline: 'Speed specialist',
+      bonuses: 'Insight ×2 · Discharge rate ×1.5',
+      blocks: 'Blocked: Regions · Connections · New',
+      description: 'Speed specialist. Insight ×2, Discharge rate ×1.5. Blocks Regions, Connections, New upgrades.',
+    },
+    profunda: {
+      name: 'Deep',
+      tagline: 'Idle specialist',
+      bonuses: 'Memories ×2 this cycle · Focus fill ×0.5',
+      blocks: 'Blocked: Tap · Focus · Synapse',
+      description: 'Idle specialist. Memories ×2 this cycle, Focus fill ×0.5. Blocks Tap, Focus, Synapse.',
+    },
+    equilibrada: {
+      name: 'Balanced',
+      tagline: 'Flexible',
+      bonuses: 'All categories enabled',
+      blocks: 'Every upgrade bonus ×0.85',
+      description: 'Flexible. All categories enabled — but every upgrade bonus ×0.85.',
+    },
   },
   // Sprint 5 — 5 Region display names (GDD §16). Anatomical English standard.
   regions: {
