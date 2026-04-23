@@ -20,6 +20,15 @@ const t = en.sleep;
 // "CSS values" exception. Design tokens live in src/ui/tokens.ts; component-local
 // values follow the existing App.tsx / FragmentOverlay.tsx precedent.
 
+/** OFFLINE-10: returning-player greeting indexed by avgMoodTier (0-4). GDD §19. */
+function greetingForMoodTier(tier: number): string {
+  if (tier <= 0) return t.greetings.numb; // CONST-OK MoodTierIndex
+  if (tier === 1) return t.greetings.calm; // CONST-OK MoodTierIndex
+  if (tier === 2) return t.greetings.engaged; // CONST-OK MoodTierIndex
+  if (tier === 3) return t.greetings.elevated; // CONST-OK MoodTierIndex
+  return t.greetings.euphoric; // CONST-OK MoodTierIndex (4 = Euphoric)
+}
+
 function formatElapsed(elapsedMs: number): string {
   const mins = Math.floor(elapsedMs / 60_000); // CONST-OK ms→min
   const hours = Math.floor(mins / 60); // CONST-OK min→h
@@ -90,10 +99,16 @@ export const SleepScreen = memo(function SleepScreen() {
   if (summary.elapsedMs < SYNAPSE_CONSTANTS.offlineModalMinSeconds * 1000) return null; // CONST-OK s→ms
 
   const eligibleForRewardedAd = summary.elapsedMs >= SYNAPSE_CONSTANTS.lucidDreamMinOfflineMinutes * 60_000; // CONST-OK min→ms
+  const showGreeting = summary.elapsedMs >= SYNAPSE_CONSTANTS.lucidDreamMinOfflineMinutes * 60_000; // CONST-OK min→ms
 
   return (
     <div data-testid="sleep-screen" style={overlayStyle}>
       <div style={cardStyle}>
+        {showGreeting && (
+          <p data-testid="sleep-greeting" style={{ fontStyle: 'italic', opacity: 0.85, marginBottom: 'var(--spacing-3)' /* CONST-OK CSS subdued caption */ }}>
+            {greetingForMoodTier(summary.avgMoodTier)}
+          </p>
+        )}
         <h2 style={titleStyle}>{t.title}</h2>
 
         <div data-testid="sleep-stats">
