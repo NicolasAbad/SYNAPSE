@@ -880,7 +880,14 @@ Typical cycle: 5-10 Resonance. Perfect cycle: ~18. Max/run: ~260.
 
 **MOOD-2:** Event deltas live in `SYNAPSE_CONSTANTS.moodDelta*` constants, cited by `src/engine/mood.ts`.
 
-**MOOD-3:** Offline decay per §19 — Mood drifts toward Calm (50) at 2/hour. Empática archetype gets 1/hour decay (half rate). Genius Pass subscribers' Mood never drops below 40 (Calm floor).
+**MOOD-3 (Sprint 7.9 extended):** Mood drifts symmetrically toward `moodDecayTargetValue` (50) during both **online** and **offline** play. Above 50 drifts down; below 50 drifts up; exactly 50 is stable.
+- **Online rate:** `moodOnlineDriftPerMinute` (0.5/min = 30/hour). Gentle enough that per-prestige +10 events net-gain, strong enough that Euphoric isn't permanent.
+- **Offline rate:** `moodDecayPerHourOffline` (2/hour, via §19 offline engine — Sprint 8a consumer).
+- **Empática archetype:** halves BOTH rates (`moodDriftArchetypeEmpaticaMult` = 0.5).
+- **`lim_steady_heart` upgrade:** halves BOTH rates (`moodDriftSteadyHeartMult` = 0.5). Stacks multiplicatively with Empática.
+- **Floors bind before drift target:** `lim_resilience` floor 25, Genius Pass floor 40. When mood is below a binding floor, drift pulls UP toward the floor; above the floor, drift continues toward 50.
+
+Rationale (Sprint 7.9): the online drift addresses Sprint 7.8 Balance Scout Sim finding F2 (mood saturated at 100 by P7 under active play — "emotional weather" metaphor collapsed). Gentle 0.5/min drift preserves Euphoric as achievable + most-of-the-time-occupied tier for engaged players while keeping the 5-tier variety visible across the Run.
 
 **MOOD-4 (Sprint 6.8 Phase 6 R3 decision):** Mood event delta scaling stacks **ADDITIVELY**, not multiplicatively. Formula: `effectiveDelta = baseDelta × (1 + sum(activeBonuses))`. With both `shard_emo_deep` (+0.5) and `red_emotiva` (+0.5) active, deltas are ×2.0 not ×2.25. Simpler, predictable, easier to balance. Genius Pass +0.0 (no mood-magnitude perk; instead grants the floor MOOD-3 perk).
 

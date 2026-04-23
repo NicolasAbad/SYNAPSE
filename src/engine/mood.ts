@@ -171,3 +171,24 @@ export function averageMoodOverWindow(state: Pick<GameState, 'mood' | 'moodHisto
   for (const s of samples) sum += s.mood;
   return sum / samples.length;
 }
+
+/** Sprint 7.9 §16.3 MOOD-3 extended: online drift rate per minute. Empática ×0.5, lim_steady_heart ×0.5 (stackable). */
+export function moodOnlineDriftRate(state: Pick<GameState, 'archetype' | 'upgrades'>): number {
+  const base = SYNAPSE_CONSTANTS.moodOnlineDriftPerMinute;
+  const archetypeMult = state.archetype === 'empatica' ? SYNAPSE_CONSTANTS.moodDriftArchetypeEmpaticaMult : 1;
+  const upgradeMult = ownsLimUpgrade(state, 'lim_steady_heart') ? SYNAPSE_CONSTANTS.moodDriftSteadyHeartMult : 1;
+  return base * archetypeMult * upgradeMult;
+}
+
+/** Sprint 7.9 §16.3 MOOD-3 extended: apply drift toward moodDecayTargetValue. Floor-aware (resilience 25, Genius Pass 40). */
+export function applyMoodDrift(state: Pick<GameState, 'mood' | 'archetype' | 'upgrades' | 'isSubscribed'>, dtMs: number): number {
+  const target = SYNAPSE_CONSTANTS.moodDecayTargetValue;
+  const maxStep = moodOnlineDriftRate(state) * (dtMs / 60_000); // CONST-OK ms→min
+  let next = state.mood;
+  if (next > target) next = Math.max(target, next - maxStep);
+  else if (next < target) next = Math.min(target, next + maxStep);
+  const resilienceFloor = ownsLimUpgrade(state, 'lim_resilience') ? SYNAPSE_CONSTANTS.limResilienceMoodFloor : 0;
+  const passFloor = state.isSubscribed ? SYNAPSE_CONSTANTS.moodGeniusPassFloor : 0;
+  const floor = Math.max(0, resilienceFloor, passFloor);
+  return Math.max(floor, Math.min(SYNAPSE_CONSTANTS.moodMaxValue, next));
+}

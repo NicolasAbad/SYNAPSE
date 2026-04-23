@@ -180,7 +180,16 @@ export const SYNAPSE_CONSTANTS = {
   moodTierFocusFillMults: [1.00, 1.00, 1.10, 1.10, 1.10] as const, // Engaged+ only
   moodTierMaxChargesBonus: [0, 0, 0, 1, 1] as const, // Elevated/Euphoric: +1 discharge max
   moodTierInsightPotentialBonus: [0, 0, 0, 0, 1] as const, // Euphoric only: +1 Insight level potential
-  moodDecayPerHourOffline: 2, // MOOD-3: mood drifts toward Calm during long offline
+  moodDecayPerHourOffline: 2, // MOOD-3: mood drifts toward moodDecayTargetValue during long offline (Sprint 8a offline consumer)
+  // Sprint 7.9 §16.3 MOOD-3 extended online drift: addresses Sprint 7.8 F2
+  // (Mood saturated at 100 by P7 under active play). Both online + offline
+  // now converge toward 50 (midpoint) — above drifts down, below drifts up,
+  // 50 is stable. Empática archetype ×0.5, lim_steady_heart ×0.5 (stacking)
+  // per MOOD-3 updated spec.
+  moodOnlineDriftPerMinute: 0.5, // 30/hour = 15× gentler than offline
+  moodDecayTargetValue: 50, // midpoint — symmetric drift target
+  moodDriftArchetypeEmpaticaMult: 0.5, // Empática archetype halves online + offline drift (MOOD-3)
+  moodDriftSteadyHeartMult: 0.5, // lim_steady_heart halves online + offline drift (MOOD-3 extended)
   moodGeniusPassFloor: 40, // GDD §26: Genius Pass subscribers' Mood never drops below Calm
 
   // ── Regions: Pre-commitments (Prefrontal, Sprint 6.8) ──

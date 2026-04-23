@@ -12,7 +12,7 @@ import { checkMentalState, mentalStateProductionMult, mentalStateDuration, updat
 import { shouldTriggerMicroChallenge, rollMicroChallenge, activateMicroChallenge, isMicroChallengeFailed, isMicroChallengeComplete, clearMicroChallenge } from './microChallenges';
 import { MICRO_CHALLENGES_BY_ID } from '../config/microChallenges';
 import { stepShardDrip, chargeIntervalShardMult } from './shards';
-import { moodProductionMult, moodMaxChargesBonus } from './mood';
+import { moodProductionMult, moodMaxChargesBonus, applyMoodDrift } from './mood';
 import { integratedMindMaxChargeBonus } from './integratedMind';
 import { upgradeMasteryMult } from './mastery';
 import type { GameState } from '../types/GameState';
@@ -52,9 +52,7 @@ function stepExpireModifiers(s: GameState, nowTimestamp: number): void {
  * this tick's effectiveProductionPerSecond reflects any new multiplier.
  * FOCUS-2: bar is pre-charged — a just-expired Insight re-fires immediately.
  */
-function stepInsightActivation(s: GameState, nowTimestamp: number): void {
-  Object.assign(s, tryActivateInsight(s, nowTimestamp));
-}
+function stepInsightActivation(s: GameState, nowTimestamp: number): void { Object.assign(s, tryActivateInsight(s, nowTimestamp)); }
 
 /** Step 3: Cache base/effective production-per-second for tick + UI consumers (production.ts owns the §4 formula). */
 function stepRecalcProduction(s: GameState): void {
@@ -114,6 +112,9 @@ function stepResonantPatternPrune(s: GameState, nowTimestamp: number): void {
     );
   }
 }
+
+/** Step 7.5: online Mood drift toward midpoint per §16.3 MOOD-3 (Sprint 7.9). */
+function stepMoodDrift(s: GameState): void { s.mood = applyMoodDrift(s, TICK_MS); }
 
 /** Step 8: Mental State + Mood mults per §17 / §16.3 — both stack post-softCap. */
 function stepMentalStateTriggers(s: GameState, n: number): void {
@@ -180,6 +181,7 @@ export function tick(state: GameState, nowTimestamp: number): TickResult {
   stepExpireModifiers(s, nowTimestamp);
   stepInsightActivation(s, nowTimestamp);
   stepRecalcProduction(s);
+  stepMoodDrift(s); // applied before mood mult per Sistema Límbico drift rule
   stepMentalStateTriggers(s, nowTimestamp); // Mental state mult applied before stepProduce
   stepProduce(s);
   stepShardDrip(s); // Hipocampo Memory Shard drip per GDD sixteen point one
