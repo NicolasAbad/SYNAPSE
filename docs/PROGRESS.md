@@ -6,10 +6,25 @@
 
 ## Current status
 
-**Phase:** Sprint 7.7 Phase 7.7.3 CLOSED (Mastery XP dispatcher wired). **1452 tests pass** (+11 from 7.7.2); 4/4 gates green (ratio 0.81); typecheck + lint clean.
-**Last updated:** 2026-04-23 after Phase 7.7.3 close.
-**Active sprint:** Sprint 7.7 in-flight (7.7.1 ✓, 7.7.2 ✓, 7.7.3 ✓, 7.7.4-7.7.6 pending).
-**Next action:** Phase 7.7.4 — Consumer wiring (Option C): `mutationEffectMult`, `pathwayBonusMult`, `archetypeBonusMult` × Mastery. Upgrade consumer deferred to Sprint 7.8.
+**Phase:** Sprint 7.7 Phase 7.7.4 CLOSED (Mastery consumers — Mutation/Pathway/Archetype). **1468 tests pass** (+16 from 7.7.3); 4/4 gates green (ratio 0.81); typecheck + lint clean.
+**Last updated:** 2026-04-23 after Phase 7.7.4 close.
+**Active sprint:** Sprint 7.7 in-flight (7.7.1 ✓, 7.7.2 ✓, 7.7.3 ✓, 7.7.4 ✓, 7.7.5-7.7.6 pending).
+**Next action:** Phase 7.7.5 — Mind → Mastery sub-tab UI (MasterySubtab.tsx) + append `'mastery'` to MindSubtabId + strings.
+
+### Sprint 7.7 Phase 7.7.4 dashboard (2026-04-23 — Mastery consumer multipliers, Option C)
+
+**Scope shipped:** multiplicative Mastery stacking on 3 entity-class accessor modules per GDD §38.2 MASTERY-2.
+
+**Changes applied:**
+- `src/engine/archetypes.ts` — 6 multiplicative accessors now × (1 + masteryBonus) via internal `archetypeMasteryMult` helper: active production / focus fill / memory / spontaneous rate / offline efficiency / resonance gain. Additive (insightDurationAddSec, mutationBonusOptions) + override (lucidDreamRate) bonuses **excluded** per documented §38.2 interpretation (probability-cap protection + additive ambiguity). Signatures widened from `Pick<..., 'archetype'>` to `Pick<..., 'archetype' | 'mastery'>`.
+- `src/engine/pathways.ts` — all 4 multiplicative accessors now × (1 + masteryBonus) via `pathwayMasteryMult`. Includes the Profunda focus fill malus (×0.5) which softens at L10 (×0.525). Equilibrada dampening exposed via new `pathwayUpgradeBonusDampWithMastery` helper.
+- `src/engine/mutations.ts` — `mutationProdMult` + `mutationDischargeMult` now × (1 + masteryBonus). Cost mods + interval reductions explicitly **not** wrapped (would reverse direction under Mastery).
+- `src/engine/prestige.ts` — `computeMemoriesGained` signature widened to accept `'mastery'` (downstream of archetypeMemoryMult needing the new pick).
+- `tests/engine/mastery-consumers.test.ts` (NEW, 16 tests) — per-class spot checks + canonical GDD §38.2 Hiperestimulación L10 → ×2.10 case + documented exclusion tests + no-choice identity + baseline L0 behavior.
+
+**Scope exclusion (Option C):** Upgrade consumer multiplier **deferred to Sprint 7.8**. Upgrade bonuses are scattered across 10+ engine sites (production/discharge/focus/insight/…); adding Mastery there is a wider regression surface best tackled after TEST-5 shows it matters for balance.
+
+**Canonical validation:** GDD §38.2 example test present — Hiperestimulación L10 produces exactly ×2.10 (2.0 × 1.05).
 
 ### Sprint 7.7 Phase 7.7.3 dashboard (2026-04-23 — Mastery XP dispatcher)
 

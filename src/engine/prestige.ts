@@ -39,7 +39,7 @@ function appendDiaryCapped(prev: readonly DiaryEntry[], entry: DiaryEntry): Diar
   return next.length > DIARY_CAP ? next.slice(next.length - DIARY_CAP) : next;
 }
 /** GDD §6 + Sprint 7.5.2 §16.1: base × pathwayMult × archetypeMult + Node 24 B + shard_epi_imprint. */
-export function computeMemoriesGained(state: Pick<GameState, 'upgrades' | 'patternDecisions' | 'currentPathway' | 'archetype' | 'memoryShardUpgrades'>): number {
+export function computeMemoriesGained(state: Pick<GameState, 'upgrades' | 'patternDecisions' | 'currentPathway' | 'archetype' | 'memoryShardUpgrades' | 'mastery'>): number {
   const baseGain = SYNAPSE_CONSTANTS.baseMemoriesPerPrestige * pathwayMemoriesPerPrestigeMult(state as GameState) * archetypeMemoryMult(state) + memoriesPerPrestigeDecisionAdd(state);
   const shardBonus = state.memoryShardUpgrades.includes('shard_epi_imprint') ? SYNAPSE_CONSTANTS.shardEpiImprintMemoryPerPrestigeBonus : 0;
   return baseGain + shardBonus;

@@ -20,6 +20,20 @@ import { MUTATIONS, MUTATIONS_BY_ID, MUT3_FIRST_CYCLE_FILTER } from '../config/m
 import { SYNAPSE_CONSTANTS } from '../config/constants';
 import { hash, mulberry32 } from './rng';
 import { era3MutationBonusOptions } from './era3';
+import { masteryBonus } from './mastery';
+
+/**
+ * Sprint 7.7 §38 MASTERY-2: multiplicative Mastery on active-mutation bonus
+ * accessors. Applied to production + discharge multipliers only (spec gives
+ * Hiperestimulación L10 → ×2.10 as the canonical example). Cost mods and
+ * interval reductions are left untouched — reversing their direction under
+ * Mastery would nerf the player, which the spec doesn't intend.
+ */
+function mutationMasteryMult(state: GameState): number {
+  const id = state.currentMutation?.id;
+  if (!id) return 1;
+  return 1 + masteryBonus(state, id);
+}
 
 /**
  * MUT-2: deterministic seed for the Mutation pool draw.
@@ -109,27 +123,29 @@ function activeMutation(state: GameState): Mutation | null {
   return id ? MUTATIONS_BY_ID[id] ?? null : null;
 }
 
-/** Production multiplier from the active mutation (cycle-time-independent only). */
+/** Production multiplier from the active mutation. Mastery stacks multiplicatively. */
 export function mutationProdMult(state: GameState): number {
   const m = activeMutation(state);
   if (!m) return 1;
   const e = m.effect;
-  if (e.kind === 'neural_efficiency') return e.neuronProdMult;
-  if (e.kind === 'hyperstimulation') return e.prodMult;
+  let base = 1;
+  if (e.kind === 'neural_efficiency') base = e.neuronProdMult;
+  else if (e.kind === 'hyperstimulation') base = e.prodMult;
   // Especialización doubles down on the chosen type — but we apply that at the
   // per-type production split (Phase 5.4 / Region Dominant pairing). Returns 1
   // here so the cycle-wide rate doesn't double-count.
-  return 1;
+  return base * mutationMasteryMult(state);
 }
 
-/** Discharge bonus multiplier — applied to the Discharge yield per GDD §13 #3/#4. */
+/** Discharge bonus multiplier per GDD §13 #3/#4. Mastery stacks multiplicatively. */
 export function mutationDischargeMult(state: GameState): number {
   const m = activeMutation(state);
   if (!m) return 1;
   const e = m.effect;
-  if (e.kind === 'rapid_discharge') return e.dischargeBonusMult;
-  if (e.kind === 'focused_discharge') return e.dischargeMult;
-  return 1;
+  let base = 1;
+  if (e.kind === 'rapid_discharge') base = e.dischargeBonusMult;
+  else if (e.kind === 'focused_discharge') base = e.dischargeMult;
+  return base * mutationMasteryMult(state);
 }
 
 /** Charge interval (ms) override. Falls back to base × upgrades-modifier when no mutation. */

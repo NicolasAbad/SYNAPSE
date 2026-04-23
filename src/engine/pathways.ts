@@ -17,9 +17,21 @@
 import type { GameState } from '../types/GameState';
 import type { PathwayDef, UpgradeCategory } from '../types';
 import { PATHWAYS_BY_ID } from '../config/pathways';
+import { masteryBonus } from './mastery';
 
 function activePathway(state: GameState): PathwayDef | null {
   return state.currentPathway ? PATHWAYS_BY_ID[state.currentPathway] ?? null : null;
+}
+
+/**
+ * Sprint 7.7 §38 MASTERY-2: multiplicative Mastery stacking on Pathway
+ * bonuses. Returns (1 + masteryBonus) for the active pathway id, or 1 when
+ * no pathway is active. Applies uniformly — boosts positive multipliers
+ * (×2.0 → ×2.10) and softens the Profunda focus malus (×0.5 → ×0.525).
+ */
+function pathwayMasteryMult(state: GameState): number {
+  if (state.currentPathway === null) return 1;
+  return 1 + masteryBonus(state, state.currentPathway);
 }
 
 /**
@@ -70,34 +82,49 @@ export function dampenUpgradeBonus(rawMult: number, damp: number): number {
   return 1 + (rawMult - 1) * damp;
 }
 
-/** Rápida bonus: Insight duration ×2.0. Caller multiplies the base seconds. */
+/** Rápida bonus: Insight duration ×2.0. Mastery stacks multiplicatively. */
 export function pathwayInsightDurationMult(state: GameState): number {
-  return activePathway(state)?.bonuses.insightDurationMult ?? 1;
+  const base = activePathway(state)?.bonuses.insightDurationMult ?? 1;
+  return base * pathwayMasteryMult(state);
 }
 
 /**
- * Rápida bonus: Discharge charge rate ×1.5 (= interval × 1/1.5). Returns the
- * multiplier; caller divides intervalMs by it (matches existing tick step-6
- * upgrade pattern).
+ * Rápida bonus: Discharge charge rate ×1.5 (= interval × 1/1.5). Mastery
+ * stacks multiplicatively. Caller divides intervalMs by the result.
  */
 export function pathwayChargeRateMult(state: GameState): number {
-  return activePathway(state)?.bonuses.chargeRateMult ?? 1;
+  const base = activePathway(state)?.bonuses.chargeRateMult ?? 1;
+  return base * pathwayMasteryMult(state);
 }
 
 /**
  * Profunda bonus: Memories per prestige ×2.0 — applied this cycle only.
- * Wired into computeMemoriesGained (engine/prestige.ts) — multiplies AFTER
- * baseMemoriesPerPrestige + memoryGainAdd contributions.
+ * Wired into computeMemoriesGained. Mastery stacks multiplicatively.
  */
 export function pathwayMemoriesPerPrestigeMult(state: GameState): number {
-  return activePathway(state)?.bonuses.memoriesPerPrestigeMult ?? 1;
+  const base = activePathway(state)?.bonuses.memoriesPerPrestigeMult ?? 1;
+  return base * pathwayMasteryMult(state);
 }
 
 /**
  * Profunda bonus: Focus fill rate ×0.5 (pathway malus). Phase 5.6 hooks
- * this into focus accumulation; currently exposed for completeness so
- * consumers don't double-implement and future-me has a known indirection.
+ * this into focus accumulation. Mastery applies (softens the malus).
  */
 export function pathwayFocusFillRateMult(state: GameState): number {
-  return activePathway(state)?.bonuses.focusFillRateMult ?? 1;
+  const base = activePathway(state)?.bonuses.focusFillRateMult ?? 1;
+  return base * pathwayMasteryMult(state);
+}
+
+/**
+ * Equilibrada dampening helper — applies Mastery: ×0.85 → ×0.8925 at L10
+ * (less dampening = more upgrade bonus preserved).
+ */
+export function pathwayUpgradeBonusDampWithMastery(state: GameState): number {
+  const damp = pathwayUpgradeBonusDamp(state);
+  if (damp === 1) return 1;
+  // Bring damp closer to 1 by the Mastery bonus ratio.
+  // At L10: mastery=0.05, damp=0.85 → new damp = 0.85 + (1 - 0.85) * 0.05 = 0.8575.
+  // Intuition: Mastery "repairs" a fraction of the gap to 1.
+  if (state.currentPathway === null) return damp;
+  return damp + (1 - damp) * masteryBonus(state, state.currentPathway);
 }
