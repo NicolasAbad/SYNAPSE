@@ -6,10 +6,73 @@
 
 ## Current status
 
-**Phase:** Sprint 7 CLOSED. All 6 phases (7.1 Achievements data → 7.2 Store integration → 7.3 Mental States → 7.4 Micro-challenges → 7.5 Diary writes + UI → 7.6 Achievements UI + What-if polish) shipped. **1243 tests pass** (+152 from Sprint 6.8 close 1091); 4/4 gates green.
-**Last updated:** 2026-04-22 after Sprint 7 close.
-**Active sprint:** Sprint 7.5 Region Deepening ready (10-12 days, the BIG one — 9 new fields, 5 sub-systems, brain canvas panel).
-**Next action:** Sprint 7.5 Phase 7.5.1 — GameState scaffolding (110→119 fields, validateLoadedState bump, PRESTIGE_RESET split update, consistency tests, migration code for legacy 110-field saves).
+**Phase:** Sprint 7.5 Phase 7.5.1 CLOSED (GameState scaffolding 110→119 + migration). **1260 tests pass** (+17 from Sprint 7 close 1243: +10 migrate + +7 prestige region behavior); 4/4 gates green; typecheck + lint clean.
+**Last updated:** 2026-04-22 after Sprint 7.5 Phase 7.5.1 close.
+**Active sprint:** Sprint 7.5 Region Deepening (Phase 7.5.1/9 done). Next: Phase 7.5.2 Hipocampo Memory Shards.
+**Next action:** Sprint 7.5 Phase 7.5.2 — Hipocampo Memory Shards (3 typed shards with drip engine, 8-upgrade Shard tree, Memory Weave conversion 100 shards → 1 Memoria, Hipocampo panel UI scaffold). Pre-code research: confirm 8 Hipocampo upgrade names per CLAUDE.md translation discipline (shard_emo_pulse / _resonance / _deep, shard_proc_flow / _pattern / _mastery, shard_epi_imprint / _reflection — names per GDD §16.1 already documented). Retire `consolidacion_memoria` upgrade with silent migration drop.
+
+### Sprint 7.5 Phase 7.5.1 closing dashboard (2026-04-22 — GameState scaffolding 110→119)
+
+- **Phase:** 7.5.1/9 — single atomic commit covering scaffolding + migration + tests + doc syncs.
+- **Tests:** **1260 pass** (+17 net: +10 migrate + +7 prestige region-field behavior). 0 fail / 37 skipped / 79 files. 4/4 gates PASS, ratio 0.82.
+
+- **Scope delivered:**
+  - ✅ GameState 110 → 119 fields. 9 new fields per GDD §32:
+    `memoryShards` / `memoryShardUpgrades` (Hipocampo PRESERVE), `activePrecommitment` (Prefrontal RESET cycle-scoped) / `precommitmentStreak` (PRESERVE on prestige, RESET on Transcendence), `mood` / `moodHistory` (Límbico PRESERVE prestige / RESET on Transcendence), `brocaNamedMoments` (lifetime identity), `mastery` (§38 lifetime), `autoBuyConfig` (QoL pull-in)
+  - ✅ `GAMESTATE_FIELD_COUNT` 110 → 119 in src/config/constants.ts
+  - ✅ PRESTIGE split refreshed: 45/60/4/1=110 → 46/68/4/1=119 (PRESTIGE_RESET adds activePrecommitment; PRESTIGE_PRESERVE_FIELDS adds the other 8)
+  - ✅ `migrateState()` helper (new src/store/migrate.ts, ~35 lines): silently backfills 9 default fields when loading legacy 110-field saves; idempotent; defensive on null/array/primitive (passes through for validator to reject); zero new constants invented (`mood: 50` uses existing `SYNAPSE_CONSTANTS.moodInitialValue`)
+  - ✅ Migration wired into `loadGame()` BEFORE `validateLoadedState`
+  - ✅ All consistency / saveGame / saveScheduler / gameStore / buffer-1-prestige-sim assertions bumped 110→119
+  - ✅ TRANSCENDENCE split deferred to Sprint 8b (no `handleTranscend` action in code yet — doc-only construct in GDD §34)
+  - ✅ Mood event-delta dispatcher / Shard drip engine / Pre-commit goal evaluator / Visual Foresight tier derivation: ALL deferred to Phase 7.5.2-7.5.5 — this phase is pure scaffolding only
+  - ✅ Migration toast deferred to Phase 7.5.2 (no user-visible surface yet)
+
+- **Tests delta breakdown:**
+  - +10 migrate.test.ts (legacy backfill / idempotency / preserves player progress / defensive on bad input / no invented values)
+  - +7 prestige.test.ts Sprint 7.5.1 region/mastery/auto-buy block (activePrecommitment RESETS / 5 PRESERVE field round-trips / mastery preserved / autoBuyConfig preserved)
+
+- **Audit findings (post-implementation, this session):**
+  - Stale comments fixed: prestige.test.ts line 53 ("45 RESET fields"→46) + line 164 ("55 strictly-unchanged PRESERVE"→58)
+  - Gate 2 warning incidentally fixed: src/engine/microChallenges.ts top comment "GDD §18" → "docs/GDD.md §18" matches Gate 2 regex
+  - GDD §32 line 2471 has documented drift: `lastCycleConfig` shape in GDD says `{polarity, mutation, pathway} | null` but actual code has `{... , upgrades: string[]}` since Sprint 5 Mutation #14 Déjà Vu. Not 7.5.1 scope; flag for next GDD sweep.
+  - GDD §32 line 2427 says "Mental States (6)" but enumerates 7 fields (cosmetic count comment, not blocking). Flag for GDD sweep.
+
+- **Files created:**
+  - src/store/migrate.ts (~35 lines)
+  - tests/store/migrate.test.ts (~120 lines, 10 tests)
+
+- **Files modified (15 total):**
+  - src/types/GameState.ts — +9 fields in 6 new sections + header comments (110→119, "45/60" → "46/68", line counts refreshed)
+  - src/store/gameStore.ts — +9 defaults in createDefaultState + 3 comment updates (110→119)
+  - src/config/constants.ts — GAMESTATE_FIELD_COUNT 110→119 + comment refresh
+  - src/config/prestige.ts — PRESTIGE_RESET data + RESET_FIELDS adds activePrecommitment; PRESERVE_FIELDS +8; header invariant comments refreshed
+  - src/store/saveGame.ts — wires migrateState() before validateLoadedState; docstring 110→119
+  - src/engine/microChallenges.ts — GDD reference format fix (Gate 2 cleanup)
+  - src/ui/hud/EmergenciaCapBanner.tsx — comment 110→119
+  - tests/consistency.test.ts — 5 sites (45→46, 60→68, 110→119)
+  - tests/store/gameStore.test.ts — 4 sites (110→119)
+  - tests/store/saveGame.test.ts — 6 sites (110→119, comment block updated)
+  - tests/store/saveScheduler.test.ts — 2 sites (110→119)
+  - tests/engine/prestige.test.ts — 2 stale-comment fixes + new Sprint 7.5.1 region behavior block (+7 tests)
+  - scripts/buffer-1-prestige-sim.ts — 2 sites (110→119)
+  - docs/SPRINTS.md — line 161/162 (110→119)
+  - CLAUDE.md — Exception A/B note refreshed (post-Sprint-7.5.1 line counts + 119 fields)
+
+- **Test rigor review (post-Phase-7.5.1):**
+  - Migration tests adversarial: black-box (legacy stripped fixture), idempotent across 3+ migrations, defensive on null/array/primitive, preserves player-set values on re-migrate (not clobbered), defaults match canonical constants (no invented numbers).
+  - PRESTIGE behavior tests strict: each new field has its own assert; activePrecommitment RESETS to null verified; the 8 PRESERVE fields each verified pre→post unchanged with non-default seed values.
+  - Coverage gap noted (NOT plugged this phase, intentional): no meta-test asserts "every field added to createDefaultState is also in migrateState defaults". Plugging this would require parsing source. Mitigation: anti-invention rules + pre-code research catalog discipline at every phase kickoff catches missed migrations.
+  - The existing PRESERVE pass-through test at prestige.test.ts:164 iterates the live `PRESTIGE_PRESERVE_FIELDS` array — auto-extends as fields are added; the static "55 unchanged" comment was the only stale piece (now fixed to 58).
+  - No need to modify existing test approach. Property-based + GDD-oracle pattern (per memory `feedback_test_rigor`) holds.
+
+- **Audit conclusion: green.** No mechanical regression introduced; no new feature implemented (intentional — this is scaffolding only; Phase 7.5.2-7.5.9 ship the engines that consume these fields). Old saves will silently upgrade on first load via migrateState. The next phase (7.5.2 Hipocampo) can begin from a clean baseline.
+
+- **Sprint 7.5 Phase 7.5.2 — first action (next session/turn):**
+  Phase 7.5.2 Hipocampo Memory Shards:
+  1. Pre-code research catalog: 8 Hipocampo upgrade IDs/effects per GDD §16.1 table (already named in §16.1, just confirm); shard drip cadence engine pattern (per-tick fractional accumulation); `consolidacion_memoria` retirement migration; Memory Weave conversion 100→1; Hipocampo panel UI shape.
+  2. STOP-for-approval — present catalog before any code.
+  3. Atomic commit: data file (8 upgrades + drip rates) + engine module (src/engine/shards.ts) + store wiring (drip on tap + cycle complete pause) + Hipocampo panel UI + retirement migration + tests.
 
 ### Sprint 7 closing dashboard (this session, 2026-04-22)
 

@@ -50,7 +50,7 @@ const PRESERVE_UPDATED_BY_HANDLEPRESTIGE = new Set<keyof GameState>([
 ]);
 
 describe('handlePrestige — PRESTIGE_RESET field-level behavior (§33)', () => {
-  test('resets the 45 RESET fields to their PRESTIGE_RESET values (except engine-side overrides)', () => {
+  test('resets the 46 RESET fields to their PRESTIGE_RESET values (except engine-side overrides)', () => {
     const before: GameState = {
       ...createDefaultState(),
       thoughts: 999_999,
@@ -161,7 +161,7 @@ describe('handlePrestige — PRESTIGE_UPDATE + lifetime (§33)', () => {
 });
 
 describe('handlePrestige — PRESTIGE_PRESERVE pass-through (§33)', () => {
-  test('the 55 strictly-unchanged PRESERVE fields are identical pre→post', () => {
+  test('the 58 strictly-unchanged PRESERVE fields are identical pre→post', () => {
     const before: GameState = {
       ...createDefaultState(),
       memories: 42,
@@ -186,6 +186,66 @@ describe('handlePrestige — PRESTIGE_PRESERVE pass-through (§33)', () => {
     };
     const { state: next } = handlePrestige(before, 1_000_000);
     expect(next.patternDecisions).toEqual({ 6: 'A', 15: 'B', 24: 'A' });
+  });
+});
+
+// Sprint 7.5.1 — Region scaffolding fields PRESTIGE behavior (§16 + §32).
+describe('handlePrestige — Sprint 7.5.1 region/mastery/auto-buy fields', () => {
+  test('activePrecommitment RESETS to null on prestige (cycle-scoped, §16.2 PRECOMMIT-2)', () => {
+    const before: GameState = {
+      ...createDefaultState(),
+      activePrecommitment: { goalId: 'pc_under_8min', wager: 2 },
+    };
+    const { state: next } = handlePrestige(before, 1_000_000);
+    expect(next.activePrecommitment).toBeNull();
+  });
+
+  test('memoryShards PRESERVE across prestige (§16.1 lifetime shards)', () => {
+    const before: GameState = {
+      ...createDefaultState(),
+      memoryShards: { emotional: 12, procedural: 47, episodic: 5 },
+      memoryShardUpgrades: ['shard_emo_pulse'],
+    };
+    const { state: next } = handlePrestige(before, 1_000_000);
+    expect(next.memoryShards).toEqual({ emotional: 12, procedural: 47, episodic: 5 });
+    expect(next.memoryShardUpgrades).toEqual(['shard_emo_pulse']);
+  });
+
+  test('precommitmentStreak PRESERVES across prestige (RESET only on Transcendence per §16.2)', () => {
+    const before: GameState = { ...createDefaultState(), precommitmentStreak: 3 };
+    const { state: next } = handlePrestige(before, 1_000_000);
+    expect(next.precommitmentStreak).toBe(3);
+  });
+
+  test('mood + moodHistory PRESERVE across prestige (§16.3 MOOD-1)', () => {
+    const history = [{ timestamp: 100, mood: 60 }, { timestamp: 200, mood: 65 }];
+    const before: GameState = { ...createDefaultState(), mood: 73, moodHistory: history };
+    const { state: next } = handlePrestige(before, 1_000_000);
+    expect(next.mood).toBe(73);
+    expect(next.moodHistory).toEqual(history);
+  });
+
+  test('brocaNamedMoments PRESERVE across prestige (§16.5 lifetime identity)', () => {
+    const moments = [{ momentId: 'first_awakening', phrase: 'I am.' }];
+    const before: GameState = { ...createDefaultState(), brocaNamedMoments: moments };
+    const { state: next } = handlePrestige(before, 1_000_000);
+    expect(next.brocaNamedMoments).toEqual(moments);
+  });
+
+  test('mastery PRESERVES across prestige (§38 lifetime use counts)', () => {
+    const before: GameState = {
+      ...createDefaultState(),
+      mastery: { mut_dopamine: 5, path_rapida: 2 },
+    };
+    const { state: next } = handlePrestige(before, 1_000_000);
+    expect(next.mastery).toEqual({ mut_dopamine: 5, path_rapida: 2 });
+  });
+
+  test('autoBuyConfig PRESERVES across prestige (Sprint 6.8 QoL)', () => {
+    const config = { basica: { enabled: true, cap: 50 } };
+    const before: GameState = { ...createDefaultState(), autoBuyConfig: config };
+    const { state: next } = handlePrestige(before, 1_000_000);
+    expect(next.autoBuyConfig).toEqual(config);
   });
 });
 

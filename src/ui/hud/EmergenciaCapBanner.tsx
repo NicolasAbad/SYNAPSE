@@ -16,7 +16,7 @@ import { t } from '../../config/strings';
  * - Dismissed by a tap anywhere (`pointerdown`).
  * - Stays dismissed until the next prestige (keyed on `prestigeCount`,
  *   which monotonically increases). No GameState mutation — all state
- *   is React-local so the 110-field invariant is preserved.
+ *   is React-local so the 119-field invariant is preserved.
  * - Only renders while the predicate holds. If the player dismisses,
  *   the banner stays down for the rest of the cycle even if the
  *   predicate remains true (no nagging).

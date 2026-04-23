@@ -5,11 +5,11 @@
 // Mount-time timestamps are populated via initSessionTimestamps action
 // per INIT-1 — see src/store/initSession.ts for the React boundary.
 //
-// CODE-2 exception: enumerating all 110 fields with section comments
+// CODE-2 exception: enumerating all 119 fields with section comments
 // and per-field inline rationale pushes this file above the 200-line
 // cap. Same justification as src/types/GameState.ts — the interface is
 // a single-source-of-truth artifact; splitting it would lose the
-// invariant that Object.keys(createDefaultState()).length === 110.
+// invariant that Object.keys(createDefaultState()).length === 119.
 
 import { create } from 'zustand';
 import { SYNAPSE_CONSTANTS } from '../config/constants';
@@ -28,9 +28,9 @@ import { ACHIEVEMENTS_BY_ID } from '../config/achievements';
 import type { DiaryEntry } from '../types';
 
 /**
- * Pure default state. Matches GDD §32 100-field enumeration exactly.
- * 12 non-trivial initial values per §32 "DEFAULT_STATE non-trivial initial values"
- * (updated Phase 6 — insightMultiplier was the 12th, added from §33 PRESTIGE_RESET).
+ * Pure default state. Matches GDD §32 119-field enumeration exactly.
+ * 13 non-trivial initial values per §32 "DEFAULT_STATE non-trivial initial values"
+ * (Phase 7.5.1 added `mood: 50` as the 13th, from SYNAPSE_CONSTANTS.moodInitialValue).
  * 4 impure timestamp fields stay at 0/null per INIT-1; mount effect populates them.
  */
 export function createDefaultState(): GameState {
@@ -146,6 +146,21 @@ export function createDefaultState(): GameState {
     cycleNeuronPurchases: [],
     // === Neural Diary (1) ===
     diaryEntries: [],
+    // === Hipocampo — Memory Shards (2) — §16.1 PRESERVE lifetime ===
+    memoryShards: { emotional: 0, procedural: 0, episodic: 0 },
+    memoryShardUpgrades: [],
+    // === Prefrontal — Pre-commitments (2) — §16.2 ===
+    activePrecommitment: null, // RESETS on prestige (cycle-scoped)
+    precommitmentStreak: 0, // PRESERVE on prestige, RESET on Transcendence
+    // === Límbico — Mood (2) — §16.3 ===
+    mood: SYNAPSE_CONSTANTS.moodInitialValue, // CONST-OK — §32 DEFAULT_STATE: Calm tier (50)
+    moodHistory: [],
+    // === Broca — Named Moments (1) — §16.5 PRESERVE lifetime identity ===
+    brocaNamedMoments: [],
+    // === Mastery (1) — §38 PRESERVE lifetime ===
+    mastery: {},
+    // === Auto-buy config (1) — Sprint 6.8 QoL pull-in, P10+ ===
+    autoBuyConfig: {},
     // === What-if Preview (2) ===
     lastCycleTimes: [],
     lastCycleConfig: null,
@@ -203,7 +218,7 @@ export function createDefaultState(): GameState {
 
 /**
  * UI-local state (Sprint 2 Phase 5) — NOT part of GameState, NOT persisted,
- * NOT counted in the 110-field invariant. Lives alongside GameState in the
+ * NOT counted in the 119-field invariant. Lives alongside GameState in the
  * same Zustand store for selector convenience but is semantically distinct.
  * Per PROGRESS.md Sprint 2 handoff: "may add UI-specific actions like
  * setActiveTab at the end, but not modify existing state shape".
@@ -434,7 +449,7 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
     // Strip UI-local state before persistence: `activeTab`, `undoToast`, and
     // `antiSpamActive` are all transient per session; actions are dropped by
     // JSON.stringify naturally. Keeps the persisted payload at exactly
-    // 110 GameState fields per §32 invariant.
+    // 119 GameState fields per §32 invariant.
     const { activeTab: _a, activeMindSubtab: _m, undoToast: _u, antiSpamActive: _s, achievementToast: _at, ...rest } = get();
     void _a;
     void _m;

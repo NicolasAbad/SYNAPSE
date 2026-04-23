@@ -1,17 +1,16 @@
-// Implements docs/GDD.md §32 (GameState — 110 fields) — v1.0 post-audit
+// Implements docs/GDD.md §32 (GameState — 119 fields) — v1.0 post-Sprint-7.5.1
 //
-// CRITICAL: this interface must have EXACTLY 110 properties. Sprint 1 invariant
-// asserts `Object.keys(DEFAULT_STATE).length === 110`. Section-by-section count
-// matches §32 breakdown: 5+2+2+5+4+1+4+2+1+11+1+2+3+1+1+3+3+1+1+6+5+7+3+2+1+2
-// +2+2+4+4+7+2+2+1+1+3+1+2 = 110.
+// CRITICAL: this interface must have EXACTLY 119 properties. Sprint 1 invariant
+// asserts `Object.keys(DEFAULT_STATE).length === 119`. Section-by-section count
+// per §32 breakdown sums to 119 (verified line-by-line in GDD §32).
 //
 /**
- * GameState — the canonical application state (110 fields).
+ * GameState — the canonical application state (119 fields).
  *
- * CODE-2 exception (second audit followup): this file exceeds the
- * 200-line cap at 214 lines. Rationale: 110 one-line field
- * declarations + 38 section-header comments + interface boilerplate
- * cannot be reduced without either (a) dropping load-bearing
+ * CODE-2 exception (second audit followup, refreshed Sprint 7.5.1):
+ * this file exceeds the 200-line cap due to 119 one-line field
+ * declarations + section-header comments + interface boilerplate.
+ * Cannot be reduced without either (a) dropping load-bearing
  * audit comments that map fields to GDD §32 categories, or
  * (b) splitting into multiple files which breaks the
  * single-source-of-truth property of this interface.
@@ -22,9 +21,9 @@
  *
  * This exception is documented in CLAUDE.md under CODE-2.
  *
- * Field count MUST remain 110. Adding/removing fields requires:
+ * Field count MUST remain 119. Adding/removing fields requires:
  * - updating docs/GDD.md §32
- * - updating the 45/60/4/1 PRESTIGE_RESET/PRESERVE/UPDATE split
+ * - updating the 46/68/4/1 PRESTIGE_RESET/PRESERVE/UPDATE split
  * - updating the consistency test that asserts exact count
  */
 
@@ -176,11 +175,39 @@ export interface GameState {
   // === Neural Diary (1) ===
   diaryEntries: DiaryEntry[];
 
+  // === Hipocampo — Memory Shards (2) — Sprint 6.8/7.5 §16.1 ===
+  // PRESERVE on prestige + Transcendence (lifetime per-type counters).
+  memoryShards: { emotional: number; procedural: number; episodic: number };
+  memoryShardUpgrades: string[];
+
+  // === Prefrontal — Pre-commitments (2) — Sprint 6.8/7.5 §16.2 ===
+  // activePrecommitment RESETS on prestige; precommitmentStreak PRESERVES on
+  // prestige and RESETS on Transcendence (Sprint 8b implements TRANSCENDENCE).
+  activePrecommitment: { goalId: string; wager: number } | null;
+  precommitmentStreak: number;
+
+  // === Límbico — Mood (2) — Sprint 6.8/7.5 §16.3 ===
+  // mood + moodHistory PRESERVE on prestige and RESET to 50/[] on Transcendence.
+  mood: number; // 0-100, default 50 (Calm tier)
+  moodHistory: { timestamp: number; mood: number }[]; // circular buffer cap 48
+
+  // === Broca — Named Moments (1) — Sprint 6.8/7.5 §16.5 ===
+  // PRESERVE across prestige AND Transcendence (lifetime identity).
+  brocaNamedMoments: { momentId: string; phrase: string }[];
+
+  // === Mastery — unified lifetime tracking (1) — Sprint 6.8 §38 ===
+  // PRESERVE across prestige AND Transcendence. id → use count.
+  mastery: Record<string, number>;
+
+  // === Auto-buy config (1) — Sprint 6.8 QoL pull-in from v1.1 ===
+  // PRESERVE across prestige AND Transcendence. Per-neuron-type unlocks at P10+.
+  autoBuyConfig: Record<string, { enabled: boolean; cap: number }>;
+
   // === What-if Preview (2) ===
   lastCycleTimes: number[];
   // Sprint 4c.1: snapshot for POLAR-1 / SAME AS LAST.
   // Sprint 5: extended with `upgrades: string[]` to support Mutation #14
-  // Déjà Vu ("Start with last cycle's upgrades owned"). 110-field invariant
+  // Déjà Vu ("Start with last cycle's upgrades owned"). 119-field invariant
   // unchanged — same field, wider object shape.
   lastCycleConfig: { polarity: string; mutation: string; pathway: string; upgrades: string[] } | null;
 

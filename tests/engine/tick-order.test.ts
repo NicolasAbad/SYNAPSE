@@ -125,6 +125,16 @@ function makeState(overrides: Partial<GameState> = {}): GameState {
     tabBadgesDismissed: [],
     lastActiveTimestamp: 0,
     gameVersion: '1.0.0',
+    // Sprint 7.5.1 region/mastery/auto-buy fields (9, all default-empty for tick tests).
+    memoryShards: { emotional: 0, procedural: 0, episodic: 0 },
+    memoryShardUpgrades: [],
+    activePrecommitment: null,
+    precommitmentStreak: 0,
+    mood: 50,
+    moodHistory: [],
+    brocaNamedMoments: [],
+    mastery: {},
+    autoBuyConfig: {},
   };
   return { ...base, ...overrides };
 }

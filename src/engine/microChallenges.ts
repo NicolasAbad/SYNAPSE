@@ -1,4 +1,4 @@
-// Implements GDD §18 Micro-challenges + MICRO-1..5 rules. CODE-9 deterministic.
+// Implements docs/GDD.md §18 Micro-challenges + MICRO-1..5 rules. CODE-9 deterministic.
 // Sprint 7 Phase 7.4. Engine: trigger eligibility, deterministic roll, complete/fail check.
 
 import type { GameState } from '../types/GameState';

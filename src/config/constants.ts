@@ -324,9 +324,8 @@ export const SYNAPSE_CONSTANTS = {
   gameVersion: '1.0.0',
 
   // ── Field-count runtime verification (§32) ──
-  // Current code state: 110 fields. Sprint 7.5 Phase 7.5.1 will add 9 new fields
-  // (memoryShards, memoryShardUpgrades, activePrecommitment, precommitmentStreak,
-  // mood, moodHistory, brocaNamedMoments, mastery, autoBuyConfig) and bump to 119.
-  // See GDD §32 for target spec.
-  GAMESTATE_FIELD_COUNT: 110,
+  // 119 fields after Sprint 7.5 Phase 7.5.1 (was 110 pre-7.5.1). The +9 fields
+  // are: memoryShards, memoryShardUpgrades, activePrecommitment, precommitmentStreak,
+  // mood, moodHistory, brocaNamedMoments, mastery, autoBuyConfig. Per GDD §32.
+  GAMESTATE_FIELD_COUNT: 119,
 } as const;

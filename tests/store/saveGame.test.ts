@@ -27,7 +27,7 @@ describe('saveGame / loadGame round-trip', () => {
     mockStorage.clear();
   });
 
-  test('round-trips all 110 GameState fields without loss', async () => {
+  test('round-trips all 119 GameState fields without loss', async () => {
     const state = createDefaultState();
     state.thoughts = 12345.67;
     state.prestigeCount = 3;
@@ -39,7 +39,7 @@ describe('saveGame / loadGame round-trip', () => {
     const loaded = await loadGame();
 
     expect(loaded).not.toBeNull();
-    expect(Object.keys(loaded!).length).toBe(110);
+    expect(Object.keys(loaded!).length).toBe(119);
     expect(loaded!.thoughts).toBe(12345.67);
     expect(loaded!.prestigeCount).toBe(3);
     expect(loaded!.neurons[0].count).toBe(10);
@@ -98,11 +98,11 @@ describe('validateLoadedState — boundary defense', () => {
     expect(validateLoadedState(null)).toBeNull();
   });
 
-  test('accepts a correctly-shaped payload (110 keys)', () => {
+  test('accepts a correctly-shaped payload (119 keys)', () => {
     const good = createDefaultState();
     const result = validateLoadedState(good);
     expect(result).not.toBeNull();
-    expect(Object.keys(result!).length).toBe(110);
+    expect(Object.keys(result!).length).toBe(119);
   });
 
   test('rejects through loadGame end-to-end for corrupted shape', async () => {
@@ -158,19 +158,18 @@ describe('round-trip type fidelity', () => {
     expect(loaded!.insightMultiplier).toBe(1);
   });
 
-  test('JSON.stringify drops actions + UI-local state is stripped → 110 file keys', async () => {
-    // Store has GameState (110) + UIState (1: activeTab) + GameStoreActions (5) = 116 accessible keys.
-    // Phase 5 added activeTab as UI-local state; saveToStorage action strips it before
-    // persisting (UI-local is transient per session). JSON.stringify drops the 5 functions.
-    // Result: persisted payload contains exactly the 110 GameState data fields.
+  test('JSON.stringify drops actions + UI-local state is stripped → 119 file keys', async () => {
+    // Store has GameState (119) + UIState (multi-key) + actions. saveToStorage strips
+    // UI-local fields before persisting; JSON.stringify drops functions. Result:
+    // persisted payload contains exactly the 119 GameState data fields.
     const storeSnapshot = useGameStore.getState();
     const storeKeyCount = Object.keys(storeSnapshot).length;
-    expect(storeKeyCount).toBeGreaterThanOrEqual(110);
+    expect(storeKeyCount).toBeGreaterThanOrEqual(119);
     // Use the action (mirrors production code path) rather than passing the raw store.
     await useGameStore.getState().saveToStorage();
     const loaded = await loadGame();
     expect(loaded).not.toBeNull();
-    expect(Object.keys(loaded!).length).toBe(110);
+    expect(Object.keys(loaded!).length).toBe(119);
   });
 });
 

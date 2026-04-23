@@ -88,7 +88,7 @@ function runCycles(label: string, withFocusPersistente: boolean): void {
   console.log(`━━━ ${label} ━━━`);
   let state = freshState();
   // Pre-flight invariants.
-  check(fieldCount(state) === 110, `pre: field count = ${fieldCount(state)}, expected 110`);
+  check(fieldCount(state) === 119, `pre: field count = ${fieldCount(state)}, expected 119`);
   check(state.prestigeCount === 0, `pre: prestigeCount = ${state.prestigeCount}, expected 0`);
   check(state.memories === 0, `pre: memories = ${state.memories}, expected 0`);
   check(state.isTutorialCycle === true, `pre: isTutorialCycle = ${state.isTutorialCycle}, expected true`);
@@ -151,7 +151,7 @@ function runCycles(label: string, withFocusPersistente: boolean): void {
     }
 
     // Field count stable.
-    check(fieldCount(state) === 110, `cycle ${i}: field count = ${fieldCount(state)}, expected 110`);
+    check(fieldCount(state) === 119, `cycle ${i}: field count = ${fieldCount(state)}, expected 119`);
 
     // No NaN / Infinity.
     const bad = hasNaNOrInfinity(state);

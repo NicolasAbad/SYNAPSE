@@ -1,15 +1,15 @@
-// Implements docs/GDD.md §33 (PRESTIGE_RESET 45 / PRESTIGE_PRESERVE 60 /
-// PRESTIGE_UPDATE 4 / lifetime 1 = 110 total).
+// Implements docs/GDD.md §33 (PRESTIGE_RESET 46 / PRESTIGE_PRESERVE 68 /
+// PRESTIGE_UPDATE 4 / lifetime 1 = 119 total).
 //
 // Pure data file — no logic. handlePrestige() in src/engine/prestige.ts
 // (Sprint 4a Phase 4a.2) consumes these to produce a post-prestige state.
 //
 // Field-count invariants (asserted by tests/consistency.test.ts §33 block):
-//   PRESTIGE_RESET_FIELDS.length === 45
-//   PRESTIGE_PRESERVE_FIELDS.length === 60
+//   PRESTIGE_RESET_FIELDS.length === 46
+//   PRESTIGE_PRESERVE_FIELDS.length === 68
 //   PRESTIGE_UPDATE_FIELDS.length === 4
 //   PRESTIGE_LIFETIME_FIELDS.length === 1
-//   45 + 60 + 4 + 1 === 110 === Object.keys(createDefaultState()).length
+//   46 + 68 + 4 + 1 === 119 === Object.keys(createDefaultState()).length
 //   RESET ∩ PRESERVE === ∅ (disjoint — no field in both)
 //
 // Ordering within each tuple mirrors GDD §33 for audit readability, but
@@ -19,7 +19,7 @@ import type { NeuronState } from '../types';
 import type { GameState } from '../types/GameState';
 
 /**
- * PRESTIGE_RESET (45 fields) — values applied at the start of a new cycle.
+ * PRESTIGE_RESET (46 fields) — values applied at the start of a new cycle.
  *
  * `dischargeLastTimestamp: 0` is a placeholder; handlePrestige() overrides it
  * to the `timestamp` parameter so a fresh 20-min charge window starts at the
@@ -99,6 +99,8 @@ export const PRESTIGE_RESET: Partial<GameState> = {
   // Resonant Pattern cycle trackers (2)
   cycleDischargesUsed: 0,
   cycleNeuronPurchases: [],
+  // Prefrontal Pre-commitment (1) — §16.2 PRECOMMIT-2 cycle-scoped (Sprint 6.8)
+  activePrecommitment: null,
 };
 
 export const PRESTIGE_RESET_FIELDS = [
@@ -118,6 +120,8 @@ export const PRESTIGE_RESET_FIELDS = [
   'activeMicroChallenge', 'lastMicroChallengeTime', 'cycleMicroChallengesAttempted',
   'currentOfflineCapHours', 'currentOfflineEfficiency',
   'cycleDischargesUsed', 'cycleNeuronPurchases',
+  // Prefrontal Pre-commitment (1) — Sprint 6.8 §16.2
+  'activePrecommitment',
 ] as const satisfies readonly (keyof GameState)[];
 
 export const PRESTIGE_PRESERVE_FIELDS = [
@@ -175,6 +179,18 @@ export const PRESTIGE_PRESERVE_FIELDS = [
   'sessionStartTimestamp',
   // System (2)
   'lastActiveTimestamp', 'gameVersion',
+  // Hipocampo — Memory Shards (2) — Sprint 6.8 §16.1 PRESERVE lifetime
+  'memoryShards', 'memoryShardUpgrades',
+  // Prefrontal Pre-commit streak (1) — PRESERVE on prestige, RESET on Transcendence
+  'precommitmentStreak',
+  // Límbico — Mood (2) — PRESERVE on prestige, RESET to 50/[] on Transcendence
+  'mood', 'moodHistory',
+  // Broca — Named Moments (1) — PRESERVE lifetime identity
+  'brocaNamedMoments',
+  // Mastery — unified lifetime tracking (1) — Sprint 6.8 §38
+  'mastery',
+  // Auto-buy config (1) — Sprint 6.8 QoL pull-in
+  'autoBuyConfig',
 ] as const satisfies readonly (keyof GameState)[];
 
 /**

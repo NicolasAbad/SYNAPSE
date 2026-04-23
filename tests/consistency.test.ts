@@ -175,9 +175,9 @@ describe('Consistency: GDD ↔ constants.ts invariants', () => {
     expect(SYNAPSE_CONSTANTS.sinestesiaTapMult).toBe(0.4);
   });
 
-  test('GameState has exactly 110 fields (GDD §32)', () => {
+  test('GameState has exactly 119 fields (GDD §32, post-Sprint-7.5.1)', () => {
     const state = createDefaultState();
-    expect(Object.keys(state).length).toBe(110);
+    expect(Object.keys(state).length).toBe(119);
   });
 });
 
@@ -290,27 +290,27 @@ describe('Consistency: PRESTIGE_RESET / PRESERVE / UPDATE split (GDD §33)', () 
   // Field-set data un-skipped in Sprint 4a Phase 4a.1 (src/config/prestige.ts
   // defines the 4 tuples). handlePrestige() behavior tests un-skip in Phase 4a.4.
 
-  test('PRESTIGE_RESET has exactly 45 fields', () => {
-    expect(PRESTIGE_RESET_FIELDS.length).toBe(45);
-    expect(Object.keys(PRESTIGE_RESET).length).toBe(45);
+  test('PRESTIGE_RESET has exactly 46 fields (Sprint 7.5.1: +activePrecommitment)', () => {
+    expect(PRESTIGE_RESET_FIELDS.length).toBe(46);
+    expect(Object.keys(PRESTIGE_RESET).length).toBe(46);
     // Tuple and data object must name the same fields.
     expect(new Set(PRESTIGE_RESET_FIELDS)).toEqual(new Set(Object.keys(PRESTIGE_RESET)));
   });
 
-  test('PRESTIGE_PRESERVE has exactly 60 fields', () => {
-    expect(PRESTIGE_PRESERVE_FIELDS.length).toBe(60);
+  test('PRESTIGE_PRESERVE has exactly 68 fields (Sprint 7.5.1: +8 region/mastery/autobuy)', () => {
+    expect(PRESTIGE_PRESERVE_FIELDS.length).toBe(68);
   });
 
-  test('RESET + PRESERVE + UPDATE + lifetime covers all 110 GameState fields', () => {
+  test('RESET + PRESERVE + UPDATE + lifetime covers all 119 GameState fields', () => {
     const union = new Set<string>([
       ...PRESTIGE_RESET_FIELDS,
       ...PRESTIGE_PRESERVE_FIELDS,
       ...PRESTIGE_UPDATE_FIELDS,
       ...PRESTIGE_LIFETIME_FIELDS,
     ]);
-    expect(union.size).toBe(110); // also asserts no duplicates across all 4 sets
+    expect(union.size).toBe(119); // also asserts no duplicates across all 4 sets
     const gameStateKeys = new Set(Object.keys(createDefaultState()));
-    expect(gameStateKeys.size).toBe(110);
+    expect(gameStateKeys.size).toBe(119);
     expect(union).toEqual(gameStateKeys);
   });
 

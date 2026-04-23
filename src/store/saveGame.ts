@@ -7,8 +7,9 @@
 import { Preferences } from '@capacitor/preferences';
 import type { GameState } from '../types/GameState';
 import { SYNAPSE_CONSTANTS } from '../config/constants';
+import { migrateState } from './migrate';
 
-/** Versioned storage key. v1 = current schema; future v2+ adds MIG-1 merge + migrateState(). */
+/** Versioned storage key. v1 = current schema; migrateState() backfills missing fields per CODE-6. */
 const SAVE_KEY = 'synapse.save.v1';
 
 export async function saveGame(state: GameState): Promise<void> {
@@ -21,7 +22,10 @@ export async function loadGame(): Promise<GameState | null> {
   if (result.value === null) return null;
   try {
     const parsed = JSON.parse(result.value) as unknown;
-    return validateLoadedState(parsed);
+    // Sprint 7.5.1: backfill new schema fields for legacy saves before
+    // structural validation. migrateState is defensive — non-objects pass
+    // through so the validator can reject them for the right reason.
+    return validateLoadedState(migrateState(parsed));
   } catch (e) {
     console.error('[saveGame] Failed to parse save:', e);
     return null;
@@ -34,7 +38,7 @@ export async function clearSave(): Promise<void> {
 
 /**
  * Boundary defense against corrupt/malicious saves. Structural shape check only:
- * verifies payload is a non-null plain object with exactly 110 top-level keys
+ * verifies payload is a non-null plain object with exactly 119 top-level keys
  * (the §32 GameState invariant). Deep field-by-field type validation would
  * require a runtime schema (adds ~500 lines); deferred to Sprint 10 MIG-1 /
  * Sprint 11a save fuzzer. For v1.0, structural check + JSON parse is sufficient

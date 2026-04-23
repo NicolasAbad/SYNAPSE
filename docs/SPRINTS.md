@@ -158,8 +158,8 @@ Scaffold the project, implement the engine primitives and save system.
 **AI checks ✅:**
 - [ ] `npm run dev` starts without errors
 - [ ] `npm run build` produces bundle < 2MB
-- [ ] GameState interface compiles — exactly 110 fields, all typed, no `any`
-- [ ] `Object.keys(DEFAULT_STATE).length === 110` (Sprint 1 invariant)
+- [ ] GameState interface compiles — exactly 119 fields, all typed, no `any` (Sprint 7.5.1 bumped from 110)
+- [ ] `Object.keys(DEFAULT_STATE).length === 119` (Sprint 1 invariant, refreshed Sprint 7.5.1)
 - [ ] `SYNAPSE_CONSTANTS` exports every value listed in GDD §31
 - [ ] `softCap(100) = 100`, `softCap(200) ≈ 164.9`, `softCap(1000) ≈ 524.8`
 - [ ] `calculateProduction()` returns `{ base, effective }` separately (no deprecated `productionPerSecond`)
