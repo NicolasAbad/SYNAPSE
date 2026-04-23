@@ -695,7 +695,7 @@ Offline system complete, Sleep screen animation, Lucid Dream choice, rewarded ad
 **AI checks ✅:**
 - [ ] `applyOfflineProgress()` per GDD §19 formula (called on app resume, seconds elapsed = timestamp param)
 - [ ] Base cap 4h, Sueño REM → 8h, Consciencia Distribuida → 12h (OFFLINE-6)
-- [ ] Base efficiency 0.50, max ratio 2.0 (OFFLINE-4 cap)
+- [ ] Base efficiency 0.50, max ratio 2.5 (OFFLINE-11 cap, raised 2.0 → 2.5 in Sprint 7.5.3 R6 — original OFFLINE-4 stated 2.0)
 - [ ] Time anomaly (clock backward, or >2× cap): OFFLINE-5 handling
 - [ ] Minimum elapsed 60s before calc runs (offlineMinMinutes)
 - [ ] Sleep screen with 4s "brain dreaming" animation + particle cascade

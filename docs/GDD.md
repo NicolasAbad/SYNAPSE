@@ -2317,11 +2317,13 @@ export const SYNAPSE_CONSTANTS = {
 
 Continues in Part 3 (sections 32-36)...
 
-# 32. GameState (119 fields, fully enumerated)
+# 32. GameState (121 fields, fully enumerated)
 
-**CRITICAL:** This interface must match `DEFAULT_STATE` in `src/store/gameStore.ts` exactly. Consistency test asserts `Object.keys(DEFAULT_STATE).length === 119`.
+**CRITICAL:** This interface must match `DEFAULT_STATE` in `src/store/gameStore.ts` exactly. Consistency test asserts `Object.keys(DEFAULT_STATE).length === 121`.
 
 **Sprint 6.8 re-architecture (2026-04-22):** field count grew 110 → 119 (+9 net) to support the Region redesign. New fields: `memoryShards`, `memoryShardUpgrades`, `activePrecommitment`, `precommitmentStreak`, `mood`, `moodHistory`, `brocaNamedMoments`, `mastery`, `autoBuyConfig`. Derived state (NOT new fields): `visualInsightTier` (from regionsUnlocked + Visual upgrades), stats dashboard (from existing aggregates), precommitmentHistory (from diaryEntries filter), oneiric dreams seen (extend narrativeFragmentsSeen with `dream_*` prefix).
+
+**Sprint 7.10 Sprint-8a delta (2026-04-23):** field count grew 119 → 121 (+2 net) to support the offline-engine UI surfaces. New fields: `pendingOfflineSummary` (Offline group, holds the `OfflineSummary` shape returned from `applyOfflineProgress` for Sleep screen / Welcome modal / Lucid Dream choice consumers — clears on prestige + on dismiss); `lucidDreamActiveUntil` (Session bonuses group, expiry timestamp for the Lucid Dream Option A +10% buff per GDD §19 — same naming family as `eurekaExpiry` / `mentalStateExpiry`).
 
 ```ts
 interface GameState {
@@ -2362,9 +2364,10 @@ interface GameState {
   mutationSeed: number;                         // for deterministic pool draws
   currentPathway: Pathway | null;
 
-  // === Offline (2) ===
+  // === Offline (3) — Sprint 7.10.4 added pendingOfflineSummary ===
   currentOfflineCapHours: number;
   currentOfflineEfficiency: number;
+  pendingOfflineSummary: OfflineSummary | null; // Sleep screen consumer; clears on prestige + on dismiss
 
   // === Session (1) ===
   sessionStartTimestamp: number | null;
@@ -2405,10 +2408,11 @@ interface GameState {
   dailyLoginStreak: number;                     // 0-7
   lastDailyClaimDate: string | null;            // 'YYYY-MM-DD'
 
-  // === Session bonuses (3) ===
+  // === Session bonuses (4) — Sprint 7.10.5 added lucidDreamActiveUntil ===
   momentumBonus: number;                        // thoughts from pre-prestige snapshot
   lastCycleEndProduction: number;               // NEW field: snapshot for CORE-8 (BUG-A fix)
   eurekaExpiry: number | null;                  // Eureka spontaneous event expiry
+  lucidDreamActiveUntil: number | null;         // Lucid Dream Option A +10% buff expiry (GDD §19)
 
   // === Active event (1) ===
   activeSpontaneousEvent: SpontaneousEventActive | null;
@@ -2542,7 +2546,7 @@ interface GameState {
 - Discharge: 4
 - Upgrades: 1
 - Cycle choices: 4
-- Offline: 2
+- Offline: 3 (added `pendingOfflineSummary` — Sprint 7.10.4)
 - Session: 1
 - Prestige & progression: 11
 - Personal bests: 1
@@ -2551,7 +2555,7 @@ interface GameState {
 - Pattern decisions: 1
 - Resonant Patterns: 1
 - Tutorial + Retention: 3
-- Session bonuses: 3 (added `lastCycleEndProduction` — BUG-A fix)
+- Session bonuses: 4 (added `lastCycleEndProduction` — BUG-A fix; added `lucidDreamActiveUntil` — Sprint 7.10.5)
 - Active event: 1
 - Run-exclusive upgrades: 1
 - Achievements: 6
@@ -2580,13 +2584,14 @@ interface GameState {
 - Mastery: 1 (Sprint 6.8 §38)
 - Auto-buy config: 1 (Sprint 6.8 QoL pull-in)
 
-**Total: 119 fields.**
+**Total: 121 fields.**
 
-Breakdown verification: 5+2+2+5+4+1+4+2+1+11+1+2+3+1+1+3+3+1+1+6+5+7+3+2+1+2+2+2+4+4+7+2+2+1+1+3+1+2+2+2+2+1+1+1 = 119 ✓
+Breakdown verification: 5+2+2+5+4+1+4+3+1+11+1+2+3+1+1+3+3+1+1+6+5+7+3+2+1+2+2+2+4+4+7+2+2+1+1+4+1+2+2+2+2+1+1+1 = 121 ✓ (Offline 2→3 + Session bonuses 3→4)
 
 Historical notes:
 - Pre-Sprint-6.8: 110 fields after second-audit reconciliation (old docs claimed 105, actual interface had 104 — BUG-D discrepancy. That revision removed 1 deprecated `productionPerSecond` and added 7 fields across bug/gap fixes. Net: 104 − 1 + 7 = 110.)
 - **Sprint 6.8 re-architecture (2026-04-22):** +9 fields for Region redesign + Mastery + Auto-buy QoL. Net: 110 + 9 = 119.
+- **Sprint 7.10 Sprint-8a delta (2026-04-23):** +2 fields for offline-engine UI orchestration (`pendingOfflineSummary`, `lucidDreamActiveUntil`). Net: 119 + 2 = 121.
 
 ### DEFAULT_STATE non-trivial initial values (second audit 2B-1b)
 
