@@ -6,10 +6,41 @@
 
 ## Current status
 
-**Phase:** Sprint 7.6 Phase 7.6.2 CLOSED (Archetype P5→P7 migration + narrative-fragment rescheduling Option C). **1397 tests pass**; 4/4 gates green (ratio 0.81); typecheck + lint clean.
-**Last updated:** 2026-04-23 after Phase 7.6.2 close.
-**Active sprint:** Sprint 7.6 in-flight (7.6.1 catalog ✓, 7.6.2 Archetype migration ✓, 7.6.3-7.6.5 pending).
-**Next action:** Phase 7.6.3 — Onboarding 5-cycle tutorial track (extend TutorialHints.tsx to cover Cycles 2-5 + `tutorial_step_*` fragment prefix persistence + TUTOR-4/5 Sparks + analytics wiring).
+**Phase:** Sprint 7.6 Phase 7.6.3 CLOSED (Onboarding 5-cycle tutorial track wired). **1417 tests pass** (+20 from 7.6.2 close); 4/4 gates green (ratio 0.80); typecheck + lint clean.
+**Last updated:** 2026-04-23 after Phase 7.6.3 close.
+**Active sprint:** Sprint 7.6 in-flight (7.6.1 catalog ✓, 7.6.2 Archetype migration ✓, 7.6.3 Onboarding tutorial track ✓, 7.6.4-7.6.5 pending).
+**Next action:** Phase 7.6.4 — Pathway UI card scannability refinement (split `pathways.{id}.description` into tagline/bonuses/blocks sub-strings + `PathwaySlot.tsx` 3-span render).
+
+### Sprint 7.6 Phase 7.6.3 dashboard (2026-04-23 — Onboarding 5-cycle tutorial track)
+
+**Scope shipped:** store action + prestige hook + 4 new hint overlays + string set + tests.
+
+**Changes applied:**
+- `src/config/constants.ts` — `tutorialStepIds: ['tutorial_step_c1'..'c5'] as const` (readonly canonical IDs, §39.2 prefix pattern).
+- `src/store/gameStore.ts` — `completeTutorialStep(stepId)` action ('ok' | 'already_completed' | 'invalid_step'). Idempotent via `narrativeFragmentsSeen.includes(stepId)`. Grants `tutorialSparksRewardPerStep` (2) on first call.
+- `src/store/gameStore.ts` prestige action — auto-grants `tutorial_step_c{N+1}` + 2 Sparks when pre-prestige `prestigeCount < 5`. Fires at the Awakening dopamine moment, once per cycle completion.
+- `src/ui/modals/TutorialHints.tsx` — HintId union 4→8; 4 new cycle-gated overlays:
+  - `upgrades_tab` (P1 + sparks>0 + cycleUpgradesBought===0) → auto-dismiss on first upgrade purchase
+  - `focus_discharge` (P2 + focusBar<cascadeThreshold + cycleDischargesUsed===0) → auto-dismiss on first discharge
+  - `polarity` (P3 + cycleGenerated≥threshold + currentPolarity===null) → auto-dismiss on polarity pick
+  - `patterns_hipocampo` (P4) → Mind+Regions reveal cue, passive (hides on tab nav via existing render gate)
+- `src/config/strings/en.ts` — +4 strings under `tutorial.*` namespace.
+- `tests/store/completeTutorialStep.test.ts` (NEW, 6 tests) — validation, idempotency, Sparks delta, 5-step loop, Zustand pitfall compliance.
+- `tests/integration/tutorial-sparks.test.ts` (NEW, 6 tests) — 0→1 grants c1, 1→2 grants c2, 4→5 grants c5, post-tutorial (5→6) grants nothing, same-cycle re-fire no-dup, full 5-run grants 10 Sparks.
+- `tests/ui/modals/TutorialHints.test.tsx` — +8 render tests covering cycle 2-5 hints + post-tutorial no-hint gate.
+
+**Decisions / scope calls matching 7.6.1 V1-V6 approvals:**
+- **V1 REUSE** — `narrativeFragmentsSeen` with `tutorial_step_*` prefix (§39.2 pattern); zero invariant drift at 119 fields.
+- **V2 5 steps** — exactly one per cycle, Sparks reward at prestige-completion moment.
+- **V3 (a) TabBadge** — not wired in this phase; deferred. Cycle 2 hint is text-only overlay pointing at Upgrades tab. TabBadge extension lands in Sprint 7.7 or later if playtesting demands.
+- **V6 skip toggle** — deferred per TUTOR-3 "dismissable per hint" only (matches GDD §37.2 spec).
+
+**What's intentionally NOT done this phase (consistent with catalog):**
+- Analytics event emission (Sprint 11 §27 owns Firebase wiring).
+- Cascade teaser secondary overlay (no explicit spec demand beyond headline hint; revisit in Sprint 10 UX polish if playtesting calls for it).
+- Global "Skip all tutorial" toggle (deferred to Sprint 10).
+
+**Test growth:** 1397 → 1417 (+20). completeTutorialStep 6 + tutorial-sparks 6 + TutorialHints 8 extensions = 20.
 
 ### Sprint 7.6 Phase 7.6.2 dashboard (2026-04-23 — Archetype P5→P7 migration)
 

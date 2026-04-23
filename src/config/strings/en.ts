@@ -75,6 +75,10 @@ export const en = {
     hint_buy: 'Buy your first neuron',
     hint_discharge: 'Use Discharge',
     hint_variety: 'Buy a different type for +5% production',
+    hint_upgrades_tab: 'Spend Sparks in the Upgrades tab',
+    hint_focus_discharge: 'Fill Focus to 75% for a Cascade burst',
+    hint_polarity: 'Before Awakening, pick a Polarity',
+    hint_patterns_hipocampo: 'Mind tab: Patterns tree + Hipocampo shards are live',
   },
   undo: {
     prefix_neuron: 'Bought',

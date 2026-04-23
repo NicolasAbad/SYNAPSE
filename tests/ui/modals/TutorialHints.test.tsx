@@ -203,6 +203,73 @@ describe('TutorialHints — hint 4 (variety, Decision B)', () => {
   });
 });
 
+describe('TutorialHints — Sprint 7.6 cycle 2-5 extension (§37)', () => {
+  test('cycle 2 (prestigeCount=1 + sparks>0 + cycleUpgradesBought=0) → upgrades_tab hint', () => {
+    useGameStore.setState({ isTutorialCycle: false, prestigeCount: 1, sparks: 5, cycleUpgradesBought: 0 });
+    const { queryByTestId } = render(<TutorialHints />);
+    expect(queryByTestId('tutorial-hint-upgrades-tab')?.textContent).toBe('Spend Sparks in the Upgrades tab');
+  });
+
+  test('cycle 2 hint auto-dismisses after a cycle upgrade is bought', () => {
+    useGameStore.setState({ isTutorialCycle: false, prestigeCount: 1, sparks: 5, cycleUpgradesBought: 0 });
+    const { queryByTestId } = render(<TutorialHints />);
+    expect(queryByTestId('tutorial-hint-upgrades-tab')).not.toBeNull();
+    act(() => {
+      useGameStore.setState({ cycleUpgradesBought: 1 });
+    });
+    expect(queryByTestId('tutorial-hint-upgrades-tab')).toBeNull();
+  });
+
+  test('cycle 3 (prestigeCount=2 + focusBar < cascadeThreshold + no discharge yet) → focus_discharge hint', () => {
+    useGameStore.setState({ isTutorialCycle: false, prestigeCount: 2, focusBar: 0, cycleDischargesUsed: 0 });
+    const { queryByTestId } = render(<TutorialHints />);
+    expect(queryByTestId('tutorial-hint-focus-discharge')?.textContent).toBe('Fill Focus to 75% for a Cascade burst');
+  });
+
+  test('cycle 3 hint auto-dismisses after the player Discharges', () => {
+    useGameStore.setState({ isTutorialCycle: false, prestigeCount: 2, focusBar: 0, cycleDischargesUsed: 0 });
+    const { queryByTestId } = render(<TutorialHints />);
+    expect(queryByTestId('tutorial-hint-focus-discharge')).not.toBeNull();
+    act(() => {
+      useGameStore.setState({ cycleDischargesUsed: 1 });
+    });
+    expect(queryByTestId('tutorial-hint-focus-discharge')).toBeNull();
+  });
+
+  test('cycle 4 (prestigeCount=3 + threshold reached + no polarity) → polarity hint', () => {
+    useGameStore.setState({ isTutorialCycle: false, prestigeCount: 3, cycleGenerated: 1_000_000, currentThreshold: 1_000_000, currentPolarity: null });
+    const { queryByTestId } = render(<TutorialHints />);
+    expect(queryByTestId('tutorial-hint-polarity')?.textContent).toBe('Before Awakening, pick a Polarity');
+  });
+
+  test('cycle 4 hint auto-dismisses once Polarity is chosen', () => {
+    useGameStore.setState({ isTutorialCycle: false, prestigeCount: 3, cycleGenerated: 1_000_000, currentThreshold: 1_000_000, currentPolarity: null });
+    const { queryByTestId } = render(<TutorialHints />);
+    expect(queryByTestId('tutorial-hint-polarity')).not.toBeNull();
+    act(() => {
+      useGameStore.setState({ currentPolarity: 'excitatory' });
+    });
+    expect(queryByTestId('tutorial-hint-polarity')).toBeNull();
+  });
+
+  test('cycle 5 (prestigeCount=4) → patterns_hipocampo reveal hint', () => {
+    useGameStore.setState({ isTutorialCycle: false, prestigeCount: 4 });
+    const { queryByTestId } = render(<TutorialHints />);
+    expect(queryByTestId('tutorial-hint-patterns-hipocampo')?.textContent).toBe(
+      'Mind tab: Patterns tree + Hipocampo shards are live',
+    );
+  });
+
+  test('post-tutorial (prestigeCount=5+) renders no tutorial-track hint', () => {
+    useGameStore.setState({ isTutorialCycle: false, prestigeCount: 5, sparks: 99, cycleUpgradesBought: 0 });
+    const { queryByTestId } = render(<TutorialHints />);
+    expect(queryByTestId('tutorial-hint-upgrades-tab')).toBeNull();
+    expect(queryByTestId('tutorial-hint-focus-discharge')).toBeNull();
+    expect(queryByTestId('tutorial-hint-polarity')).toBeNull();
+    expect(queryByTestId('tutorial-hint-patterns-hipocampo')).toBeNull();
+  });
+});
+
 describe('TutorialHints — priority', () => {
   test('hint 1 (tap) wins over hint 2 (buy) when both predicates hold', () => {
     vi.useFakeTimers();

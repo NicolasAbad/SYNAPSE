@@ -235,9 +235,12 @@ export const SYNAPSE_CONSTANTS = {
   masteryBonusPerLevel: 0.005, // +0.5% per level (max +5%)
 
   // ── Onboarding tutorial track (Sprint 6.8 — 5-cycle progressive) ──
-  // GDD §37 + TUTOR-3..5 rules.
+  // GDD §37 + TUTOR-3..5 rules. Sprint 7.6 Phase 7.6.3 wired the Sparks reward
+  // loop: each step completes on the prestige that ends that cycle (0→1 for c1,
+  // …, 4→5 for c5). Persisted via `narrativeFragmentsSeen` (§39.2 prefix pattern).
   tutorialTrackCycleCount: 5, // 5 cycles of progressive disclosure
   tutorialSparksRewardPerStep: 2, // +2 Sparks per tutorial goal completion
+  tutorialStepIds: ['tutorial_step_c1', 'tutorial_step_c2', 'tutorial_step_c3', 'tutorial_step_c4', 'tutorial_step_c5'] as const,
 
   // ── Achievements thresholds (Sprint 7 §24.5 — values match GDD spec) ──
   achievementCycUnder10Ms: 600_000, // cyc_under_10: complete cycle in <10 min

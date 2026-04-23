@@ -6,28 +6,29 @@ import { MOTION } from '../tokens';
 import { t } from '../../config/strings';
 
 /**
- * Tutorial hint stack per SPRINTS.md §Sprint 3 + PROGRESS.md Decision B.
+ * Tutorial hint stack per SPRINTS.md §Sprint 3 + PROGRESS.md Decision B +
+ * Sprint 7.6 Phase 7.6.3 §37 5-cycle track extension.
  *
- * Renders at most ONE hint at a time; priority order: tap → buy → discharge
- * → variety. Hints 2-4 auto-dismiss when their predicate flips false (the
- * triggering action was performed). Hint 1 uses a local idle timer + tap
- * detector — the first pointerdown anywhere dismisses it permanently.
- *
- * All gates include `isTutorialCycle` — no hints after P1 per UI-9.
- *
- * - `tap`       UI-9 step 4 (Sprint 2 Phase 6 scope)
- * - `buy`       SPRINTS.md §Sprint 3 AI-check #14 (hint 2)
- * - `discharge` SPRINTS.md §Sprint 3 AI-check #14 (hint 3)
- * - `variety`   PROGRESS.md Decision B (connection-multiplier UX reinforcement)
+ * Cycle 1 (`isTutorialCycle === true`): tap → buy → discharge → variety.
+ * Cycles 2-5 (`prestigeCount === 1..4`): upgrades_tab → focus_discharge →
+ * polarity → patterns_hipocampo. Only one hint renders at a time.
+ * Sparks reward (TUTOR-5 +2 per step) is granted at PRESTIGE-completion
+ * inside the store's `prestige` action, not at hint dismiss.
  */
 
-type HintId = 'tap' | 'buy' | 'discharge' | 'variety';
+type HintId =
+  | 'tap' | 'buy' | 'discharge' | 'variety'
+  | 'upgrades_tab' | 'focus_discharge' | 'polarity' | 'patterns_hipocampo';
 
 const TEXT_KEY: Record<HintId, string> = {
   tap: 'tutorial.hint_tap',
   buy: 'tutorial.hint_buy',
   discharge: 'tutorial.hint_discharge',
   variety: 'tutorial.hint_variety',
+  upgrades_tab: 'tutorial.hint_upgrades_tab',
+  focus_discharge: 'tutorial.hint_focus_discharge',
+  polarity: 'tutorial.hint_polarity',
+  patterns_hipocampo: 'tutorial.hint_patterns_hipocampo',
 };
 
 const TEST_ID: Record<HintId, string> = {
@@ -35,6 +36,10 @@ const TEST_ID: Record<HintId, string> = {
   buy: 'tutorial-hint-buy',
   discharge: 'tutorial-hint-discharge',
   variety: 'tutorial-hint-variety',
+  upgrades_tab: 'tutorial-hint-upgrades-tab',
+  focus_discharge: 'tutorial-hint-focus-discharge',
+  polarity: 'tutorial-hint-polarity',
+  patterns_hipocampo: 'tutorial-hint-patterns-hipocampo',
 };
 
 /**
@@ -52,11 +57,18 @@ function varietyBasicaThreshold(): number {
 
 export const TutorialHints = memo(function TutorialHints() {
   const isTutorialCycle = useGameStore((s) => s.isTutorialCycle);
+  const prestigeCount = useGameStore((s) => s.prestigeCount);
   const thoughts = useGameStore((s) => s.thoughts);
   const basicaCount = useGameStore((s) => s.neurons.find((n) => n.type === 'basica')?.count ?? 0);
   const sensorialCount = useGameStore((s) => s.neurons.find((n) => n.type === 'sensorial')?.count ?? 0);
   const dischargeCharges = useGameStore((s) => s.dischargeCharges);
   const cycleDischargesUsed = useGameStore((s) => s.cycleDischargesUsed);
+  const sparks = useGameStore((s) => s.sparks);
+  const cycleUpgradesBought = useGameStore((s) => s.cycleUpgradesBought);
+  const focusBar = useGameStore((s) => s.focusBar);
+  const currentPolarity = useGameStore((s) => s.currentPolarity);
+  const cycleGenerated = useGameStore((s) => s.cycleGenerated);
+  const currentThreshold = useGameStore((s) => s.currentThreshold);
   // Sprint 4c Phase 4c.6 — hide tutorial hint overlay when a non-Mind panel
   // is open. Hints should only appear over the canvas, not over a management
   // panel the player intentionally opened (audit bug).
@@ -105,6 +117,20 @@ export const TutorialHints = memo(function TutorialHints() {
     ) {
       active = 'variety';
     }
+  } else if (prestigeCount === 1 && sparks > 0 && cycleUpgradesBought === 0) {
+    // Cycle 2 §37: surface the Upgrades tab as the Sparks spending surface.
+    active = 'upgrades_tab';
+  } else if (prestigeCount === 2 && focusBar < SYNAPSE_CONSTANTS.cascadeThreshold && cycleDischargesUsed === 0) {
+    // Cycle 3 §37: teach the Focus→Discharge→Cascade loop.
+    active = 'focus_discharge';
+  } else if (prestigeCount === 3 && cycleGenerated >= currentThreshold && currentPolarity === null) {
+    // Cycle 4 §37: Polarity shows up in CycleSetupScreen — nudge at the
+    // threshold-crossed moment when the player is about to Awaken.
+    active = 'polarity';
+  } else if (prestigeCount === 4) {
+    // Cycle 5 §37: Mind + Regions tabs are active; introduce Patterns tree
+    // and the Hipocampo shard drip. Passive reveal — auto-hidden on tab nav.
+    active = 'patterns_hipocampo';
   } else if (basicaCount === 0 && thoughts >= neuronCost('basica', 0)) {
     // Post-prestige "buy first neuron" hint — PRESTIGE_RESET zeroes every
     // neuron count while the Momentum Bonus gives starting thoughts. New

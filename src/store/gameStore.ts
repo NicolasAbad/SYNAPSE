@@ -310,6 +310,8 @@ export interface GameStoreActions {
   authorNamedMoment: (momentId: string, phrase: string) => 'ok' | 'already_logged' | 'invalid_moment' | 'invalid_phrase';
   /** Sprint 7.5.6 §16.5 VOICE-2 — skip a Named Moment (substitutes archetype-keyed default phrase). */
   skipNamedMoment: (momentId: string) => 'ok' | 'already_logged' | 'invalid_moment';
+  /** Sprint 7.6 Phase 7.6.3 §37 TUTOR-5 — mark a tutorial step complete (+2 Sparks per step, idempotent via narrativeFragmentsSeen). */
+  completeTutorialStep: (stepId: string) => 'ok' | 'already_completed' | 'invalid_step';
   /** Restore pre-purchase state from the active undo toast's snapshot. No-op if none active. */
   undoLastPurchase: () => void;
   /** Dismiss the undo toast without reversing the purchase (player tapped elsewhere or timer elapsed). */
@@ -544,6 +546,16 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
     set({ brocaNamedMoments: logNamedMoment(state, id, defaultPhraseFor(id, state.archetype)) });
     return 'ok';
   },
+  completeTutorialStep: (stepId) => {
+    if (!(SYNAPSE_CONSTANTS.tutorialStepIds as readonly string[]).includes(stepId)) return 'invalid_step';
+    const state = get();
+    if (state.narrativeFragmentsSeen.includes(stepId)) return 'already_completed';
+    set({
+      narrativeFragmentsSeen: [...state.narrativeFragmentsSeen, stepId],
+      sparks: state.sparks + SYNAPSE_CONSTANTS.tutorialSparksRewardPerStep,
+    });
+    return 'ok';
+  },
   undoLastPurchase: () => {
     const toast = get().undoToast;
     if (!toast) return;
@@ -628,7 +640,17 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
     const finalDiary = [...(ach.diaryEntries ?? withDiary.diaryEntries), ...preDiary];
     const trimmedDiary = finalDiary.length > 500 ? finalDiary.slice(finalDiary.length - 500) : finalDiary; // CONST-OK Sprint 7.5 cap
     const finalToast = ach.achievementToast ?? (preCheck.newlyUnlocked.length > 0 ? { achievementId: preCheck.newlyUnlocked[0], expiresAt: nowTimestamp + SYNAPSE_CONSTANTS.undoToastDurationMs } : null);
-    set({ ...withDiary, ...narrative, ...ach, sparks: (ach.sparks ?? post.sparks) + preReward, diaryEntries: trimmedDiary, achievementToast: finalToast, undoToast: null });
+    // Sprint 7.6 Phase 7.6.3 §37 TUTOR-5 — completed cycle N (pre-prestige
+    // prestigeCount 0..4) grants tutorial_step_c{N+1} reward. Idempotent via
+    // narrativeFragmentsSeen prefix (§39.2 pattern).
+    const effectiveSeen = ach.narrativeFragmentsSeen ?? post.narrativeFragmentsSeen;
+    const tutorialStepAdd = state.prestigeCount < SYNAPSE_CONSTANTS.tutorialTrackCycleCount
+      ? SYNAPSE_CONSTANTS.tutorialStepIds[state.prestigeCount]
+      : null;
+    const grantsTutorialReward = tutorialStepAdd !== null && !effectiveSeen.includes(tutorialStepAdd);
+    const tutorialSparksBonus = grantsTutorialReward ? SYNAPSE_CONSTANTS.tutorialSparksRewardPerStep : 0;
+    const seenAfterTutorial = grantsTutorialReward ? [...effectiveSeen, tutorialStepAdd] : effectiveSeen;
+    set({ ...withDiary, ...narrative, ...ach, sparks: (ach.sparks ?? post.sparks) + preReward + tutorialSparksBonus, narrativeFragmentsSeen: seenAfterTutorial, diaryEntries: trimmedDiary, achievementToast: finalToast, undoToast: null });
     return { fired: true, outcome };
   },
   resetPatternDecisions: () => {
