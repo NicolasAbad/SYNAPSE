@@ -19,6 +19,8 @@ import { loadGame, saveGame } from './saveGame';
 import { tryBuyNeuron, tryBuyUpgrade, type BuyReason, type UndoToast } from './purchases';
 import { tryBuyShardUpgrade } from './shardPurchases';
 import { PRECOMMIT_GOALS_BY_ID } from '../config/precommitGoals';
+import { NAMED_MOMENTS, hasMomentBeenLogged, defaultPhraseFor, logNamedMoment } from '../engine/innerVoice';
+import type { NamedMomentId } from '../engine/innerVoice';
 import { applyTap } from './tap';
 import { performDischarge, type DischargeOutcome } from '../engine/discharge';
 import { handlePrestige, type PrestigeOutcome } from '../engine/prestige';
@@ -304,6 +306,10 @@ export interface GameStoreActions {
   setActivePrecommitment: (goalId: string) => 'ok' | 'locked' | 'already_active' | 'unknown_goal' | 'insufficient_funds';
   /** Sprint 7.5.4 §16.2 PRECOMMIT-2 — cancel active Pre-commit (refunds wager, only if no meaningful progress). */
   cancelActivePrecommitment: () => 'ok' | 'no_active' | 'too_late';
+  /** Sprint 7.5.6 §16.5 VOICE-1 — author a Named Moment with the player's chosen phrase. */
+  authorNamedMoment: (momentId: string, phrase: string) => 'ok' | 'already_logged' | 'invalid_moment' | 'invalid_phrase';
+  /** Sprint 7.5.6 §16.5 VOICE-2 — skip a Named Moment (substitutes archetype-keyed default phrase). */
+  skipNamedMoment: (momentId: string) => 'ok' | 'already_logged' | 'invalid_moment';
   /** Restore pre-purchase state from the active undo toast's snapshot. No-op if none active. */
   undoLastPurchase: () => void;
   /** Dismiss the undo toast without reversing the purchase (player tapped elsewhere or timer elapsed). */
@@ -518,6 +524,24 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
     const meaningful = state.lastTapTimestamps.length > 0 || state.cycleNeuronsBought > 0 || state.cycleUpgradesBought > 0 || state.cycleGenerated > state.momentumBonus;
     if (meaningful) return 'too_late';
     set({ memories: state.memories + state.activePrecommitment.wager, activePrecommitment: null });
+    return 'ok';
+  },
+  authorNamedMoment: (momentId, phrase) => {
+    if (!(NAMED_MOMENTS as readonly string[]).includes(momentId)) return 'invalid_moment';
+    const trimmed = phrase.trim();
+    if (trimmed.length === 0 || trimmed.length > SYNAPSE_CONSTANTS.brocaPhraseMaxChars) return 'invalid_phrase';
+    const state = get();
+    const id = momentId as NamedMomentId;
+    if (hasMomentBeenLogged(state, id)) return 'already_logged';
+    set({ brocaNamedMoments: logNamedMoment(state, id, trimmed) });
+    return 'ok';
+  },
+  skipNamedMoment: (momentId) => {
+    if (!(NAMED_MOMENTS as readonly string[]).includes(momentId)) return 'invalid_moment';
+    const state = get();
+    const id = momentId as NamedMomentId;
+    if (hasMomentBeenLogged(state, id)) return 'already_logged';
+    set({ brocaNamedMoments: logNamedMoment(state, id, defaultPhraseFor(id, state.archetype)) });
     return 'ok';
   },
   undoLastPurchase: () => {

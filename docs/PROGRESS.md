@@ -6,10 +6,10 @@
 
 ## Current status
 
-**Phase:** Sprint 7.5 Phase 7.5.5 CLOSED (Visual Foresight engine: 4-tier resolver + 3 Visual upgrades + procesamiento_visual retired; MUT-2 BREAKING refactor SKIPPED via senior-dev correction). **1369 tests pass** (+13 from Phase 7.5.4 close 1356); 4/4 gates green; typecheck + lint clean.
-**Last updated:** 2026-04-22 after Sprint 7.5 Phase 7.5.5 close.
-**Active sprint:** Sprint 7.5 Region Deepening (5 of 9 phases done). Next: Phase 7.5.6 Broca Inner Voice.
-**Next action:** Sprint 7.5 Phase 7.5.6 — Broca Inner Voice engine. Ship 5 Named Moment slots (First Awakening / Archetype Voice / Resonance Found / Era 3 Entry / The Last Choice), free-text authoring (40 chars), persistence in `brocaNamedMoments`, fragment routing for `voice_*`/`dream_*`/`greeting_*`/`crossrun_*` prefixes per VOICE-2a (fire regardless of Broca region UI unlock). Oneiric Dreams seed (5 in v1.0).
+**Phase:** Sprint 7.5 Phase 7.5.6 CLOSED (Broca Inner Voice engine: 5 Named Moment resolver + persistence + 2 store actions + 5×4 default-phrase matrix). **1381 tests pass** (+12 from Phase 7.5.5 close 1369); 4/4 gates green.
+**Last updated:** 2026-04-22 after Sprint 7.5 Phase 7.5.6 close.
+**Active sprint:** Sprint 7.5 Region Deepening (6 of 9 phases done). Next: Phase 7.5.7 Brain-canvas Region tab + deferred UI from 7.5.4/7.5.5/7.5.6.
+**Next action:** Sprint 7.5 Phase 7.5.7 — Regions tab brain-canvas redesign per REG-2. 5 anatomically-positioned region nodes on Canvas 2D, tap-to-mini-panel slide-up, glow states for unlocked vs locked. Plus deferred UI: CycleSetupScreen 4th-slot for Pre-commit picker (7.5.4); What-if 3-cycle horizon UI (7.5.5); T2 Mutation pool preview cards / T3 Spontaneous countdown badge / T4 Era 3 preview (7.5.5); NamedMomentPrompt modal (7.5.6); Broca panel Named Moments archive viewer (P14+ unlock).
 
 ### Sprint 7.5 Phase 7.5.4 closing dashboard (2026-04-22 — Prefrontal Pre-commits)
 
