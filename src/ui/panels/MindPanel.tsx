@@ -5,6 +5,7 @@ import { t } from '../../config/strings';
 import { PatternTreeView } from './PatternTreeView';
 import { DiarySubtab } from './DiarySubtab';
 import { AchievementsSubtab } from './AchievementsSubtab';
+import { MasterySubtab } from './MasterySubtab';
 
 /**
  * Mind tab panel — subtab router per Sprint 4b Phase 4b.4 (scope-addition
@@ -19,7 +20,7 @@ import { AchievementsSubtab } from './AchievementsSubtab';
  * Patterns subtab (this sprint): basic Pattern Tree viz + PAT-3 reset. Other
  * subtabs render "Unlocks in Sprint X" placeholders until Sprint 5/6/7/8b.
  */
-const NON_HOME_SUBTABS: MindSubtabId[] = ['patterns', 'archetypes', 'diary', 'achievements', 'resonance'];
+const NON_HOME_SUBTABS: MindSubtabId[] = ['patterns', 'archetypes', 'diary', 'achievements', 'resonance', 'mastery'];
 
 export const MindPanel = memo(function MindPanel() {
   // Subtab state lifted to Zustand (Sprint 4c Phase 4c.6.5) so sibling HUD
@@ -138,6 +139,7 @@ function MindSubtabBody({ subtab }: { subtab: MindSubtabId }) {
       {subtab === 'diary' && <DiarySubtab />}
       {subtab === 'achievements' && <AchievementsSubtab />}
       {subtab === 'resonance' && <Placeholder keyName="mind_subtabs.resonance_placeholder" />}
+      {subtab === 'mastery' && <MasterySubtab />}
     </div>
   );
 }

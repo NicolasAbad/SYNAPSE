@@ -229,7 +229,7 @@ export function createDefaultState(): GameState {
  * setActiveTab at the end, but not modify existing state shape".
  */
 export type TabId = 'mind' | 'neurons' | 'upgrades' | 'regions';
-export type MindSubtabId = 'home' | 'patterns' | 'archetypes' | 'diary' | 'achievements' | 'resonance';
+export type MindSubtabId = 'home' | 'patterns' | 'archetypes' | 'diary' | 'achievements' | 'resonance' | 'mastery';
 
 export interface UIState {
   activeTab: TabId;

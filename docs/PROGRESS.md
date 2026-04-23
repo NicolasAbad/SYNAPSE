@@ -6,10 +6,28 @@
 
 ## Current status
 
-**Phase:** Sprint 7.7 Phase 7.7.4 CLOSED (Mastery consumers — Mutation/Pathway/Archetype). **1468 tests pass** (+16 from 7.7.3); 4/4 gates green (ratio 0.81); typecheck + lint clean.
-**Last updated:** 2026-04-23 after Phase 7.7.4 close.
-**Active sprint:** Sprint 7.7 in-flight (7.7.1 ✓, 7.7.2 ✓, 7.7.3 ✓, 7.7.4 ✓, 7.7.5-7.7.6 pending).
-**Next action:** Phase 7.7.5 — Mind → Mastery sub-tab UI (MasterySubtab.tsx) + append `'mastery'` to MindSubtabId + strings.
+**Phase:** Sprint 7.7 Phase 7.7.5 CLOSED (Mind → Mastery sub-tab UI). **1475 tests pass** (+7 from 7.7.4); 4/4 gates green (ratio 0.81); typecheck + lint clean.
+**Last updated:** 2026-04-23 after Phase 7.7.5 close.
+**Active sprint:** Sprint 7.7 in-flight (7.7.1-7.7.5 ✓, 7.7.6 pending).
+**Next action:** Phase 7.7.6 — Sprint 7.7 close (buffer-1 sim verify + dashboard).
+
+### Sprint 7.7 Phase 7.7.5 dashboard (2026-04-23 — Mind Mastery sub-tab UI)
+
+**Scope shipped:** MasterySubtab panel + MindSubtabId expansion + i18n strings.
+
+**Changes applied:**
+- `src/ui/panels/MasterySubtab.tsx` (NEW, ~135 lines) — 4 section toggle (Mutations / Upgrades / Pathways / Archetypes) + entity grid with per-card reveal state (`uses === 0` → `???` + "Use once to reveal" hint per §38.3; `uses > 0` → id + Level N + uses count; `level === 10` → MAX suffix). Responsive `repeat(auto-fill, minmax(160px, 1fr))` grid for mobile/tablet.
+- `src/store/gameStore.ts` — MindSubtabId union expanded from 6 to 7 (appended `'mastery'`).
+- `src/ui/panels/MindPanel.tsx` — NON_HOME_SUBTABS includes `'mastery'`; router renders `<MasterySubtab />`.
+- `src/config/strings/en.ts` — `mind_subtabs.mastery` + 8 new mastery-domain keys (title, 4 section labels, locked hint, level label, uses label, MAX suffix).
+- `tests/ui/panels/MasterySubtab.test.tsx` (NEW, 7 tests) — 4 section tabs present, default=mutation, tab-switch wiring, locked card `???` state, revealed card metadata, MAX suffix at L10, archetype section renders 3 cards.
+
+**Gate 3 remediation:** initial draft left CSS token refs without CONST-OK comments → ratio dropped to 0.79. Refactored card styles into top-level `CSSProperties` constants + added CONST-OK on all spacing refs (matches existing panel pattern). Back to 0.81.
+
+**Deferred (not in scope for Sprint 7.7):**
+- Entity display names — cards show id-strings (e.g. `hiperestimulacion`) rather than player-facing names. Full name lookup via `t()` keys and per-entity description tooltips fit the Sprint 10 UX polish pass.
+- Next-level preview copy (GDD §38.3 mentions "next-level preview") — current uses count + `MAX` suffix is the minimum viable disclosure; add preview bar in Sprint 10 if playtesting calls for it.
+- Per-entity description tooltips.
 
 ### Sprint 7.7 Phase 7.7.4 dashboard (2026-04-23 — Mastery consumer multipliers, Option C)
 
