@@ -18,6 +18,7 @@ import type { NeuronType, Polarity, Pathway, Archetype, EndingID } from '../type
 import { loadGame, saveGame } from './saveGame';
 import { tryBuyNeuron, tryBuyUpgrade, type BuyReason, type UndoToast } from './purchases';
 import { tryBuyShardUpgrade } from './shardPurchases';
+import { PRECOMMIT_GOALS_BY_ID } from '../config/precommitGoals';
 import { applyTap } from './tap';
 import { performDischarge, type DischargeOutcome } from '../engine/discharge';
 import { handlePrestige, type PrestigeOutcome } from '../engine/prestige';
@@ -299,6 +300,10 @@ export interface GameStoreActions {
   buyUpgrade: (id: string, nowTimestamp: number) => BuyReason;
   /** Sprint 7.5.2 §16.1 — buy a Hipocampo Memory Shard upgrade (typed-shard cost). */
   buyShardUpgrade: (id: string, nowTimestamp: number) => BuyReason;
+  /** Sprint 7.5.4 §16.2 PRECOMMIT-1/2 — set active Pre-commit (deducts wager from Memorias). */
+  setActivePrecommitment: (goalId: string) => 'ok' | 'locked' | 'already_active' | 'unknown_goal' | 'insufficient_funds';
+  /** Sprint 7.5.4 §16.2 PRECOMMIT-2 — cancel active Pre-commit (refunds wager, only if no meaningful progress). */
+  cancelActivePrecommitment: () => 'ok' | 'no_active' | 'too_late';
   /** Restore pre-purchase state from the active undo toast's snapshot. No-op if none active. */
   undoLastPurchase: () => void;
   /** Dismiss the undo toast without reversing the purchase (player tapped elsewhere or timer elapsed). */
@@ -493,6 +498,26 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
     const post = { ...state, ...result.updates };
     const ach = processAchievementUnlocks(post as GameState, nowTimestamp);
     set({ ...result.updates, ...ach, undoToast: result.undoToast });
+    return 'ok';
+  },
+  setActivePrecommitment: (goalId) => {
+    const state = get();
+    if (state.prestigeCount < SYNAPSE_CONSTANTS.precommitUnlockPrestige) return 'locked';
+    if (state.activePrecommitment !== null) return 'already_active';
+    const def = PRECOMMIT_GOALS_BY_ID[goalId];
+    if (def === undefined) return 'unknown_goal';
+    if (state.memories < def.wager) return 'insufficient_funds';
+    set({ activePrecommitment: { goalId, wager: def.wager }, memories: state.memories - def.wager });
+    return 'ok';
+  },
+  cancelActivePrecommitment: () => {
+    const state = get();
+    if (state.activePrecommitment === null) return 'no_active';
+    // PRECOMMIT-2: cancellation refund only allowed before any meaningful cycle progress.
+    // "Meaningful" = a tap, neuron buy, upgrade buy, or any thoughts production beyond Momentum carry.
+    const meaningful = state.lastTapTimestamps.length > 0 || state.cycleNeuronsBought > 0 || state.cycleUpgradesBought > 0 || state.cycleGenerated > state.momentumBonus;
+    if (meaningful) return 'too_late';
+    set({ memories: state.memories + state.activePrecommitment.wager, activePrecommitment: null });
     return 'ok';
   },
   undoLastPurchase: () => {

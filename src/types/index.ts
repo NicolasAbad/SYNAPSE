@@ -344,9 +344,9 @@ export type DiaryEntryType =
   | 'ending'
   | 'fragment'
   | 'achievement'
-  | 'spontaneous'; // Sprint 7.1 D4 decision (Sprint 6.8 audit) — separate from 'fragment' to avoid
-                   // overcounting fragment-based achievements (nar_ten_fragments, nar_diary_50).
-                   // Used by hid_spontaneous_hunter to track 12 unique spontaneous event IDs lifetime.
+  | 'spontaneous'
+  | 'precommit'; // Sprint 7.5.4 §16.2 PRECOMMIT-4 — pre-commit wager + outcome history.
+                 // data shape: { goalId, wager, outcome: 'success'|'fail'|'cancel', sparksAwarded?, memoryDelta? }
 
 export interface DiaryEntry {
   timestamp: number;

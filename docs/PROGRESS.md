@@ -6,10 +6,59 @@
 
 ## Current status
 
-**Phase:** Sprint 7.5 Phase 7.5.3 CLOSED (Sistema Límbico Moodometer: tier resolver + 5-tier production/focus/charges/insight mults + event-delta dispatcher wired into Cascade/Prestige/Fragment/RP, 6 Límbico upgrades + ondas_theta + shard_emo_deep, retired regulacion_emocional, maxOfflineEfficiencyRatio 2.0 → 2.5, HUD Mood glyph + Límbico panel section). **1338 tests pass** (+35 from Phase 7.5.2 close 1303: +35 mood engine tests; consistency/prestige/purchases tests refactored for new upgrade catalog); 4/4 gates green; typecheck + lint clean.
-**Last updated:** 2026-04-22 after Sprint 7.5 Phase 7.5.3 close.
-**Active sprint:** Sprint 7.5 Region Deepening (3 of 9 phases done). Next: Phase 7.5.4 Prefrontal Pre-commits.
-**Next action:** Sprint 7.5 Phase 7.5.4 — Prefrontal Pre-commit engine (8 goal templates, CycleSetupScreen 4th slot at P5+, success/fail resolution at prestige with 2× Memoria reward / -15% penalty, 5-streak permanent +1 Memoria/cycle bonus, PRECOMMIT-1..5 incl. lenient `<=` time-comparison per R4).
+**Phase:** Sprint 7.5 Phase 7.5.4 CLOSED (Prefrontal Pre-commits: 8 goal templates + resolution engine + 2 store actions + Mood-fail wiring + DiaryEntryType +'precommit'). **1356 tests pass** (+18 from Phase 7.5.3 close 1338); 4/4 gates green; typecheck + lint clean.
+**Last updated:** 2026-04-22 after Sprint 7.5 Phase 7.5.4 close.
+**Active sprint:** Sprint 7.5 Region Deepening (4 of 9 phases done). Next: Phase 7.5.5 Visual Foresight + MUT-2 seed refactor (BREAKING).
+**Next action:** Sprint 7.5 Phase 7.5.5 — Visual Foresight tier engine + MUT-2 seed refactor. Pre-code research: 4 tier resolver (T1 What-if 3-cycle / T2 Mutation-pool preview / T3 Spontaneous countdown / T4 Era 3 preview); MUT-2 mutationSeed compute moves prestige-START → prestige-END (BREAKING — 23 mutation tests need updates); What-if Preview UI extends from "next cycle" to "3 cycles ahead"; procesamiento_visual retirement migration; Pattern Recognition toggle (replaces procesamiento_visual visual indicator); Spontaneous-event 20s countdown badge; Visual panel UI scaffold inside RegionsPanel.
+
+### Sprint 7.5 Phase 7.5.4 closing dashboard (2026-04-22 — Prefrontal Pre-commits)
+
+- **Phase:** 7.5.4/9 — single atomic commit. Pre-commit engine + 8 goal templates + store actions + Mood-fail wiring + 'precommit' DiaryEntryType.
+- **Tests:** **1356 pass** (+18 from Phase 7.5.3 close 1338). 0 fail / 37 skipped / 83 files. 4/4 gates PASS, ratio 0.80.
+
+- **Scope delivered:**
+  - ✅ 8 goal templates ([src/config/precommitGoals.ts](src/config/precommitGoals.ts)) per GDD §16.2 table — pure-function eligibility checks against pre-RESET state
+  - ✅ PRECOMMIT-5 lenient `<=` time comparison (12 / 8 minute thresholds) — 11:59.999 succeeds for "under 12 min"
+  - ✅ Resolution engine ([src/engine/precommits.ts](src/engine/precommits.ts)) `applyPrecommitResolution` returns `PrecommitResolution` block (memoryMultiplier × success Sparks × streakDelta × Mood-after × diary entry)
+  - ✅ Wired into [src/engine/prestige.ts](src/engine/prestige.ts) `handlePrestige` BEFORE Memory grant. Multiplier applies to `baseMemoriesGained`; `streakPermanentMemoriaBonus` (every 5 successes = +1 lifetime Memoria/cycle) added cumulative
+  - ✅ PRECOMMIT-3 + R-decision: Genius Pass waives -15% penalty (Pass-shielded fail = 0% reward, neutral baseline) but streak STILL resets
+  - ✅ Pre-commit-fail Mood -15 delta wired (was deferred from Phase 7.5.3) — only fires for non-Pass-shielded failures
+  - ✅ Store actions: `setActivePrecommitment(goalId)` (gates on P5+ unlock + already-active + unknown_goal + insufficient_funds; deducts wager from Memorias) + `cancelActivePrecommitment()` (PRECOMMIT-2 refund only allowed before any meaningful cycle progress: tap/neuron-buy/upgrade-buy/thoughts-beyond-Momentum)
+  - ✅ DiaryEntryType extended with `'precommit'` (data carries goalId + wager + outcome + passShielded + memoryMultiplier|sparksAwarded)
+  - ✅ DiarySubtab renders precommit entries (🎯 icon + goal name + outcome subtitle)
+  - ✅ activePrecommitment already in PRESTIGE_RESET (Sprint 7.5.1); precommitmentStreak update wired into handlePrestige's `next` block
+  - ✅ CycleSetupScreen 4th-slot UI DEFERRED to Phase 7.5.7 (brain-canvas Region tab redesign) — store actions are callable today; UI surface lands when the Prefrontal panel mini-UI ships
+
+- **Tests delta breakdown (+18 net):**
+  - +18 [tests/engine/precommits.test.ts](tests/engine/precommits.test.ts): 8-goal data integrity / per-goal eligibility (lenient `<=` PRECOMMIT-5 verified for both time thresholds) / 4 outcome variants (no_active / unknown_goal / success / fail with+without Pass) / streak bonus PRECOMMIT-3
+
+- **Senior-dev calls (this phase):**
+  - `pc_max_focus_3x` eligibility uses `insightTimestamps.filter(t >= cycleStartTimestamp).length >= 3` as a Focus-fill proxy. True per-cycle Focus-fill counter would require a new GameState field; v1.0 approximation acceptable since Insight is the player-visible Focus payoff. Documented in src/config/precommitGoals.ts.
+  - `cancelActivePrecommitment` "meaningful progress" boundary uses `cycleGenerated > momentumBonus` (any production beyond Momentum carry counts as engaged play). Defensible interpretation of GDD §16.2 PRECOMMIT-2 prose "after cycle has meaningful progress".
+  - CycleSetupScreen 4th-slot UI DEFERRED — no spec-side blocker, but the brain-canvas redesign in Sprint 7.5.7 will throw away most CycleSetupScreen layout work. Better to ship store actions now (engine-complete) and ship UI in 7.5.7 alongside the rest of the Prefrontal mini-panel.
+
+- **Files created (3):**
+  - [src/config/precommitGoals.ts](src/config/precommitGoals.ts) (~95 lines, canonical 8-goal data + isPrecommitUnlocked helper)
+  - [src/engine/precommits.ts](src/engine/precommits.ts) (~95 lines, resolution + streak bonus)
+  - [tests/engine/precommits.test.ts](tests/engine/precommits.test.ts)
+
+- **Files modified (5):**
+  - [src/types/index.ts](src/types/index.ts): DiaryEntryType +'precommit'
+  - [src/config/strings/en.ts](src/config/strings/en.ts): +precommit_goals (8 names+descs) + prefrontal_panel + diary.precommit_success/_fail
+  - [src/engine/prestige.ts](src/engine/prestige.ts): wires applyPrecommitResolution + streakPermanentMemoriaBonus + precommitmentStreak update + Mood-fail merge + diary append helper
+  - [src/store/gameStore.ts](src/store/gameStore.ts): +setActivePrecommitment / +cancelActivePrecommitment actions
+  - [src/ui/panels/DiarySubtab.tsx](src/ui/panels/DiarySubtab.tsx): +precommit icon + summary formatter
+
+- **Sprint 7.5 Phase 7.5.5 — first action (next session/turn):**
+  Visual Foresight + MUT-2 seed refactor (BREAKING). Pre-code research:
+  1. 4-tier resolver (visualInsightTier derived: T1 P0 always-on / T2 P5+ or vis_pattern_sight / T3 P12+ or vis_deep_sight / T4 P19+ or vis_prophet_sight)
+  2. **MUT-2 seed refactor (BREAKING)**: mutationSeed currently computed at prestige-START in CycleSetupScreen. Move to prestige-END inside handlePrestige so the next cycle's Mutation pool is known at Pattern Tree screen for T2 preview. ~23 mutation tests need careful update.
+  3. What-if Preview extension: 1-cycle → 3-cycle horizon (UI work in WhatIfPreview.tsx)
+  4. T2 Mutation pool preview: 3 candidate cards rendered at top of PatternTreeView (between Awakening + CycleSetupScreen)
+  5. T3 Spontaneous countdown: stepSpontaneousEventTrigger emits a 20s "approaching" badge to HUD (existing FocusBar position is the natural UI slot)
+  6. T4 Era 3 preview: AwakeningScreen renders next Era 3 event name + narrative snippet (mechanical hidden)
+  7. Retire procesamiento_visual (extend RETIRED_UPGRADE_IDS); Pattern Recognition toggle replaces it (highlights best upgrade in UpgradesPanel — UI-side flag, no engine field)
+  8. 3 Visual upgrades (vis_pattern_sight 2 Mem P5 / vis_deep_sight 8 Mem P12 / vis_prophet_sight 20 Mem P19) — Memorias-priced
 
 ### Sprint 7.5 Phase 7.5.3 closing dashboard (2026-04-22 — Sistema Límbico Moodometer)
 

@@ -11,8 +11,9 @@ import { archetypeMemoryMult } from './archetypes';
 import { checkAllResonantPatterns } from './resonantPatterns';
 import { episodicShardsAtPrestige } from './shards';
 import { applyMoodEvent } from './mood';
+import { applyPrecommitResolution, streakPermanentMemoriaBonus } from './precommits';
 import type { GameState } from '../types/GameState';
-import type { AwakeningEntry, PatternNode } from '../types';
+import type { AwakeningEntry, PatternNode, DiaryEntry } from '../types';
 
 /** Metadata the Awakening UI needs; engine doesn't store it. */
 export interface PrestigeOutcome {
@@ -31,6 +32,11 @@ function ownedUpgradeIds(upgrades: GameState['upgrades']): Set<string> {
   return out;
 }
 
+const DIARY_CAP = 500; // CONST-OK §32 + Sprint 7.5 diary cap
+function appendDiaryCapped(prev: readonly DiaryEntry[], entry: DiaryEntry): DiaryEntry[] {
+  const next = [...prev, entry];
+  return next.length > DIARY_CAP ? next.slice(next.length - DIARY_CAP) : next;
+}
 /** GDD §6 + Sprint 7.5.2 §16.1: base × pathwayMult × archetypeMult + Node 24 B + shard_epi_imprint. */
 export function computeMemoriesGained(state: Pick<GameState, 'upgrades' | 'patternDecisions' | 'currentPathway' | 'archetype' | 'memoryShardUpgrades'>): number {
   const baseGain = SYNAPSE_CONSTANTS.baseMemoriesPerPrestige * pathwayMemoriesPerPrestigeMult(state as GameState) * archetypeMemoryMult(state) + memoriesPerPrestigeDecisionAdd(state);
@@ -55,24 +61,10 @@ function focusBarAfterReset(state: Pick<GameState, 'upgrades' | 'focusBar'>): nu
 }
 
 /** BUG-04: personalBests keyed by PRE-increment prestigeCount; update only if faster. */
-function updatePersonalBests(
-  prev: GameState['personalBests'],
-  prestigeCount: number,
-  cycleMinutes: number,
-): { next: GameState['personalBests']; wasPersonalBest: boolean } {
+function updatePersonalBests(prev: GameState['personalBests'], prestigeCount: number, cycleMinutes: number): { next: GameState['personalBests']; wasPersonalBest: boolean } {
   const prior = prev[prestigeCount];
-  if (!prior) {
-    return {
-      next: { ...prev, [prestigeCount]: { minutes: cycleMinutes, rewardGiven: false } },
-      wasPersonalBest: true,
-    };
-  }
-  if (cycleMinutes < prior.minutes) {
-    return {
-      next: { ...prev, [prestigeCount]: { minutes: cycleMinutes, rewardGiven: prior.rewardGiven } },
-      wasPersonalBest: true,
-    };
-  }
+  if (!prior) return { next: { ...prev, [prestigeCount]: { minutes: cycleMinutes, rewardGiven: false } }, wasPersonalBest: true };
+  if (cycleMinutes < prior.minutes) return { next: { ...prev, [prestigeCount]: { minutes: cycleMinutes, rewardGiven: prior.rewardGiven } }, wasPersonalBest: true };
   return { next: prev, wasPersonalBest: false };
 }
 
@@ -103,7 +95,11 @@ export function handlePrestige(state: GameState, timestamp: number): { state: Ga
   const patternsGained = newPatterns.length;
   const resonanceGain = 0;
   const rp = checkAllResonantPatterns(state);
-  const memoriesGained = computeMemoriesGained(state);
+  const baseMemoriesGained = computeMemoriesGained(state);
+  // Sprint 7.5.4 §16.2 — resolve active Pre-commit BEFORE Memory grant.
+  const pc = applyPrecommitResolution(state, cycleDurationMs, timestamp);
+  const streakAfter = pc.streakDelta < 0 ? 0 : state.precommitmentStreak + pc.streakDelta;
+  const memoriesGained = Math.max(0, Math.round(baseMemoriesGained * pc.memoryMultiplier) + streakPermanentMemoriaBonus(streakAfter));
   // Step 8 — Focus Persistente retention captured BEFORE applying RESET defaults.
   const focusBarRetained = focusBarAfterReset(state);
   // POLAR-1 + Sprint 5 Mutation #14 Déjà Vu snapshot. Pre-RESET so array isn't empty.
@@ -144,7 +140,6 @@ export function handlePrestige(state: GameState, timestamp: number): { state: Ga
     resonance: state.resonance + resonanceGain,
     // GDD §22 RP rewards — flip discovered flags + bump Sparks for new ones.
     resonantPatternsDiscovered: rp.resonantPatternsDiscovered,
-    sparks: rp.sparks,
     // Sprint 7.5.2 §16.1 Episodic Shard burst at prestige: base + per-RP discovery.
     memoryShards: {
       emotional: state.memoryShards.emotional,
@@ -152,8 +147,13 @@ export function handlePrestige(state: GameState, timestamp: number): { state: Ga
       episodic: state.memoryShards.episodic + episodicShardsAtPrestige(rp.newlyDiscovered.length),
     },
     // Sprint 7.5.3 §16.3 MOOD-2: prestige + per-RP mood deltas (accumulated).
-    mood: moodAccum.mood,
-    moodHistory: moodAccum.moodHistory,
+    // Sprint 7.5.4: pre-commit-fail Mood -15 supersedes when applicable.
+    mood: pc.moodAfter ?? moodAccum.mood,
+    moodHistory: pc.moodHistoryAfter ?? moodAccum.moodHistory,
+    // Sprint 7.5.4 §16.2 — Pre-commit resolution: Sparks bonus + streak update + diary.
+    sparks: rp.sparks + pc.sparksAwarded,
+    precommitmentStreak: streakAfter,
+    diaryEntries: pc.diaryEntry === null ? state.diaryEntries : appendDiaryCapped(state.diaryEntries, pc.diaryEntry),
     awakeningLog: [...state.awakeningLog, awakeningEntry],
     personalBests,
     personalBestsBeaten: state.personalBestsBeaten + (wasPersonalBest ? 1 : 0),

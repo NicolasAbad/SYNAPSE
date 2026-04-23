@@ -82,6 +82,7 @@ const TYPE_ICON: Record<DiaryEntryType, string> = {
   fragment: '📜',
   achievement: '🏆',
   spontaneous: '⚡',
+  precommit: '🎯', // Sprint 7.5.4 §16.2 Pre-commit wager
 };
 
 function DiaryEntryRow({ entry }: { entry: DiaryEntry }) {
@@ -157,6 +158,14 @@ function formatEntrySummary(entry: DiaryEntry): { title: string; subtitle: strin
     return {
       title: t(`spontaneous.${id}.name`),
       subtitle: t('diary.spontaneous_subtitle'),
+    };
+  }
+  if (entry.type === 'precommit') {
+    const goalId = d['goalId'] as string;
+    const outcome = d['outcome'] as string;
+    return {
+      title: t(`precommit_goals.${goalId}.name`),
+      subtitle: outcome === 'success' ? t('diary.precommit_success') : t('diary.precommit_fail'),
     };
   }
   return { title: entry.type, subtitle: null };

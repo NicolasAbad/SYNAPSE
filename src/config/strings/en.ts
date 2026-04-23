@@ -308,6 +308,22 @@ export const en = {
     drip_paused: 'Drip paused (cycle complete)',
     weave_locked: 'Memory Weave unlocks with Integrated Mind',
   },
+  // Sprint 7.5.4 §16.2 — Pre-commit goal templates (8) + diary copy.
+  precommit_goals: {
+    pc_under_12min: { name: 'Under 12 Minutes', description: 'Complete this cycle in 12 min or less.' },
+    pc_under_8min: { name: 'Under 8 Minutes', description: 'Complete this cycle in 8 min or less.' },
+    pc_no_discharge: { name: 'No Discharge', description: 'Complete this cycle without using a Discharge.' },
+    pc_five_cascades: { name: 'Five Cascades', description: 'Trigger 5 Cascades this cycle.' },
+    pc_20_neurons: { name: '20 Neurons', description: 'Buy 20 neurons before P3.' },
+    pc_no_tap_idle: { name: 'No Taps', description: 'Complete this cycle without tapping.' },
+    pc_max_focus_3x: { name: 'Triple Focus', description: 'Trigger Insight three times this cycle.' },
+    pc_spontaneous_hunter: { name: 'Spontaneous Hunter', description: 'Witness 3 Spontaneous events this cycle.' },
+  },
+  prefrontal_panel: {
+    title: 'Prefrontal — Pre-commitments',
+    streak_label: 'Streak',
+    cancel_button: 'Cancel (refund wager)',
+  },
   // Sprint 7.5.3 §16.3 — Mood UI strings.
   mood_tiers: {
     numb: 'Numb',
@@ -586,6 +602,8 @@ export const en = {
     ending_subtitle: 'Choice:',
     fragment_title: 'Fragment read',
     spontaneous_subtitle: 'Witnessed',
+    precommit_success: 'Pre-commit succeeded',
+    precommit_fail: 'Pre-commit failed',
   },
 
   // Sprint 3+ adds keys as new features ship — do NOT preload
