@@ -6,10 +6,20 @@
 
 ## Current status
 
-**Phase:** Sprint 7.5 Phase 7.5.6 CLOSED (Broca Inner Voice engine: 5 Named Moment resolver + persistence + 2 store actions + 5×4 default-phrase matrix). **1381 tests pass** (+12 from Phase 7.5.5 close 1369); 4/4 gates green.
-**Last updated:** 2026-04-22 after Sprint 7.5 Phase 7.5.6 close.
-**Active sprint:** Sprint 7.5 Region Deepening (6 of 9 phases done). Next: Phase 7.5.7 Brain-canvas Region tab + deferred UI from 7.5.4/7.5.5/7.5.6.
-**Next action:** Sprint 7.5 Phase 7.5.7 — Regions tab brain-canvas redesign per REG-2. 5 anatomically-positioned region nodes on Canvas 2D, tap-to-mini-panel slide-up, glow states for unlocked vs locked. Plus deferred UI: CycleSetupScreen 4th-slot for Pre-commit picker (7.5.4); What-if 3-cycle horizon UI (7.5.5); T2 Mutation pool preview cards / T3 Spontaneous countdown badge / T4 Era 3 preview (7.5.5); NamedMomentPrompt modal (7.5.6); Broca panel Named Moments archive viewer (P14+ unlock).
+**Phase:** Sprint 7.5 Phase 7.5.7 CLOSED (NamedMomentPrompt modal — closes the loop on Phase 7.5.6 Inner Voice engine). **1387 tests pass** (+6 from Phase 7.5.6 close 1381); 4/4 gates green.
+**Last updated:** 2026-04-22 after Sprint 7.5 Phase 7.5.7 close.
+**Active sprint:** Sprint 7.5 Region Deepening (7 of 9 phases done). Next: Phase 7.5.8 Integrated Mind.
+**Next action:** Sprint 7.5 Phase 7.5.8 — Amplitud de Banda → Integrated Mind tier tracker. Wire 3/4/5-region active-tier check (Hipocampo / Prefrontal / Límbico / Visual / Broca activity flags); +1 max charge at 3 regions, +10% Memoria gain at 4 regions, secret narrative beat + ending variant + 5 Sparks at 5 regions; wire 5 stubbed region achievements (reg_shard_collector, reg_precommit_streak, reg_euphoric, reg_foresight_master, reg_integrated_mind); add `integrated_mind_whole` narrative fragment.
+
+**Deferred UI from Phase 7.5.7 (documented for v1.1 / Sprint 10 polish phase):**
+- Brain-canvas Region tab redesign per REG-2 — full Canvas 2D rebuild with 5 anatomical region nodes + tap-to-mini-panel slide-up. Substantial UI work; existing list-based RegionsPanel works on mobile and ships. Senior-dev call: defer to Sprint 10 UX polish.
+- CycleSetupScreen 4th-slot Pre-commit picker (7.5.4 store actions ready) — needs 8-goal selector UI.
+- What-if Preview 3-cycle horizon extension (7.5.5 helper ready).
+- T2 Mutation pool preview cards on PatternTreeView (7.5.5 — getMutationOptions callable today).
+- T3 Spontaneous countdown 20s badge in HUD.
+- T4 Era 3 event preview at AwakeningScreen.
+- Broca panel Named Moments archive viewer (P14+ unlock).
+All engine helpers shipped and callable; UI is the remaining work and lands in Sprint 10 polish phase.
 
 ### Sprint 7.5 Phase 7.5.4 closing dashboard (2026-04-22 — Prefrontal Pre-commits)
 

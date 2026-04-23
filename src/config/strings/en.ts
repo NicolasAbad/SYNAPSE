@@ -329,6 +329,16 @@ export const en = {
     streak_label: 'Streak',
     cancel_button: 'Cancel (refund wager)',
   },
+  // Sprint 7.5.6/7.5.7 §16.5 — Broca Inner Voice Named Moment prompts.
+  named_moments: {
+    skip_button: 'Skip',
+    author_button: 'Speak',
+    first_awakening: { title: 'Your first awakening', prompt: 'Name this moment. What does it mean to begin?' },
+    archetype_voice: { title: 'Your archetype speaks', prompt: 'Now that you have chosen, what will you become?' },
+    resonance_found: { title: 'Resonance discovered', prompt: 'Something patterned. Name what resonated.' },
+    era3_entry: { title: 'Beyond the threshold', prompt: 'You enter Era Three. Name what changes.' },
+    last_choice: { title: 'The final choice', prompt: 'You stand at the ending. Name your decision.' },
+  },
   // Sprint 7.5.3 §16.3 — Mood UI strings.
   mood_tiers: {
     numb: 'Numb',

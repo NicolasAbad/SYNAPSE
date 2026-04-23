@@ -14,6 +14,7 @@ import { EmergenciaCapBanner } from './EmergenciaCapBanner';
 import { AwakeningFlow } from './AwakeningFlow';
 import { PendingDecisionFlow } from './PendingDecisionFlow';
 import { TabPanelContainer } from '../panels/TabPanelContainer';
+import { NamedMomentPrompt } from '../modals/NamedMomentPrompt';
 
 /**
  * HUD composition overlay. Absolute-positioned sibling of NeuronCanvas
@@ -60,6 +61,7 @@ export const HUD = memo(function HUD() {
       <EmergenciaCapBanner />
       <AwakeningFlow />
       <PendingDecisionFlow />
+      <NamedMomentPrompt />
       <TabBar />
     </div>
   );
