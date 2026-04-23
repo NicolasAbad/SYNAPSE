@@ -42,13 +42,14 @@ function warn(msg: string): void {
 function freshState(): GameState {
   // Reuse the store's createDefaultState via reset() to avoid divergence.
   // Strip UI-state fields + bound action methods so we get the pure GameState
-  // shape (110 fields per §32 invariant).
+  // shape (119 fields per §32 invariant post-Sprint-7.5.1).
   useGameStore.getState().reset();
   const raw = useGameStore.getState() as unknown as Record<string, unknown>;
   const out: Record<string, unknown> = {};
+  const UI_FIELDS = new Set(['activeTab', 'activeMindSubtab', 'undoToast', 'antiSpamActive', 'achievementToast']);
   for (const [k, v] of Object.entries(raw)) {
     if (typeof v === 'function') continue;
-    if (k === 'activeTab' || k === 'activeMindSubtab' || k === 'undoToast' || k === 'antiSpamActive') continue;
+    if (UI_FIELDS.has(k)) continue;
     out[k] = v;
   }
   return out as unknown as GameState;
@@ -236,12 +237,13 @@ function runCycles(label: string, withFocusPersistente: boolean): void {
 
 // Verify exported field-set constants haven't drifted from §33 invariants.
 console.log('━━━ Field-set invariants ━━━');
-check(PRESTIGE_RESET_FIELDS.length === 45, `PRESTIGE_RESET_FIELDS length = ${PRESTIGE_RESET_FIELDS.length}, expected 45`);
-check(PRESTIGE_PRESERVE_FIELDS.length === 60, `PRESTIGE_PRESERVE_FIELDS length = ${PRESTIGE_PRESERVE_FIELDS.length}, expected 60`);
+// Sprint 7.5.1 bumped these counts: 45/60 → 46/68 alongside the 110→119 field bump.
+check(PRESTIGE_RESET_FIELDS.length === 46, `PRESTIGE_RESET_FIELDS length = ${PRESTIGE_RESET_FIELDS.length}, expected 46`);
+check(PRESTIGE_PRESERVE_FIELDS.length === 68, `PRESTIGE_PRESERVE_FIELDS length = ${PRESTIGE_PRESERVE_FIELDS.length}, expected 68`);
 check(PRESTIGE_UPDATE_FIELDS.length === 4, `PRESTIGE_UPDATE_FIELDS length = ${PRESTIGE_UPDATE_FIELDS.length}, expected 4`);
 check(
-  PRESTIGE_RESET_FIELDS.length + PRESTIGE_PRESERVE_FIELDS.length + PRESTIGE_UPDATE_FIELDS.length === 109,
-  `45 + 60 + 4 = 109 (lifetime field is the 110th, not in any tuple)`,
+  PRESTIGE_RESET_FIELDS.length + PRESTIGE_PRESERVE_FIELDS.length + PRESTIGE_UPDATE_FIELDS.length === 118,
+  `46 + 68 + 4 = 118 (lifetime field is the 119th, not in any tuple)`,
 );
 
 runCycles('Run A — vanilla 10-cycle prestige loop (no upgrades)', false);

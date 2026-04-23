@@ -6,10 +6,61 @@
 
 ## Current status
 
-**Phase:** Sprint 7.5 Phase 7.5.8 CLOSED (Integrated Mind tier tracker + 5 region achievements wired). **1397 tests pass** (+10 from Phase 7.5.7 close 1387); 4/4 gates green.
-**Last updated:** 2026-04-22 after Sprint 7.5 Phase 7.5.8 close.
-**Active sprint:** Sprint 7.5 Region Deepening (8 of 9 phases done). Next: Phase 7.5.9 close.
-**Next action:** Sprint 7.5 Phase 7.5.9 — Sprint 7.5 close. Run TEST-5 partial sim if time allows; finalize Sprint 7.5 closing dashboard with phase summaries, locked decisions, deferred-to-Sprint-10 UI inventory, audit findings, test rigor review.
+**Phase:** Sprint 7.5 CLOSED (all 9 phases shipped: scaffolding + Hipocampo + Límbico + Pre-commits + Visual + Broca + Modal + Integrated Mind + close). **1397 tests pass** (+154 from Sprint 7 close 1243); 4/4 gates green; buffer-1 sim 0 errors/0 warnings; typecheck + lint clean.
+**Last updated:** 2026-04-22 after Sprint 7.5 close.
+**Active sprint:** Sprint 7.6 ready (Onboarding tutorial track + Archetype P5→P7 migration + Pathway expansion UI per GDD §37 + revised plan).
+**Next action:** Sprint 7.6 Phase 7.6.1 — pre-code research catalog for Onboarding 5-cycle tutorial track + Archetype P5→P7 migration (test updates: archetypeUnlockPrestige bump 5→7 alongside Sprint 6 archetype tests).
+
+### Sprint 7.5 close dashboard (2026-04-22 — Region Deepening)
+
+**Phases shipped (9/9):** 7.5.1 GameState scaffolding (110→119) → 7.5.2 Hipocampo Memory Shards (6 of 8 upgrades + drip + retired consolidacion_memoria) → 7.5.3 Sistema Límbico Moodometer (5-tier + event deltas + 6 upgrades + ondas_theta + retired regulacion_emocional + R6 offline ratio bump) → 7.5.4 Prefrontal Pre-commits (8 templates + resolution + Mood-fail wiring) → 7.5.5 Visual Foresight (4-tier resolver + 3 upgrades + retired procesamiento_visual) → 7.5.6 Broca Inner Voice (5 Named Moments + persistence) → 7.5.7 NamedMomentPrompt modal → 7.5.8 Integrated Mind tier tracker + 5 region achievements wired → 7.5.9 close.
+
+**Test growth:** Sprint 7 close: 1243 → Sprint 7.5 close: 1397 (+154). Per-phase: 7.5.1 +17 / 7.5.2 +44 / 7.5.3 +35 / 7.5.4 +18 / 7.5.5 +13 / 7.5.6 +12 / 7.5.7 +6 / 7.5.8 +10. New test files: 8 (migrate, shards, shardPurchase, mood, precommits, visual, innerVoice, integratedMind, NamedMomentPrompt).
+
+**GameState invariant:** 110 → 119 fields (+9: memoryShards, memoryShardUpgrades, activePrecommitment, precommitmentStreak, mood, moodHistory, brocaNamedMoments, mastery, autoBuyConfig). Buffer-1 prestige sim runs 20 cycles 0-error/0-warning across both Focus Persistente variants.
+
+**Upgrade catalog growth:** 35 → 42 in src/config/upgrades.ts (3 retirements: consolidacion_memoria, regulacion_emocional, procesamiento_visual; +6 Límbico, +ondas_theta, +3 Visual). Plus 7 Hipocampo shard upgrades in src/config/shards.ts (typed-shard cost, separate canonical file). Migrate.ts strips all 3 retired IDs silently from legacy saves.
+
+**5 region sub-systems live:**
+- Hipocampo: 3 typed shard banks + drip engine (Emo/Proc tick-driven, Episodic burst at prestige) + 7 of 8 upgrades shipped (shard_proc_mastery deferred to 7.7 Mastery)
+- Prefrontal: 8 Pre-commit templates + resolution engine + 5-streak permanent +1 Memoria/cycle bonus + Mood-fail integration
+- Límbico: 5-tier Moodometer (Numb/Calm/Engaged/Elevated/Euphoric) + event-delta dispatcher (8 event kinds) + production/focus/charges/insight mults + 6 Memoria-priced upgrades + Genius Pass mood floor 40
+- Visual: 4-tier Foresight resolver + 3 Memoria-priced tier-unlock upgrades + 4 UI gating helpers (engine ready; UI surfaces deferred to Sprint 10)
+- Broca: 5 Named Moment slots + 5×4 archetype-keyed default-phrase matrix + author/skip store actions + UI prompt modal
+
+**Integrated Mind (Amplitud de Banda):** 5 per-region active checks + 3-tier synergy bonuses (3 active = +1 charge / 4 = ×1.10 Memoria / 5 = +5 Sparks once-per-Run + integrated_mind_whole narrative beat). 5 stubbed region achievements wired to real triggers.
+
+**Locked Sprint 7.5 design decisions:**
+- `episodicShardPerPrestige: 2` (R-decision: symmetric with baseMemoriesPerPrestige; calibrates shard_epi_imprint affordable at P5)
+- `moodInitialValue: 50 → 30` (senior-dev call: GDD §16.3 prose vs table contradiction; code aligns to table; default = neutral Calm baseline so first prestige is the first earned tier climb)
+- `maxOfflineEfficiencyRatio: 2.0 → 2.5` (R6 lock applied; preserves investment with new Mood/Ondas Theta stack)
+- MUT-2 BREAKING refactor SKIPPED (senior-dev correction: existing seed already deterministic from post-prestige state; saved ~23 mutation tests from churn)
+- Brain-canvas Region tab redesign DEFERRED to Sprint 10 UX polish (existing list-based RegionsPanel ships v1.0; canvas rebuild is co-located polish work)
+- Per-Run vs lifetime "active" check for Integrated Mind: lifetime proxy in v1.0 (per-Run ships with TRANSCENDENCE in Sprint 8b)
+
+**GDD doc deviations flagged for next sweep (5):**
+- §16.3 line 831 prose ("starts at 50 (Calm)") contradicts tier table (40-59 = Engaged) — code aligns to table
+- §32 line 2471 `lastCycleConfig` shape: GDD says `{polarity, mutation, pathway} | null` but code has `{... , upgrades: string[]}` since Sprint 5 Mutation #14
+- §32 line 2427 mental-states section count comment says "(6)" but enumerates 7 fields
+- §16.4 FORESIGHT-2 prose framed MUT-2 refactor as BREAKING but the existing seed function is already deterministic from post-prestige state
+- §16.6 INTEGRATED-1..2 "active this Run" uses lifetime proxy in v1.0; full Run-scoped tracking ships Sprint 8b TRANSCENDENCE
+
+**UI surfaces deferred to Sprint 10 UX polish (engine helpers all ready):**
+- Brain-canvas Region tab redesign per REG-2 (5 anatomical region nodes + tap-to-mini-panel slide-up)
+- CycleSetupScreen 4th-slot Pre-commit picker (8-goal selector + Confirm/Skip)
+- What-if Preview 3-cycle horizon extension (engine helper `whatIfHorizonCycles()` ready)
+- T2 Mutation pool preview cards on PatternTreeView (engine ready via getMutationOptions on post-prestige state)
+- T3 Spontaneous countdown 20s badge in HUD
+- T4 Era 3 event preview at AwakeningScreen
+- Broca panel Named Moments archive viewer (P14+ unlock)
+
+**Audit findings (post-Sprint-7.5 close):**
+- All 9 phase commits green at commit time (pre-commit hook ran typecheck + lint + 4 gates + full test suite for each)
+- buffer-1-prestige-sim updated to handle Sprint 7.5.1 119-field invariant + Sprint 7.5.1 PRESTIGE 46/68/4/1 split + Sprint 7.2 achievementToast UI field strip → final run: 0 errors / 0 warnings
+- Test rigor maintained per `feedback_test_rigor` memory: all engine tests assert against `SYNAPSE_CONSTANTS` (not literal numbers); property tests for shard drip non-negativity + monotonic non-decreasing within cycle
+- Pre-existing CODE-2 drift: src/store/purchases.ts at 248 lines (since Sprint 6.5; Sprint 7.5 added +4 lines via shard-currency type widening). Not introduced by 7.5; flagged for cleanup in Sprint 7.7+.
+
+**Sprint 7.6 first action:** Onboarding 5-cycle tutorial track + Archetype P5→P7 migration. Pre-code research catalog before code (GDD §37 + the deferred archetype unlock bump).
 
 **Deferred UI from Phase 7.5.7 (documented for v1.1 / Sprint 10 polish phase):**
 - Brain-canvas Region tab redesign per REG-2 — full Canvas 2D rebuild with 5 anatomical region nodes + tap-to-mini-panel slide-up. Substantial UI work; existing list-based RegionsPanel works on mobile and ships. Senior-dev call: defer to Sprint 10 UX polish.
