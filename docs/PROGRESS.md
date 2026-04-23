@@ -6,10 +6,54 @@
 
 ## Current status
 
-**Phase:** Sprint 7.6 Phase 7.6.4 CLOSED (Pathway card scannability refinement). **1420 tests pass** (+3 from 7.6.3 close); 4/4 gates green (ratio 0.80); typecheck + lint clean.
-**Last updated:** 2026-04-23 after Phase 7.6.4 close.
-**Active sprint:** Sprint 7.6 in-flight (7.6.1 catalog ✓, 7.6.2 ✓, 7.6.3 ✓, 7.6.4 ✓, 7.6.5 pending).
-**Next action:** Phase 7.6.5 — Sprint 7.6 close: buffer-1 sim verify + PROGRESS.md 5-phase dashboard + gate/baseline snapshot.
+**Phase:** Sprint 7.6 CLOSED (all 5 phases shipped: pre-code catalog + archetype migration + onboarding tutorial + pathway refinement + close). **1420 tests pass** (+23 from Sprint 7.5 close 1397); 4/4 gates green (ratio 0.80); buffer-1 sim 0 errors/0 warnings across 20 prestige cycles (both variants); typecheck + lint clean.
+**Last updated:** 2026-04-23 after Sprint 7.6 close.
+**Active sprint:** Sprint 7.7 ready (Mastery system per GDD §38 — 54 trackable entities × 10 levels, Mind → Mastery sub-tab).
+**Next action:** Sprint 7.7 Phase 7.7.1 — pre-code research catalog for Mastery system (4 entity classes × level calculation × Mind sub-tab UI + shard_proc_mastery reward wiring deferred from Sprint 7.5.2).
+
+### Sprint 7.6 close dashboard (2026-04-23 — Onboarding + Archetype + Pathway polish)
+
+**Phases shipped (5/5):**
+- **7.6.1** Pre-code research catalog (6 value decisions V1-V6 approved by Nico)
+- **7.6.2** Archetype P5→P7 migration + narrative-fragment rescheduling (Option C coexistence)
+- **7.6.3** Onboarding 5-cycle tutorial track (completeTutorialStep + 4 new hints + prestige auto-grant)
+- **7.6.4** Pathway card scannability refinement (tagline/bonuses/blocks 3-span split)
+- **7.6.5** Sprint close + buffer-1 sim verify + dashboard
+
+**Test growth:** Sprint 7.5 close: 1397 → Sprint 7.6 close: 1420 (+23). Per-phase: 7.6.2 0 (edits only) / 7.6.3 +20 (completeTutorialStep 6 + tutorial-sparks 6 + TutorialHints 8) / 7.6.4 +3. New test files: 3 (completeTutorialStep, tutorial-sparks, PathwaySlot).
+
+**GameState invariant:** 119 fields preserved (per 7.6.1 V1 REUSE decision — tutorial persistence via `narrativeFragmentsSeen` prefix, not a new field). PRESTIGE split unchanged at 46/68/4/1.
+
+**Upgrade catalog:** unchanged (42 in upgrades.ts + 7 shard upgrades). No retirements this sprint.
+
+**Key deliverables:**
+- **Archetype unlock at P7** (was P5). `archetypeUnlockPrestige: 5 → 7` in constants.ts; ana_01/emp_01/cre_01 narrative triggers bumped 5→7; setArchetype/achievement/narrative tests swept to use `SYNAPSE_CONSTANTS.archetypeUnlockPrestige`. Option C narrative coexistence: ana_01 + ana_03 both fire at P7 archetype choice (intro + first-observation pair).
+- **5-cycle Onboarding tutorial** (GDD §37). `completeTutorialStep` store action grants +2 Sparks per cycle completion (TUTOR-5), idempotent via `narrativeFragmentsSeen` prefix (`tutorial_step_c1..c5`). prestige action auto-fires step reward for the just-completed cycle. 4 new hint overlays (upgrades_tab, focus_discharge, polarity, patterns_hipocampo) gated on prestigeCount 1-4 with auto-dismiss predicates on the canonical teaching action.
+- **Pathway card scannability** (GDD §14). Each Pathway's description string split into tagline/bonuses/blocks sub-keys; PathwayCard renders 3 stacked spans with distinct opacity tiers (1.0/0.85/0.65). Backward-compatible — `description` preserved for legacy consumers.
+
+**Commits (this sprint):**
+- `c794104` Phase 7.6.2 — Archetype P5→P7 migration
+- `3fc7dc1` Phase 7.6.3 — Onboarding 5-cycle tutorial track
+- `9769a02` Phase 7.6.4 — Pathway card scannability refinement
+- (this commit) Phase 7.6.5 — Sprint 7.6 close
+
+**Research gap caught during sprint:** Phase 7.6.1 catalog claimed `archetype_prestige` narrative triggers auto-migrate via `archetype_chosen` event. Incorrect — they also gate on `state.prestigeCount === tr.prestigeCount`. Would have silently orphaned `ana_01/emp_01/cre_01` in prod. Caught during first test run (Phase 7.6.2). Applied surgical Option C fix (3 prestigeCount bumps + 1 test assertion +2 Memories).
+
+**Unverified assumptions from catalog — verified during sprint:**
+- V1 `narrativeFragmentsSeen` REUSE (§39.2 pattern) — ✅ verified: 5 tutorial step IDs persist cleanly, no invariant drift.
+- V2 5 steps total — ✅ verified: `SYNAPSE_CONSTANTS.tutorialStepIds` tuple of 5; integration test confirms 10 total Sparks across full 5-cycle run.
+- V5 minimal Pathway split — ✅ verified: 3 sub-spans render, legacy description preserved, 3 UI tests pass.
+
+**Deferred (per 7.6.1 approvals):**
+- V3 TabBadge Upgrades nudge at P1 (deferred — overlay text is sufficient per player testing feedback anticipation; TabBadge integration in Sprint 7.7 if wanted).
+- V4 NARRATIVE.md "P5 (archetype chosen)" → "P7" wording — 3 headings synced this sprint; 5 Sprint 7.5 GDD deviations still deferred to Sprint 7.9 docs sweep.
+- V6 Global "Skip tutorial" toggle — Sprint 10 UX polish.
+- Cascade teaser secondary overlay — Sprint 10 if playtesting demands.
+- Analytics `tutorial_step_completed` emission — Sprint 11 §27 Firebase wiring.
+
+**Pending Nico actions:**
+- Push Sprint 7.6 commits (4 ahead of origin/main currently — `c794104`, `3fc7dc1`, `9769a02`, + Sprint 7.6.5 close commit)
+- Approve Sprint 7.7 scope: Mastery system per GDD §38
 
 ### Sprint 7.6 Phase 7.6.4 dashboard (2026-04-23 — Pathway card scannability)
 
