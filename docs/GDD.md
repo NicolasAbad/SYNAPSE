@@ -1564,7 +1564,7 @@ Cross-cycle milestones. Unlock across Run 1 progression.
 |---|---|---|---|---|
 | `meta_first_awakening` | First Awakening | First prestige completed (`lifetimePrestiges` goes from 0 to 1) | +5 Sparks | Tutorial payoff |
 | `meta_polarity_picked` | First Choice | First Polarity chosen (at P3) | +3 Sparks | Milestone |
-| `meta_archetype_chosen` | First Identity | First Archetype chosen (at P5) | +5 Sparks | Archetype commitment |
+| `meta_archetype_chosen` | First Identity | First Archetype chosen (at P7, Sprint 7.6 migration from P5) | +5 Sparks | Archetype commitment |
 | `meta_mutation_picked` | First Mutation | First Mutation chosen (at P7) | +3 Sparks | |
 | `meta_pathway_picked` | First Pathway | First Pathway chosen (at P10) | +5 Sparks | Era 2 gateway |
 | `meta_era_3` | Threshold of Truth | Reach P19 (Era 3 begins) | +14 Sparks | Era 3 reward |

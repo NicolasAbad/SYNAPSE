@@ -6,10 +6,33 @@
 
 ## Current status
 
-**Phase:** Sprint 7.5 CLOSED (all 9 phases shipped: scaffolding + Hipocampo + Límbico + Pre-commits + Visual + Broca + Modal + Integrated Mind + close). **1397 tests pass** (+154 from Sprint 7 close 1243); 4/4 gates green; buffer-1 sim 0 errors/0 warnings; typecheck + lint clean.
-**Last updated:** 2026-04-22 after Sprint 7.5 close.
-**Active sprint:** Sprint 7.6 ready (Onboarding tutorial track + Archetype P5→P7 migration + Pathway expansion UI per GDD §37 + revised plan).
-**Next action:** Sprint 7.6 Phase 7.6.1 — pre-code research catalog for Onboarding 5-cycle tutorial track + Archetype P5→P7 migration (test updates: archetypeUnlockPrestige bump 5→7 alongside Sprint 6 archetype tests).
+**Phase:** Sprint 7.6 Phase 7.6.2 CLOSED (Archetype P5→P7 migration + narrative-fragment rescheduling Option C). **1397 tests pass**; 4/4 gates green (ratio 0.81); typecheck + lint clean.
+**Last updated:** 2026-04-23 after Phase 7.6.2 close.
+**Active sprint:** Sprint 7.6 in-flight (7.6.1 catalog ✓, 7.6.2 Archetype migration ✓, 7.6.3-7.6.5 pending).
+**Next action:** Phase 7.6.3 — Onboarding 5-cycle tutorial track (extend TutorialHints.tsx to cover Cycles 2-5 + `tutorial_step_*` fragment prefix persistence + TUTOR-4/5 Sparks + analytics wiring).
+
+### Sprint 7.6 Phase 7.6.2 dashboard (2026-04-23 — Archetype P5→P7 migration)
+
+**Scope shipped:** single constant bump + test-sweep + narrative-fragment rescheduling.
+
+**Changes applied:**
+- `src/config/constants.ts:144` — `archetypeUnlockPrestige: 5 → 7`. Comment cleaned of migration-pending language.
+- `src/config/narrative/fragments.ts:82,101,120` — `ana_01/emp_01/cre_01` trigger `prestigeCount: 5 → 7` (Option C: coexist with `ana_03/emp_03/cre_03` still at P7 — both fire on archetype-choice event as an "intro + first thought" pair; 57-fragment canonical count preserved).
+- `src/config/strings/en.ts` — `meta_archetype_chosen.description` already said "at P7" (pre-staged — no change).
+- `docs/GDD.md:1567` — wording synced "at P5" → "at P7 (Sprint 7.6 migration from P5)".
+- `docs/NARRATIVE.md` — ANA-01/EMP-01/CRE-01 headings "P5" → "P7".
+- 5 test files updated (13 assertions):
+  - `tests/engine/archetypes.test.ts` — unlock gate + description
+  - `tests/store/setArchetype.test.ts` — loop `[0..4]` → `[0..unlock-1]`; `prestigeCount: 5` → constant reference
+  - `tests/integration/narrative-triggers.test.ts` — constant reference + **expects +2 Memories at P7** (ana_01 + ana_03 both fire per Option C)
+  - `tests/engine/narrative.test.ts` — constant reference
+  - `tests/store/achievementUnlock.test.ts` — meta_archetype_chosen gate + constant reference
+
+**Research gap caught during implementation:** Phase 7.6.1 catalog claimed narrative fragment triggers auto-migrate via `archetype_chosen` event. Incorrect — fragments also gate on `state.prestigeCount === tr.prestigeCount`. Would have left `ana_01/emp_01/cre_01` unreachable in prod. Applied Option C as surgical fix (3 prestigeCount bumps). Fragment count stays at 57, narrative coexistence validated via integration test.
+
+**Expected side-effect:** players reaching P7 and choosing an archetype now receive TWO first-archetype fragments in the same event (intro + first observation), + 2 Memories instead of 1. Narratively: intended as a paired monologue; mechanically minor. Sprint 7.6 close + TEST-5 sim will confirm balance.
+
+**Unchanged (verified not archetype-coupled):** Pre-commits P5+ gate (§16.2), Visual T2 P5 gate (§16.4), precommits/integratedMind/prestige/polarity/production tests at P5.
 
 ### Sprint 7.5 close dashboard (2026-04-22 — Region Deepening)
 

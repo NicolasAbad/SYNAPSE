@@ -4,13 +4,14 @@ import { beforeEach, describe, expect, test } from 'vitest';
 import { useGameStore } from '../../src/store/gameStore';
 import { SYNAPSE_CONSTANTS } from '../../src/config/constants';
 
-describe('useGameStore.setArchetype — P5+ unlock gate', () => {
+describe('useGameStore.setArchetype — P7+ unlock gate (Sprint 7.6 migration)', () => {
   beforeEach(() => {
     useGameStore.getState().reset();
   });
 
-  test('rejects when prestigeCount < archetypeUnlockPrestige (P0-P4)', () => {
-    for (const pc of [0, 1, 2, 3, 4]) {
+  test('rejects when prestigeCount < archetypeUnlockPrestige (P0-P6)', () => {
+    const unlock = SYNAPSE_CONSTANTS.archetypeUnlockPrestige;
+    for (let pc = 0; pc < unlock; pc++) {
       useGameStore.getState().reset();
       useGameStore.setState({ prestigeCount: pc });
       const result = useGameStore.getState().setArchetype('analitica');
@@ -20,7 +21,7 @@ describe('useGameStore.setArchetype — P5+ unlock gate', () => {
     }
   });
 
-  test('fires at prestigeCount === archetypeUnlockPrestige (P5)', () => {
+  test('fires at prestigeCount === archetypeUnlockPrestige (P7)', () => {
     useGameStore.setState({ prestigeCount: SYNAPSE_CONSTANTS.archetypeUnlockPrestige });
     const result = useGameStore.getState().setArchetype('analitica');
     expect(result.fired).toBe(true);
@@ -29,7 +30,7 @@ describe('useGameStore.setArchetype — P5+ unlock gate', () => {
   });
 
   test('fires at prestigeCount > archetypeUnlockPrestige', () => {
-    useGameStore.setState({ prestigeCount: 10 });
+    useGameStore.setState({ prestigeCount: SYNAPSE_CONSTANTS.archetypeUnlockPrestige + 3 });
     const result = useGameStore.getState().setArchetype('empatica');
     expect(result.fired).toBe(true);
     expect(useGameStore.getState().archetype).toBe('empatica');
@@ -39,7 +40,7 @@ describe('useGameStore.setArchetype — P5+ unlock gate', () => {
 describe('useGameStore.setArchetype — irreversibility (GDD §12)', () => {
   beforeEach(() => {
     useGameStore.getState().reset();
-    useGameStore.setState({ prestigeCount: 5 });
+    useGameStore.setState({ prestigeCount: SYNAPSE_CONSTANTS.archetypeUnlockPrestige });
   });
 
   test('second call returns fired=false once archetype is already set', () => {
@@ -72,7 +73,7 @@ describe('useGameStore.setArchetype — irreversibility (GDD §12)', () => {
 
 describe('useGameStore.setArchetype — Zustand pitfall compliance', () => {
   test('action references preserved (merge-mode setState)', () => {
-    useGameStore.setState({ prestigeCount: 5 });
+    useGameStore.setState({ prestigeCount: SYNAPSE_CONSTANTS.archetypeUnlockPrestige });
     const beforeRefs = {
       prestige: useGameStore.getState().prestige,
       setArchetype: useGameStore.getState().setArchetype,

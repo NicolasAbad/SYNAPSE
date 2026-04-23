@@ -45,11 +45,11 @@ describe('activeArchetype / isArchetypeUnlocked', () => {
     expect(activeArchetype(withArchetype('creativa'))?.id).toBe('creativa');
   });
 
-  test('isArchetypeUnlocked — pre-P5 false, P5+ true', () => {
+  test('isArchetypeUnlocked — pre-P7 false, P7+ true (Sprint 7.6 migration)', () => {
     expect(isArchetypeUnlocked(freshState({ prestigeCount: 0 }))).toBe(false);
-    expect(isArchetypeUnlocked(freshState({ prestigeCount: 4 }))).toBe(false);
+    expect(isArchetypeUnlocked(freshState({ prestigeCount: SYNAPSE_CONSTANTS.archetypeUnlockPrestige - 1 }))).toBe(false);
     expect(isArchetypeUnlocked(freshState({ prestigeCount: SYNAPSE_CONSTANTS.archetypeUnlockPrestige }))).toBe(true);
-    expect(isArchetypeUnlocked(freshState({ prestigeCount: 10 }))).toBe(true);
+    expect(isArchetypeUnlocked(freshState({ prestigeCount: SYNAPSE_CONSTANTS.archetypeUnlockPrestige + 5 }))).toBe(true);
   });
 });
 

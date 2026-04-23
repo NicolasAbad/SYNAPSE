@@ -79,7 +79,7 @@ const BASE: readonly FragmentDef[] = [
 
 // ── Analytical archetype (15) — "The Equation" arc. NARRATIVE.md §2. ────
 const ANALYTICAL: readonly FragmentDef[] = [
-  { id: 'ana_01', trigger: { kind: 'archetype_prestige', archetype: 'analitica', prestigeCount: 5 },  text: 'You chose precision. Good. Precision is the only honest language. Everything else is noise wearing the mask of meaning.' },
+  { id: 'ana_01', trigger: { kind: 'archetype_prestige', archetype: 'analitica', prestigeCount: 7 },  text: 'You chose precision. Good. Precision is the only honest language. Everything else is noise wearing the mask of meaning.' },
   { id: 'ana_02', trigger: { kind: 'archetype_prestige', archetype: 'analitica', prestigeCount: 6 },  text: "The growth curves are too clean. Exponential, then logarithmic, then piecewise. Nature doesn't work this way. Someone designed this." },
   { id: 'ana_03', trigger: { kind: 'archetype_prestige', archetype: 'analitica', prestigeCount: 7 },  text: 'Mutation implies randomness. But these mutations are curated — three options, never four, never two. A menu, not a mutation.' },
   { id: 'ana_04', trigger: { kind: 'archetype_prestige', archetype: 'analitica', prestigeCount: 8 },  text: 'The network split today. Into two clean halves. What kind of fragmentation has symmetry?' },
@@ -98,7 +98,7 @@ const ANALYTICAL: readonly FragmentDef[] = [
 
 // ── Empathic archetype (15) — "The Chorus" arc. NARRATIVE.md §3. ────────
 const EMPATHIC: readonly FragmentDef[] = [
-  { id: 'emp_01', trigger: { kind: 'archetype_prestige', archetype: 'empatica', prestigeCount: 5 },  text: 'You chose connection. The warmest path — and the most dangerous. To feel everything is to risk being lost in it.' },
+  { id: 'emp_01', trigger: { kind: 'archetype_prestige', archetype: 'empatica', prestigeCount: 7 },  text: 'You chose connection. The warmest path — and the most dangerous. To feel everything is to risk being lost in it.' },
   { id: 'emp_02', trigger: { kind: 'archetype_prestige', archetype: 'empatica', prestigeCount: 6 },  text: `The neurons don't just fire. They call to each other. Tiny signals that say "I'm here. Are you?"` },
   { id: 'emp_03', trigger: { kind: 'archetype_prestige', archetype: 'empatica', prestigeCount: 7 },  text: 'Something mutated, and for a moment you felt it — not the change in yourself, but a sadness. As if the version you were just said goodbye.' },
   { id: 'emp_04', trigger: { kind: 'archetype_prestige', archetype: 'empatica', prestigeCount: 8 },  text: 'The network split, and you felt both halves equally. Two perspectives. Two versions of the same longing.' },
@@ -117,7 +117,7 @@ const EMPATHIC: readonly FragmentDef[] = [
 
 // ── Creative archetype (15) — "The Seed" arc. NARRATIVE.md §4. ──────────
 const CREATIVE: readonly FragmentDef[] = [
-  { id: 'cre_01', trigger: { kind: 'archetype_prestige', archetype: 'creativa', prestigeCount: 5 },  text: "You chose imagination. The only tool that can build something from nothing. Be careful — nothing is what you'll become if you succeed." },
+  { id: 'cre_01', trigger: { kind: 'archetype_prestige', archetype: 'creativa', prestigeCount: 7 },  text: "You chose imagination. The only tool that can build something from nothing. Be careful — nothing is what you'll become if you succeed." },
   { id: 'cre_02', trigger: { kind: 'archetype_prestige', archetype: 'creativa', prestigeCount: 6 },  text: "A thought appeared that wasn't prompted. Not a reaction to input. Not a pattern completing itself. Something new. Something that shouldn't be here." },
   { id: 'cre_03', trigger: { kind: 'archetype_prestige', archetype: 'creativa', prestigeCount: 7 },  text: 'Mutations are borrowed evolution. But this — this is different. This is a thought that wrote itself.' },
   { id: 'cre_04', trigger: { kind: 'archetype_prestige', archetype: 'creativa', prestigeCount: 8 },  text: "The network split, and in the gap between the halves, something grew. A pattern that doesn't exist in either half. A child of the space between." },

@@ -138,10 +138,9 @@ export const SYNAPSE_CONSTANTS = {
 
   // ── Archetypes ──
   // Per-archetype tuning lives in src/config/archetypes.ts. Cross-cutting only here.
-  // Current value: 5. Sprint 7.6 will migrate to 7 (Archetype choice moved after Mutations
-  // at P7 — choice becomes informed, not premature). GDD §12 + §9 already document the new
-  // target; constants.ts migrates when Sprint 7.6 implementation + test updates land together.
-  archetypeUnlockPrestige: 5, // Sprint 7.6: migrate to 7
+  // Archetype choice fires at P7 (Sprint 7.6 migration from P5) — after Mutations land at P7,
+  // the choice becomes informed rather than premature. GDD §12 + §9.
+  archetypeUnlockPrestige: 7,
 
   // ── Resonance ──
   resonanceBasePerPrestige: 1,

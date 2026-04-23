@@ -17,6 +17,7 @@ import {
 } from '../../src/engine/narrative';
 import { FRAGMENTS } from '../../src/config/narrative/fragments';
 import { ECHOES } from '../../src/config/narrative/echoes';
+import { SYNAPSE_CONSTANTS } from '../../src/config/constants';
 import type { GameState } from '../../src/types/GameState';
 
 function freshState(overrides: Partial<GameState> = {}): GameState {
@@ -118,8 +119,8 @@ describe('checkFragmentTriggers — per-trigger-kind', () => {
     expect(fired).not.toContain('base_05');
   });
 
-  test('archetype_prestige — ANA-01 fires at archetype=analitica + P5 via archetype_chosen', () => {
-    const s = freshState({ archetype: 'analitica', prestigeCount: 5 });
+  test('archetype_prestige — ANA-01 fires at archetype=analitica + P7 via archetype_chosen (Sprint 7.6)', () => {
+    const s = freshState({ archetype: 'analitica', prestigeCount: SYNAPSE_CONSTANTS.archetypeUnlockPrestige });
     const fired = checkFragmentTriggers(s, { kind: 'archetype_chosen' });
     expect(fired).toContain('ana_01');
   });
@@ -133,7 +134,7 @@ describe('checkFragmentTriggers — per-trigger-kind', () => {
   });
 
   test('archetype_prestige does NOT fire when archetype mismatches', () => {
-    const s = freshState({ archetype: 'analitica', prestigeCount: 5 });
+    const s = freshState({ archetype: 'analitica', prestigeCount: SYNAPSE_CONSTANTS.archetypeUnlockPrestige });
     const fired = checkFragmentTriggers(s, { kind: 'archetype_chosen' });
     expect(fired).not.toContain('emp_01');
     expect(fired).not.toContain('cre_01');

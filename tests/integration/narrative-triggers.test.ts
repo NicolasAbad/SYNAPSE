@@ -9,6 +9,7 @@
 
 import { beforeEach, describe, expect, test } from 'vitest';
 import { useGameStore } from '../../src/store/gameStore';
+import { SYNAPSE_CONSTANTS } from '../../src/config/constants';
 
 describe('narrative triggers via store actions (integration)', () => {
   beforeEach(() => {
@@ -34,17 +35,21 @@ describe('narrative triggers via store actions (integration)', () => {
     expect(afterSecond).toBe(afterFirst); // no second Memory grant
   });
 
-  test('setArchetype at P5 fires the matching ANA/EMP/CRE fragment', () => {
-    useGameStore.setState({ prestigeCount: 5 });
+  test('setArchetype at P7 fires the matching ANA/EMP/CRE fragment (Sprint 7.6 migration)', () => {
+    useGameStore.setState({ prestigeCount: SYNAPSE_CONSTANTS.archetypeUnlockPrestige });
     const before = useGameStore.getState().memories;
     useGameStore.getState().setArchetype('analitica');
     const s = useGameStore.getState();
+    // Sprint 7.6 Option C narrative coexistence: ana_01 (shifted 5→7) and ana_03
+    // (already at P7) both fire at the archetype-choice event — two fragments,
+    // two Memory grants (NARR-8 +1 per first-read).
     expect(s.narrativeFragmentsSeen).toContain('ana_01');
-    expect(s.memories).toBe(before + 1);
+    expect(s.narrativeFragmentsSeen).toContain('ana_03');
+    expect(s.memories).toBe(before + 2);
   });
 
   test('setArchetype does NOT fire OTHER archetype fragments', () => {
-    useGameStore.setState({ prestigeCount: 5 });
+    useGameStore.setState({ prestigeCount: SYNAPSE_CONSTANTS.archetypeUnlockPrestige });
     useGameStore.getState().setArchetype('empatica');
     const s = useGameStore.getState();
     expect(s.narrativeFragmentsSeen).toContain('emp_01');

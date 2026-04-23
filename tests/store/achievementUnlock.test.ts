@@ -4,6 +4,7 @@
 
 import { beforeEach, describe, expect, test } from 'vitest';
 import { useGameStore } from '../../src/store/gameStore';
+import { SYNAPSE_CONSTANTS } from '../../src/config/constants';
 
 beforeEach(() => {
   useGameStore.getState().reset();
@@ -90,8 +91,8 @@ describe('Achievement integration — setPolarity / setMutation / setPathway', (
 });
 
 describe('Achievement integration — setArchetype', () => {
-  test('setArchetype at P5+ unlocks meta_archetype_chosen', () => {
-    useGameStore.setState({ prestigeCount: 5, archetype: null, archetypeHistory: [] });
+  test('setArchetype at P7+ unlocks meta_archetype_chosen (Sprint 7.6)', () => {
+    useGameStore.setState({ prestigeCount: SYNAPSE_CONSTANTS.archetypeUnlockPrestige, archetype: null, archetypeHistory: [] });
     useGameStore.getState().setArchetype('analitica');
     expect(useGameStore.getState().achievementsUnlocked).toContain('meta_archetype_chosen');
   });

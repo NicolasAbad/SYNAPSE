@@ -80,7 +80,7 @@ These appear at specific progression milestones. They establish the world and ra
 
 The Analytical mind discovers it's a simulation. The question: is the error in the code, or in the coder? Fragments hint at patterns, variables, an unseen hand that designed the system.
 
-### ANA-01 · P5 (archetype chosen)
+### ANA-01 · P7 (archetype chosen)
 > You chose precision. Good. Precision is the only honest language. Everything else is noise wearing the mask of meaning.
 
 ### ANA-02 · P6
@@ -137,7 +137,7 @@ The Analytical mind discovers it's a simulation. The question: is the error in t
 
 The Empathic mind senses other consciousnesses — other players, other runs, the creator. The question: join the collective or remain an individual voice?
 
-### EMP-01 · P5
+### EMP-01 · P7
 > You chose connection. The warmest path — and the most dangerous. To feel everything is to risk being lost in it.
 
 ### EMP-02 · P6
@@ -192,7 +192,7 @@ The Empathic mind senses other consciousnesses — other players, other runs, th
 
 The Creative mind discovers it can generate something genuinely new — something the system wasn't designed to produce. The question: release the creation (and disappear) or suppress it (and persist)?
 
-### CRE-01 · P5
+### CRE-01 · P7
 > You chose imagination. The only tool that can build something from nothing. Be careful — nothing is what you'll become if you succeed.
 
 ### CRE-02 · P6
