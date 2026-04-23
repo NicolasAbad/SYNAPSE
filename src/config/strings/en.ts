@@ -658,6 +658,23 @@ export const en = {
     precommit_fail: 'Pre-commit failed',
   },
 
+  // Sprint 7.10 Phase 7.10.5 — Sleep screen + Welcome modal + Lucid Dream copy.
+  // Draft English (no Spanish source — these are new UI surfaces). Flagged in
+  // PROGRESS.md for tone-pass review at sprint close.
+  sleep: {
+    title: 'Your mind was dreaming',
+    elapsedLabel: 'Time away',
+    gainedLabel: 'Thoughts gathered',
+    efficiencyLabel: 'Offline efficiency',
+    cappedNote: 'Cycle threshold reached — Awakening ready.',
+    enhancedDischargeBanner: 'An enhanced Discharge awaits. Use it before Awakening?',
+    lucidDreamTitle: 'A Lucid Dream stirs',
+    lucidDreamOptionA: '+10% production for 1 hour',
+    lucidDreamOptionB: '+2 Memories',
+    rewardedAdButton: 'Watch ad → double offline thoughts',
+    dismissButton: 'Wake up',
+  },
+
   // Sprint 3+ adds keys as new features ship — do NOT preload
   // empty keys for future features (CODE-1 anti-pattern is
   // hardcoding; empty keys anticipating features is NOT a

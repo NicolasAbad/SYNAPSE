@@ -18,6 +18,8 @@
 //     `ondas_theta` upgrade per GDD §24 + Mood-applies-offline §19).
 //   - Sprint 7.10.4: 119 → 120 fields. Backfills `pendingOfflineSummary: null`
 //     so legacy saves load cleanly; null is the correct "no pending" default.
+//   - Sprint 7.10.5: 120 → 121 fields. Backfills `lucidDreamActiveUntil: null`
+//     for Lucid Dream Option A timed-buff expiry per GDD §19.
 
 import { SYNAPSE_CONSTANTS } from '../config/constants';
 
@@ -58,6 +60,7 @@ export function migrateState(parsed: unknown): unknown {
     mastery: {},
     autoBuyConfig: {},
     pendingOfflineSummary: null,
+    lucidDreamActiveUntil: null, // Sprint 7.10.5 — Lucid Dream Option A buff expiry
   };
   const out: Record<string, unknown> = { ...obj };
   for (const key of Object.keys(defaults)) {

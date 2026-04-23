@@ -5,11 +5,11 @@
 // Mount-time timestamps are populated via initSessionTimestamps action
 // per INIT-1 — see src/store/initSession.ts for the React boundary.
 //
-// CODE-2 exception: enumerating all 120 fields with section comments
+// CODE-2 exception: enumerating all 121 fields with section comments
 // and per-field inline rationale pushes this file above the 200-line
 // cap. Same justification as src/types/GameState.ts — the interface is
 // a single-source-of-truth artifact; splitting it would lose the
-// invariant that Object.keys(createDefaultState()).length === 120.
+// invariant that Object.keys(createDefaultState()).length === 121.
 
 import { create } from 'zustand';
 import { SYNAPSE_CONSTANTS } from '../config/constants';
@@ -34,7 +34,7 @@ import { ACHIEVEMENTS_BY_ID } from '../config/achievements';
 import type { DiaryEntry } from '../types';
 
 /**
- * Pure default state. Matches GDD §32 120-field enumeration exactly.
+ * Pure default state. Matches GDD §32 121-field enumeration exactly.
  * 13 non-trivial initial values per §32 "DEFAULT_STATE non-trivial initial values"
  * (Phase 7.5.1 added `mood: 50` as the 13th, from SYNAPSE_CONSTANTS.moodInitialValue).
  * 4 impure timestamp fields stay at 0/null per INIT-1; mount effect populates them.
@@ -115,10 +115,11 @@ export function createDefaultState(): GameState {
     isTutorialCycle: true, // TUTOR-2: first-ever cycle flag
     dailyLoginStreak: 0,
     lastDailyClaimDate: null,
-    // === Session bonuses (3) ===
+    // === Session bonuses (4) — Sprint 7.10 Phase 7.10.5 added lucidDreamActiveUntil ===
     momentumBonus: 0,
     lastCycleEndProduction: 0,
     eurekaExpiry: null,
+    lucidDreamActiveUntil: null,
     // === Active event (1) ===
     activeSpontaneousEvent: null,
     // === Run-exclusive upgrades (1) ===
@@ -278,6 +279,10 @@ export interface GameStoreActions {
   applyOfflineReturn: (nowTimestamp: number) => void;
   /** Phase 7.10.4 — UI consumer (Sleep screen / Welcome modal) dismiss handler. Clears pendingOfflineSummary. */
   dismissOfflineSummary: () => void;
+  /** Phase 7.10.5 — Lucid Dream Option A choice: +10% production for 1h. Sets lucidDreamActiveUntil + dismisses summary. */
+  chooseLucidDreamOptionA: (nowTimestamp: number) => void;
+  /** Phase 7.10.5 — Lucid Dream Option B choice: +N Memories one-shot. Dismisses summary. */
+  chooseLucidDreamOptionB: () => void;
   /** Full reset to createDefaultState — placeholder for Sprint 7 save-load error path. */
   reset: () => void;
   /** Phase 7: load saved state from Capacitor Preferences; returns true if a save was applied. */
@@ -475,6 +480,14 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
     saveGame(get() as GameState).catch((e) => console.error('[applyOfflineReturn] save failed:', e));
   },
   dismissOfflineSummary: () => set({ pendingOfflineSummary: null }),
+  chooseLucidDreamOptionA: (nowTimestamp) => set({
+    lucidDreamActiveUntil: nowTimestamp + SYNAPSE_CONSTANTS.lucidDreamOptionADurationMs,
+    pendingOfflineSummary: null,
+  }),
+  chooseLucidDreamOptionB: () => set((s) => ({
+    memories: s.memories + SYNAPSE_CONSTANTS.lucidDreamOptionBMemoryGain,
+    pendingOfflineSummary: null,
+  })),
   reset: () => set(() => ({ ...createDefaultState(), activeTab: 'mind' as TabId, activeMindSubtab: 'home' as MindSubtabId, undoToast: null, antiSpamActive: false, achievementToast: null })),
   loadFromSave: async () => {
     const loaded = await loadGame();

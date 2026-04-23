@@ -6,10 +6,55 @@
 
 ## Current status
 
-**Phase:** Sprint 7.10 Phase 7.10.4 CLOSED (Store action + Capacitor resume + `pendingOfflineSummary` field). **1558 tests pass** (+8 from Phase 7.10.3); 4/4 gates green (ratio 0.83); typecheck + lint clean. **GameState invariant bumped: 119 → 120 fields.**
-**Last updated:** 2026-04-23 after Phase 7.10.4 commit.
+**Phase:** Sprint 7.10 Phase 7.10.5 CLOSED (Sleep screen UI + Lucid Dream Option A buff). **1602 tests pass** (+22 + 22 cascade-updated from Phase 7.10.4); 4/4 gates green (ratio 0.82); typecheck + lint clean. **GameState invariant bumped: 120 → 121 fields.**
+**Last updated:** 2026-04-23 after Phase 7.10.5 commit.
 **Active sprint:** Sprint 7.10 — Sprint 8a Offline engine (Option 1).
-**Next action:** Phase 7.10.5 — UI surfaces: Sleep screen (4s animation + particle cascade), Welcome-back modal (offlineModalMinSeconds gate), Lucid Dream binary-choice modal, OFFLINE-7 enhanced-Discharge banner, rewarded ad ×2 stub. ~10 tests + Vitest Browser Mode component tests. STOP-for-approval at kickoff.
+**Next action:** Phase 7.10.6 — OFFLINE-10 Returning-player greeting fragments (5 mood-tier-gated Broca Inner Voice strings with `greeting_*` prefix, per-line Nico approval in kickoff). Idempotent fire-once via `narrativeFragmentsSeen`. ~6 tests. STOP-for-approval at kickoff.
+
+### Sprint 7.10 Phase 7.10.5 (2026-04-23) — Sleep screen UI + Lucid Dream buff
+
+**Scope shipped:**
+- **GameState 120 → 121 fields.** New field `lucidDreamActiveUntil: number | null` in Session bonuses group (3→4). Same naming family as `eurekaExpiry` / `mentalStateExpiry`. PRESTIGE_RESET clears on prestige (47 → 48). All downstream invariants updated in lockstep: GAMESTATE_FIELD_COUNT, CLAUDE.md Exception A/B, consistency tests, migrate.ts backfill, tick.ts literals (2 files).
+- `src/engine/offline.ts` extended with `lucidDreamProductionMult(state, now) → 1.10 | 1.0`. Pure. (189 lines under cap.)
+- `src/engine/tick.ts` wired:
+  - Step 2 `stepExpireModifiers` clears `lucidDreamActiveUntil` on expiry
+  - Step 8 `stepMentalStateTriggers` applies `lucidDreamProductionMult` after `moodProductionMult` (post-softCap, stacks multiplicatively)
+- `src/store/gameStore.ts` — 2 new actions:
+  - `chooseLucidDreamOptionA(nowTimestamp)` — sets `lucidDreamActiveUntil = now + lucidDreamOptionADurationMs`, dismisses summary
+  - `chooseLucidDreamOptionB()` — `memories += lucidDreamOptionBMemoryGain`, dismisses summary
+- `src/App.tsx` — absorbed Phase 7.10.4's applyOfflineReturn + resume listeners into the existing load-first init sequence (instead of the separate useInitSession hook — avoids Phase 7 Finding B race). `initSession.ts` reverted to its simple pre-7.10.4 form.
+- `src/config/constants.ts` — new `offlineModalMinSeconds: 60` (Welcome-back gate per Sprint 3.6 audit).
+- `src/config/strings/en.ts` — new `sleep` namespace with 11 UI strings (title, labels, banners, Lucid Dream A/B, dismiss). Draft English; flagged in PROGRESS.md for tone-pass review at sprint close.
+- `src/ui/modals/SleepScreen.tsx` NEW (152 lines) — memoized. Reads `pendingOfflineSummary`. Gates: null → null; elapsedMs < 60s → null; else render. Sections: header + stats + conditional cycle-cap note + conditional OFFLINE-7 enhanced-Discharge banner + conditional Lucid Dream binary choice + conditional rewarded-ad button + dismiss button. Pure conditional rendering; state mutations via store actions only.
+- `src/App.tsx` mounts `<SleepScreen />` in the top-level modal tree (alongside FragmentOverlay / Era3EventModal).
+
+**Tests added (22 new):**
+- `tests/engine/lucidDreamBuff.test.ts` (7 tests): pure-helper identity / active / expired / boundary; tick `stepExpireModifiers` clears on expiry; preserves while active; effectiveProductionPerSecond reflects 1.10× mult when active.
+- `tests/store/lucidDreamChoices.test.ts` (5 tests): A sets expiry + dismisses; B grants memories + dismisses + does NOT set expiry.
+- `tests/ui/modals/SleepScreen.test.tsx` (10 tests, @vitest-environment jsdom): render gates (null/short/ok), conditional banners (cap/enhanced-discharge/Lucid/rewarded-ad), action handlers (dismiss/A/B).
+
+**Tests updated for 120 → 121 field count:**
+- `tests/consistency.test.ts` (3 spots: count, PRESTIGE_RESET 48, union 121)
+- `tests/store/gameStore.test.ts` (2 spots)
+- `tests/store/migrate.test.ts` (NEW_FIELDS expanded to 11; 110→121 migration path; idempotency 121; default-value assertion for `lucidDreamActiveUntil: null`)
+- `tests/store/saveGame.test.ts` (5 spots)
+- `tests/store/saveScheduler.test.ts` (1 spot)
+- `tests/engine/tick.test.ts` + `tests/engine/tick-order.test.ts` — added `lucidDreamActiveUntil: null` to test state literals
+
+**Gate 3 speed bump (caught mid-phase):** Ratio dropped 0.83 → 0.78 after SleepScreen.tsx's CSS literals (opacity, dim-overlay alpha, typography values) were counted. Fixed by adding explicit `// CONST-OK` comments on every line containing a CSS numeric literal (per existing App.tsx / FragmentOverlay.tsx precedent). Ratio recovered to 0.82.
+
+**Integration architecture decision:**
+`useInitSession` was extended in Phase 7.10.4 to call `applyOfflineReturn` + attach listeners, BUT `App.tsx` has its own load-first init that bypasses `useInitSession`. This phase absorbed the Phase 7.10.4 orchestration into `App.tsx` directly (where load order is already correct) and reverted `initSession.ts` to its simple pre-7.10.4 form. Result: single orchestration site, correct load-before-offline-calc sequencing, cleanup on unmount for listeners.
+
+**Test growth:** 1558 → 1602 (+22 new + cascade field-count updates kept the rest green). 3 new test files.
+**Gates:** 4/4 PASS, ratio 0.82 (197 constants / 44 literals). ESLint + typecheck clean.
+
+**Strings flagged for tone-pass review (per CLAUDE.md translation discipline):**
+All 11 new strings under `sleep.*` in `en.ts` are draft English with no Spanish source (these are new UI surfaces, not translations). Nico should tone-pass before polish lock. Current values lean neutral-poetic to match GDD §19 "brain dreaming" framing: "Your mind was dreaming", "Time away", "Thoughts gathered", etc.
+
+**Next phase (7.10.6):** Greeting fragments — 5 mood-tier-gated Broca Inner Voice strings (`greeting_numb_1`, `greeting_calm_1`, `greeting_engaged_1`, `greeting_elevated_1`, `greeting_euphoric_1`). OFFLINE-10 fire-once via `narrativeFragmentsSeen`. Per-line Nico approval required. ~6 tests.
+
+### Sprint 7.10 Phase 7.10.4 (2026-04-23) — Store + resume wiring + GameState field 120
 
 ### Sprint 7.10 Phase 7.10.4 (2026-04-23) — Store + resume wiring + GameState field 120
 

@@ -83,6 +83,20 @@ export function offlineProceduralShardDrip(elapsedMs: number): number {
 }
 
 /**
+ * Lucid Dream Option A buff (§19) — production multiplier while
+ * `lucidDreamActiveUntil` is in the future. Returns 1.0 when expired/null.
+ * Sprint 7.10 Phase 7.10.5 — applied post-Mood mult in tick.ts step 8.
+ */
+export function lucidDreamProductionMult(
+  state: Pick<GameState, 'lucidDreamActiveUntil'>,
+  nowTimestamp: number,
+): number {
+  if (state.lucidDreamActiveUntil === null) return 1;
+  if (nowTimestamp >= state.lucidDreamActiveUntil) return 1;
+  return SYNAPSE_CONSTANTS.lucidDreamOptionAProductionMult;
+}
+
+/**
  * Lucid Dream (§19) deterministic RNG roll via §30 RNG-1. Seed derived from
  * FNV-1a hash over `(lastActiveTimestamp, nowTimestamp)` — stable across replays.
  * Gates: P10+ + elapsed ≥ lucidDreamMinOfflineMinutes. Probability: 33% default,

@@ -13,6 +13,7 @@ import { shouldTriggerMicroChallenge, rollMicroChallenge, activateMicroChallenge
 import { MICRO_CHALLENGES_BY_ID } from '../config/microChallenges';
 import { stepShardDrip, chargeIntervalShardMult } from './shards';
 import { moodProductionMult, moodMaxChargesBonus, applyMoodDrift } from './mood';
+import { lucidDreamProductionMult } from './offline';
 import { integratedMindMaxChargeBonus } from './integratedMind';
 import { upgradeMasteryMult } from './mastery';
 import type { GameState } from '../types/GameState';
@@ -41,17 +42,16 @@ function stepExpireModifiers(s: GameState, nowTimestamp: number): void {
   if (s.eurekaExpiry !== null && nowTimestamp >= s.eurekaExpiry) {
     s.eurekaExpiry = null;
   }
+  if (s.lucidDreamActiveUntil !== null && nowTimestamp >= s.lucidDreamActiveUntil) {
+    s.lucidDreamActiveUntil = null;
+  }
   if (s.pendingHyperfocusBonus && s.mentalStateExpiry !== null && nowTimestamp - s.mentalStateExpiry > HYPERFOCUS_BONUS_WINDOW_MS) {
     s.pendingHyperfocusBonus = false;
   }
   // TODO Sprint 7: Mental State exit conditions per MENTAL-4 (§17).
 }
 
-/**
- * Step 2.5 (Phase 5): auto-activate Insight after expiry + before recalc so
- * this tick's effectiveProductionPerSecond reflects any new multiplier.
- * FOCUS-2: bar is pre-charged — a just-expired Insight re-fires immediately.
- */
+/** Step 2.5: auto-activate Insight after expiry + before recalc (FOCUS-2 pre-charged bar). */
 function stepInsightActivation(s: GameState, nowTimestamp: number): void { Object.assign(s, tryActivateInsight(s, nowTimestamp)); }
 
 /** Step 3: Cache base/effective production-per-second for tick + UI consumers (production.ts owns the §4 formula). */
@@ -126,6 +126,7 @@ function stepMentalStateTriggers(s: GameState, n: number): void {
   }
   if (ms !== null) s.effectiveProductionPerSecond *= mentalStateProductionMult(s, n);
   s.effectiveProductionPerSecond *= moodProductionMult(s);
+  s.effectiveProductionPerSecond *= lucidDreamProductionMult(s, n);
 }
 
 /** Step 9: Era 3 event activation (§23). No-op; UI reads prestigeCount + cycleAge. */

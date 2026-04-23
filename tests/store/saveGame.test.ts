@@ -27,7 +27,7 @@ describe('saveGame / loadGame round-trip', () => {
     mockStorage.clear();
   });
 
-  test('round-trips all 120 GameState fields without loss', async () => {
+  test('round-trips all 121 GameState fields without loss', async () => {
     const state = createDefaultState();
     state.thoughts = 12345.67;
     state.prestigeCount = 3;
@@ -39,7 +39,7 @@ describe('saveGame / loadGame round-trip', () => {
     const loaded = await loadGame();
 
     expect(loaded).not.toBeNull();
-    expect(Object.keys(loaded!).length).toBe(120);
+    expect(Object.keys(loaded!).length).toBe(121);
     expect(loaded!.thoughts).toBe(12345.67);
     expect(loaded!.prestigeCount).toBe(3);
     expect(loaded!.neurons[0].count).toBe(10);
@@ -98,11 +98,11 @@ describe('validateLoadedState — boundary defense', () => {
     expect(validateLoadedState(null)).toBeNull();
   });
 
-  test('accepts a correctly-shaped payload (120 keys)', () => {
+  test('accepts a correctly-shaped payload (121 keys)', () => {
     const good = createDefaultState();
     const result = validateLoadedState(good);
     expect(result).not.toBeNull();
-    expect(Object.keys(result!).length).toBe(120);
+    expect(Object.keys(result!).length).toBe(121);
   });
 
   test('rejects through loadGame end-to-end for corrupted shape', async () => {
@@ -158,18 +158,18 @@ describe('round-trip type fidelity', () => {
     expect(loaded!.insightMultiplier).toBe(1);
   });
 
-  test('JSON.stringify drops actions + UI-local state is stripped → 120 file keys', async () => {
+  test('JSON.stringify drops actions + UI-local state is stripped → 121 file keys', async () => {
     // Store has GameState (119) + UIState (multi-key) + actions. saveToStorage strips
     // UI-local fields before persisting; JSON.stringify drops functions. Result:
-    // persisted payload contains exactly the 120 GameState data fields.
+    // persisted payload contains exactly the 121 GameState data fields.
     const storeSnapshot = useGameStore.getState();
     const storeKeyCount = Object.keys(storeSnapshot).length;
-    expect(storeKeyCount).toBeGreaterThanOrEqual(120);
+    expect(storeKeyCount).toBeGreaterThanOrEqual(121);
     // Use the action (mirrors production code path) rather than passing the raw store.
     await useGameStore.getState().saveToStorage();
     const loaded = await loadGame();
     expect(loaded).not.toBeNull();
-    expect(Object.keys(loaded!).length).toBe(120);
+    expect(Object.keys(loaded!).length).toBe(121);
   });
 });
 

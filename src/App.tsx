@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { App as CapApp, type AppState } from '@capacitor/app';
+import { Capacitor } from '@capacitor/core';
 import { useGameStore } from './store/gameStore';
 import { useSaveScheduler } from './store/saveScheduler';
 import { useTickScheduler } from './store/tickScheduler';
@@ -9,23 +11,43 @@ import { GdprModal, isEU } from './ui/modals/GdprModal';
 import { TutorialHints } from './ui/modals/TutorialHints';
 import { FragmentOverlay } from './ui/modals/FragmentOverlay';
 import { Era3EventModal } from './ui/modals/Era3EventModal';
+import { SleepScreen } from './ui/modals/SleepScreen';
 import { EchoLayer } from './ui/canvas/EchoLayer';
 
 export function App() {
   // Sequential mount: load saved state first, then init timestamps ONLY if no
-  // save was present. This prevents the Phase 7 Finding B race where the sync
-  // mount effect could write mount-time timestamps before the async load
-  // overwrote them. See PROGRESS.md Phase 7 Finding B.
+  // save was present, then applyOfflineReturn. Ordering prevents the Phase 7
+  // Finding B race AND ensures applyOfflineReturn sees the saved
+  // lastActiveTimestamp (Sprint 7.10 Phase 7.10.4). After load, attach
+  // resume listeners (Capacitor App + visibilitychange).
   useEffect(() => {
+    const cleanups: Array<() => void> = [];
     const initialize = async () => {
       const loaded = await useGameStore.getState().loadFromSave();
       if (!loaded) {
         useGameStore.getState().initSessionTimestamps(Date.now());
       }
-      // If loaded === true: saved timestamps already present per
-      // INIT-1 rule 3 (mount effect does NOT overwrite non-zero).
+      useGameStore.getState().applyOfflineReturn(Date.now());
+      if (Capacitor.isNativePlatform()) {
+        const handlePromise = CapApp.addListener('appStateChange', (s: AppState) => {
+          if (s.isActive) useGameStore.getState().applyOfflineReturn(Date.now());
+        });
+        cleanups.push(() => {
+          handlePromise.then((h) => h.remove()).catch(() => {});
+        });
+      }
+      const onVisibility = (): void => {
+        if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+          useGameStore.getState().applyOfflineReturn(Date.now());
+        }
+      };
+      if (typeof document !== 'undefined') {
+        document.addEventListener('visibilitychange', onVisibility);
+        cleanups.push(() => document.removeEventListener('visibilitychange', onVisibility));
+      }
     };
     void initialize();
+    return () => cleanups.forEach((off) => off());
   }, []);
 
   useTickScheduler(); // game tick runtime
@@ -56,6 +78,7 @@ export function App() {
       <EchoLayer />
       <FragmentOverlay />
       <Era3EventModal />
+      <SleepScreen />
       {!splashDone && <SplashScreen onComplete={() => setSplashDone(true)} />}
       {splashDone && isEU && !gdprDone && <GdprModal onComplete={() => setGdprDone(true)} />}
     </main>

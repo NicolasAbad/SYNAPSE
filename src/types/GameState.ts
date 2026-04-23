@@ -1,12 +1,13 @@
-// Implements docs/GDD.md §32 (GameState — 120 fields) — v1.0 post-Sprint-7.10.4
+// Implements docs/GDD.md §32 (GameState — 121 fields) — v1.0 post-Sprint-7.10.5
 //
-// CRITICAL: this interface must have EXACTLY 120 properties. Sprint 1 invariant
-// asserts `Object.keys(DEFAULT_STATE).length === 120`. Section-by-section count
-// per §32 breakdown sums to 120 (verified line-by-line in GDD §32).
-// Sprint 7.10.4 added `pendingOfflineSummary` to the Offline group (119 → 120).
+// CRITICAL: this interface must have EXACTLY 121 properties. Sprint 1 invariant
+// asserts `Object.keys(DEFAULT_STATE).length === 121`. Section-by-section count
+// per §32 breakdown sums to 121 (verified line-by-line in GDD §32).
+// Sprint 7.10.4 added `pendingOfflineSummary` (Offline group, 119 → 120).
+// Sprint 7.10.5 added `lucidDreamActiveUntil` (Session bonuses, 120 → 121).
 //
 /**
- * GameState — the canonical application state (120 fields).
+ * GameState — the canonical application state (121 fields).
  *
  * CODE-2 exception (second audit followup, refreshed Sprint 7.5.1):
  * this file exceeds the 200-line cap due to 119 one-line field
@@ -22,9 +23,9 @@
  *
  * This exception is documented in CLAUDE.md under CODE-2.
  *
- * Field count MUST remain 120. Adding/removing fields requires:
+ * Field count MUST remain 121. Adding/removing fields requires:
  * - updating docs/GDD.md §32
- * - updating the 47/68/4/1 PRESTIGE_RESET/PRESERVE/UPDATE split
+ * - updating the 48/68/4/1 PRESTIGE_RESET/PRESERVE/UPDATE split
  * - updating the consistency test that asserts exact count
  */
 
@@ -131,10 +132,11 @@ export interface GameState {
   dailyLoginStreak: number;
   lastDailyClaimDate: string | null;
 
-  // === Session bonuses (3) — lastCycleEndProduction is CORE-8 (BUG-A fix) ===
+  // === Session bonuses (4) — lastCycleEndProduction is CORE-8 (BUG-A fix); lucidDreamActiveUntil is Sprint 7.10 Phase 7.10.5 ===
   momentumBonus: number;
   lastCycleEndProduction: number;
   eurekaExpiry: number | null;
+  lucidDreamActiveUntil: number | null;
 
   // === Active event (1) ===
   activeSpontaneousEvent: SpontaneousEventActive | null;

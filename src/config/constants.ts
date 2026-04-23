@@ -123,6 +123,8 @@ export const SYNAPSE_CONSTANTS = {
   lucidDreamOptionAProductionMult: 1.10, // Option A: +10% production
   lucidDreamOptionADurationMs: 3_600_000, // Option A: 1 hour duration (ms) — consumer Phase 7.10.5
   lucidDreamOptionBMemoryGain: 2, // Option B: +2 Memories (+3-with-Regulación-Emocional dropped per Sprint 7.5.3 retirement)
+  // Sprint 7.10 Phase 7.10.5 — Welcome-back modal (Sprint 3.6 audit) gate.
+  offlineModalMinSeconds: 60, // skip Sleep screen for sub-minute returns; below this, accrual is silent
 
   // ── Memories ──
   baseMemoriesPerPrestige: 2, // GDD §2 Memory generation table: +2 per prestige baseline. Consolidación de Memoria upgrade adds +50% via `memoryGainAdd: 0.5` (§24).
@@ -386,8 +388,8 @@ export const SYNAPSE_CONSTANTS = {
   gameVersion: '1.0.0',
 
   // ── Field-count runtime verification (§32) ──
-  // 120 fields after Sprint 7.10 Phase 7.10.4 (was 119 post-7.5.1). The +1 field
-  // is `pendingOfflineSummary`, stashed on GameState for Sleep screen + Welcome
-  // modal + Lucid Dream consumer surfaces. Per GDD §32.
-  GAMESTATE_FIELD_COUNT: 120,
+  // 121 fields after Sprint 7.10 Phase 7.10.5 (was 120 post-7.10.4). The +1
+  // field is `lucidDreamActiveUntil`, the Lucid Dream Option A timed-buff
+  // expiry per GDD §19. Same naming family as eurekaExpiry / mentalStateExpiry.
+  GAMESTATE_FIELD_COUNT: 121,
 } as const;

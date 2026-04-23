@@ -41,6 +41,7 @@ function makeState(overrides: Partial<GameState> = {}): GameState {
     currentOfflineCapHours: 4,
     currentOfflineEfficiency: 0.5,
     pendingOfflineSummary: null,
+    lucidDreamActiveUntil: null,
     sessionStartTimestamp: null,
     prestigeCount: 0,
     currentThreshold: 50_000,

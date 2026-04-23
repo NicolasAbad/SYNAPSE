@@ -1,15 +1,15 @@
-// Implements docs/GDD.md §33 (PRESTIGE_RESET 47 / PRESTIGE_PRESERVE 68 /
-// PRESTIGE_UPDATE 4 / lifetime 1 = 120 total).
+// Implements docs/GDD.md §33 (PRESTIGE_RESET 48 / PRESTIGE_PRESERVE 68 /
+// PRESTIGE_UPDATE 4 / lifetime 1 = 121 total).
 //
 // Pure data file — no logic. handlePrestige() in src/engine/prestige.ts
 // (Sprint 4a Phase 4a.2) consumes these to produce a post-prestige state.
 //
 // Field-count invariants (asserted by tests/consistency.test.ts §33 block):
-//   PRESTIGE_RESET_FIELDS.length === 47
+//   PRESTIGE_RESET_FIELDS.length === 48
 //   PRESTIGE_PRESERVE_FIELDS.length === 68
 //   PRESTIGE_UPDATE_FIELDS.length === 4
 //   PRESTIGE_LIFETIME_FIELDS.length === 1
-//   47 + 68 + 4 + 1 === 120 === Object.keys(createDefaultState()).length
+//   48 + 68 + 4 + 1 === 121 === Object.keys(createDefaultState()).length
 //   RESET ∩ PRESERVE === ∅ (disjoint — no field in both)
 //
 // Ordering within each tuple mirrors GDD §33 for audit readability, but
@@ -66,10 +66,11 @@ export const PRESTIGE_RESET: Partial<GameState> = {
   currentMutation: null,
   mutationSeed: 0,
   currentPathway: null,
-  // Session bonuses (3)
+  // Session bonuses (4) — Sprint 7.10.5 added lucidDreamActiveUntil
   momentumBonus: 0,
   lastCycleEndProduction: 0,
   eurekaExpiry: null,
+  lucidDreamActiveUntil: null,
   // Active event (1)
   activeSpontaneousEvent: null,
   // Spontaneous events cycle state (3)
@@ -114,7 +115,7 @@ export const PRESTIGE_RESET_FIELDS = [
   'dischargeCharges', 'dischargeMaxCharges', 'dischargeLastTimestamp', 'nextDischargeBonus',
   'upgrades',
   'currentPolarity', 'currentMutation', 'mutationSeed', 'currentPathway',
-  'momentumBonus', 'lastCycleEndProduction', 'eurekaExpiry',
+  'momentumBonus', 'lastCycleEndProduction', 'eurekaExpiry', 'lucidDreamActiveUntil',
   'activeSpontaneousEvent',
   'lastSpontaneousCheck', 'spontaneousMemoryUsed', 'spontaneousInterferenceUsed',
   'cycleUpgradesBought', 'cycleCascades', 'cyclePositiveSpontaneous', 'cycleNeuronsBought',
