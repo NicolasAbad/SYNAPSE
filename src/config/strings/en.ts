@@ -194,7 +194,6 @@ export const en = {
     ltp_potenciacion_larga: 'Long-Term Potentiation',
     espejo_resonantes: 'Resonant Mirrors',
     neurogenesis: 'Neurogenesis',
-    consolidacion_memoria: 'Memory Consolidation',
     regulacion_emocional: 'Emotional Regulation',
     procesamiento_visual: 'Visual Processing',
     funciones_ejecutivas: 'Executive Function',
@@ -240,8 +239,7 @@ export const en = {
     ltp_potenciacion_larga: 'All neurons ×1.5',
     espejo_resonantes: 'Mirror neurons ×4',
     neurogenesis: 'All neurons ×1.10',
-    // Regions (5, Memorias)
-    consolidacion_memoria: 'Basic neurons ×3; Memories +50%',
+    // Regions (4, Memorias) — Sprint 7.5.2 retired consolidacion_memoria
     regulacion_emocional: 'Offline efficiency ×2',
     procesamiento_visual: 'Highlights best upgrade',
     funciones_ejecutivas: 'Thought-cost upgrades −20%',
@@ -262,6 +260,35 @@ export const en = {
     resonancia_acumulada: 'First post-offline Discharge +5%/hr (cap +100%)',
     sintesis_cognitiva: 'Pattern flat bonus ×2',
     focus_persistente: 'Keep 25% Focus across prestige',
+  },
+  // Sprint 7.5.2 — Hipocampo Memory Shard upgrades (GDD §16.1).
+  // 6 of 8 ship in 7.5.2; the remaining 2 land with consumer phases:
+  // shard_emo_deep → 7.5.3 (Mood), shard_proc_mastery → 7.7 (Mastery).
+  shard_upgrades: {
+    shard_emo_pulse: 'Emotional Pulse',
+    shard_emo_resonance: 'Emotional Resonance',
+    shard_proc_flow: 'Procedural Flow',
+    shard_proc_pattern: 'Procedural Pattern',
+    shard_epi_imprint: 'Episodic Imprint',
+    shard_epi_reflection: 'Episodic Reflection',
+  },
+  shard_upgrades_desc: {
+    shard_emo_pulse: 'Each Cascade also grants +1 Spark',
+    shard_emo_resonance: 'Fragment first-read grants +2 Memory (total +3)',
+    shard_proc_flow: 'Tap contribution +5%',
+    shard_proc_pattern: 'Discharge charge interval −10%',
+    shard_epi_imprint: '+1 Memoria per prestige',
+    shard_epi_reflection: 'Each Resonant Pattern grants +10 Sparks (total +15)',
+  },
+  shard_types: {
+    emotional: 'Emotional Shard',
+    procedural: 'Procedural Shard',
+    episodic: 'Episodic Shard',
+  },
+  hipocampo_panel: {
+    title: 'Hipocampo — Memory Shards',
+    drip_paused: 'Drip paused (cycle complete)',
+    weave_locked: 'Memory Weave unlocks with Integrated Mind',
   },
   // Sprint 5 — 15 Mutations (GDD §13). Player-facing display name + concise
   // mechanical description. Internal ids stay Spanish snake_case in mutations.ts;

@@ -1,7 +1,7 @@
 // Implements docs/GDD.md §4 (Production formula) + §5 (Neurons — connection multiplier)
 // + §9 (Threshold). Sprint 3 Phase 2 wires the §4 formula stack: per-neuron
-// rate mults (all_neurons_mult, neuron_type_mult, basica_mult_and_memory_gain)
-// stack on the sum; global mults (all_production_mult, prestige_scaling_mult,
+// rate mults (all_neurons_mult, neuron_type_mult) stack on the sum; global
+// mults (all_production_mult, prestige_scaling_mult,
 // lifetime_prestige_add, upgrades_scaling_mult) stack on rawMult; softCap
 // applies to rawMult per §4 line 209-211 ("NOT to the sum"). Stubs for
 // Sprint 5-7 modifiers (archetype, region, mutation, polarity, mental state,
@@ -95,9 +95,9 @@ function computeAllNeuronsMult(ownedIds: ReadonlySet<string>): number {
 
 /**
  * Product of every owned per-type rate-mult upgrade for `type`. Covers
- * `neuron_type_mult` (Receptores AMPA/Transducción/Axones/Espejo Resonantes)
- * and the basicaMult component of `basica_mult_and_memory_gain`
- * (Consolidación de Memoria, §16). memoryGainAdd is cycle-end, not per-tick.
+ * `neuron_type_mult` (Receptores AMPA / Transducción / Axones / Espejo
+ * Resonantes). Sprint 7.5.2: removed the `basica_mult_and_memory_gain`
+ * branch (consolidacion_memoria retired per GDD §16.8).
  */
 function computePerTypeMult(type: NeuronType, ownedIds: ReadonlySet<string>): number {
   let mult = 1;
@@ -105,7 +105,6 @@ function computePerTypeMult(type: NeuronType, ownedIds: ReadonlySet<string>): nu
     const effect = UPGRADES_BY_ID[id]?.effect;
     if (!effect) continue;
     if (effect.kind === 'neuron_type_mult' && effect.neuronType === type) mult *= effect.mult;
-    if (effect.kind === 'basica_mult_and_memory_gain' && type === 'basica') mult *= effect.basicaMult;
   }
   return mult;
 }

@@ -22,7 +22,7 @@ import { mutationNeuronCostMod, mutationUpgradeCostMod } from '../engine/mutatio
 import { pathwayCostMod } from '../engine/pathways';
 import { era3NeuronCostMult } from '../engine/era3';
 import type { GameState } from '../types/GameState';
-import type { NeuronState, NeuronType } from '../types';
+import type { NeuronState, NeuronType, UpgradeCostCurrency } from '../types';
 
 /** Reason code for why a purchase was rejected. 'ok' means it will succeed. */
 export type BuyReason = 'ok' | 'locked' | 'insufficient_funds' | 'already_owned' | 'unknown';
@@ -49,7 +49,7 @@ function countOf(neurons: readonly NeuronState[], type: NeuronType): number {
  */
 function finalUpgradeCost(
   baseCost: number,
-  costCurrency: 'thoughts' | 'memorias',
+  costCurrency: UpgradeCostCurrency,
   owned: ReadonlySet<string>,
   state: GameState,
 ): number {
@@ -110,12 +110,15 @@ export function canBuyUpgrade(state: GameState, id: string): { reason: BuyReason
 /**
  * Ephemeral undo-toast record. UI-local (not persisted). `snapshot` holds the
  * GameState fields to restore on undo — Zustand merge-mode set(snapshot) applies it.
+ *
+ * Sprint 7.5.2: `currency` widened to UpgradeCostCurrency (5 options) so the
+ * shard-purchase flow can produce undo toasts with the typed-shard cost label.
  */
 export interface UndoToast {
-  kind: 'neuron' | 'upgrade';
+  kind: 'neuron' | 'upgrade' | 'shard_upgrade';
   id: string;
   refund: number;
-  currency: 'thoughts' | 'memorias';
+  currency: 'thoughts' | 'memorias' | 'emotional_shards' | 'procedural_shards' | 'episodic_shards';
   expiresAt: number;
   snapshot: Partial<GameState>;
 }
@@ -242,3 +245,4 @@ export function tryBuyUpgrade(state: GameState, id: string, nowTimestamp: number
     : null;
   return { ok: true, updates, undoToast };
 }
+

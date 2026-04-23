@@ -5,6 +5,7 @@ import { UPGRADES_BY_ID } from '../../config/upgrades';
 import { canBuyUpgrade } from '../../store/purchases';
 import { formatCurrency } from '../util/formatNumber';
 import { t } from '../../config/strings';
+import { HipocampoShardSection } from './HipocampoShardSection';
 import type { GameState } from '../../types/GameState';
 import type { RegionDef } from '../../types';
 
@@ -85,6 +86,8 @@ function RegionCard({ region, state }: RegionCardProps) {
           ))}
         </ul>
       )}
+      {/* Sprint 7.5.2 §16.1 — Hipocampo Shard tree (typed-shard upgrades). */}
+      {unlocked && region.id === 'hipocampo' && <HipocampoShardSection state={state} />}
     </li>
   );
 }

@@ -6,10 +6,103 @@
 
 ## Current status
 
-**Phase:** Sprint 7.5 Phase 7.5.1 CLOSED (GameState scaffolding 110→119 + migration). **1260 tests pass** (+17 from Sprint 7 close 1243: +10 migrate + +7 prestige region behavior); 4/4 gates green; typecheck + lint clean.
-**Last updated:** 2026-04-22 after Sprint 7.5 Phase 7.5.1 close.
-**Active sprint:** Sprint 7.5 Region Deepening (Phase 7.5.1/9 done). Next: Phase 7.5.2 Hipocampo Memory Shards.
-**Next action:** Sprint 7.5 Phase 7.5.2 — Hipocampo Memory Shards (3 typed shards with drip engine, 8-upgrade Shard tree, Memory Weave conversion 100 shards → 1 Memoria, Hipocampo panel UI scaffold). Pre-code research: confirm 8 Hipocampo upgrade names per CLAUDE.md translation discipline (shard_emo_pulse / _resonance / _deep, shard_proc_flow / _pattern / _mastery, shard_epi_imprint / _reflection — names per GDD §16.1 already documented). Retire `consolidacion_memoria` upgrade with silent migration drop.
+**Phase:** Sprint 7.5 Phase 7.5.2 CLOSED (Hipocampo Memory Shards: 6 of 8 upgrades + drip engine + retired-upgrade migration + Hipocampo UI scaffold). **1303 tests pass** (+44 from Phase 7.5.1 close 1259: +25 shards engine + +11 shard purchase + +4 migrate retire-strip + 4 prestige tweaks); 4/4 gates green; typecheck + lint clean.
+**Last updated:** 2026-04-22 after Sprint 7.5 Phase 7.5.2 close.
+**Active sprint:** Sprint 7.5 Region Deepening (2 of 9 phases done). Next: Phase 7.5.3 Sistema Límbico (Mood engine + offline rewire).
+**Next action:** Sprint 7.5 Phase 7.5.3 — Sistema Límbico Moodometer. Pre-code research: confirm Mood event-delta dispatcher pattern; ship `shard_emo_deep` upgrade (deferred from 7.5.2 — needs Mood engine consumer) + 6 Límbico Memorias-priced upgrades (`lim_steady_heart` / `lim_empathic_spark` / `lim_resilience` / `lim_elevation` / `lim_euphoric_echo` / `lim_emotional_wisdom` per GDD §16.3); retire `regulacion_emocional` with new `ondas_theta` upgrade (offline path); wire Mood-applies-to-offline (R6) + bump `maxOfflineEfficiencyRatio` 2.0 → 2.5; HUD Mood icon. STOP-for-approval before code.
+
+### Sprint 7.5 Phase 7.5.2 closing dashboard (2026-04-22 — Hipocampo Memory Shards)
+
+- **Phase:** 7.5.2/9 — single atomic commit. Ships the Hipocampo sub-system (6 of 8 upgrades; remaining 2 land with their consumer phases per CLAUDE.md "no half-shipped features").
+- **Tests:** **1303 pass** (+44 net: +25 shards engine + +11 shard purchase + +4 migrate retire-strip + 4 prestige test refactors). 0 fail / 37 skipped / 81 files. 4/4 gates PASS, ratio 0.81.
+
+- **Scope delivered:**
+  - ✅ 3 typed shard banks already in `state.memoryShards` (Phase 7.5.1 scaffolding) — drip + burst engine landed
+  - ✅ `stepShardDrip` per-tick engine: Emo + Proc fractional accumulation (0.5/min spec → 0.5/600 per 100ms tick) gated by per-cycle eligibility flags + REG-6 cycle-complete pause
+  - ✅ Eligibility derivation (no new fields): Emo from `cycleCascades > 0 || cyclePositiveSpontaneous > 0 || hasFragmentReadThisCycle(state)` (diary scan); Proc from `cycleNeuronsBought / cycleUpgradesBought / lastTapTimestamps`
+  - ✅ Per-event bursts: fragment first-read +1 Emo (via `applyFragmentRead`); prestige Episodic burst +N base + +5 per newly-discovered RP (via `handlePrestige` + `checkAllResonantPatterns`)
+  - ✅ 6 of 8 shard upgrades shipped with consumers wired:
+    - `shard_emo_pulse` (20 Emo, P1) — Cascade Sparks +1 each → wired in `discharge.ts` Cascade branch
+    - `shard_emo_resonance` (50 Emo, P3) — Fragment first-read +2 Memory → wired in `narrative.ts applyFragmentRead`
+    - `shard_proc_flow` (20 Proc, P1) — Tap contribution ×1.05 → wired in `tap.ts computeTapThought`
+    - `shard_proc_pattern` (50 Proc, P3) — Discharge charge interval ×0.90 → wired in `tick.ts stepDischargeChargeAccumulation` + HUD `DischargeCharges` countdown for parity
+    - `shard_epi_imprint` (10 Epi, P1) — +1 Memoria per prestige → wired in `prestige.ts computeMemoriesGained`
+    - `shard_epi_reflection` (30 Epi, P5) — RP Sparks +10 each (total 15) → wired in `resonantPatterns.ts checkAllResonantPatterns`
+  - ✅ Deferred (per "no half-shipped features"): `shard_emo_deep` (Mood engine consumer → 7.5.3), `shard_proc_mastery` (Mastery system consumer → 7.7); their UpgradeEffect kinds will land alongside their consumers
+  - ✅ `consolidacion_memoria` retired (GDD §16.8); migrate.ts strips it from saved upgrades silently (no Memoria refund — value-neutral sunset); upgrade list dropped 35 → 34; `basica_mult_and_memory_gain` UpgradeEffect kind removed; consumer branches in `prestige.ts` + `production.ts` removed
+  - ✅ Memory Weave (100 shards → 1 Memoria) DEFERRED to Sprint 7.5.8 (depends on Integrated Mind activity tracker)
+  - ✅ Hipocampo region card extended with shard counters (REG-5 color coding: Emotional pink, Procedural blue, Episodic cyan) + 6 buyable shard-upgrade rows + "Memory Weave coming" hint — rendered inside existing RegionsPanel
+  - ✅ Brain-canvas redesign of Regions tab DEFERRED to Sprint 7.5.7 (UI scaffold today is intentionally minimal and will be replaced)
+  - ✅ Typed-shard cost handling: `UpgradeCostCurrency` extended with `'emotional_shards' | 'procedural_shards' | 'episodic_shards'`; `UpgradeCategory` gains `'mem'`
+  - ✅ Shard purchases use a SEPARATE flow (`src/store/shardPurchases.ts`) and store IDs in `state.memoryShardUpgrades` (NOT `state.upgrades`) to keep the canonical 34-upgrade list semantically pure
+  - ✅ All 5 retired-upgrade test references swept (consistency.test, purchases.test, prestige.test, patternDecisions.test, production-formula.test); `economy-sanity.mjs` projector cleaned
+
+- **Tests delta breakdown (+44 net):**
+  - +25 `tests/engine/shards.test.ts` (drip eligibility / drip math / determinism / monotonic non-decreasing / per-event bursts / 6 effect helpers / per-minute aggregate matches GDD spec rate)
+  - +11 `tests/store/shardPurchase.test.ts` (canBuyShardUpgrade for all 5 reasons / typed-bank dispatch / no Memorias-Thoughts cross-contamination / no `state.upgrades` mutation / Episodic + Procedural buy variants)
+  - +4 `tests/store/migrate.test.ts` (retired-upgrade strip / Memoria-balance preservation / idempotency / no-op on saves without retired ID)
+  - +1 `tests/engine/prestige.test.ts` (Sprint 7.5.2 Episodic burst at prestige — Emo+Proc preserved, Episodic grows by base + RP burst)
+  - −1 `tests/engine/production-formula.test.ts` (`basica_mult_and_memory_gain applies basicaMult=3 to Básica` removed alongside the retired effect kind)
+  - 5 existing tests refactored (consistency upgrade-count, region-count, cost-currency assertions; prestige PRESERVE skip set updated to include `memoryShards`; patternDecisions consolidacion stack test → shard_epi_imprint)
+
+- **Constants added (CODE-1, all from GDD §16.1 except `episodicShardPerPrestige`):**
+  - `episodicShardPerPrestige: 2` (**Nico-approved 2026-04-22** — symmetric with `baseMemoriesPerPrestige=2`; calibrates `shard_epi_imprint` affordable at P5 and `shard_epi_reflection` affordable at P15+first-RP)
+  - `episodicShardPerRp: 5` (GDD §16.1)
+  - `shardEmoPulseCascadeSparkBonus: 1`
+  - `shardEmoResonanceFragmentMemoryBonus: 2`
+  - `shardProcFlowTapMultBonus: 0.05`
+  - `shardProcPatternChargeIntervalMult: 0.90`
+  - `shardEpiImprintMemoryPerPrestigeBonus: 1`
+  - `shardEpiReflectionRpSparkBonus: 10`
+
+- **Translation (Nico-approved 2026-04-22):**
+  - 6 shard upgrade display names (Emotional Pulse / Emotional Resonance / Procedural Flow / Procedural Pattern / Episodic Imprint / Episodic Reflection) + 3 shard type names (Emotional Shard / Procedural Shard / Episodic Shard) + Hipocampo panel section copy
+
+- **Files created (5):**
+  - `src/config/shards.ts` (~54 lines, canonical 6-upgrade data — Gate 3 exempt via `src/config/` exclusion)
+  - `src/engine/shards.ts` (~127 lines: drip + bursts + 6 effect helpers)
+  - `src/store/shardPurchases.ts` (~60 lines: canBuyShardUpgrade + tryBuyShardUpgrade — split from purchases.ts to respect CODE-2)
+  - `src/ui/panels/HipocampoShardSection.tsx` (~113 lines: 3 shard counters + 6 buyable rows + Weave hint)
+  - `tests/engine/shards.test.ts` + `tests/store/shardPurchase.test.ts`
+
+- **Files modified (~17):**
+  - `src/types/index.ts` — UpgradeCostCurrency +3 types; UpgradeCategory +'mem'; UpgradeEffect +6 kinds; `basica_mult_and_memory_gain` removed
+  - `src/config/constants.ts` — +8 new shard constants
+  - `src/ui/tokens.ts` — +3 shard color tokens (REG-5 pink/blue/cyan)
+  - `src/store/migrate.ts` — `RETIRED_UPGRADE_IDS` set + `stripRetiredUpgrades` helper; comment refresh
+  - `src/config/upgrades.ts` — REMOVE `consolidacion_memoria`; doc 35 → 34
+  - `src/config/regions.ts` — Hipocampo `upgradeIds: []`
+  - `src/config/strings/en.ts` — 2 retired keys removed; 14 new keys (6 shard names + 6 shard descriptions + 3 shard types + 3 panel-section keys)
+  - `src/engine/prestige.ts` — `computeMemoriesGained` rewritten (no more `basica_mult_and_memory_gain`); `+ shard_epi_imprint`; Episodic burst at prestige
+  - `src/engine/production.ts` — removed `basica_mult_and_memory_gain` consumer branch
+  - `src/engine/discharge.ts` — `+ shard_emo_pulse` Cascade Spark grant
+  - `src/engine/narrative.ts` — `applyFragmentRead` +shard_emo_resonance Memory bonus + Emo shard burst
+  - `src/engine/resonantPatterns.ts` — `+ shard_epi_reflection` Spark bonus + signature widened to take `memoryShardUpgrades`
+  - `src/engine/tick.ts` — wires `stepShardDrip` + `chargeIntervalShardMult` (line cap respected at 199)
+  - `src/store/tap.ts` — `+ shard_proc_flow` ×1.05 tap contribution
+  - `src/store/purchases.ts` — UndoToast.kind/currency widened; `finalUpgradeCost` signature widened to `UpgradeCostCurrency`; gameStore-side wiring added
+  - `src/store/gameStore.ts` — `buyShardUpgrade` action wired
+  - `src/ui/hud/DischargeCharges.tsx` — applies `chargeIntervalShardMult` for HUD parity
+  - `src/ui/panels/RegionsPanel.tsx` — mounts `HipocampoShardSection` inside Hipocampo card; ClassifiedUpgrade.costCurrency widened
+  - `src/ui/panels/UpgradesPanel.tsx` — ClassifiedUpgrade.costCurrency widened to UpgradeCostCurrency
+
+- **Audit findings (post-implementation):**
+  - **Pre-existing CODE-2 drift (NOT introduced by 7.5.2):** `src/store/purchases.ts` was 244 lines pre-7.5.2 (since Sprint 6.5); my +4 lines bring it to 248. Flagged for a future cleanup phase. Splitting shard purchases into `shardPurchases.ts` was the correct call (kept the new file at 60 lines; would have pushed purchases.ts to ~310 if inlined).
+  - **Test rigor refactor:** PRESERVE pass-through skip set (`PRESERVE_UPDATED_BY_HANDLEPRESTIGE`) extended to include `memoryShards` since handlePrestige now writes the Episodic burst there. The test still iterates the live `PRESTIGE_PRESERVE_FIELDS` array — auto-extends as new PRESERVE fields are added. Pattern continues to work.
+  - **HUD/engine drift risk fixed:** `DischargeCharges.tsx` countdown timer reads `memoryShardUpgrades` and applies `chargeIntervalShardMult` — keeps the visible countdown in sync with the engine's actual interval. Added at the same time as the engine change to prevent a late-discovered desync.
+  - **Test-by-construction avoidance:** all 25 shard engine tests assert against canonical `SYNAPSE_CONSTANTS` rather than literal numbers (e.g. `expect(perTick).toBe(SYNAPSE_CONSTANTS.shardDripBasePerMinute * (SYNAPSE_CONSTANTS.tickIntervalMs / 60_000))` — if either constant changes, the spec rate test catches it). Per memory `feedback_test_rigor`.
+  - **Property tests added:** non-negative invariant + monotonic non-decreasing within a cycle (drip never negative, never decreases). Catches regressions where a future tick step might subtract from shard banks.
+
+- **Sprint 7.5 Phase 7.5.3 — first action (next session/turn):**
+  Sistema Límbico Moodometer — pre-code research catalog covering:
+  1. Mood event-delta dispatcher pattern (recommend single `applyMoodEvent(state, kind)` engine helper, mirrors `dispatchNarrative` shape; consumers in 7-8 actions)
+  2. Mood-tier resolver (post-softCap effective mult per tier, stacks multiplicatively with Mental States)
+  3. 6 Límbico upgrade names (already in GDD §16.3 table — need per-name English approval)
+  4. `regulacion_emocional` retirement migration + new `ondas_theta` Memorias upgrade (offline path replacement)
+  5. `maxOfflineEfficiencyRatio` 2.0 → 2.5 (R6 lock)
+  6. Mood-applies-to-offline integration (REG-6 average-not-current-mood per GDD §16.3 anti-ramp-farming)
+  7. `shard_emo_deep` upgrade ships now (deferred from 7.5.2; consumer = Mood event scaling)
+  8. HUD Mood icon (5-tier glyph) + Límbico panel UI scaffold
 
 ### Sprint 7.5 Phase 7.5.1 closing dashboard (2026-04-22 — GameState scaffolding 110→119)
 

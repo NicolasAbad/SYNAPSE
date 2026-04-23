@@ -9,6 +9,7 @@ import { applyPermanentPatternDecisionsToState, memoriesPerPrestigeDecisionAdd }
 import { pathwayMemoriesPerPrestigeMult } from './pathways';
 import { archetypeMemoryMult } from './archetypes';
 import { checkAllResonantPatterns } from './resonantPatterns';
+import { episodicShardsAtPrestige } from './shards';
 import type { GameState } from '../types/GameState';
 import type { AwakeningEntry, PatternNode } from '../types';
 
@@ -29,15 +30,11 @@ function ownedUpgradeIds(upgrades: GameState['upgrades']): Set<string> {
   return out;
 }
 
-/** GDD §6: base × (1 + memoryGainAdd) × pathwayMult + Node 24 B add. */
-export function computeMemoriesGained(state: Pick<GameState, 'upgrades' | 'patternDecisions' | 'currentPathway' | 'archetype'>): number {
-  let mult = 1;
-  for (const id of ownedUpgradeIds(state.upgrades)) {
-    const effect = UPGRADES_BY_ID[id]?.effect;
-    if (effect?.kind === 'basica_mult_and_memory_gain') mult += effect.memoryGainAdd;
-  }
-  // GDD §14 Profunda ×2 × GDD §12 Empática ×1.25 + GDD §10 Node 24 B (+2 flat, post-mult).
-  return SYNAPSE_CONSTANTS.baseMemoriesPerPrestige * mult * pathwayMemoriesPerPrestigeMult(state as GameState) * archetypeMemoryMult(state) + memoriesPerPrestigeDecisionAdd(state);
+/** GDD §6 + Sprint 7.5.2 §16.1: base × pathwayMult × archetypeMult + Node 24 B + shard_epi_imprint. */
+export function computeMemoriesGained(state: Pick<GameState, 'upgrades' | 'patternDecisions' | 'currentPathway' | 'archetype' | 'memoryShardUpgrades'>): number {
+  const baseGain = SYNAPSE_CONSTANTS.baseMemoriesPerPrestige * pathwayMemoriesPerPrestigeMult(state as GameState) * archetypeMemoryMult(state) + memoriesPerPrestigeDecisionAdd(state);
+  const shardBonus = state.memoryShardUpgrades.includes('shard_epi_imprint') ? SYNAPSE_CONSTANTS.shardEpiImprintMemoryPerPrestigeBonus : 0;
+  return baseGain + shardBonus;
 }
 
 /** CORE-8 amended cap: raw × 30s clamped at nextThreshold × maxMomentumPct (§35 4A-2). */
@@ -114,14 +111,11 @@ export function handlePrestige(state: GameState, timestamp: number): { state: Ga
   const memoriesGained = computeMemoriesGained(state);
   // Step 8 — capture Focus Persistente retention BEFORE applying RESET defaults.
   const focusBarRetained = focusBarAfterReset(state);
-  // POLAR-1 / SAME AS LAST snapshot — cycle choices captured before RESET zeroes them.
-  // Sprint 5: snapshot also captures purchased upgrade IDs for Mutation #14
-  // Déjà Vu (carries upgrades into next cycle). Pre-RESET so array isn't empty.
+  // POLAR-1 + Sprint 5 Mutation #14 Déjà Vu snapshot. Pre-RESET so array isn't empty.
   const lastCycleConfig = { polarity: state.currentPolarity ?? '', mutation: state.currentMutation?.id ?? '', pathway: state.currentPathway ?? '', upgrades: state.upgrades.filter((u) => u.purchased).map((u) => u.id) };
-  // Step 9 — compute UPDATE values (new prestigeCount, threshold, timestamp, tutorial flip).
+  // Step 9 + Step 11 — UPDATE values + capped Momentum Bonus.
   const newPrestigeCount = state.prestigeCount + 1;
   const nextThreshold = calculateThreshold(newPrestigeCount, state.transcendenceCount);
-  // Step 11 — capped Momentum Bonus (computed here, applied to thoughts below).
   const momentumBonus = computeMomentumBonus(lastCycleEndProduction, nextThreshold);
   // Append Awakening log entry before merging (wants pre-reset polarity/mutation/pathway).
   const awakeningEntry: AwakeningEntry = {
@@ -158,6 +152,12 @@ export function handlePrestige(state: GameState, timestamp: number): { state: Ga
     // GDD §22 RP rewards — flip discovered flags + bump Sparks for new ones.
     resonantPatternsDiscovered: rp.resonantPatternsDiscovered,
     sparks: rp.sparks,
+    // Sprint 7.5.2 §16.1 Episodic Shard burst at prestige: base + per-RP discovery.
+    memoryShards: {
+      emotional: state.memoryShards.emotional,
+      procedural: state.memoryShards.procedural,
+      episodic: state.memoryShards.episodic + episodicShardsAtPrestige(rp.newlyDiscovered.length),
+    },
     awakeningLog: [...state.awakeningLog, awakeningEntry],
     personalBests,
     personalBestsBeaten: state.personalBestsBeaten + (wasPersonalBest ? 1 : 0),

@@ -146,22 +146,23 @@ describe('canBuyUpgrade / tryBuyUpgrade', () => {
     expect(check.cost).toBeCloseTo(3_000 * 0.8, 6); // 2400
   });
   test('COST-1 does NOT apply to memoria-cost region upgrades', () => {
-    const state = withUpgrades({ ...createDefaultState(), memories: 100 }, ['funciones_ejecutivas']);
-    expect(canBuyUpgrade(state, 'consolidacion_memoria').cost).toBe(2); // unchanged
+    // Sprint 7.5.2: consolidacion_memoria retired; using regulacion_emocional (5 Mem, P0+).
+    const state = withUpgrades({ ...createDefaultState(), memories: 100, prestigeCount: 2 }, ['funciones_ejecutivas']);
+    expect(canBuyUpgrade(state, 'regulacion_emocional').cost).toBe(5); // unchanged
   });
 
   test('Memoria-cost upgrade deducts from memories, not thoughts', () => {
     const state = { ...createDefaultState(), memories: 10 };
-    const result = tryBuyUpgrade(state, 'consolidacion_memoria', 0);
+    const result = tryBuyUpgrade(state, 'regulacion_emocional', 0);
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    expect(result.updates.memories).toBe(8);
+    expect(result.updates.memories).toBe(5);
     expect(result.updates.thoughts).toBeUndefined();
   });
 
   test('insufficient memoria rejects region upgrade', () => {
     const state = { ...createDefaultState(), memories: 1 };
-    expect(canBuyUpgrade(state, 'consolidacion_memoria').reason).toBe('insufficient_funds');
+    expect(canBuyUpgrade(state, 'regulacion_emocional').reason).toBe('insufficient_funds');
   });
 });
 

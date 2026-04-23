@@ -96,11 +96,9 @@ describe('calculateProduction — base sum + rate multipliers', () => {
     expect(base).toBeCloseTo(1.25, 6);
   });
 
-  test('basica_mult_and_memory_gain applies basicaMult=3 to Básica', () => {
-    const state = withUpgrades(createDefaultState(), ['consolidacion_memoria']);
-    const { base } = calculateProduction(state);
-    expect(base).toBeCloseTo(1.5, 6); // 1 × 0.5 × 3 = 1.5
-  });
+  // Sprint 7.5.2 §16.8 — basica_mult_and_memory_gain effect kind retired with
+  // consolidacion_memoria. Per-type basica multiplier coverage now lives via
+  // `receptores_ampa` (neuron_type_mult, basica ×2) elsewhere in this file.
 });
 
 describe('calculateProduction — global upgrade mults (§4 multiplier stack)', () => {

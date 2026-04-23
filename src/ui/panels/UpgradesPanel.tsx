@@ -5,13 +5,14 @@ import { canBuyUpgrade } from '../../store/purchases';
 import { formatCurrency } from '../util/formatNumber';
 import { t } from '../../config/strings';
 import type { GameState } from '../../types/GameState';
+import type { UpgradeCostCurrency } from '../../types';
 
 type Section = 'affordable' | 'teaser' | 'locked';
 
 interface ClassifiedUpgrade {
   id: string;
   cost: number;
-  costCurrency: 'thoughts' | 'memorias';
+  costCurrency: UpgradeCostCurrency;
   unlockPrestige: number;
   section: Section;
 }

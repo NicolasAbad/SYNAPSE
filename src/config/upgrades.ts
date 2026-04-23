@@ -1,12 +1,12 @@
-// Implements docs/GDD.md §24 (The 35 upgrades, categorized) — canonical storage.
+// Implements docs/GDD.md §24 (The 34 upgrades, categorized) — canonical storage.
 //
 // CANONICAL STORAGE FILE per CLAUDE.md "Canonical storage file rule" —
-// this file is the source of truth for the 35 upgrade definitions. It
+// this file is the source of truth for the 34 upgrade definitions. It
 // contains ONLY data (no logic). All game-logic values (cost, effect
 // parameters) are copied verbatim from GDD §24 tables + §16 Regions table
 // (Region upgrades priced in Memorias). Gate 3 (constants coverage) of
 // scripts/check-invention.sh excludes this file from the literal count —
-// the 35 upgrade costs are canonical spec values, not inventions.
+// the 34 upgrade costs are canonical spec values, not inventions.
 //
 // Display names: approved English translations per Sprint 3 Phase 1 kickoff
 // (Nico approval, see PROGRESS.md). Effect descriptions live in
@@ -21,10 +21,12 @@
 import type { UpgradeDef } from '../types';
 
 /**
- * The 35 upgrades per GDD §24 (v1.0, excluding the 4 run-exclusive in §21 and
- * the Resonance upgrades in §15 — those ship in Sprints 8b / 8c).
+ * The 34 upgrades per GDD §24 (v1.0, excluding the 4 run-exclusive in §21 and
+ * the Resonance upgrades in §15 — those ship in Sprints 8b / 8c). Sprint 7.5.2
+ * retired `consolidacion_memoria` (Hipocampo Shard refactor, §16.8); the count
+ * dropped 35 → 34.
  *
- * Category counts: tap=3, foc=1, syn=5, neu=8, reg=5, con=4, met=3, new=6.
+ * Category counts: tap=3, foc=1, syn=5, neu=8, reg=4, con=4, met=3, new=6.
  */
 export const UPGRADES: readonly UpgradeDef[] = [
   // ── Tap (⚡, 3) ──
@@ -52,8 +54,10 @@ export const UPGRADES: readonly UpgradeDef[] = [
   { id: 'espejo_resonantes', category: 'neu', cost: 150_000, costCurrency: 'thoughts', unlockPrestige: 2, effect: { kind: 'neuron_type_mult', neuronType: 'espejo', mult: 4 } },
   { id: 'neurogenesis', category: 'neu', cost: 5_000_000, costCurrency: 'thoughts', unlockPrestige: 5, effect: { kind: 'all_neurons_mult', mult: 1.10 } },
 
-  // ── Regions (◈, 5) — costs in Memorias per GDD §16 ──
-  { id: 'consolidacion_memoria', category: 'reg', cost: 2, costCurrency: 'memorias', unlockPrestige: 0, effect: { kind: 'basica_mult_and_memory_gain', basicaMult: 3, memoryGainAdd: 0.5 } },
+  // ── Regions (◈, 4) — costs in Memorias per GDD §16. Sprint 7.5.2 retired
+  // `consolidacion_memoria` (effect absorbed into Hipocampo shard_emo_resonance,
+  // GDD §16.8). regulacion_emocional retires Sprint 7.5.3 with the Mood engine;
+  // procesamiento_visual retires Sprint 7.5.5 with the Visual Foresight engine. ──
   { id: 'regulacion_emocional', category: 'reg', cost: 5, costCurrency: 'memorias', unlockPrestige: 0, effect: { kind: 'offline_efficiency_mult', mult: 2 } },
   { id: 'procesamiento_visual', category: 'reg', cost: 8, costCurrency: 'memorias', unlockPrestige: 0, effect: { kind: 'best_upgrade_indicator' } },
   { id: 'funciones_ejecutivas', category: 'reg', cost: 3, costCurrency: 'memorias', unlockPrestige: 2, effect: { kind: 'upgrade_cost_reduction', pct: 0.20 } },

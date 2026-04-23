@@ -11,6 +11,7 @@ import { archetypeSpontaneousRateMult } from './archetypes';
 import { checkMentalState, mentalStateProductionMult, mentalStateDuration, updateHyperfocusTracking } from './mentalStates';
 import { shouldTriggerMicroChallenge, rollMicroChallenge, activateMicroChallenge, isMicroChallengeFailed, isMicroChallengeComplete, clearMicroChallenge } from './microChallenges';
 import { MICRO_CHALLENGES_BY_ID } from '../config/microChallenges';
+import { stepShardDrip, chargeIntervalShardMult } from './shards';
 import type { GameState } from '../types/GameState';
 
 // Structural intrinsics (not designer-tunable). Changing breaks determinism / spec.
@@ -100,8 +101,8 @@ function stepDischargeChargeAccumulation(s: GameState, nowTimestamp: number): vo
     const e = UPGRADES_BY_ID[u.id]?.effect;
     if (e?.kind === 'charge_rate_mult') intervalMs = intervalMs / e.mult;
   }
-  // GDD §14 Rápida ×1.5 + GDD §13 #3 Descarga Rápida 12-min override.
-  intervalMs = mutationChargeIntervalMs(s, intervalMs / pathwayChargeRateMult(s));
+  // GDD §14 Rápida + §13 #3 Descarga Rápida + §16.1 shard_proc_pattern stack.
+  intervalMs = mutationChargeIntervalMs(s, intervalMs / pathwayChargeRateMult(s)) * chargeIntervalShardMult(s);
   const effectiveMax = mutationMaxChargesOverride(s) ?? s.dischargeMaxCharges;
   if (nowTimestamp - s.dischargeLastTimestamp >= intervalMs) {
     s.dischargeCharges = Math.min(effectiveMax, s.dischargeCharges + 1);
@@ -184,6 +185,7 @@ export function tick(state: GameState, nowTimestamp: number): TickResult {
   stepRecalcProduction(s);
   stepMentalStateTriggers(s, nowTimestamp); // Mental state mult applied before stepProduce
   stepProduce(s);
+  stepShardDrip(s); // Hipocampo Memory Shard drip per GDD sixteen point one
   stepConsciousnessBarUnlock(s);
   // REG-1 unlock check (Sprint 5 Phase 5.4).
   checkRegionUnlock(s);

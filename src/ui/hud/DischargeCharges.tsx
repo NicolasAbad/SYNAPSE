@@ -2,6 +2,7 @@ import { memo, useEffect, useState } from 'react';
 import { SYNAPSE_CONSTANTS } from '../../config/constants';
 import { useGameStore } from '../../store/gameStore';
 import { UPGRADES_BY_ID } from '../../config/upgrades';
+import { chargeIntervalShardMult } from '../../engine/shards';
 import { t } from '../../config/strings';
 import { HUD } from '../tokens';
 
@@ -25,13 +26,18 @@ function formatMmSs(ms: number): string {
 }
 
 /** Match tick.ts step-6: charge_rate_mult upgrades shorten the regen interval. */
-function effectiveChargeIntervalMs(upgrades: ReturnType<typeof useGameStore.getState>['upgrades']): number {
+function effectiveChargeIntervalMs(
+  upgrades: ReturnType<typeof useGameStore.getState>['upgrades'],
+  memoryShardUpgrades: ReturnType<typeof useGameStore.getState>['memoryShardUpgrades'],
+): number {
   let intervalMs = SYNAPSE_CONSTANTS.chargeIntervalMinutes * 60_000; // CONST-OK: min→ms
   for (const u of upgrades) {
     if (!u.purchased) continue;
     const e = UPGRADES_BY_ID[u.id]?.effect;
     if (e?.kind === 'charge_rate_mult') intervalMs = intervalMs / e.mult;
   }
+  // Sprint 7.5.2 §16.1 shard_proc_pattern parity with tick.ts.
+  intervalMs *= chargeIntervalShardMult({ memoryShardUpgrades });
   return intervalMs;
 }
 
@@ -40,6 +46,7 @@ export const DischargeCharges = memo(function DischargeCharges() {
   const maxCharges = useGameStore((s) => s.dischargeMaxCharges);
   const lastTimestamp = useGameStore((s) => s.dischargeLastTimestamp);
   const upgrades = useGameStore((s) => s.upgrades);
+  const memoryShardUpgrades = useGameStore((s) => s.memoryShardUpgrades);
 
   // Force re-render every second so the MM:SS label decrements visibly.
   // Cheap (≤1 React render/sec on a single small subtree); much simpler
@@ -51,7 +58,7 @@ export const DischargeCharges = memo(function DischargeCharges() {
     return () => clearInterval(id);
   }, [charges, maxCharges]);
 
-  const intervalMs = effectiveChargeIntervalMs(upgrades);
+  const intervalMs = effectiveChargeIntervalMs(upgrades, memoryShardUpgrades);
   const remainingMs = lastTimestamp + intervalMs - now;
   const showCountdown = charges < maxCharges && remainingMs > 0;
 

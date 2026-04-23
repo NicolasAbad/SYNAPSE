@@ -21,6 +21,7 @@ import { focusFillRateDecisionMult } from '../engine/patternDecisions';
 import { archetypeFocusFillRateMult } from '../engine/archetypes';
 import { spontaneousFocusFillMult } from '../engine/spontaneous';
 import { era3FocusFillBlocked } from '../engine/era3';
+import { tapContributionShardMult } from '../engine/shards';
 import type { GameState } from '../types/GameState';
 
 function ownedUpgradeIds(state: Pick<GameState, 'upgrades'>): Set<string> {
@@ -44,6 +45,8 @@ export function computeTapThought(state: GameState, antiSpamActive: boolean): nu
   }
   if (state.currentMutation?.id === 'sinestesia') tapThought *= sinestesiaTapMult;
   if (antiSpamActive) tapThought *= antiSpamPenaltyMultiplier;
+  // Sprint 7.5.2 §16.1 shard_proc_flow: tap contribution +5%.
+  tapThought *= tapContributionShardMult(state);
   return tapThought;
 }
 

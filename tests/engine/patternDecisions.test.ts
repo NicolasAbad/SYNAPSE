@@ -117,17 +117,12 @@ describe('Node 24 B — memories_per_prestige_add 2 wired into computeMemoriesGa
     expect(withB - baseline).toBe(2);
   });
 
-  test('stacks with Consolidación de Memoria (multiplicative × + additive)', () => {
-    const baseWithConsol = computeMemoriesGained({
-      ...createDefaultState(),
-      upgrades: [{ id: 'consolidacion_memoria', purchased: true, purchasedAt: 0 }],
-    });
-    const withBoth = computeMemoriesGained({
-      ...createDefaultState(),
-      upgrades: [{ id: 'consolidacion_memoria', purchased: true, purchasedAt: 0 }],
-      patternDecisions: { 24: 'B' },
-    });
-    expect(withBoth - baseWithConsol).toBe(2);
+  test('stacks with shard_epi_imprint flat add (Sprint 7.5.2 — replaces consolidacion_memoria slot)', () => {
+    // Sprint 7.5.2 §16.1: shard_epi_imprint contributes a flat +1 Memoria/prestige.
+    // Node 24 B adds +2. Both stack additively post-base × pathway × archetype.
+    const base = computeMemoriesGained({ ...createDefaultState(), memoryShardUpgrades: ['shard_epi_imprint'] });
+    const withBoth = computeMemoriesGained({ ...createDefaultState(), memoryShardUpgrades: ['shard_epi_imprint'], patternDecisions: { 24: 'B' } });
+    expect(withBoth - base).toBe(2);
   });
 });
 

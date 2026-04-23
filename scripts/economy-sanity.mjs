@@ -75,7 +75,10 @@ function estimatePerTypeMult(type, p) {
   if (type === 'sensorial' && p >= 1) m *= 3; // transduccion_sensorial
   if (type === 'piramidal' && p >= 2) m *= 3; // axones_proyeccion
   if (type === 'espejo' && p >= 2) m *= 4; // espejo_resonantes
-  if (type === 'basica' && p >= 0) m *= 3; // consolidacion_memoria (typical P0)
+  // Sprint 7.5.2 §16.8: consolidacion_memoria retired (was ×3 basica). Removed
+  // from this projector — no surviving thoughts-cost upgrade replicates the
+  // standalone basica ×3 effect at P0. Acervo de Memorias (Sprint 6.8 Wave 2,
+  // P5+) replaces the Memorias-acceleration channel via memory_per_prestige.
   return m;
 }
 function estimateConnectionMult(neurons, p) {

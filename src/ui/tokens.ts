@@ -49,6 +49,17 @@ export const COLORS = {
   borderMedium: '#ffffff20', // ~12% white
   borderStrong: '#ffffff30', // ~18% white
 
+  // ── Shard type colors (Sprint 7.5.2 — GDD §16.1 REG-5) ──
+  // Pink/blue/cyan triad for the 3 Memory Shard types in the Hipocampo panel.
+  // Distinct from neuron colors (which overlap with semantic UI elsewhere).
+  // Pink is a brighter variant of --pk; cyan reuses --cy for consistency with
+  // Resonant Patterns (memory ↔ pattern semantic kinship); blue shifts toward
+  // a softer --bl variant so the three are visually distinct under reduced
+  // motion / colorblind modes (Sprint 10 will validate).
+  shardEmotional: '#F472B6',  // pink — Emotional Shards
+  shardProcedural: '#60A5FA', // blue — Procedural Shards
+  shardEpisodic: '#22D3EE',   // cyan — Episodic Shards
+
   // ── Neuron type colors (Sprint 2 Phase 2 — GDD §5 × canonical palette) ──
   // Mapping rationale in GDD §3b + PROGRESS.md Phase 2 pre-code entry.
   // Era arc: Era 1 violet (Piramidal-dominated) → Era 2 cyan (Integradora unlocks P10+) → Era 3 white-gold (P26).

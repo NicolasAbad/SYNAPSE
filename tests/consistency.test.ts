@@ -451,18 +451,18 @@ describe('Consistency: Pathways (GDD §14)', () => {
 
 describe('Consistency: Upgrades (GDD §24)', () => {
   // Un-skipped Sprint 3 Phase 1: UPGRADES data ships here.
-  test('Total 35 upgrades (not counting run-exclusive or resonance)', () => {
-    expect(UPGRADES.length).toBe(35);
+  test('Total 34 upgrades (Sprint 7.5.2: consolidacion_memoria retired, was 35)', () => {
+    expect(UPGRADES.length).toBe(34);
   });
   test('Each upgrade has a valid category', () => {
     const validCategories: ReadonlySet<UpgradeCategory> = new Set<UpgradeCategory>([
-      'tap', 'foc', 'syn', 'neu', 'reg', 'con', 'met', 'new',
+      'tap', 'foc', 'syn', 'neu', 'reg', 'con', 'met', 'new', 'mem',
     ]);
     for (const u of UPGRADES) {
       expect(validCategories.has(u.category)).toBe(true);
     }
   });
-  test('Upgrade category counts match GDD §24 (tap=3, foc=1, syn=5, neu=8, reg=5, con=4, met=3, new=6)', () => {
+  test('Upgrade category counts match GDD §24 post-7.5.2 (tap=3, foc=1, syn=5, neu=8, reg=4, con=4, met=3, new=6)', () => {
     const counts = UPGRADES.reduce<Record<string, number>>((acc, u) => {
       acc[u.category] = (acc[u.category] ?? 0) + 1;
       return acc;
@@ -471,7 +471,7 @@ describe('Consistency: Upgrades (GDD §24)', () => {
     expect(counts.foc).toBe(1);
     expect(counts.syn).toBe(5);
     expect(counts.neu).toBe(8);
-    expect(counts.reg).toBe(5);
+    expect(counts.reg).toBe(4); // Sprint 7.5.2: was 5, consolidacion_memoria retired
     expect(counts.con).toBe(4);
     expect(counts.met).toBe(3);
     expect(counts.new).toBe(6);
@@ -480,9 +480,9 @@ describe('Consistency: Upgrades (GDD §24)', () => {
     const ids = UPGRADES.map((u) => u.id);
     expect(new Set(ids).size).toBe(ids.length);
   });
-  test('Region upgrades are priced in Memorias (GDD §16)', () => {
+  test('Region upgrades are priced in Memorias (GDD §16, Sprint 7.5.2: 4 surviving)', () => {
     const regionUpgrades = UPGRADES.filter((u) => u.category === 'reg');
-    expect(regionUpgrades.length).toBe(5);
+    expect(regionUpgrades.length).toBe(4);
     for (const u of regionUpgrades) {
       expect(u.costCurrency).toBe('memorias');
     }
@@ -528,9 +528,9 @@ describe('Consistency: Upgrades (GDD §24)', () => {
     expect(UPGRADES.find((u) => u.id === 'ltp_potenciacion_larga')!.effect).toEqual({ kind: 'all_neurons_mult', mult: 1.5 });
     expect(UPGRADES.find((u) => u.id === 'neurogenesis')!.effect).toEqual({ kind: 'all_neurons_mult', mult: 1.10 });
   });
-  test('§16 Regions tier: exact cost in Memorias + effect params', () => {
-    expect(UPGRADES.find((u) => u.id === 'consolidacion_memoria')!).toEqual(expect.objectContaining({ cost: 2, costCurrency: 'memorias', unlockPrestige: 0 }));
-    expect(UPGRADES.find((u) => u.id === 'consolidacion_memoria')!.effect).toEqual({ kind: 'basica_mult_and_memory_gain', basicaMult: 3, memoryGainAdd: 0.5 });
+  test('§16 Regions tier: exact cost in Memorias + effect params (Sprint 7.5.2: consolidacion_memoria retired)', () => {
+    // Sprint 7.5.2 §16.8 — consolidacion_memoria removed; 5 region upgrades → 4.
+    expect(UPGRADES.find((u) => u.id === 'consolidacion_memoria')).toBeUndefined();
     expect(UPGRADES.find((u) => u.id === 'regulacion_emocional')!.cost).toBe(5);
     expect(UPGRADES.find((u) => u.id === 'procesamiento_visual')!.cost).toBe(8);
     expect(UPGRADES.find((u) => u.id === 'funciones_ejecutivas')!).toEqual(expect.objectContaining({ cost: 3, unlockPrestige: 2 }));

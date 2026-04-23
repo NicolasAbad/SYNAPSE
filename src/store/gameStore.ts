@@ -17,6 +17,7 @@ import type { GameState } from '../types/GameState';
 import type { NeuronType, Polarity, Pathway, Archetype, EndingID } from '../types';
 import { loadGame, saveGame } from './saveGame';
 import { tryBuyNeuron, tryBuyUpgrade, type BuyReason, type UndoToast } from './purchases';
+import { tryBuyShardUpgrade } from './shardPurchases';
 import { applyTap } from './tap';
 import { performDischarge, type DischargeOutcome } from '../engine/discharge';
 import { handlePrestige, type PrestigeOutcome } from '../engine/prestige';
@@ -296,6 +297,8 @@ export interface GameStoreActions {
    * offline_efficiency_mult). Other effects consumed at event time.
    */
   buyUpgrade: (id: string, nowTimestamp: number) => BuyReason;
+  /** Sprint 7.5.2 §16.1 — buy a Hipocampo Memory Shard upgrade (typed-shard cost). */
+  buyShardUpgrade: (id: string, nowTimestamp: number) => BuyReason;
   /** Restore pre-purchase state from the active undo toast's snapshot. No-op if none active. */
   undoLastPurchase: () => void;
   /** Dismiss the undo toast without reversing the purchase (player tapped elsewhere or timer elapsed). */
@@ -477,6 +480,15 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
   buyUpgrade: (id, nowTimestamp) => {
     const state = get();
     const result = tryBuyUpgrade(state, id, nowTimestamp);
+    if (!result.ok) return result.reason;
+    const post = { ...state, ...result.updates };
+    const ach = processAchievementUnlocks(post as GameState, nowTimestamp);
+    set({ ...result.updates, ...ach, undoToast: result.undoToast });
+    return 'ok';
+  },
+  buyShardUpgrade: (id, nowTimestamp) => {
+    const state = get();
+    const result = tryBuyShardUpgrade(state, id, nowTimestamp);
     if (!result.ok) return result.reason;
     const post = { ...state, ...result.updates };
     const ach = processAchievementUnlocks(post as GameState, nowTimestamp);

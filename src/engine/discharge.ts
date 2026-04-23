@@ -16,6 +16,7 @@ import { UPGRADES_BY_ID } from '../config/upgrades';
 import { cascadeThresholdOverride, dischargeDamageDecisionMult } from './patternDecisions';
 import { mutationDischargeMult } from './mutations';
 import { era3DischargeMultOverride } from './era3';
+import { cascadeSparkBonus } from './shards';
 import type { GameState } from '../types/GameState';
 import type { Polarity } from '../types';
 
@@ -158,6 +159,9 @@ export function performDischarge(
     // Step 4+5 per BUG-07 order: bar → 0, then post-Cascade refund.
     updates.focusBar = sincronizacionRefund(state);
     updates.cycleCascades = state.cycleCascades + 1;
+    // Sprint 7.5.2 §16.1 shard_emo_pulse: +1 Spark per Cascade.
+    const sparkBonus = cascadeSparkBonus(state);
+    if (sparkBonus > 0) updates.sparks = state.sparks + sparkBonus;
   }
   // lastPurchaseTimestamp NOT touched — Discharge isn't a purchase; Mental State
   // Dormancy triggers on idle taps+purchases, Discharge doesn't count (per §17).

@@ -193,8 +193,21 @@ export const SYNAPSE_CONSTANTS = {
   // ── Regions: Memory Shards (Hipocampo, Sprint 6.8) ──
   // GDD §16 Hipocampo + SHARD-1..3 rules. Typed shards replace generic Memorias drip.
   shardDripBasePerMinute: 0.5, // base drip per active shard type per active minute
-  shardsToMemoriaConversion: 100, // 100 shards (any type) → 1 Memoria (via Memory Weave)
+  shardsToMemoriaConversion: 100, // 100 shards (any type) → 1 Memoria (via Memory Weave, Sprint 7.5.8)
   shardTypeCount: 3, // emotional, procedural, episodic
+  // Sprint 7.5.2: Episodic burst values (GDD §16.1 "+N at each prestige, +5 per RP").
+  // N=2 base (Nico-approved 2026-04-22 — symmetric with baseMemoriesPerPrestige=2,
+  // calibrates `shard_epi_imprint` (10 Epi) affordable at P5, `shard_epi_reflection`
+  // (30 Epi) affordable at P15 + first-RP).
+  episodicShardPerPrestige: 2,
+  episodicShardPerRp: 5, // GDD §16.1
+  // Sprint 7.5.2: 6 shard-upgrade effect tuning constants (GDD §16.1 table).
+  shardEmoPulseCascadeSparkBonus: 1,        // shard_emo_pulse: +1 Spark per Cascade
+  shardEmoResonanceFragmentMemoryBonus: 2,  // shard_emo_resonance: +2 Memory on fragment first-read (stacks above base +1)
+  shardProcFlowTapMultBonus: 0.05,          // shard_proc_flow: tap contribution +5%
+  shardProcPatternChargeIntervalMult: 0.90, // shard_proc_pattern: discharge charge interval ×0.9 (-10%)
+  shardEpiImprintMemoryPerPrestigeBonus: 1, // shard_epi_imprint: +1 Memoria per prestige
+  shardEpiReflectionRpSparkBonus: 10,       // shard_epi_reflection: +10 Sparks per RP (stacks above base 5 → total 15)
 
   // ── Regions: Visual Foresight (Sprint 6.8) ──
   // GDD §16 Corteza Visual + FORESIGHT-1..4 rules. Tier-gated preview powers.

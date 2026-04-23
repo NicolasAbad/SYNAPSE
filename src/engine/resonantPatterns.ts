@@ -4,9 +4,11 @@
 //
 // Patterns are tracked in state.resonantPatternsDiscovered: [b,b,b,b]
 // indexed by RP number - 1. Each discovery grants +5 Sparks (GDD §22).
+// Sprint 7.5.2 §16.1: shard_epi_reflection adds +10 Sparks per discovery (total 15).
 // Unlocks the Singularity secret ending at P26 when all 4 discovered.
 
 import type { GameState } from '../types/GameState';
+import { rpSparkShardBonus } from './shards';
 
 // Structural constants (GDD §22 spec values — hoisted for readability).
 const RP1_WINDOW_MS = 120_000; // CONST-OK (§22 RP-1 "within first 2 minutes")
@@ -51,9 +53,12 @@ export function checkRP4(state: Pick<GameState, 'cycleCascades' | 'upgrades'>): 
  * Check all 4 RPs against pre-reset state. Returns { updates, newlyDiscovered }
  * so the caller can merge `resonantPatternsDiscovered` + bump `sparks`. Only
  * flips false → true; already-discovered never toggles back.
+ *
+ * Sprint 7.5.2 §16.1: per-RP Spark grant = base RP_DISCOVERY_SPARKS (5) +
+ * shard_epi_reflection bonus (10 if owned, else 0). Total 15 with shard owned.
  */
 export function checkAllResonantPatterns(
-  state: Pick<GameState, 'resonantPatternsDiscovered' | 'cycleNeuronPurchases' | 'cycleStartTimestamp' | 'cycleDischargesUsed' | 'prestigeCount' | 'patternDecisions' | 'cycleCascades' | 'upgrades' | 'sparks'>,
+  state: Pick<GameState, 'resonantPatternsDiscovered' | 'cycleNeuronPurchases' | 'cycleStartTimestamp' | 'cycleDischargesUsed' | 'prestigeCount' | 'patternDecisions' | 'cycleCascades' | 'upgrades' | 'sparks' | 'memoryShardUpgrades'>,
 ): { resonantPatternsDiscovered: [boolean, boolean, boolean, boolean]; sparks: number; newlyDiscovered: number[] } {
   const prior = state.resonantPatternsDiscovered;
   const checks = [checkRP1(state), checkRP2(state), checkRP3(state), checkRP4(state)];
@@ -65,9 +70,10 @@ export function checkAllResonantPatterns(
       newlyDiscovered.push(i);
     }
   }
+  const sparkPerRp = RP_DISCOVERY_SPARKS + rpSparkShardBonus(state);
   return {
     resonantPatternsDiscovered: next,
-    sparks: state.sparks + newlyDiscovered.length * RP_DISCOVERY_SPARKS,
+    sparks: state.sparks + newlyDiscovered.length * sparkPerRp,
     newlyDiscovered,
   };
 }

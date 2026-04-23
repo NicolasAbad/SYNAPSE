@@ -21,7 +21,12 @@ export const REGIONS: readonly RegionDef[] = [
     id: 'hipocampo',
     nameKey: 'regions.hipocampo.name',
     unlockPrestige: 0,
-    upgradeIds: ['consolidacion_memoria'] as const,
+    // Sprint 7.5.2: legacy `consolidacion_memoria` retired (GDD §16.8). Hipocampo
+    // now hosts a typed-shard upgrade tree (Memory Shards) priced in shard currencies,
+    // declared in src/config/shards.ts and rendered by RegionsPanel via SHARD_UPGRADES.
+    // No `upgradeIds` here keeps the region card legacy-clean; the shard tree renders
+    // as a Hipocampo-specific section above this card list.
+    upgradeIds: [] as const,
   },
   {
     id: 'prefrontal',

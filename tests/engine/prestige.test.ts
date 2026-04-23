@@ -47,6 +47,7 @@ const PRESERVE_UPDATED_BY_HANDLEPRESTIGE = new Set<keyof GameState>([
   'lastCycleConfig', // 4c.1: POLAR-1 / SAME AS LAST snapshot of just-ended cycle.
   'sparks',                      // 6.6: +5 per newly-discovered Resonant Pattern.
   'resonantPatternsDiscovered', // 6.6: RP check flips false→true on discovery.
+  'memoryShards',               // 7.5.2: Episodic burst at prestige (+N base + +5/RP).
 ]);
 
 describe('handlePrestige — PRESTIGE_RESET field-level behavior (§33)', () => {
@@ -200,14 +201,21 @@ describe('handlePrestige — Sprint 7.5.1 region/mastery/auto-buy fields', () =>
     expect(next.activePrecommitment).toBeNull();
   });
 
-  test('memoryShards PRESERVE across prestige (§16.1 lifetime shards)', () => {
+  test('memoryShards Emo+Proc PRESERVE; Episodic grows by base + RP burst (Sprint 7.5.2 §16.1)', () => {
+    // Sprint 7.5.2 changes the Episodic semantic: PRESERVE on prestige but receives
+    // a burst (`episodicShardPerPrestige` base + `episodicShardPerRp` per newly-
+    // discovered RP). Emo + Proc stay strictly preserved at prestige time.
+    // Default state's cycleDischargesUsed=0 satisfies RP-2 → 1 RP fires.
     const before: GameState = {
       ...createDefaultState(),
       memoryShards: { emotional: 12, procedural: 47, episodic: 5 },
       memoryShardUpgrades: ['shard_emo_pulse'],
     };
     const { state: next } = handlePrestige(before, 1_000_000);
-    expect(next.memoryShards).toEqual({ emotional: 12, procedural: 47, episodic: 5 });
+    expect(next.memoryShards.emotional).toBe(12);
+    expect(next.memoryShards.procedural).toBe(47);
+    // 5 (seeded) + 2 (base) + 5 (RP-2 fired) = 12
+    expect(next.memoryShards.episodic).toBe(12);
     expect(next.memoryShardUpgrades).toEqual(['shard_emo_pulse']);
   });
 
@@ -359,8 +367,10 @@ describe('computeMemoriesGained — GDD §2 Memory generation table', () => {
     expect(computeMemoriesGained(createDefaultState())).toBe(2);
   });
 
-  test('Consolidación de Memoria contributes +50 % → 2 × 1.5 = 3', () => {
-    const state = withUpgrades(createDefaultState(), ['consolidacion_memoria']);
+  test('Hipocampo shard_epi_imprint contributes +1 → base 2 + 1 = 3', () => {
+    // Sprint 7.5.2 §16.1: replaces consolidacion_memoria's +50% memory channel.
+    // shard_epi_imprint adds a flat +1 Memoria per prestige (post-mult).
+    const state = { ...createDefaultState(), memoryShardUpgrades: ['shard_epi_imprint'] };
     expect(computeMemoriesGained(state)).toBeCloseTo(3, 6);
   });
 });
@@ -373,8 +383,8 @@ describe('handlePrestige — Memories + awakening log (PREST-1 step 7)', () => {
     expect(next.memories).toBe(12);
   });
 
-  test('memories increments by 3 with Consolidación de Memoria', () => {
-    const before = withUpgrades({ ...createDefaultState(), memories: 10 }, ['consolidacion_memoria']);
+  test('memories increments by 3 with shard_epi_imprint (Sprint 7.5.2 §16.1)', () => {
+    const before: GameState = { ...createDefaultState(), memories: 10, memoryShardUpgrades: ['shard_epi_imprint'] };
     const { state: next, outcome } = handlePrestige(before, 1_000_000);
     expect(outcome.memoriesGained).toBeCloseTo(3, 6);
     expect(next.memories).toBeCloseTo(13, 6);

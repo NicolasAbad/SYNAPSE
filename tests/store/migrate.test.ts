@@ -107,6 +107,44 @@ describe('migrateState — idempotency', () => {
   });
 });
 
+describe('migrateState — Sprint 7.5.2 retired upgrade strip (consolidacion_memoria)', () => {
+  test('strips consolidacion_memoria from saved upgrades array', () => {
+    const legacy = legacy110();
+    legacy.upgrades = [
+      { id: 'consolidacion_memoria', purchased: true, purchasedAt: 0 },
+      { id: 'descarga_neural', purchased: true, purchasedAt: 0 },
+    ];
+    const migrated = migrateState(legacy) as Record<string, unknown>;
+    const upgrades = migrated.upgrades as Array<{ id: string }>;
+    expect(upgrades).toHaveLength(1);
+    expect(upgrades[0].id).toBe('descarga_neural');
+  });
+
+  test('preserves other upgrades and Memorias balance (no refund per GDD §16.8)', () => {
+    const legacy = legacy110();
+    legacy.upgrades = [{ id: 'consolidacion_memoria', purchased: true, purchasedAt: 0 }];
+    legacy.memories = 7;
+    const migrated = migrateState(legacy) as Record<string, unknown>;
+    expect(migrated.memories).toBe(7); // not refunded — value-neutral sunset
+    expect((migrated.upgrades as unknown[]).length).toBe(0);
+  });
+
+  test('idempotent — re-migrating an already-stripped save changes nothing', () => {
+    const legacy = legacy110();
+    legacy.upgrades = [{ id: 'consolidacion_memoria', purchased: true, purchasedAt: 0 }];
+    const m1 = migrateState(legacy) as Record<string, unknown>;
+    const m2 = migrateState(m1) as Record<string, unknown>;
+    expect(m1).toEqual(m2);
+  });
+
+  test('preserves shape on saves that never had consolidacion_memoria', () => {
+    const legacy = legacy110();
+    legacy.upgrades = [{ id: 'descarga_neural', purchased: true, purchasedAt: 0 }];
+    const migrated = migrateState(legacy) as Record<string, unknown>;
+    expect((migrated.upgrades as unknown[]).length).toBe(1);
+  });
+});
+
 describe('migrateState — defensive behavior on bad input', () => {
   test('returns null for null input (no NPE)', () => {
     expect(migrateState(null)).toBeNull();

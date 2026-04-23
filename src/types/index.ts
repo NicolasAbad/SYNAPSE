@@ -14,7 +14,9 @@ export interface NeuronSnapshot {
   timestamp: number;
 }
 
-export type UpgradeCategory = 'tap' | 'foc' | 'syn' | 'neu' | 'reg' | 'con' | 'met' | 'new';
+// Sprint 7.5.2 added 'mem' for Hipocampo Memory Shard upgrades (typed-shard
+// priced, separate from the legacy 'reg' Memorias-priced region upgrades).
+export type UpgradeCategory = 'tap' | 'foc' | 'syn' | 'neu' | 'reg' | 'con' | 'met' | 'new' | 'mem';
 
 export interface UpgradeState {
   id: string;
@@ -22,7 +24,8 @@ export interface UpgradeState {
   purchasedAt?: number;
 }
 
-export type UpgradeCostCurrency = 'thoughts' | 'memorias';
+// Sprint 7.5.2 extended with the 3 typed shard currencies for Hipocampo upgrades.
+export type UpgradeCostCurrency = 'thoughts' | 'memorias' | 'emotional_shards' | 'procedural_shards' | 'episodic_shards';
 
 // Kind-tagged discriminated union per Sprint 3 Phase 1 Nico approval:
 // one effect per upgrade, compound effects (e.g. Deep Concentration's focus+insight)
@@ -41,7 +44,6 @@ export type UpgradeEffect =
   | { kind: 'all_neurons_mult'; mult: number }
   | { kind: 'neuron_type_mult'; neuronType: NeuronType; mult: number }
   | { kind: 'connection_mult_double' }
-  | { kind: 'basica_mult_and_memory_gain'; basicaMult: number; memoryGainAdd: number }
   | { kind: 'offline_efficiency_mult'; mult: number }
   | { kind: 'best_upgrade_indicator' }
   | { kind: 'upgrade_cost_reduction'; pct: number }
@@ -56,7 +58,17 @@ export type UpgradeEffect =
   | { kind: 'discharge_prestige_bonus'; base: number }
   | { kind: 'post_offline_discharge_bonus'; perHour: number; capAdd: number }
   | { kind: 'pattern_flat_mult'; mult: number }
-  | { kind: 'focus_persist'; pct: number };
+  | { kind: 'focus_persist'; pct: number }
+  // Sprint 7.5.2 — Hipocampo Memory Shard upgrade effects (GDD §16.1).
+  // 2 of 8 shard upgrades deferred to consumer phases (shard_emo_deep → 7.5.3
+  // Mood; shard_proc_mastery → 7.7 Mastery). Their effect kinds will land
+  // alongside their consumers per CLAUDE.md "no half-shipped features".
+  | { kind: 'cascade_spark_bonus'; sparks: number }            // shard_emo_pulse
+  | { kind: 'fragment_memory_bonus'; memory: number }          // shard_emo_resonance
+  | { kind: 'tap_contribution_pct_add'; pct: number }          // shard_proc_flow
+  | { kind: 'charge_interval_mult'; mult: number }             // shard_proc_pattern
+  | { kind: 'memory_per_prestige_add'; memory: number }        // shard_epi_imprint
+  | { kind: 'rp_spark_bonus'; sparks: number };                // shard_epi_reflection
 
 export interface UpgradeDef {
   id: string;
