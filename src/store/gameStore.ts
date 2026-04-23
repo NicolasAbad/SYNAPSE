@@ -28,6 +28,7 @@ import { applyPermanentPatternDecisionsToState } from '../engine/patternDecision
 import { dispatchNarrative, applyFragmentRead } from '../engine/narrative';
 import { MUTATIONS_BY_ID } from '../config/mutations';
 import { checkAllAchievements, achievementRewardSum } from '../engine/achievements';
+import { applyMasteryXpGain } from '../engine/mastery';
 import { ACHIEVEMENTS_BY_ID } from '../config/achievements';
 import type { DiaryEntry } from '../types';
 
@@ -494,9 +495,12 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
     const state = get();
     const result = tryBuyUpgrade(state, id, nowTimestamp);
     if (!result.ok) return result.reason;
-    const post = { ...state, ...result.updates };
+    // Sprint 7.7 §38 — Upgrade Mastery +1 XP per purchase (lifetime accrual).
+    // applyMasteryXpGain ignores unknown ids (shards/mutations won't reach here).
+    const masteryAfter = applyMasteryXpGain(state, id, 1);
+    const post = { ...state, ...result.updates, mastery: masteryAfter };
     const ach = processAchievementUnlocks(post as GameState, nowTimestamp);
-    set({ ...result.updates, ...ach, undoToast: result.undoToast });
+    set({ ...result.updates, mastery: masteryAfter, ...ach, undoToast: result.undoToast });
     return 'ok';
   },
   buyShardUpgrade: (id, nowTimestamp) => {
@@ -592,6 +596,16 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
     const preCheck = checkAllAchievements(cycleEndState);
 
     const { state: nextState, outcome } = handlePrestige(state, nowTimestamp);
+    // Sprint 7.7 §38 — grant Mastery XP for the outgoing cycle's choices.
+    // state (pre-PRESTIGE_RESET) still carries currentMutation/Pathway/archetype.
+    // applyMasteryXpGain is pure + ignores unknown ids, so null-choices no-op.
+    let masteryAfterPrestige = nextState.mastery;
+    const mutationId = state.currentMutation?.id ?? null;
+    const pathwayId = state.currentPathway;
+    const archetypeId = state.archetype;
+    if (mutationId !== null) masteryAfterPrestige = applyMasteryXpGain({ mastery: masteryAfterPrestige, memoryShardUpgrades: state.memoryShardUpgrades }, mutationId, 1);
+    if (pathwayId !== null) masteryAfterPrestige = applyMasteryXpGain({ mastery: masteryAfterPrestige, memoryShardUpgrades: state.memoryShardUpgrades }, pathwayId, 1);
+    if (archetypeId !== null) masteryAfterPrestige = applyMasteryXpGain({ mastery: masteryAfterPrestige, memoryShardUpgrades: state.memoryShardUpgrades }, archetypeId, 1);
     // Push prestige diary entry BEFORE post-reset achievement check so
     // hid_no_discharge_full_cycle can count this cycle's tail entry.
     // Sprint 7.5: also push personal_best entry if achieved + resonant_pattern
@@ -617,7 +631,7 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
         extraDiary.push({ timestamp: nowTimestamp, type: 'resonant_pattern', data: { rpIndex: i, rpNumber: i + 1 } });
       }
     }
-    const withDiary = { ...nextState, diaryEntries: [...nextState.diaryEntries, prestigeDiary, ...extraDiary], achievementsUnlocked: [...nextState.achievementsUnlocked, ...preCheck.newlyUnlocked] };
+    const withDiary = { ...nextState, mastery: masteryAfterPrestige, diaryEntries: [...nextState.diaryEntries, prestigeDiary, ...extraDiary], achievementsUnlocked: [...nextState.achievementsUnlocked, ...preCheck.newlyUnlocked] };
     // Merge mode (no `true` flag) — preserves action bindings per CLAUDE.md
     // Zustand pitfall rule. undoToast cleared since pre-prestige purchases no
     // longer apply to the new cycle. Narrative triggers fire on the POST-reset

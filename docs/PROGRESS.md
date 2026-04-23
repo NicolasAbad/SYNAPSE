@@ -6,10 +6,27 @@
 
 ## Current status
 
-**Phase:** Sprint 7.7 Phase 7.7.2 CLOSED (Mastery engine + entity registry). **1441 tests pass** (+21 from Sprint 7.6 close 1420); 4/4 gates green (ratio 0.81); typecheck + lint clean.
-**Last updated:** 2026-04-23 after Phase 7.7.2 close.
-**Active sprint:** Sprint 7.7 in-flight (7.7.1 catalog ✓, 7.7.2 engine ✓, 7.7.3-7.7.6 pending).
-**Next action:** Phase 7.7.3 — Mastery XP dispatcher: wire `applyMasteryXpGain` into `prestige` action (mutation + pathway + archetype per-cycle +1) and `buyUpgrade` action (upgrade per-purchase +1).
+**Phase:** Sprint 7.7 Phase 7.7.3 CLOSED (Mastery XP dispatcher wired). **1452 tests pass** (+11 from 7.7.2); 4/4 gates green (ratio 0.81); typecheck + lint clean.
+**Last updated:** 2026-04-23 after Phase 7.7.3 close.
+**Active sprint:** Sprint 7.7 in-flight (7.7.1 ✓, 7.7.2 ✓, 7.7.3 ✓, 7.7.4-7.7.6 pending).
+**Next action:** Phase 7.7.4 — Consumer wiring (Option C): `mutationEffectMult`, `pathwayBonusMult`, `archetypeBonusMult` × Mastery. Upgrade consumer deferred to Sprint 7.8.
+
+### Sprint 7.7 Phase 7.7.3 dashboard (2026-04-23 — Mastery XP dispatcher)
+
+**Scope shipped:** hooks into `prestige` + `buyUpgrade` store actions.
+
+**Changes applied:**
+- `src/store/gameStore.ts` — `prestige` action: after `handlePrestige` returns, grant +1 XP to each non-null slot (`currentMutation.id` / `currentPathway` / `archetype`) using pre-reset state. Multiplied by `masteryGainMult(state)` (×1.25 when shard_proc_mastery owned). Wired into `withDiary` so final `set()` persists the updated `mastery`.
+- `src/store/gameStore.ts` — `buyUpgrade` action: after `tryBuyUpgrade` succeeds, +1 XP to the upgrade id. `applyMasteryXpGain` ignores unknown ids so the helper is safe to call without id-class checks.
+- Import: `applyMasteryXpGain` added to `src/store/gameStore.ts`.
+- `tests/integration/mastery-xp-dispatch.test.ts` (NEW, 11 tests) — prestige/mutation/pathway/archetype hooks, no-op on null slots, accumulation across prestiges, buyUpgrade success + failure, shard_proc_mastery multiplier, PRESERVE invariant verification.
+
+**Key behaviors validated:**
+- XP accrues BEFORE PRESTIGE_RESET clears `currentMutation/Pathway` (outgoing cycle's choices readable via pre-reset `state`).
+- Mastery survives prestige (PRESERVE slot) — integration test asserts 5→6 after one cycle.
+- `shard_proc_mastery` (1.25 multiplier) applies uniformly to both prestige and buyUpgrade accrual sites via shared `applyMasteryXpGain` helper.
+- Failed buyUpgrade (insufficient_funds) does NOT grant XP — dispatcher only fires on `result.ok`.
+- Empty-slot prestige (no mutation/pathway/archetype) is mastery no-op.
 
 ### Sprint 7.7 Phase 7.7.2 dashboard (2026-04-23 — Mastery engine)
 
