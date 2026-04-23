@@ -1,13 +1,15 @@
 // Implements GDD.md §19 OFFLINE-1..11 — pure offline progress engine (CODE-9).
-// Sprint 7.10 Phase 7.10.2: base formula + upgrade/archetype/GP/decision/mood
-// stack + ratio cap + time anomaly detection. Phase 7.10.3 layers Lucid Dream
-// roll + Procedural shard drip + Mutation temporal averaging on top.
+// Sprint 7.10 Phase 7.10.2: base formula + efficiency stack + cap + time anomaly.
+// Sprint 7.10 Phase 7.10.3: Mutation temporal averaging (MUT-1), OFFLINE-9
+// Procedural shard drip, Lucid Dream deterministic RNG roll (§30 RNG-1).
 // Consumer: src/store/gameStore.ts applyOfflineReturn action (Phase 7.10.4).
 
 import { SYNAPSE_CONSTANTS } from '../config/constants';
 import { UPGRADES_BY_ID } from '../config/upgrades';
+import { MUTATIONS_BY_ID } from '../config/mutations';
 import { PATTERN_DECISIONS } from '../config/patterns';
 import { effectiveMoodTier, averageMoodOverWindow } from './mood';
+import { seededRandom, hash } from './rng';
 import type { GameState } from '../types/GameState';
 
 export interface OfflineSummary {
@@ -64,6 +66,53 @@ export function computeOfflineEfficiencyMult(
   return Math.min(eff, SYNAPSE_CONSTANTS.maxOfflineEfficiencyRatio);
 }
 
+/**
+ * MUT-1: temporal mutations (`sprint`, `crescendo`) use AVG-over-cycle production
+ * during offline (not peak) — averages the two mult poles. Per `affectsOffline` flag
+ * in src/config/mutations.ts. Non-temporal mutations leave baseProductionPerSecond
+ * unchanged (their mult is already baked into the pre-cached rate by production.ts).
+ */
+export function effectiveOfflineProductionPerSecond(
+  state: Pick<GameState, 'baseProductionPerSecond' | 'currentMutation'>,
+): number {
+  const peak = state.baseProductionPerSecond;
+  const id = state.currentMutation?.id;
+  if (id === undefined) return peak;
+  const mutation = MUTATIONS_BY_ID[id];
+  if (!mutation?.affectsOffline) return peak;
+  const e = mutation.effect;
+  if (e.kind === 'sprint') return peak * (e.earlyMult + e.lateMult) * 0.5; // CONST-OK arithmetic mean
+  if (e.kind === 'crescendo') return peak * (e.startMult + e.endMult) * 0.5; // CONST-OK arithmetic mean
+  return peak;
+}
+
+/** OFFLINE-9: Procedural shard drip during offline at `shardDripOfflineRateMult × base`. Emo/Epi do NOT drip offline. */
+export function offlineProceduralShardDrip(elapsedMs: number): number {
+  const elapsedMinutes = elapsedMs / 60_000; // CONST-OK ms→min
+  return SYNAPSE_CONSTANTS.shardDripBasePerMinute * SYNAPSE_CONSTANTS.shardDripOfflineRateMult * elapsedMinutes;
+}
+
+/**
+ * Lucid Dream (§19) deterministic RNG roll via §30 RNG-1. Seed derived from
+ * FNV-1a hash over `(lastActiveTimestamp, nowTimestamp)` — stable across replays.
+ * Gates: P10+ + elapsed ≥ lucidDreamMinOfflineMinutes. Probability: 33% default,
+ * 100% for Empática archetype (stacked with no other mults — GDD §19 override).
+ */
+export function rollLucidDream(
+  state: Pick<GameState, 'prestigeCount' | 'archetype' | 'lastActiveTimestamp'>,
+  nowTimestamp: number,
+  elapsedMs: number,
+): boolean {
+  if (state.prestigeCount < SYNAPSE_CONSTANTS.lucidDreamUnlockPrestige) return false;
+  const minElapsed = SYNAPSE_CONSTANTS.lucidDreamMinOfflineMinutes * 60_000; // CONST-OK min→ms
+  if (elapsedMs < minElapsed) return false;
+  const probability = state.archetype === 'empatica'
+    ? SYNAPSE_CONSTANTS.lucidDreamEmpaticaProbability
+    : SYNAPSE_CONSTANTS.lucidDreamBaseProbability;
+  const seed = hash(`lucid_${state.lastActiveTimestamp}_${nowTimestamp}`);
+  return seededRandom(seed) < probability;
+}
+
 /** OFFLINE-5: detect clock backwards / over-cap. Returns clamped elapsed ms + anomaly kind + cap. */
 export function detectTimeAnomaly(
   state: Pick<GameState, 'lastActiveTimestamp' | 'upgrades'>,
@@ -104,7 +153,8 @@ export function applyOfflineProgress(state: GameState, nowTimestamp: number): { 
   const avgMoodTier = effectiveMoodTier({ mood: avgMood, upgrades: state.upgrades });
   const efficiency = computeOfflineEfficiencyMult(state, avgMoodTier);
   const elapsedSec = clampedElapsedMs / 1000; // CONST-OK ms→s
-  let gained = state.baseProductionPerSecond * elapsedSec * efficiency;
+  const prodPerSec = effectiveOfflineProductionPerSecond(state);
+  let gained = prodPerSec * elapsedSec * efficiency;
   const remaining = state.currentThreshold - state.cycleGenerated;
   let cappedHit = false;
   if (remaining > 0 && gained >= remaining) {
@@ -112,6 +162,8 @@ export function applyOfflineProgress(state: GameState, nowTimestamp: number): { 
     cappedHit = true;
   }
   const enhancedDischargeAvailable = cappedHit && state.nextDischargeBonus > 0;
+  const procDrip = offlineProceduralShardDrip(clampedElapsedMs);
+  const lucidDreamTriggered = rollLucidDream(state, nowTimestamp, clampedElapsedMs);
   return {
     state: {
       ...state,
@@ -119,10 +171,15 @@ export function applyOfflineProgress(state: GameState, nowTimestamp: number): { 
       cycleGenerated: state.cycleGenerated + gained,
       totalGenerated: state.totalGenerated + gained,
       lastActiveTimestamp: nowTimestamp,
+      memoryShards: {
+        emotional: state.memoryShards.emotional,
+        procedural: state.memoryShards.procedural + procDrip,
+        episodic: state.memoryShards.episodic,
+      },
     },
     summary: {
       elapsedMs: clampedElapsedMs, gained, efficiency, avgMood, avgMoodTier, capHours,
-      cappedHit, timeAnomaly: anomaly, enhancedDischargeAvailable, lucidDreamTriggered: false,
+      cappedHit, timeAnomaly: anomaly, enhancedDischargeAvailable, lucidDreamTriggered,
     },
   };
 }

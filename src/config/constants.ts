@@ -114,6 +114,15 @@ export const SYNAPSE_CONSTANTS = {
   empaticaOfflineEfficiencyMult: 2.5, // GDD §19 Empática archetype offline mult
   geniusPassOfflineEfficiencyMult: 1.25, // GDD §19 Genius Pass +25% offline (stub flag; full Pass Sprint 9b)
   offlineTimeAnomalyOverCapMult: 2, // GDD §19 OFFLINE-5: elapsed > cap × this → hard-cap + anomaly log
+  // Sprint 7.10 Phase 7.10.3 — OFFLINE-9 shard drip + Lucid Dream roll per GDD §19.
+  shardDripOfflineRateMult: 0.5, // OFFLINE-9: Procedural drip at 50% of active rate; Emo/Epi stay 0 offline
+  lucidDreamUnlockPrestige: 10, // Lucid Dream unlocks at P10+
+  lucidDreamBaseProbability: 0.33, // default Lucid Dream fire probability
+  lucidDreamEmpaticaProbability: 1.0, // Empática always triggers Lucid Dream
+  lucidDreamMinOfflineMinutes: 30, // Lucid Dream + rewarded-ad gate
+  lucidDreamOptionAProductionMult: 1.10, // Option A: +10% production
+  lucidDreamOptionADurationMs: 3_600_000, // Option A: 1 hour duration (ms) — consumer Phase 7.10.5
+  lucidDreamOptionBMemoryGain: 2, // Option B: +2 Memories (+3-with-Regulación-Emocional dropped per Sprint 7.5.3 retirement)
 
   // ── Memories ──
   baseMemoriesPerPrestige: 2, // GDD §2 Memory generation table: +2 per prestige baseline. Consolidación de Memoria upgrade adds +50% via `memoryGainAdd: 0.5` (§24).

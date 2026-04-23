@@ -6,10 +6,32 @@
 
 ## Current status
 
-**Phase:** Sprint 7.10 Phase 7.10.2 CLOSED (Offline engine core). **1532 tests pass** (+23 from Sprint 7.9 close 1509); 4/4 gates green (ratio 0.82); typecheck + lint clean.
-**Last updated:** 2026-04-23 after Phase 7.10.2 commit.
+**Phase:** Sprint 7.10 Phase 7.10.3 CLOSED (Offline engine extensions — MUT-1 + OFFLINE-9 + Lucid Dream). **1550 tests pass** (+18 from Phase 7.10.2); 4/4 gates green (ratio 0.83); typecheck + lint clean.
+**Last updated:** 2026-04-23 after Phase 7.10.3 commit.
 **Active sprint:** Sprint 7.10 — Sprint 8a Offline engine (Option 1 of Sprint 7.10 scope, Nico-approved 2026-04-23).
-**Next action:** Phase 7.10.3 — Mood AVG anti-ramp-farming consumer + Procedural shard drip (OFFLINE-9) + Mutation temporal averaging + Lucid Dream RNG roll. STOP-for-approval at kickoff.
+**Next action:** Phase 7.10.4 — Store action `applyOfflineReturn`, Capacitor `@capacitor/app` resume listener, `visibilitychange` fallback, `initSession` integration order, save-on-resume. +`pendingOfflineSummary` field (GameState 119 → 120). STOP-for-approval at kickoff.
+
+### Sprint 7.10 Phase 7.10.3 (2026-04-23) — Offline engine extensions
+
+**Scope shipped:**
+- `src/engine/offline.ts` extended (128 → 185 lines) — 3 new pure helpers: `effectiveOfflineProductionPerSecond` (MUT-1 temporal averaging), `offlineProceduralShardDrip` (OFFLINE-9 shard drip), `rollLucidDream` (P10+ + 30min gate + seeded RNG per §30 RNG-1).
+- `src/config/constants.ts` — 8 new constants: `shardDripOfflineRateMult` (0.5), `lucidDreamUnlockPrestige` (10), `lucidDreamBaseProbability` (0.33), `lucidDreamEmpaticaProbability` (1.0), `lucidDreamMinOfflineMinutes` (30), `lucidDreamOptionAProductionMult` (1.10), `lucidDreamOptionADurationMs` (3_600_000), `lucidDreamOptionBMemoryGain` (2).
+- `applyOfflineProgress` updated: uses `effectiveOfflineProductionPerSecond` (not raw peak), accumulates Procedural shards into `state.memoryShards.procedural`, fills `summary.lucidDreamTriggered`.
+- `tests/engine/offline.phase3.test.ts` NEW (~190 lines, 18 tests): MUT-1 averaging for sprint/crescendo, OFFLINE-9 drip linearity + Emo/Epi exclusion, Lucid Dream gate branches, Empática 100% always-true, RNG determinism (same seed → same result), 33% cohort distribution check (200 trials), integration checks (skip branch suppresses drip + roll, P<10 blocks Lucid).
+
+**MUT-1 spec interpretation (flagging for Nico awareness):**
+GDD §19 line 1159 says "uses avg of cycle for Crescendo/Sprint, peak for others". Interpreted as arithmetic mean of the two mult poles: Sprint → (5.0 + 0.5) × 0.5 = 2.75×; Crescendo → (0.2 + 3.0) × 0.5 = 1.6×. This is exploit-resistant (player can't "close at peak") and matches the "averaged production" phrasing in mutations.ts header comment. If Nico prefers time-weighted integration against `cycleStartTimestamp`, that's a one-function swap at next phase kickoff.
+
+**Lucid Dream Option B (+3 variant dropped):**
+GDD §19 referenced "+3 Memories with Regulación Emocional" variant for Option B. `regulacion_emocional` was retired in Sprint 7.5.3 (§16.8 + §19). Ondas Theta replaced the offline-path of Reg. Emocional but is not a natural home for the Memory bonus. Dropped per V8 approval — simpler scope, zero live code impact (upgrade doesn't exist).
+
+**Test growth:** 1532 → 1550 (+18). 1 new test file.
+
+**Gates:** 4/4 PASS, ratio 0.83 (191 constants / 40 literals — up from 0.82). ESLint + typecheck clean.
+
+**Next phase (7.10.4):** Store action + Capacitor `@capacitor/app` install + resume listener + web `visibilitychange` fallback + `initSession` integration + save-on-resume + `pendingOfflineSummary` field. GameState 119 → 120 (consistency test assertion + CLAUDE.md update).
+
+### Sprint 7.10 Phase 7.10.2 (2026-04-23) — Offline engine core
 
 ### Sprint 7.10 Phase 7.10.2 (2026-04-23) — Offline engine core
 
