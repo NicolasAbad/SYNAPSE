@@ -71,6 +71,19 @@ export function masteryBonus(state: Pick<GameState, 'mastery'>, id: string): num
 }
 
 /**
+ * Upgrade-class Mastery multiplier helper: `(1 + masteryBonus)` for upgrade ids
+ * in the canonical UPGRADES catalog, identity (1) for any other id (shards,
+ * mutations, pathways, archetypes, unknown). Use at consumer sites where an
+ * upgrade's multiplicative effect value is being applied: `effect.mult *
+ * upgradeMasteryMult(state, id)`. Sprint 7.8 Phase 7.8.2 pulls the 7.7.4-
+ * deferred Upgrade consumer wiring forward per §38.2 MASTERY-2 coverage.
+ */
+export function upgradeMasteryMult(state: Pick<GameState, 'mastery'>, upgradeId: string): number {
+  if (masteryClassOf(upgradeId) !== 'upgrade') return 1;
+  return 1 + masteryBonus(state, upgradeId);
+}
+
+/**
  * XP gain multiplier: shard_proc_mastery (when owned) multiplies every XP
  * accrual by `masteryXpGainMult` before the value lands in `mastery[id]`.
  * Base identity 1.0 when the shard upgrade isn't owned.

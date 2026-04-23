@@ -6,10 +6,39 @@
 
 ## Current status
 
-**Phase:** Sprint 7.7 CLOSED (all 5 implementation phases + close shipped: engine + dispatcher + consumers + UI + close). **1475 tests pass** (+55 from Sprint 7.6 close 1420); 4/4 gates green (ratio 0.81); buffer-1 sim 0 errors/0 warnings across 20 prestige cycles (both variants); typecheck + lint clean.
-**Last updated:** 2026-04-23 after Sprint 7.7 close.
-**Active sprint:** Sprint 7.8 ready (scope TBD — candidates: Upgrade-Mastery consumer wiring + TEST-5 1000-run simulation + balance tuning, OR v1.1 pull-ins from POSTLAUNCH.md).
-**Next action:** Sprint 7.8 kickoff — Nico to approve scope. Priority recommendation: TEST-5 simulation (GDD §35, Sprint 8c historically) to validate all Sprint 7.5-7.7 balance additions before shipping more features.
+**Phase:** Sprint 7.8 Phase 7.8.2 CLOSED (Upgrade Mastery consumer wiring — 7.7.4-deferred item pulled forward per 7.8.1 V7). **1482 tests pass** (+7 from Sprint 7.7 close); 4/4 gates green (ratio 0.81); typecheck + lint clean.
+**Last updated:** 2026-04-23 after Phase 7.8.2 close.
+**Active sprint:** Sprint 7.8 in-flight (7.8.1 catalog ✓, 7.8.2 Upgrade Mastery ✓, 7.8.3-7.8.6 pending).
+**Next action:** Phase 7.8.3 — Balance Scout Sim engine + runner. `src/sim/balanceScoutSim.ts` (creates the sim dir per CLAUDE.md:55) + `scripts/run-balance-scout.ts`.
+
+### Sprint 7.8 Phase 7.8.2 dashboard (2026-04-23 — Upgrade Mastery consumers)
+
+**Scope shipped (deferred from Sprint 7.7 Phase 7.7.4 per 7.7.1 V4 Option C):**
+
+**Changes applied:**
+- `src/engine/mastery.ts` — new helper `upgradeMasteryMult(state, upgradeId)` returns `(1 + masteryBonus)` for canonical upgrade ids only; identity for shard/mutation/pathway/archetype/unknown ids.
+- `src/engine/production.ts` — `computeAllNeuronsMult` + `computePerTypeMult` + `computeGlobalUpgradeMult` signatures widened to accept `Pick<GameState, 'mastery'>`. The 4 multiplicative effect branches (`all_neurons_mult`, `neuron_type_mult`, `all_production_mult`) now stack Mastery per-upgrade. Scaling kinds (`prestige_scaling_mult` / `lifetime_prestige_add` / `upgrades_scaling_mult`) deliberately EXCLUDE Mastery to preserve growth-curve stability.
+- `src/engine/discharge.ts` — `dischargeUpgradeMult` widened + `discharge_mult` branch stacks Mastery.
+- `src/store/tap.ts` — `tap_bonus_mult` branch stacks Mastery.
+- `src/engine/tick.ts` — `charge_rate_mult` branch stacks Mastery (rate↑, interval↓).
+- `tests/engine/mastery-upgrade-consumers.test.ts` (NEW, 7 tests) — helper identity + L10 tests for 4 multiplicative sites (red_neuronal_densa / retroalimentacion_positiva / amplificador_de_disparo / dopamina).
+
+**Scope clarification per 7.8.1 V4 reasoning:** the scaling-mult kinds are intentionally excluded from Mastery to preserve balance. `prestige_scaling_mult` uses `Math.pow(effect.perPrestige, state.prestigeCount)` — stacking +5% Mastery on an exponential base would produce unpredictable late-game growth. Conservative interpretation of §38.2 "multiplies upgrade effect" = the base multiplier, not the scaling exponent. Documented inline in `computeGlobalUpgradeMult`.
+
+**Wrapping scope (5 multiplicative effect kinds covered):**
+- `tap_bonus_mult` (dopamina etc.)
+- `all_neurons_mult` (red_neuronal_densa, ltp_induction, neurogenesis)
+- `neuron_type_mult` (receptores_ampa, transduccion_sensorial, etc.)
+- `all_production_mult` (retroalimentacion_positiva)
+- `discharge_mult` (amplificador_de_disparo, potencial_latente)
+- `charge_rate_mult` (red_alta_velocidad)
+
+**Intentionally skipped (additive / non-multiplicative):**
+- `tap_replace_pct` (replacement, not multiplication)
+- `tap_focus_fill_add` (additive)
+- `discharge_max_charges_add` (additive integer count)
+- `focus_persist` (retention pct, bounded [0,1])
+- `cascade_mult_double` (literal ×2 stack, already dense)
 
 ### Sprint 7.7 close dashboard (2026-04-23 — Mastery system)
 

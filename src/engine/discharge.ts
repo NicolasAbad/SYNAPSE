@@ -18,6 +18,7 @@ import { mutationDischargeMult } from './mutations';
 import { era3DischargeMultOverride } from './era3';
 import { cascadeSparkBonus } from './shards';
 import { applyMoodEvent } from './mood';
+import { upgradeMasteryMult } from './mastery';
 import type { GameState } from '../types/GameState';
 import type { Polarity } from '../types';
 
@@ -52,12 +53,12 @@ function baseDischargeMultiplier(state: Pick<GameState, 'prestigeCount' | 'isTut
   return state.prestigeCount >= SYNAPSE_CONSTANTS.dischargeMultBoostMinPrestige ? dischargeMultiplierP3Plus : dischargeMultiplier;
 }
 
-/** Amplificador de Disparo + other tap_bonus-style mults on the Discharge side. */
-function dischargeUpgradeMult(ownedIds: ReadonlySet<string>): number {
+/** Amplificador de Disparo + other tap_bonus-style mults on the Discharge side. Mastery stacks per-upgrade. */
+function dischargeUpgradeMult(state: Pick<GameState, 'mastery'>, ownedIds: ReadonlySet<string>): number {
   let mult = 1;
   for (const id of ownedIds) {
     const effect = UPGRADES_BY_ID[id]?.effect;
-    if (effect?.kind === 'discharge_mult') mult *= effect.mult;
+    if (effect?.kind === 'discharge_mult') mult *= effect.mult * upgradeMasteryMult(state, id);
   }
   return mult;
 }
@@ -82,7 +83,7 @@ export function computeCascadeMultiplier(state: Pick<GameState, 'upgrades' | 're
 /** Final multiplier stack on Discharge burst. Cascade mult applied only on Cascade. */
 export function computeDischargeMultiplier(state: GameState, isCascade: boolean): number {
   const base = baseDischargeMultiplier(state);
-  const amp = dischargeUpgradeMult(ownedUpgradeIds(state));
+  const amp = dischargeUpgradeMult(state, ownedUpgradeIds(state));
   const cascade = isCascade ? computeCascadeMultiplier(state) : 1;
   // GDD §10 Node 36 B: +10 % Discharge damage (always applied when chosen).
   const decisionMult = dischargeDamageDecisionMult(state);

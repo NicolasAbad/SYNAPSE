@@ -22,6 +22,7 @@ import { archetypeFocusFillRateMult } from '../engine/archetypes';
 import { spontaneousFocusFillMult } from '../engine/spontaneous';
 import { era3FocusFillBlocked } from '../engine/era3';
 import { tapContributionShardMult } from '../engine/shards';
+import { upgradeMasteryMult } from '../engine/mastery';
 import type { GameState } from '../types/GameState';
 
 function ownedUpgradeIds(state: Pick<GameState, 'upgrades'>): Set<string> {
@@ -41,7 +42,7 @@ export function computeTapThought(state: GameState, antiSpamActive: boolean): nu
   let tapThought = Math.max(baseTapThoughtMin, state.effectiveProductionPerSecond * tapPct);
   for (const id of owned) {
     const effect = UPGRADES_BY_ID[id]?.effect;
-    if (effect?.kind === 'tap_bonus_mult') tapThought *= effect.mult;
+    if (effect?.kind === 'tap_bonus_mult') tapThought *= effect.mult * upgradeMasteryMult(state, id);
   }
   if (state.currentMutation?.id === 'sinestesia') tapThought *= sinestesiaTapMult;
   if (antiSpamActive) tapThought *= antiSpamPenaltyMultiplier;

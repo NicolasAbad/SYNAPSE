@@ -14,6 +14,7 @@ import { MICRO_CHALLENGES_BY_ID } from '../config/microChallenges';
 import { stepShardDrip, chargeIntervalShardMult } from './shards';
 import { moodProductionMult, moodMaxChargesBonus } from './mood';
 import { integratedMindMaxChargeBonus } from './integratedMind';
+import { upgradeMasteryMult } from './mastery';
 import type { GameState } from '../types/GameState';
 
 // Structural intrinsics. Changing breaks determinism / spec.
@@ -40,14 +41,10 @@ function stepExpireModifiers(s: GameState, nowTimestamp: number): void {
   if (s.eurekaExpiry !== null && nowTimestamp >= s.eurekaExpiry) {
     s.eurekaExpiry = null;
   }
-  if (
-    s.pendingHyperfocusBonus &&
-    s.mentalStateExpiry !== null &&
-    nowTimestamp - s.mentalStateExpiry > HYPERFOCUS_BONUS_WINDOW_MS
-  ) {
+  if (s.pendingHyperfocusBonus && s.mentalStateExpiry !== null && nowTimestamp - s.mentalStateExpiry > HYPERFOCUS_BONUS_WINDOW_MS) {
     s.pendingHyperfocusBonus = false;
   }
-  // TODO Sprint 7: Mental State exit conditions per MENTAL-4 (§17) — set currentMentalState to null when exit triggers fire.
+  // TODO Sprint 7: Mental State exit conditions per MENTAL-4 (§17).
 }
 
 /**
@@ -98,7 +95,7 @@ function stepDischargeChargeAccumulation(s: GameState, nowTimestamp: number): vo
   for (const u of s.upgrades) {
     if (!u.purchased) continue;
     const e = UPGRADES_BY_ID[u.id]?.effect;
-    if (e?.kind === 'charge_rate_mult') intervalMs = intervalMs / e.mult;
+    if (e?.kind === 'charge_rate_mult') intervalMs = intervalMs / (e.mult * upgradeMasteryMult(s, u.id));
   }
   intervalMs = mutationChargeIntervalMs(s, intervalMs / pathwayChargeRateMult(s)) * chargeIntervalShardMult(s);
   const baseMax = mutationMaxChargesOverride(s) ?? s.dischargeMaxCharges;

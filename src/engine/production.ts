@@ -29,6 +29,7 @@ import { dampenUpgradeBonus, pathwayUpgradeBonusDamp } from './pathways';
 import { archetypeActiveProductionMult } from './archetypes';
 import { spontaneousProdMult, spontaneousConnectionMult } from './spontaneous';
 import { era3ProductionMult } from './era3';
+import { upgradeMasteryMult } from './mastery';
 import type { GameState } from '../types/GameState';
 import type { NeuronState, NeuronType, Polarity, UpgradeEffect } from '../types';
 
@@ -83,12 +84,12 @@ export function computeConnectionMult(neurons: readonly NeuronState[], hasSincro
   return hasSincroniaNeural ? base * SYNAPSE_CONSTANTS.sincroniaNeuralMult : base;
 }
 
-/** Product of every owned `all_neurons_mult` upgrade effect (Red Neuronal Densa, LTP, Neurogénesis). */
-function computeAllNeuronsMult(ownedIds: ReadonlySet<string>): number {
+/** Product of every owned `all_neurons_mult` upgrade effect. Mastery stacks per-upgrade. */
+function computeAllNeuronsMult(state: Pick<GameState, 'mastery'>, ownedIds: ReadonlySet<string>): number {
   let mult = 1;
   for (const id of ownedIds) {
     const effect = UPGRADES_BY_ID[id]?.effect;
-    if (effect?.kind === 'all_neurons_mult') mult *= effect.mult;
+    if (effect?.kind === 'all_neurons_mult') mult *= effect.mult * upgradeMasteryMult(state, id);
   }
   return mult;
 }
@@ -96,27 +97,27 @@ function computeAllNeuronsMult(ownedIds: ReadonlySet<string>): number {
 /**
  * Product of every owned per-type rate-mult upgrade for `type`. Covers
  * `neuron_type_mult` (Receptores AMPA / Transducción / Axones / Espejo
- * Resonantes). Sprint 7.5.2: removed the `basica_mult_and_memory_gain`
- * branch (consolidacion_memoria retired per GDD §16.8).
+ * Resonantes). Mastery stacks per-upgrade.
  */
-function computePerTypeMult(type: NeuronType, ownedIds: ReadonlySet<string>): number {
+function computePerTypeMult(state: Pick<GameState, 'mastery'>, type: NeuronType, ownedIds: ReadonlySet<string>): number {
   let mult = 1;
   for (const id of ownedIds) {
     const effect = UPGRADES_BY_ID[id]?.effect;
     if (!effect) continue;
-    if (effect.kind === 'neuron_type_mult' && effect.neuronType === type) mult *= effect.mult;
+    if (effect.kind === 'neuron_type_mult' && effect.neuronType === type) mult *= effect.mult * upgradeMasteryMult(state, id);
   }
   return mult;
 }
 
 /**
- * Product of owned global production mults: `all_production_mult`,
- * `prestige_scaling_mult`, `lifetime_prestige_add`, `upgrades_scaling_mult`
- * (Interpretation B: `min(1.5^⌊n/5⌋, capMult)` per Sprint 3 Phase 2 Nico approval).
- * State-scaling kinds depend on prestigeCount / lifetimePrestiges / ownedCount.
+ * Global production mults. Only `all_production_mult` stacks Mastery; the
+ * *_scaling_mult kinds already have their own exponential growth curves
+ * (prestige-count / lifetime / owned-count) and compounding Mastery on the
+ * base would destabilize balance. §38.2 "multiplies upgrade effect" treats
+ * the effect as the base multiplier, not the scaling exponent.
  */
 function computeGlobalUpgradeMult(
-  state: Pick<GameState, 'prestigeCount' | 'lifetimePrestiges'>,
+  state: Pick<GameState, 'prestigeCount' | 'lifetimePrestiges' | 'mastery'>,
   ownedIds: ReadonlySet<string>,
 ): number {
   const ownedCount = ownedIds.size;
@@ -124,7 +125,7 @@ function computeGlobalUpgradeMult(
   for (const id of ownedIds) {
     const effect: UpgradeEffect | undefined = UPGRADES_BY_ID[id]?.effect;
     if (!effect) continue;
-    if (effect.kind === 'all_production_mult') mult *= effect.mult;
+    if (effect.kind === 'all_production_mult') mult *= effect.mult * upgradeMasteryMult(state, id);
     else if (effect.kind === 'prestige_scaling_mult') mult *= Math.pow(effect.perPrestige, state.prestigeCount);
     else if (effect.kind === 'lifetime_prestige_add') mult *= 1 + Math.min(effect.perLp * state.lifetimePrestiges, effect.capAdd);
     else if (effect.kind === 'upgrades_scaling_mult') {
@@ -171,10 +172,10 @@ export function calculateProduction(state: GameState): { base: number; effective
     if (u.purchased) ownedIds.add(u.id);
   }
 
-  const allNeuronsMult = computeAllNeuronsMult(ownedIds);
+  const allNeuronsMult = computeAllNeuronsMult(state, ownedIds);
   let sum = 0;
   for (const neuron of state.neurons) {
-    const perType = computePerTypeMult(neuron.type, ownedIds);
+    const perType = computePerTypeMult(state, neuron.type, ownedIds);
     sum += neuron.count * NEURON_BASE_RATES[neuron.type] * allNeuronsMult * perType;
   }
 
