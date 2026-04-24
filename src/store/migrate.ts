@@ -20,6 +20,11 @@
 //     so legacy saves load cleanly; null is the correct "no pending" default.
 //   - Sprint 7.10.5: 120 → 121 fields. Backfills `lucidDreamActiveUntil: null`
 //     for Lucid Dream Option A timed-buff expiry per GDD §19.
+//   - Sprint 9a Phase 9a.3: 121 → 123 fields. Backfills `installedAt: 0`
+//     (V-5, MONEY-4 install-time anchor — initSessionTimestamps stamps it on
+//     next launch since legacy save means we don't know real install date) and
+//     `lastAdWatchedAt: 0` (V-2, MONEY-6 cooldown — 0 means "no prior ad,
+//     cooldown immediately satisfied").
 
 import { SYNAPSE_CONSTANTS } from '../config/constants';
 
@@ -61,6 +66,8 @@ export function migrateState(parsed: unknown): unknown {
     autoBuyConfig: {},
     pendingOfflineSummary: null,
     lucidDreamActiveUntil: null, // Sprint 7.10.5 — Lucid Dream Option A buff expiry
+    installedAt: 0, // Sprint 9a Phase 9a.3 — initSessionTimestamps stamps post-load
+    lastAdWatchedAt: 0, // Sprint 9a Phase 9a.3 — 0 means cooldown satisfied
   };
   const out: Record<string, unknown> = { ...obj };
   for (const key of Object.keys(defaults)) {

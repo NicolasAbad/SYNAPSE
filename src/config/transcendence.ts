@@ -1,12 +1,12 @@
-// Implements docs/GDD.md §20 + §34 (TRANSCENDENCE_RESET 59 / TRANSCENDENCE_PRESERVE 55 /
-// TRANSCENDENCE_UPDATE 7 = 121 total).
+// Implements docs/GDD.md §20 + §34 (TRANSCENDENCE_RESET 59 / TRANSCENDENCE_PRESERVE 57 /
+// TRANSCENDENCE_UPDATE 7 = 123 total).
 //
 // Pure data file — no logic. handleTranscendence() in src/engine/transcendence.ts
 // (Sprint 8b Phase 8b.2) consumes these to produce a post-Transcendence state.
 //
 // Field-count invariants (asserted by tests/consistency.test.ts §34 block):
 //   TRANSCENDENCE_RESET_FIELDS.length === 59
-//   TRANSCENDENCE_PRESERVE_FIELDS.length === 55
+//   TRANSCENDENCE_PRESERVE_FIELDS.length === 57
 //   TRANSCENDENCE_UPDATE_FIELDS.length === 7
 //   59 + 55 + 7 === 121 === Object.keys(createDefaultState()).length
 //   RESET ∩ PRESERVE === ∅ (disjoint — no field in both)
@@ -197,6 +197,14 @@ export const TRANSCENDENCE_PRESERVE_FIELDS = [
   'sparksPurchasedThisMonth', 'sparksPurchaseMonthStart',
   // Genius Pass (2)
   'geniusPassLastOfferTimestamp', 'isSubscribed',
+  // Monetization runtime (1) — Sprint 9a Phase 9a.3 (V-2): cooldown survives
+  // Transcendence so Run-2 starts honoring the prior cooldown.
+  'lastAdWatchedAt',
+  // Session install anchor (1) — Sprint 9a Phase 9a.3 (V-5): installedAt is
+  // a lifetime field. Transcendence is well past MONEY-4's 10-min window so
+  // PRESERVE has no semantic effect at the gate; classified PRESERVE for
+  // correctness ("install" is a one-time event, not a Run event).
+  'installedAt',
   // Retention (3)
   'dailyStreakDays', 'lastOpenedDate', 'weeklyChallenge',
   // Tab badges (1)

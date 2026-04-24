@@ -5,11 +5,11 @@
 // Mount-time timestamps are populated via initSessionTimestamps action
 // per INIT-1 — see src/store/initSession.ts for the React boundary.
 //
-// CODE-2 exception: enumerating all 121 fields with section comments
+// CODE-2 exception: enumerating all 123 fields with section comments
 // and per-field inline rationale pushes this file above the 200-line
 // cap. Same justification as src/types/GameState.ts — the interface is
 // a single-source-of-truth artifact; splitting it would lose the
-// invariant that Object.keys(createDefaultState()).length === 121.
+// invariant that Object.keys(createDefaultState()).length === 123.
 
 import { create } from 'zustand';
 import { SYNAPSE_CONSTANTS } from '../config/constants';
@@ -37,10 +37,11 @@ import { ACHIEVEMENTS_BY_ID } from '../config/achievements';
 import type { DiaryEntry } from '../types';
 
 /**
- * Pure default state. Matches GDD §32 121-field enumeration exactly.
+ * Pure default state. Matches GDD §32 123-field enumeration exactly.
  * 13 non-trivial initial values per §32 "DEFAULT_STATE non-trivial initial values"
  * (Phase 7.5.1 added `mood: 50` as the 13th, from SYNAPSE_CONSTANTS.moodInitialValue).
- * 4 impure timestamp fields stay at 0/null per INIT-1; mount effect populates them.
+ * 5 impure timestamp fields stay at 0/null per INIT-1; mount effect populates them
+ * (Sprint 9a Phase 9a.3 added `installedAt` to the impure-timestamp set per V-5).
  */
 export function createDefaultState(): GameState {
   return {
@@ -84,8 +85,9 @@ export function createDefaultState(): GameState {
     currentOfflineCapHours: 4, // CONST-OK — §32 DEFAULT_STATE: baseOfflineCapHours
     currentOfflineEfficiency: 0.5, // CONST-OK — §32 DEFAULT_STATE: baseOfflineEfficiency
     pendingOfflineSummary: null,
-    // === Session (1) ===
+    // === Session (2) — Sprint 9a Phase 9a.3 added installedAt (V-5, MONEY-4). ===
     sessionStartTimestamp: null, // INIT-1 impure — mount effect populates
+    installedAt: 0, // INIT-1 impure — initSessionTimestamps sets ONCE on first ever launch
     // === Prestige & progression (11) ===
     prestigeCount: 0,
     // 25_000 = TUTOR-2 tutorial threshold (retuned Sprint 3 Phase 7.4b from
@@ -202,6 +204,8 @@ export function createDefaultState(): GameState {
     // === Genius Pass (2) ===
     geniusPassLastOfferTimestamp: 0,
     isSubscribed: false,
+    // === Monetization runtime (1) — Sprint 9a Phase 9a.3 (V-2, MONEY-6 cooldown). ===
+    lastAdWatchedAt: 0,
     // === Narrative (2) ===
     narrativeFragmentsSeen: [],
     eraVisualTheme: 'bioluminescent', // Era 1 default
@@ -311,6 +315,13 @@ export interface GameStoreActions {
    * presence/absence. Idempotent.
    */
   setSubscriptionStatus: (isSubscribed: boolean) => void;
+  /**
+   * Sprint 9a Phase 9a.3 — record that a rewarded ad just completed. Stamps
+   * `lastAdWatchedAt` so the MONEY-6 3-min cooldown gate (engine/adGate.ts)
+   * blocks the next ad until `now - lastAdWatchedAt >= minAdCooldownMs`.
+   * Called by the AdMob adapter on REWARD_RECEIVED.
+   */
+  recordAdWatched: (nowTimestamp: number) => void;
   /**
    * Sprint 3 Phase 3: purchase a neuron of `type` at the current scaled cost
    * (GDD §4 `baseCost × 1.28^owned`). Returns 'ok' on success or a reason
@@ -476,11 +487,14 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
     set((state) => {
       // Per INIT-1: only populate if field is still at the pure default sentinel.
       // Saved-state restore must NOT be overwritten.
+      // installedAt (Sprint 9a Phase 9a.3, V-5): set ONCE on first launch ever
+      // — never overwritten on subsequent loads even if reset() is called.
       const updates: Partial<GameState> = {};
       if (state.cycleStartTimestamp === 0) updates.cycleStartTimestamp = nowTimestamp;
       if (state.sessionStartTimestamp === null) updates.sessionStartTimestamp = nowTimestamp;
       if (state.lastActiveTimestamp === 0) updates.lastActiveTimestamp = nowTimestamp;
       if (state.dischargeLastTimestamp === 0) updates.dischargeLastTimestamp = nowTimestamp;
+      if (state.installedAt === 0) updates.installedAt = nowTimestamp;
       return updates;
     });
   },
@@ -531,6 +545,7 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
   setActiveMindSubtab: (subtab) => set({ activeMindSubtab: subtab }),
   setAnalyticsConsent: (consent) => set({ analyticsConsent: consent }),
   setSubscriptionStatus: (isSubscribed) => set({ isSubscribed }),
+  recordAdWatched: (nowTimestamp) => set({ lastAdWatchedAt: nowTimestamp }),
   buyNeuron: (type, nowTimestamp) => {
     const state = get();
     const result = tryBuyNeuron(state, type, nowTimestamp);

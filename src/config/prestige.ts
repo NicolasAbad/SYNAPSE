@@ -1,15 +1,15 @@
-// Implements docs/GDD.md §33 (PRESTIGE_RESET 48 / PRESTIGE_PRESERVE 68 /
-// PRESTIGE_UPDATE 4 / lifetime 1 = 121 total).
+// Implements docs/GDD.md §33 (PRESTIGE_RESET 48 / PRESTIGE_PRESERVE 70 /
+// PRESTIGE_UPDATE 4 / lifetime 1 = 123 total).
 //
 // Pure data file — no logic. handlePrestige() in src/engine/prestige.ts
 // (Sprint 4a Phase 4a.2) consumes these to produce a post-prestige state.
 //
 // Field-count invariants (asserted by tests/consistency.test.ts §33 block):
 //   PRESTIGE_RESET_FIELDS.length === 48
-//   PRESTIGE_PRESERVE_FIELDS.length === 68
+//   PRESTIGE_PRESERVE_FIELDS.length === 70
 //   PRESTIGE_UPDATE_FIELDS.length === 4
 //   PRESTIGE_LIFETIME_FIELDS.length === 1
-//   48 + 68 + 4 + 1 === 121 === Object.keys(createDefaultState()).length
+//   48 + 70 + 4 + 1 === 123 === Object.keys(createDefaultState()).length
 //   RESET ∩ PRESERVE === ∅ (disjoint — no field in both)
 //
 // Ordering within each tuple mirrors GDD §33 for audit readability, but
@@ -169,6 +169,9 @@ export const PRESTIGE_PRESERVE_FIELDS = [
   'sparksPurchasedThisMonth', 'sparksPurchaseMonthStart',
   // Genius Pass (2)
   'geniusPassLastOfferTimestamp', 'isSubscribed',
+  // Monetization runtime (1) — Sprint 9a Phase 9a.3 (V-2 anti-exploit: prestige
+  // spam must NOT reset MONEY-6 3-min cooldown).
+  'lastAdWatchedAt',
   // Narrative (2)
   'narrativeFragmentsSeen', 'eraVisualTheme',
   // Endings (1)
@@ -179,8 +182,9 @@ export const PRESTIGE_PRESERVE_FIELDS = [
   'dailyStreakDays', 'lastOpenedDate', 'weeklyChallenge',
   // Tab badges (1)
   'tabBadgesDismissed',
-  // Session (1)
-  'sessionStartTimestamp',
+  // Session (2) — Sprint 9a Phase 9a.3 added installedAt (V-5: lifetime install
+  // anchor for MONEY-4 first-10-min tutorial grace).
+  'sessionStartTimestamp', 'installedAt',
   // System (2)
   'lastActiveTimestamp', 'gameVersion',
   // Hipocampo — Memory Shards (2) — Sprint 6.8 §16.1 PRESERVE lifetime

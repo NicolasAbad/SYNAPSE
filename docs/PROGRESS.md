@@ -6,10 +6,49 @@
 
 ## Current status
 
-**Phase:** Sprint 9a Phase 9a.2 COMPLETE — RevenueCat adapter (real + mock) shipped, SettingsModal with Restore Purchases live, gear icon trigger added to HUD, App.tsx initializes RevenueCat on native and maps initial entitlements → `setSubscriptionStatus`. **1712 tests pass** (+29 vs 9a.1 baseline 1683) / **4/4 gates PASS (ratio 0.82, zero warnings)** / typecheck + lint clean / GameState 121 (unchanged — adapter pattern needed no new field).
-**Last updated:** 2026-04-23 during Sprint 9a Phase 9a.2.
-**Active sprint:** Sprint 9a (Core SDK + Ads) — Phases 9a.1 + 9a.2 shipped; Phase 9a.3 (AdMob adapter + lastAdWatchedAt + installedAt fields, GameState 121→123) pending Nico green light.
-**Next action:** Phase 9a.3 — `src/platform/admob.ts` adapter + mock + persisted MONEY-6 cooldown field (`lastAdWatchedAt`) + MONEY-4 install-time anchor (`installedAt`) + ad-cooldown gate. Expected +12-18 tests, +2 GameState fields (121 → 123). STOP-for-approval gate at phase start.
+**Phase:** Sprint 9a Phase 9a.3 COMPLETE — AdMob adapter (real + mock), `adGate.canShowAd` engine helper (MONEY-4/5/6 + Genius Pass shielding), 2 new GameState fields (`installedAt` 121→122 V-5, `lastAdWatchedAt` 122→123 V-2), `recordAdWatched` store action, full PRESTIGE_PRESERVE + TRANSCENDENCE_PRESERVE updates (68→70 / 55→57). **1744 tests pass** (+32 vs 9a.2 baseline 1712) / **4/4 gates PASS (ratio 0.81, zero warnings)** / typecheck + lint clean / **GameState 123 stable**. Buffer-1 prestige sim: 0 errors / 0 warnings / field count 123 across cycles.
+**Last updated:** 2026-04-23 during Sprint 9a Phase 9a.3.
+**Active sprint:** Sprint 9a (Core SDK + Ads) — Phases 9a.1 / 9a.2 / 9a.3 shipped; Phase 9a.4 (5 ad placements + MONEY-4/5/6/7 guardrails enforced per placement) pending Nico green light.
+**Next action:** Phase 9a.4 — wire 5 ad placements (SleepScreen offline-boost is already stubbed, will become live; post-Discharge CTA, mutation-reroll on CycleSetupScreen, decision-retry on PatternDecisionModal, piggy-refill placeholder). Each placement gate-checks `canShowAd(state, now, isPostCascade?)` before `loadRewardedAd → showRewardedAd → recordAdWatched`. Expected +15-20 tests, 0 GameState fields. STOP-for-approval gate at phase start.
+
+### Phase 9a.3 deliverables (added to Sprint 9a dashboard below)
+
+**Files created (5 new):**
+- `src/engine/adGate.ts` — pure `canShowAd(state, nowTimestamp, isPostCascade?)` returning `{ allowed, reason? }` where reason is one of `'subscribed' | 'tutorial-grace' | 'post-cascade' | 'cooldown'`. Encapsulates MONEY-4/5/6 + Genius Pass shielding. Order: GP → MONEY-4 → MONEY-5 → MONEY-6.
+- `src/platform/admob.ts` — `AdMobAdapter` interface + `createAdMobAdapter()` real factory + `adUnitIdFor(placement)` env-var router for the 6 known placements
+- `src/platform/admob.mock.ts` — `createMockAdMobAdapter(opts)` with `failLoad / failShow / userDismissedBeforeReward` modes + `calls` introspection array for test assertions
+- 4 new test files: `tests/engine/adGate.test.ts` (11) + `tests/platform/admobMock.test.ts` (8) + `tests/store/installedAt.test.ts` (5) + `tests/store/lastAdWatchedAt.test.ts` (6) = 30 new tests
+
+**Files modified:**
+- `src/types/GameState.ts` — `installedAt` (Session group, 1→2 fields), `lastAdWatchedAt` (new Monetization runtime group, +1) → CODE-2 Exception A docstring updated 121 → 123
+- `src/store/gameStore.ts` — `installedAt: 0` + `lastAdWatchedAt: 0` defaults; `initSessionTimestamps` stamps `installedAt` only when 0 (set-once-only, V-5 spec); `recordAdWatched(nowTimestamp)` action; CODE-2 Exception B comment updated 121 → 123
+- `src/config/constants.ts` — `GAMESTATE_FIELD_COUNT: 121 → 123` with Sprint 9a.3 attribution
+- `src/config/prestige.ts` — `PRESTIGE_PRESERVE_FIELDS` adds `lastAdWatchedAt` (Monetization runtime) + `installedAt` (Session group); file header 121/68 → 123/70
+- `src/config/transcendence.ts` — `TRANSCENDENCE_PRESERVE_FIELDS` adds both fields with V-2/V-5 attribution comments; file header 121/55 → 123/57
+- `src/store/migrate.ts` — backfills `installedAt: 0` + `lastAdWatchedAt: 0` for legacy saves; history comment block extended
+- `tests/consistency.test.ts` — 121 → 123 field-count assertion; 68 → 70 PRESTIGE_PRESERVE; 55 → 57 TRANSCENDENCE_PRESERVE; +2 explicit "is PRESERVE on prestige/Transcendence" assertions for both new fields
+- `tests/engine/tick.test.ts` + `tests/engine/tick-order.test.ts` — fixture state objects gain both new fields
+- `tests/store/gameStore.test.ts` + `tests/store/migrate.test.ts` + `tests/store/saveGame.test.ts` (3 tests) + `tests/store/saveScheduler.test.ts` — all 121 references updated to 123
+- `scripts/buffer-1-prestige-sim.ts` — pre/cycle field-count assertions 121 → 123; PRESTIGE_PRESERVE 68 → 70; sum 120 → 122
+
+**Validations Phase 9a.3:**
+- 4/4 gates PASS (ratio 0.81, 210 constants / 49 literals)
+- ESLint clean, typecheck clean (tsc -b --noEmit)
+- 1744 tests / 0 fail / 37 skipped / 117 files (+32 tests, +4 files vs 9a.2 baseline)
+- Buffer-1 prestige sim: 0 errors / 0 warnings (vanilla + Focus Persistente, 20 cycles total, field count 123 stable each cycle)
+
+**Architectural decisions:**
+- **Ad gate is a PURE engine helper, not a store action**: `canShowAd` reads `Pick<GameState, 'isSubscribed' | 'installedAt' | 'lastAdWatchedAt'>` plus `nowTimestamp` + `isPostCascade?`. Engine layer per CODE-9 (no Math.random / Date.now). Caller passes `now` from React side.
+- **Genius Pass takes priority over MONEY-4** in the gate order — subscribers see `reason: 'subscribed'` even during the tutorial grace. Reflects GDD §26 "Genius Pass benefits: No ads (removes all 7 placements)".
+- **Defensive `installedAt === 0` denies ads** (treated as still-in-grace). Until `initSessionTimestamps` stamps the field, we can't know whether the player just installed; safer to deny one ad than to violate MONEY-4 on first launch before App.tsx mount fully completes.
+- **`recordAdWatched` is a 1-line setter** — keeping it as a store action (not direct mutation) matches the existing `setSubscriptionStatus` pattern + lets future analytics events hook in (Sprint 10 will add `logEvent('ad_watched')` here).
+- **Both new fields are PRESERVE on prestige + Transcendence** — anti-exploit (V-2): otherwise prestige spam would reset the cooldown and players could grind ads at 26× the intended rate; (V-5): `installedAt` is a lifetime install anchor by definition.
+
+**Stubbed for Phase 9a.4:**
+- 5 ad placements wired into UI (SleepScreen offline-boost button, post-Discharge CTA, mutation-reroll, decision-retry, piggy-refill placeholder)
+- Per-placement `canShowAd` calls + `loadRewardedAd → showRewardedAd → recordAdWatched` flow
+- MONEY-7 toast component (or reuse-existing) for ad failure UX
+- `isPostCascade` signal sourced from discharge.ts outcome flag (Phase 9a.4 will determine the cleanest source)
 
 ### Phase 9a.2 deliverables (added to Sprint 9a dashboard below)
 

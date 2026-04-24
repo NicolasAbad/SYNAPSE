@@ -175,9 +175,9 @@ describe('Consistency: GDD ↔ constants.ts invariants', () => {
     expect(SYNAPSE_CONSTANTS.sinestesiaTapMult).toBe(0.4);
   });
 
-  test('GameState has exactly 121 fields (GDD §32, post-Sprint-7.10.5)', () => {
+  test('GameState has exactly 123 fields (GDD §32, post-Sprint-9a.3 added installedAt + lastAdWatchedAt)', () => {
     const state = createDefaultState();
-    expect(Object.keys(state).length).toBe(121);
+    expect(Object.keys(state).length).toBe(123);
   });
 });
 
@@ -297,20 +297,20 @@ describe('Consistency: PRESTIGE_RESET / PRESERVE / UPDATE split (GDD §33)', () 
     expect(new Set(PRESTIGE_RESET_FIELDS)).toEqual(new Set(Object.keys(PRESTIGE_RESET)));
   });
 
-  test('PRESTIGE_PRESERVE has exactly 68 fields (Sprint 7.5.1: +8 region/mastery/autobuy)', () => {
-    expect(PRESTIGE_PRESERVE_FIELDS.length).toBe(68);
+  test('PRESTIGE_PRESERVE has exactly 70 fields (Sprint 9a.3: +installedAt +lastAdWatchedAt)', () => {
+    expect(PRESTIGE_PRESERVE_FIELDS.length).toBe(70);
   });
 
-  test('RESET + PRESERVE + UPDATE + lifetime covers all 121 GameState fields', () => {
+  test('RESET + PRESERVE + UPDATE + lifetime covers all 123 GameState fields', () => {
     const union = new Set<string>([
       ...PRESTIGE_RESET_FIELDS,
       ...PRESTIGE_PRESERVE_FIELDS,
       ...PRESTIGE_UPDATE_FIELDS,
       ...PRESTIGE_LIFETIME_FIELDS,
     ]);
-    expect(union.size).toBe(121); // also asserts no duplicates across all 4 sets
+    expect(union.size).toBe(123); // also asserts no duplicates across all 4 sets
     const gameStateKeys = new Set(Object.keys(createDefaultState()));
-    expect(gameStateKeys.size).toBe(121);
+    expect(gameStateKeys.size).toBe(123);
     expect(union).toEqual(gameStateKeys);
   });
 
@@ -321,21 +321,32 @@ describe('Consistency: PRESTIGE_RESET / PRESERVE / UPDATE split (GDD §33)', () 
     expect(new Set(TRANSCENDENCE_RESET_FIELDS)).toEqual(new Set(Object.keys(TRANSCENDENCE_RESET)));
   });
 
-  test('Sprint 8b: TRANSCENDENCE_PRESERVE has exactly 55 fields', async () => {
+  test('Sprint 9a.3: TRANSCENDENCE_PRESERVE has exactly 57 fields (+installedAt +lastAdWatchedAt)', async () => {
     const { TRANSCENDENCE_PRESERVE_FIELDS } = await import('../src/config/transcendence');
-    expect(TRANSCENDENCE_PRESERVE_FIELDS.length).toBe(55);
+    expect(TRANSCENDENCE_PRESERVE_FIELDS.length).toBe(57);
   });
 
-  test('Sprint 8b: TRANSCENDENCE RESET + PRESERVE + UPDATE covers all 121 GameState fields', async () => {
+  test('Sprint 9a.3: TRANSCENDENCE RESET + PRESERVE + UPDATE covers all 123 GameState fields', async () => {
     const { TRANSCENDENCE_RESET_FIELDS, TRANSCENDENCE_PRESERVE_FIELDS, TRANSCENDENCE_UPDATE_FIELDS } = await import('../src/config/transcendence');
     const union = new Set<string>([
       ...TRANSCENDENCE_RESET_FIELDS,
       ...TRANSCENDENCE_PRESERVE_FIELDS,
       ...TRANSCENDENCE_UPDATE_FIELDS,
     ]);
-    expect(union.size).toBe(121);
+    expect(union.size).toBe(123);
     const gameStateKeys = new Set(Object.keys(createDefaultState()));
     expect(union).toEqual(gameStateKeys);
+  });
+
+  test('Sprint 9a.3: lastAdWatchedAt + installedAt are PRESERVE on prestige (V-2 + V-5 anti-exploit)', () => {
+    expect(PRESTIGE_PRESERVE_FIELDS).toContain('lastAdWatchedAt');
+    expect(PRESTIGE_PRESERVE_FIELDS).toContain('installedAt');
+  });
+
+  test('Sprint 9a.3: lastAdWatchedAt + installedAt are PRESERVE on Transcendence (V-2 + V-5)', async () => {
+    const { TRANSCENDENCE_PRESERVE_FIELDS } = await import('../src/config/transcendence');
+    expect(TRANSCENDENCE_PRESERVE_FIELDS).toContain('lastAdWatchedAt');
+    expect(TRANSCENDENCE_PRESERVE_FIELDS).toContain('installedAt');
   });
 
   test('Sprint 8b: TRANSCENDENCE RESET ∩ PRESERVE === ∅ (disjoint)', async () => {

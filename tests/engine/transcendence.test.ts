@@ -188,10 +188,10 @@ describe('handleTranscendence — narrativeFragmentsSeen prefix-filter (Sprint 8
 });
 
 describe('handleTranscendence — invariants', () => {
-  test('field count remains 121 after Transcendence', () => {
+  test('field count remains 123 after Transcendence', () => {
     const before = ranOnce();
     const { state } = handleTranscendence(before, 'equation', NOW);
-    expect(Object.keys(state).length).toBe(121);
+    expect(Object.keys(state).length).toBe(123);
   });
 
   test('outcome shape exposes prev + new + ending + threshold + retained count', () => {

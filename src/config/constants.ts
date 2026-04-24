@@ -393,8 +393,9 @@ export const SYNAPSE_CONSTANTS = {
   gameVersion: '1.0.0',
 
   // ── Field-count runtime verification (§32) ──
-  // 121 fields after Sprint 7.10 Phase 7.10.5 (was 120 post-7.10.4). The +1
-  // field is `lucidDreamActiveUntil`, the Lucid Dream Option A timed-buff
-  // expiry per GDD §19. Same naming family as eurekaExpiry / mentalStateExpiry.
-  GAMESTATE_FIELD_COUNT: 121,
+  // 123 fields after Sprint 9a Phase 9a.3 (was 121 post-7.10.5). The +2 fields
+  // are `installedAt` (Session group, MONEY-4 install-time anchor per V-5) and
+  // `lastAdWatchedAt` (new Monetization runtime group, MONEY-6 3-min cooldown
+  // per V-2). Both PRESERVE on prestige + Transcendence (anti-exploit).
+  GAMESTATE_FIELD_COUNT: 123,
 } as const;

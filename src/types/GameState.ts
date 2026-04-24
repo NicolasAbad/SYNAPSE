@@ -1,16 +1,18 @@
-// Implements docs/GDD.md §32 (GameState — 121 fields) — v1.0 post-Sprint-7.10.5
+// Implements docs/GDD.md §32 (GameState — 123 fields) — v1.0 post-Sprint-9a.3
 //
-// CRITICAL: this interface must have EXACTLY 121 properties. Sprint 1 invariant
-// asserts `Object.keys(DEFAULT_STATE).length === 121`. Section-by-section count
-// per §32 breakdown sums to 121 (verified line-by-line in GDD §32).
+// CRITICAL: this interface must have EXACTLY 123 properties. Sprint 1 invariant
+// asserts `Object.keys(DEFAULT_STATE).length === 123`. Section-by-section count
+// per §32 breakdown sums to 123 (verified line-by-line in GDD §32).
 // Sprint 7.10.4 added `pendingOfflineSummary` (Offline group, 119 → 120).
 // Sprint 7.10.5 added `lucidDreamActiveUntil` (Session bonuses, 120 → 121).
+// Sprint 9a Phase 9a.3 added `installedAt` (Session, 121 → 122) and
+// `lastAdWatchedAt` (Monetization runtime, 122 → 123) per V-2 + V-5.
 //
 /**
- * GameState — the canonical application state (121 fields).
+ * GameState — the canonical application state (123 fields).
  *
  * CODE-2 exception (second audit followup, refreshed Sprint 7.5.1):
- * this file exceeds the 200-line cap due to 119 one-line field
+ * this file exceeds the 200-line cap due to 121 one-line field
  * declarations + section-header comments + interface boilerplate.
  * Cannot be reduced without either (a) dropping load-bearing
  * audit comments that map fields to GDD §32 categories, or
@@ -23,9 +25,9 @@
  *
  * This exception is documented in CLAUDE.md under CODE-2.
  *
- * Field count MUST remain 121. Adding/removing fields requires:
+ * Field count MUST remain 123. Adding/removing fields requires:
  * - updating docs/GDD.md §32
- * - updating the 48/68/4/1 PRESTIGE_RESET/PRESERVE/UPDATE split
+ * - updating the 48/70/4/1 PRESTIGE_RESET/PRESERVE/UPDATE split
  * - updating the consistency test that asserts exact count
  */
 
@@ -93,8 +95,9 @@ export interface GameState {
   currentOfflineEfficiency: number;
   pendingOfflineSummary: OfflineSummary | null;
 
-  // === Session (1) ===
+  // === Session (2) — Sprint 9a Phase 9a.3 added installedAt for MONEY-4 (V-5). ===
   sessionStartTimestamp: number | null;
+  installedAt: number;
 
   // === Prestige & progression (11) ===
   prestigeCount: number;
@@ -248,6 +251,11 @@ export interface GameState {
   // === Genius Pass (2) ===
   geniusPassLastOfferTimestamp: number;
   isSubscribed: boolean;
+
+  // === Monetization runtime (1) — Sprint 9a Phase 9a.3 (V-2). ===
+  // PRESERVE on prestige + Transcendence (anti-exploit: prestige spamming
+  // would otherwise reset the MONEY-6 3-min cooldown).
+  lastAdWatchedAt: number;
 
   // === Narrative (2) ===
   narrativeFragmentsSeen: string[];
