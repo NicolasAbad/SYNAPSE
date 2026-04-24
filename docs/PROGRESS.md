@@ -6,10 +6,108 @@
 
 ## Current status
 
-**Phase:** Sprint 9a Phase 9a.5 COMPLETE (Android-side native config + interactive sandbox setup). `AndroidManifest.xml` wired with AdMob `APPLICATION_ID` meta-data + `AD_ID` + `ACCESS_NETWORK_STATE` permissions; `strings.xml` carries real `admob_app_id` resource. `.env.local` (gitignored) populated via 3 interactive activities with Nico: RevenueCat Android key + project ID, AdMob Android App ID + 6 ad unit IDs, AdMob iOS App ID + 6 ad unit IDs. Bug fixed during iOS wireup: `src/platform/admob.ts` `adUnitIdFor()` now routes per-platform via `Capacitor.getPlatform()` (same pattern as `revenuecat.ts` `pickApiKey()`) — the prior single-env-var schema would have shipped Android IDs on iOS. `.env.example` + `vite-env.d.ts` updated to the new 12-var schema. Google Play Console internal test track created with tester `synapsegames.support@gmail.com`. RevenueCat ↔ Play Console service account link 90% done — awaiting Google's standard 24-48h permission propagation delay. **1761 tests pass** / **4/4 gates PASS (ratio 0.81)** / typecheck + lint clean / **GameState 123 stable**.
-**Last updated:** 2026-04-24 during Sprint 9a Phase 9a.5.
-**Active sprint:** Sprint 9a (Core SDK + Ads) — Phases 9a.1 / 9a.2 / 9a.3 / 9a.4 / 9a.5 shipped; iOS native config (Info.plist) deferred until Mac available; Phase 9a.6 (sprint close + buffer-1 re-validation + dashboard) pending.
-**Next action:** Phase 9a.6 — Sprint 9a close dashboard in PROGRESS.md, buffer-1 sim re-run, final commit. No new code. Expected +0 tests, 0 GameState fields. Can run autonomously (no V-points).
+**Phase:** **Sprint 9a CLOSED** — Core SDK + Ads. All 6 phases (9a.1 → 9a.6) shipped. RevenueCat + AdMob platform adapters with native-only guards + configurable mocks; `AdContext` React provider exposing `tryShowAd(placement, opts?)` composing `canShowAd` gate + adapter calls + `recordAdWatched` cooldown stamping; 5 ad placements wired (3 fully live, 1 live-with-heuristic, 1 placeholder for 9b); SettingsModal with Restore Purchases; 2 new GameState fields (`installedAt` V-5 / `lastAdWatchedAt` V-2) with full PRESTIGE_PRESERVE + TRANSCENDENCE_PRESERVE coverage; Android native config (`AndroidManifest.xml` + `strings.xml`) wired with real AdMob IDs; `.env.local` populated via 5 interactive sandbox-setup activities with Nico. **1761 tests pass** (+78 net across Sprint 9a from baseline 1683) / **4/4 gates PASS (ratio 0.81, zero warnings)** / typecheck + lint clean / **GameState 121 → 123 stable**. Buffer-1 prestige sim: 0 errors / 0 warnings / field count 123 across 20 cycles.
+**Last updated:** 2026-04-24 after Sprint 9a close (Phase 9a.6).
+**Active sprint:** Sprint 9a CLOSED. Awaiting next-sprint scope decision.
+**Next action:** Nico decision — **Sprint 9b** (Offerings UI + Cosmetics + Analytics — unblocks the store tile UX + links RevenueCat products) vs **Sprint 8c-tuning** (interactive threshold rebalance addressing TEST-5 2065 pacing-flagged cycles, still open from Sprint 8c) vs **deferred 8b.4b polish** (wire 9 stubbed Resonance/Run effect kinds) vs **iOS drop-in when Mac available** (Info.plist edits per Phase 9a.5 pending list).
+
+### Sprint 9a close dashboard (2026-04-24 — Core SDK + Ads)
+
+**Scope shipped (full Sprint 9a per SPRINTS.md §810-842 + GDD §26):**
+- Phase 9a.1: Pre-code catalog (V-1 through V-13 all Nico-approved `i aprove all`) + SDK plugin install (`@revenuecat/purchases-capacitor@^9.2.2` + `@capacitor-community/admob@^6.2.0`, both Capacitor-6 peer-compatible, no ERESOLVE) + Gate 2 warning cleanup (`docs/GDD.md §N` format on two files).
+- Phase 9a.2: RevenueCat real adapter + configurable mock + `SettingsModal.tsx` with Restore Purchases + HUD gear button + `setSubscriptionStatus` store action + `settings.*` strings namespace + `vite-env.d.ts` typed env vars.
+- Phase 9a.3: `src/engine/adGate.ts` pure helper (MONEY-4/5/6 + Genius Pass shielding) + AdMob real adapter + configurable mock + 2 new GameState fields (`installedAt`/`lastAdWatchedAt`, **121 → 123**) + `recordAdWatched` store action + PRESTIGE_PRESERVE + TRANSCENDENCE_PRESERVE updates (68→70 / 55→57).
+- Phase 9a.4: `AdContext` React provider + 5 ad placements wired (SleepScreen offline_boost full / PostDischargeAdToast HUD full-with-heuristic / MutationSlot reroll full / PendingDecisionFlow retry full / PiggyBankAdChip stub-for-9b) + 4 new reward/retry store actions + `ads.*` strings.
+- Phase 9a.5: Android native config (`AndroidManifest.xml` + `strings.xml`) + 5 interactive sandbox-setup activities with Nico (RevenueCat Android / AdMob Android / AdMob iOS / Play Console test track / RevenueCat↔Play service account link) + `.env.local` populated + latent per-platform ad-routing bug fixed.
+- Phase 9a.6: Sprint close (this dashboard, buffer-1 re-validation, no new code).
+
+**Files created (14 new):**
+- `src/platform/revenuecat.ts` + `revenuecat.mock.ts` (Phase 9a.2)
+- `src/platform/admob.ts` + `admob.mock.ts` (Phase 9a.3)
+- `src/platform/AdContext.tsx` (Phase 9a.4)
+- `src/engine/adGate.ts` (Phase 9a.3)
+- `src/ui/modals/SettingsModal.tsx` (Phase 9a.2)
+- `src/ui/hud/SettingsButton.tsx` (Phase 9a.2)
+- `src/ui/hud/PostDischargeAdToast.tsx` (Phase 9a.4)
+- `src/ui/hud/PiggyBankAdChip.tsx` (Phase 9a.4)
+- 9 new test files (revenuecatMock, admobMock, adGate, setSubscriptionStatus, installedAt, lastAdWatchedAt, adRewardActions, adContext, SettingsModal, SettingsButton)
+
+**Files modified (platform + config + state):**
+- `src/types/GameState.ts` (new `installedAt` + `lastAdWatchedAt` fields; CODE-2 Exception A 121 → 123)
+- `src/store/gameStore.ts` (7 new actions: `setSubscriptionStatus` / `recordAdWatched` / `applyAdRewardOfflineDouble` / `applyAdRewardDischargeDouble` / `rerollMutationOptions` / `retryPatternDecision`; `initSessionTimestamps` sets `installedAt` once-only; CODE-2 Exception B 121 → 123)
+- `src/config/constants.ts` (`GAMESTATE_FIELD_COUNT: 121 → 123`)
+- `src/config/prestige.ts` (header 121/68 → 123/70; `installedAt` + `lastAdWatchedAt` added to PRESTIGE_PRESERVE_FIELDS)
+- `src/config/transcendence.ts` (header 121/55 → 123/57; both fields added to TRANSCENDENCE_PRESERVE_FIELDS)
+- `src/store/migrate.ts` (history block + 2 new field backfills)
+- `src/config/strings/en.ts` (+ `settings.*` + `ads.*` namespaces; 17 new strings)
+- `src/App.tsx` (RevenueCat + AdMob adapter useMemo + init flow + `<AdProvider>` wrapper + SettingsModal render)
+- `src/ui/hud/HUD.tsx` (3 new HUD children: SettingsButton + PostDischargeAdToast + PiggyBankAdChip)
+- `src/ui/modals/SleepScreen.tsx` (stub button → live ad placement)
+- `src/ui/modals/MutationSlot.tsx` (reroll-via-ad button)
+- `src/ui/hud/PendingDecisionFlow.tsx` (post-pick retry toast)
+- `src/ui/modals/ConfirmModal.tsx` (not touched this sprint)
+- `src/vite-env.d.ts` (typed env vars for 16 SDK-related vars)
+- `android/app/src/main/AndroidManifest.xml` (AdMob meta-data + permissions)
+- `android/app/src/main/res/values/strings.xml` (admob_app_id resource)
+- `.env.example` (12-var per-platform schema)
+- `CLAUDE.md` (bundleId fix)
+- `tests/consistency.test.ts` (field-count + PRESERVE-set assertions + 2 new explicit PRESERVE assertions)
+- Numerous test fixtures updated for 123-field shape (tick.test / tick-order.test / gameStore.test / migrate.test / saveGame.test / saveScheduler.test / transcendence.test / SleepScreen.test + scripts/buffer-1-prestige-sim.ts)
+
+**Interactive sandbox setup activities (Phase 9a.5) — Nico-in-the-loop:**
+- **Activity 1:** RevenueCat project SYNAPSE (project ID `proj4d8a399d`); Android app with package `com.nicoabad.synapse`; public Android SDK key stored in `.env.local` (`goog_*`).
+- **Activity 2:** AdMob Android app entry + App ID (`~6503890286`) + 6 rewarded ad unit IDs for all 6 placements (`synapse_offline_boost`, `synapse_post_discharge`, `synapse_mutation_reroll`, `synapse_decision_retry`, `synapse_piggy_refill`, `synapse_streak_save`).
+- **Activity 3:** AdMob iOS app entry (same bundle `com.nicoabad.synapse`) + App ID (`~9490602549`) + 6 iOS-specific rewarded ad unit IDs. Latent bug caught + fixed: `adUnitIdFor()` now routes per-platform.
+- **Activity 4:** Google Play Console internal test track for developer account `5152301773637159922` (Lacron / `abad.nicolass@gmail.com`); tester email list with `synapsegames.support@gmail.com`; draft release `0.1.0-internal-scaffold` sits unpublished (APK upload happens at verification, not in Sprint 9a scope).
+- **Activity 5:** Google Cloud project `synapse-revenuecat`; 3 APIs enabled (Google Play Android Developer API + Google Play Developer Reporting API + Cloud Pub/Sub API); service account `revenuecat-validator@synapse-revenuecat.iam.gserviceaccount.com` created with JSON key; invited to Play Console with 4 least-privilege permissions (view app info / view financial data / manage orders + subscriptions / manage testing tracks); JSON uploaded to RevenueCat. **Status: Google 24-48h permission propagation in progress as of 2026-04-24 — expected to transition to "Connected" by 2026-04-26.**
+
+**Key architectural decisions:**
+- **Single AdContext over per-placement props** — 5 placements × 1 shared `tryShowAd` callback via React context beats prop-drilling 5 callbacks. Provider lives in `App.tsx` at the native-platform boundary where `adMobAdapter === null` on web/test.
+- **Adapter native-only guards** — both `createRevenueCatAdapter()` and `createAdMobAdapter()` throw if invoked off-native; dynamic `await import('@revenuecat/purchases-capacitor')` / `@capacitor-community/admob` inside methods keeps jsdom tests clean.
+- **Cooldown stamped on shown OR dismissed (anti-grind)** — MONEY-6 "max 1 ad per 3 min" interpreted as "user spent their slot." Failure (load/show error) does NOT stamp cooldown (player can retry).
+- **`installedAt` set-once-only** — per V-5, `initSessionTimestamps` writes `installedAt` only when it's `0` (first launch ever); subsequent calls never overwrite. Defensive `installedAt === 0` denies ads (treated as still-in-grace).
+- **Per-platform ad unit env vars (12 total)** — AdMob's per-app/per-platform model means Android + iOS ad unit IDs differ. Original 6-var schema (Phase 9a.3) was a latent bug caught during Phase 9a.5 Activity 3; fixed without test changes.
+- **Least-privilege service account** — RevenueCat's Play service account got 4 specific permissions scoped to SYNAPSE only (NOT Administrator, NOT Launch to production).
+- **No GameState bump during Phase 9a.2 or 9a.4** — both were pure wiring phases (adapter pattern + 5 placements using existing fields). Sprint 9a's only field bumps were the 2 in Phase 9a.3 (`installedAt` + `lastAdWatchedAt`).
+
+**Genius Pass consumer wiring already existed** — `isSubscribed` was in GameState since Sprint 1 and already read by 3 engine sites (`mood.ts` pass floor / `offline.ts` +25% efficiency / `precommits.ts` pass shield). Flipping `isSubscribed = true` from a real RevenueCat purchase propagates correctly. Sprint 9a only needed the **adapter** that flips the bit — not the consumer wiring.
+
+**Tests added (Sprint 9a total: +78):**
+- `tests/platform/revenuecatMock.test.ts` (+8)
+- `tests/platform/admobMock.test.ts` (+8)
+- `tests/platform/adContext.test.tsx` (+9)
+- `tests/engine/adGate.test.ts` (+11)
+- `tests/store/setSubscriptionStatus.test.ts` (+6)
+- `tests/store/installedAt.test.ts` (+5)
+- `tests/store/lastAdWatchedAt.test.ts` (+6)
+- `tests/store/adRewardActions.test.ts` (+8)
+- `tests/ui/modals/SettingsModal.test.tsx` (+13)
+- `tests/ui/hud/SettingsButton.test.tsx` (+2)
+- `tests/consistency.test.ts` (+2)
+
+**Validations:**
+- 4/4 gates PASS (ratio 0.81 — was 0.82 pre-sprint; dipped as expected due to platform layer adding constants but not engine-side ones)
+- ESLint clean (1 `react-refresh/only-export-components` warning resolved with scoped disable on `useAdContext` export, matches common React-context pattern)
+- Typecheck clean (`tsc -b --noEmit`)
+- Buffer-1 prestige sim: 0 errors / 0 warnings across 20 cycles, field count 123 stable
+- 1761 tests / 0 fail / 37 skipped / 119 files
+
+**Commits this sprint (6 phase commits + close):**
+- `1d29721` Phase 9a.1 — Pre-code catalog + SDK plugins installed
+- `8d077ec` Phase 9a.2 — RevenueCat adapter + SettingsModal + Restore Purchases
+- `c2b8eb1` Phase 9a.3 — AdMob adapter + adGate + GameState 121 → 123
+- `1789031` Phase 9a.4 — 5 ad placements wired via AdContext provider
+- `c7bf036` Phase 9a.5 — Android native config + sandbox setup (Nico interactive)
+- (this commit) Phase 9a.6 — Sprint close dashboard
+
+**Reviewer fabrications: 0** across 6 phase commits.
+
+**Pending Nico actions:**
+- Push 9+ Sprint 9a commits to origin/main when convenient (includes Sprint 8b/8c backlog from earlier sessions).
+- **Verify RevenueCat propagation at 2026-04-26** — check the dashboard; should transition from "Credentials need attention" to "Connected". If still broken past 48h, debug with a screenshot (possible causes: wrong scope on Play permissions, API quota limits, wrong project linked).
+- **iOS drop-in when Mac available** — `ios/App/App/Info.plist` edits: `GADApplicationIdentifier` (value: `ca-app-pub-6304825755361246~9490602549`), `NSUserTrackingUsageDescription` (V-9-approved string: "SYNAPSE uses this identifier to show more relevant ads that support free gameplay. You can opt out; the game plays the same either way."), `SKAdNetworkItems` (~70 IDs from Google's canonical AdMob list).
+- **APK upload to internal test track** — when ready to on-device-test: `npm run build && npx cap sync && npx cap open android`, build release APK, upload to draft `0.1.0-internal-scaffold`, confirm the release, install via opt-in URL on Pixel 4a.
+- **Sprint 9b** — Offerings UI + Cosmetics + Analytics — unblocks the monetization UX layer; first phase should be Sprint 9b.0 = configure RevenueCat products (`genius_pass_monthly` / `genius_pass_weekly` / `starter_pack` / 3 spark packs / cosmetic one-time purchases) + entitlement `genius_pass`, then offerings UI, then Cosmetics Store, then Firebase Analytics wiring.
 
 ### Phase 9a.5 deliverables (Android native config + sandbox accounts)
 
