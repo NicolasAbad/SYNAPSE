@@ -26,6 +26,7 @@ import { performDischarge, type DischargeOutcome } from '../engine/discharge';
 import { handlePrestige, type PrestigeOutcome } from '../engine/prestige';
 import { handleTranscendence, type TranscendenceOutcome } from '../engine/transcendence';
 import { tryBuyResonanceUpgrade } from '../engine/resonanceUpgrades';
+import { tryBuyRunUpgrade } from '../engine/runUpgrades';
 import { applyPermanentPatternDecisionsToState } from '../engine/patternDecisions';
 import { dispatchNarrative, applyFragmentRead } from '../engine/narrative';
 import { MUTATIONS_BY_ID } from '../config/mutations';
@@ -415,6 +416,8 @@ export interface GameStoreActions {
   applyTranscendence: (endingId: EndingID, nowTimestamp: number) => TranscendenceOutcome | null;
   /** Sprint 8b Phase 8b.4 — buy a Resonance upgrade. Returns true on success. */
   buyResonanceUpgrade: (id: string) => boolean;
+  /** Sprint 8b Phase 8b.5 — buy a Run-exclusive upgrade (Run 2+ / Run 3+). Returns true on success. */
+  buyRunUpgrade: (id: string) => boolean;
   /**
    * Sprint 7 Phase 7.2 (ACH-3): dismiss the achievement toast (player tapped
    * elsewhere or expiry timer fired). Idempotent — no-op if no toast active.
@@ -828,6 +831,12 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
   },
   buyResonanceUpgrade: (id) => {
     const { bought, state: next } = tryBuyResonanceUpgrade(get() as GameState, id);
+    if (!bought) return false;
+    set(next);
+    return true;
+  },
+  buyRunUpgrade: (id) => {
+    const { bought, state: next } = tryBuyRunUpgrade(get() as GameState, id);
     if (!bought) return false;
     set(next);
     return true;

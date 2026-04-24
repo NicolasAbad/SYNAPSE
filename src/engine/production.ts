@@ -14,6 +14,7 @@ import { spontaneousProdMult, spontaneousConnectionMult } from './spontaneous';
 import { era3ProductionMult } from './era3';
 import { upgradeMasteryMult } from './mastery';
 import { resonanceAllProductionMult, resonancePatternCycleCap } from './resonanceUpgrades';
+import { runUpgradeEarlyPrestigeThresholdMult } from './runUpgrades';
 import type { GameState } from '../types/GameState';
 import type { NeuronState, NeuronType, Polarity, UpgradeEffect } from '../types';
 
@@ -31,22 +32,23 @@ export function softCap(x: number): number {
   return 100 * Math.pow(x / 100, SYNAPSE_CONSTANTS.softCapExponent); // CONST-OK
 }
 
-export function calculateThreshold(prestigeCount: number, transcendenceCount: number): number {
+export function calculateThreshold(prestigeCount: number, transcendenceCount: number, runUpgradesPurchased: readonly string[] = []): number {
   const { baseThresholdTable, runThresholdMult } = SYNAPSE_CONSTANTS;
   const safeP = Math.max(0, Math.min(baseThresholdTable.length - 1, prestigeCount));
   const safeT = Math.max(0, Math.min(runThresholdMult.length - 1, transcendenceCount));
-  return baseThresholdTable[safeP] * runThresholdMult[safeT];
+  const earlyMult = runUpgradeEarlyPrestigeThresholdMult({ runUpgradesPurchased: [...runUpgradesPurchased] }, prestigeCount);
+  return baseThresholdTable[safeP] * runThresholdMult[safeT] * earlyMult;
 }
 
 export function calculateCurrentThreshold(
-  state: Pick<GameState, 'isTutorialCycle' | 'prestigeCount' | 'transcendenceCount'>,
+  state: Pick<GameState, 'isTutorialCycle' | 'prestigeCount' | 'transcendenceCount'> & Partial<Pick<GameState, 'runUpgradesPurchased'>>,
 ): number {
   if (state.isTutorialCycle) {
     const { tutorialThreshold, runThresholdMult } = SYNAPSE_CONSTANTS;
     const safeT = Math.max(0, Math.min(runThresholdMult.length - 1, state.transcendenceCount));
     return tutorialThreshold * runThresholdMult[safeT];
   }
-  return calculateThreshold(state.prestigeCount, state.transcendenceCount);
+  return calculateThreshold(state.prestigeCount, state.transcendenceCount, state.runUpgradesPurchased ?? []);
 }
 
 /**

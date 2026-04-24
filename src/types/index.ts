@@ -273,6 +273,23 @@ export interface ResonanceUpgradeDef {
   readonly effect: ResonanceUpgradeEffect;
 }
 
+// Sprint 8b Phase 8b.5 — Run-exclusive upgrade effects (GDD §21). 4 upgrades
+// for v1.0 (2 Run 2 + 2 Run 3); 2 more post-launch per RUN-2. Effect kinds
+// distinct from Upgrade / Resonance / PatternDecision to keep consumer
+// branches clean.
+export type RunUpgradeEffect =
+  | { kind: 'retro_patterns_last_cycles'; extraPerCycle: number; lookbackCycles: number } // eco_ancestral
+  | { kind: 'offline_cap_add_hours'; hours: number }                                      // sueno_profundo
+  | { kind: 'first_neuron_cost_mult'; mult: number }                                      // neurona_pionera
+  | { kind: 'early_prestige_threshold_mult'; mult: number; maxPrestige: number };         // despertar_acelerado
+
+export interface RunUpgradeDef {
+  readonly id: string;
+  readonly unlockAtTranscendenceCount: 1 | 2; // Run 2+ (=1) or Run 3+ (=2)
+  readonly costThoughts: number;
+  readonly effect: RunUpgradeEffect;
+}
+
 // Pattern Tree decision-option effects (GDD §10). Kind discriminants are
 // intentionally distinct from UpgradeEffect's so consumers can cleanly tell
 // "effect from upgrade" vs "effect from pattern decision". Sprint 4b Phase 4b.1.
