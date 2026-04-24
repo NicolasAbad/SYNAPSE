@@ -23,6 +23,20 @@ export interface GlowPackConfig {
   opacityMin: number;
 }
 
+/**
+ * Sprint 9b Phase 9b.2 (V-c) — HUD style cosmetic override. 1 entry v1.0
+ * (`minimal`). Consumed by Phase 5 HUD components to dim counters + hide
+ * secondary chrome when the player equips a HUD style for focused play.
+ */
+export interface HudStyleConfig {
+  /** Opacity multiplier for HUD counters (Thoughts, Memories, Rate). Default 1. */
+  counterOpacity: number;
+  /** When true, hides the connection chip + rate counter (minimal distraction). */
+  hideSecondaryCounters: boolean;
+  /** Optional monochrome filter — all HUD accent colors shift to grayscale. */
+  monochrome: boolean;
+}
+
 export interface Theme {
   /** Composed theme ID. Equals Era ID when no cosmetic override active,
    *  or the cosmetic ID when an override is applied. */

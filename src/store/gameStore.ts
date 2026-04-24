@@ -34,6 +34,7 @@ import { checkAllAchievements, achievementRewardSum } from '../engine/achievemen
 import { applyMasteryXpGain } from '../engine/mastery';
 import { applyOfflineProgress } from '../engine/offline';
 import { ACHIEVEMENTS_BY_ID } from '../config/achievements';
+import { COSMETIC_CATALOG } from '../config/cosmeticCatalog';
 import type { DiaryEntry } from '../types';
 
 /**
@@ -347,6 +348,25 @@ export interface GameStoreActions {
    */
   retryPatternDecision: (nodeIndex: number) => void;
   /**
+   * Sprint 9b Phase 9b.2 — cosmetic unlock (add to owned* list). Called by
+   * RevenueCat purchase success in Phase 9b.3 (or by `unlockAllCosmetics`
+   * in dev). Idempotent — duplicate unlocks are no-ops.
+   */
+  unlockCosmetic: (category: 'neuron_skin' | 'canvas_theme' | 'glow_pack' | 'hud_style', id: string) => void;
+  /**
+   * Sprint 9b Phase 9b.2 — equip an owned cosmetic (set active* field).
+   * No-op if the cosmetic isn't owned (defensive).
+   */
+  equipCosmetic: (category: 'neuron_skin' | 'canvas_theme' | 'glow_pack' | 'hud_style', id: string) => void;
+  /** Sprint 9b Phase 9b.2 — unequip (clear active* for a category). */
+  unequipCosmetic: (category: 'neuron_skin' | 'canvas_theme' | 'glow_pack' | 'hud_style') => void;
+  /**
+   * Sprint 9b Phase 9b.2 (V-f) — dev-only: unlock every cosmetic at once for
+   * 9b.2–9b.5 testing without needing a real RevenueCat connection. Gated by
+   * `import.meta.env.DEV`; compiled out of production bundles.
+   */
+  unlockAllCosmetics: () => void;
+  /**
    * Sprint 3 Phase 3: purchase a neuron of `type` at the current scaled cost
    * (GDD §4 `baseCost × 1.28^owned`). Returns 'ok' on success or a reason
    * code on failure. Recomputes connectionMult on new-type entry (C(n,2)),
@@ -601,6 +621,54 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
     const nextDecisions = { ...state.patternDecisions };
     delete nextDecisions[nodeIndex];
     set({ patternDecisions: nextDecisions });
+  },
+  unlockCosmetic: (category, id) => {
+    const state = get();
+    if (category === 'neuron_skin') {
+      if (state.ownedNeuronSkins.includes(id)) return;
+      set({ ownedNeuronSkins: [...state.ownedNeuronSkins, id] });
+    } else if (category === 'canvas_theme') {
+      if (state.ownedCanvasThemes.includes(id)) return;
+      set({ ownedCanvasThemes: [...state.ownedCanvasThemes, id] });
+    } else if (category === 'glow_pack') {
+      if (state.ownedGlowPacks.includes(id)) return;
+      set({ ownedGlowPacks: [...state.ownedGlowPacks, id] });
+    } else {
+      if (state.ownedHudStyles.includes(id)) return;
+      set({ ownedHudStyles: [...state.ownedHudStyles, id] });
+    }
+  },
+  equipCosmetic: (category, id) => {
+    const state = get();
+    if (category === 'neuron_skin') {
+      if (!state.ownedNeuronSkins.includes(id)) return;
+      set({ activeNeuronSkin: id });
+    } else if (category === 'canvas_theme') {
+      if (!state.ownedCanvasThemes.includes(id)) return;
+      set({ activeCanvasTheme: id });
+    } else if (category === 'glow_pack') {
+      if (!state.ownedGlowPacks.includes(id)) return;
+      set({ activeGlowPack: id });
+    } else {
+      if (!state.ownedHudStyles.includes(id)) return;
+      set({ activeHudStyle: id });
+    }
+  },
+  unequipCosmetic: (category) => {
+    if (category === 'neuron_skin') set({ activeNeuronSkin: null });
+    else if (category === 'canvas_theme') set({ activeCanvasTheme: null });
+    else if (category === 'glow_pack') set({ activeGlowPack: null });
+    else set({ activeHudStyle: null });
+  },
+  unlockAllCosmetics: () => {
+    // Dev-only — guard strips this branch from production bundles via tree-shaking.
+    if (!import.meta.env.DEV) return;
+    set({
+      ownedNeuronSkins: COSMETIC_CATALOG.filter((c) => c.category === 'neuron_skin').map((c) => c.id),
+      ownedCanvasThemes: COSMETIC_CATALOG.filter((c) => c.category === 'canvas_theme').map((c) => c.id),
+      ownedGlowPacks: COSMETIC_CATALOG.filter((c) => c.category === 'glow_pack').map((c) => c.id),
+      ownedHudStyles: COSMETIC_CATALOG.filter((c) => c.category === 'hud_style').map((c) => c.id),
+    });
   },
   buyNeuron: (type, nowTimestamp) => {
     const state = get();

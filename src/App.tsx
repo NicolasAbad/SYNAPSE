@@ -13,6 +13,7 @@ import { FragmentOverlay } from './ui/modals/FragmentOverlay';
 import { Era3EventModal } from './ui/modals/Era3EventModal';
 import { SleepScreen } from './ui/modals/SleepScreen';
 import { SettingsModal } from './ui/modals/SettingsModal';
+import { CosmeticsStoreModal } from './ui/modals/CosmeticsStoreModal';
 import { EchoLayer } from './ui/canvas/EchoLayer';
 import { createRevenueCatAdapter, type RevenueCatAdapter } from './platform/revenuecat';
 import { createAdMobAdapter, type AdMobAdapter } from './platform/admob';
@@ -101,6 +102,7 @@ export function App() {
   // Sprint 9a Phase 9a.2 — Settings modal open state lives here so HUD's
   // SettingsButton (sibling) can toggle it without a new store field.
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [cosmeticsOpen, setCosmeticsOpen] = useState(false);
 
   return (
     <AdProvider adapter={adMobAdapter}>
@@ -127,6 +129,11 @@ export function App() {
           open={settingsOpen}
           onClose={() => setSettingsOpen(false)}
           restorePurchases={revenueCatAdapter?.restorePurchases}
+          onOpenCosmetics={() => { setSettingsOpen(false); setCosmeticsOpen(true); }}
+        />
+        <CosmeticsStoreModal
+          open={cosmeticsOpen}
+          onClose={() => setCosmeticsOpen(false)}
         />
         {!splashDone && <SplashScreen onComplete={() => setSplashDone(true)} />}
         {splashDone && isEU && !gdprDone && <GdprModal onComplete={() => setGdprDone(true)} />}

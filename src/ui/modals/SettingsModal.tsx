@@ -21,6 +21,8 @@ export interface SettingsModalProps {
   onClose: () => void;
   /** When undefined, Restore Purchases is disabled (web/test preview). */
   restorePurchases?: RestoreFn;
+  /** Sprint 9b Phase 9b.2 — opens the Cosmetics Store modal. */
+  onOpenCosmetics?: () => void;
 }
 
 const overlayStyle = { // CONST-OK CSS style object
@@ -84,7 +86,7 @@ function statusLabel(status: RestoreStatus): string {
   return '';
 }
 
-export const SettingsModal = memo(function SettingsModal({ open, onClose, restorePurchases }: SettingsModalProps) {
+export const SettingsModal = memo(function SettingsModal({ open, onClose, restorePurchases, onOpenCosmetics }: SettingsModalProps) {
   const setSubscriptionStatus = useGameStore((s) => s.setSubscriptionStatus);
   const [status, setStatus] = useState<RestoreStatus>('idle');
 
@@ -135,6 +137,17 @@ export const SettingsModal = memo(function SettingsModal({ open, onClose, restor
         </button>
 
         <p data-testid="settings-restore-status" style={statusLineStyle}>{statusLabel(status)}</p>
+
+        {onOpenCosmetics && (
+          <button
+            type="button"
+            data-testid="settings-cosmetics"
+            onClick={onOpenCosmetics}
+            style={buttonStyle}
+          >
+            {t.cosmeticsButton}
+          </button>
+        )}
 
         <button
           type="button"

@@ -6,10 +6,48 @@
 
 ## Current status
 
-**Phase:** Sprint 9b Phase 9b.1 COMPLETE — pre-code catalog approved by Nico (V-1..V-10 all `i aprove all`), Firebase Analytics plugins installed (`@capacitor-firebase/analytics@^6.3.1` + `firebase@^11.10.0` — both Capacitor-6 peer-compatible, clean install). **1761 tests pass** (unchanged — 9b.1 is scaffolding only) / **4/4 gates PASS** / typecheck + lint clean / **GameState 123 stable** (no bump this phase).
-**Last updated:** 2026-04-24 during Sprint 9b Phase 9b.1.
-**Active sprint:** Sprint 9b (Offerings + Cosmetics + Analytics) — Phase 9b.1 shipped; Phase 9b.2 (Cosmetics: 18 registry entries + 3-second preview + Cosmetics Store panel) pending Nico green light.
-**Next action:** Phase 9b.2 — populate 4 cosmetic registries in `src/ui/theme/cosmeticOverrides.ts` (8 neuron skins + 6 canvas themes including 2 exclusives + 3 glow packs + 1 HUD style) + React-local 3-second preview mechanic + Cosmetics Store panel + own/equip/unlock store actions. Expected +15-20 tests, 0 GameState fields. STOP-for-approval gate at phase start.
+**Phase:** Sprint 9b Phase 9b.2 COMPLETE — 4 cosmetic registries populated (18 entries total: 8 neuron skins + 6 canvas themes including 2 exclusives + 3 glow packs + 1 HUD style); `src/config/cosmeticCatalog.ts` product metadata for all 18; 4 new store actions (`unlockCosmetic` / `equipCosmetic` / `unequipCosmetic` / dev-only `unlockAllCosmetics`); `CosmeticsStoreModal.tsx` with 4 tabs + grid + 3-second preview + SettingsModal integration; 36 cosmetic names/descriptions + store UI strings approved via V-d "propose + Nico edits" workflow. **1794 tests pass** (+33 vs 9b.1 baseline 1761) / **4/4 gates PASS (ratio 0.81)** / typecheck + lint clean / **GameState 123 stable** (no bump — all reused existing owned*/active* fields).
+**Last updated:** 2026-04-24 during Sprint 9b Phase 9b.2.
+**Active sprint:** Sprint 9b (Offerings + Cosmetics + Analytics) — Phases 9b.1 + 9b.2 shipped; Phase 9b.3 (RevenueCat products + entitlement configuration) deferred pending RevenueCat propagation (still "Credentials need attention" as of session start; expected resolution 2026-04-26).
+**Next action:** Phase 9b.4 (skipping 9b.3 until propagation resolves) — Starter Pack modal (post-P2 trigger, 48h window, one-time) + Genius Pass offer triggers (5 context-specific) + new GameState field `geniusPassDismissals` (bump 123 → 124) + +1 Mutation option consumer + 10 Sparks/week accrual. Expected +15-20 tests, +1 GameState field. STOP-for-approval gate at phase start.
+
+### Phase 9b.2 deliverables (Cosmetics)
+
+**Files created (4 new):**
+- `src/config/cosmeticCatalog.ts` — 18 `CosmeticCatalogEntry` objects with id/category/productId/priceUsd/nameKey/descriptionKey/exclusive fields. 2 entries (`genius_gold`, `neon_pulse`) are exclusives (productId=null, exclusive='genius_pass'|'starter_pack'); bundle-only.
+- `src/ui/modals/CosmeticsStoreModal.tsx` — 4-tab modal (neuron_skin / canvas_theme / glow_pack / hud_style), grid of tiles per category, 3-second React-local preview via `useEffect` + `setTimeout(PREVIEW_DURATION_MS=3000)`, Esc-to-close.
+- `tests/store/cosmeticsActions.test.ts` (9 tests) — unlock idempotency, category routing, equip requires ownership, unequip clears active, unlockAllCosmetics dev helper.
+- `tests/ui/theme/cosmeticOverrides.test.ts` (11 tests) — entry counts (8/6/3/1), shape validity (hex colors, GlowPackConfig sane ranges, HudStyleConfig fields), catalog/registry consistency.
+- `tests/ui/modals/CosmeticsStoreModal.test.tsx` (13 tests) — render gates, tab switching, buy/equip/unequip state transitions, exclusive tiles have no buy/preview, preview auto-clear timing.
+
+**Files modified:**
+- `src/ui/theme/cosmeticOverrides.ts` — populated from empty (NEURON_SKINS: 8 full per-type palettes; CANVAS_THEMES: 6 Partial<Theme> with gradients; GLOW_PACKS: 3 `GlowPackConfig`; HUD_STYLES: 1 `HudStyleConfig`).
+- `src/ui/theme/types.ts` — new `HudStyleConfig` type (3 fields: counterOpacity / hideSecondaryCounters / monochrome) per V-c.
+- `src/store/gameStore.ts` — 4 new actions (`unlockCosmetic` / `equipCosmetic` / `unequipCosmetic` / `unlockAllCosmetics`), `COSMETIC_CATALOG` import.
+- `src/config/strings/en.ts` — `cosmetics.*` namespace (14 UI strings + 36 per-cosmetic name/description pairs = 50 total).
+- `src/ui/modals/SettingsModal.tsx` — new `onOpenCosmetics?: () => void` prop + "Cosmetics" button linking to `CosmeticsStoreModal`.
+- `src/App.tsx` — new `cosmeticsOpen` React-local state + `<CosmeticsStoreModal />` render; SettingsModal wires `onOpenCosmetics` to set both states (close Settings + open Cosmetics).
+
+**Validations Phase 9b.2:**
+- 4/4 gates PASS (ratio 0.81, 211 constants / 51 literals — 2 more literals vs 9b.1 baseline absorbed by CONST-OK annotations on cosmetic palette values)
+- ESLint clean, typecheck clean
+- 1794 tests / 0 fail / 37 skipped / 122 files (+33 tests, +3 files vs 9b.1)
+
+**Architectural decisions:**
+- **React-local preview state** (V-e): Canvas renderer will consume `previewActive*` via a future context passthrough (not wired in 9b.2 since renderer layer edits are out of phase scope — the preview-to-canvas connection lands in Phase 9b.3 or whenever we verify it on-device). For now the preview state flips the tile button label visually but does NOT yet re-render the canvas. This is intentional for phase boundary cleanliness; the mechanic + state are in place.
+- **exclusives hidden from purchase flow**: tiles for `genius_gold` + `neon_pulse` show only name + description + exclusive badge. No Preview + no Buy buttons. They appear when the player owns them (after Genius Pass subscription or Starter Pack purchase unlocks them via 9b.4's bundle-unlock logic).
+- **Catalog priceUsd fallback only**: per MONEY-1, real prices come from `product.priceString` after RevenueCat Offerings resolve. The `priceUsd` field in `COSMETIC_CATALOG` is ONLY for pre-Offerings UI rendering (e.g. when the modal opens before RevenueCat responds). Phase 9b.3 replaces the fallback display with real `priceString`.
+- **HUD_STYLES consumer stub**: Sprint 9b.2 ships the `minimal` cosmetic data but the HUD components don't yet read `activeHudStyle`. Wiring deferred to Sprint 10 (per existing §934 scope: "Settings gear icon + HUD style integration point"). Players can equip `minimal` now; visual change lands in Sprint 10.
+- **dev-only `unlockAllCosmetics()`**: guarded by `if (!import.meta.env.DEV) return;`. Vite tree-shakes the branch out of production bundles. Used by 9b.2-9b.5 tests + dev preview without needing real RevenueCat purchases.
+
+**Strings proposed (Nico can edit in follow-up commit per V-d):**
+- 18 cosmetic name/description pairs shipped in `cosmetics.<category>.<id>.{name,description}`. Sample tone: "Ember / Warm coals, slow burn." / "Void / What the stars see." / "Minimal / Less to see, more to feel."
+- Store UI: storeTitle, tab labels, previewButton, buyButton, equipButton, equippedLabel, unequipButton, ownedLabel, backButton, exclusiveGeniusPass, exclusiveStarterPack, previewingToast.
+
+**Pending:**
+- Phase 9b.3 (RevenueCat product configuration) — waits on propagation
+- Canvas renderer preview-state connection (Phase 9b.3 or 9b.7)
+- HUD_STYLES `minimal` consumer wiring (Sprint 10)
 
 ### Sprint 9b dashboard (open — 2026-04-24)
 

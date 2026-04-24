@@ -710,6 +710,53 @@ export const en = {
     restoreNoneFound: 'No previous purchases found',
     restoreFailed: 'Restore failed — check your connection',
     openButtonAria: 'Open settings',
+    cosmeticsButton: 'Cosmetics',
+  },
+
+  // Sprint 9b Phase 9b.2 — Cosmetics store + 18 cosmetic names/descriptions.
+  // Names are terse (≤6 words) to match SleepScreen + narrative fragments tone.
+  cosmetics: {
+    storeTitle: 'Cosmetics',
+    tabNeurons: 'Neurons',
+    tabCanvas: 'Canvas',
+    tabGlow: 'Glow',
+    tabHud: 'HUD',
+    previewButton: 'Preview (3s)',
+    buyButton: 'Buy',
+    equipButton: 'Equip',
+    equippedLabel: 'Equipped',
+    unequipButton: 'Unequip',
+    ownedLabel: 'Owned',
+    backButton: 'Back',
+    exclusiveGeniusPass: 'Included with Genius Pass',
+    exclusiveStarterPack: 'Included with Starter Pack',
+    previewingToast: 'Previewing',
+    neuron_skin: {
+      ember:   { name: 'Ember',   description: 'Warm coals, slow burn.' },
+      frost:   { name: 'Frost',   description: 'Crystalline stillness.' },
+      void:    { name: 'Void',    description: 'What the stars see.' },
+      plasma:  { name: 'Plasma',  description: 'Unstable brilliance.' },
+      aurora:  { name: 'Aurora',  description: 'Cold fire in the dark.' },
+      crystal: { name: 'Crystal', description: 'Light refracted forever.' },
+      spore:   { name: 'Spore',   description: 'Quiet life, pressing outward.' },
+      nebula:  { name: 'Nebula',  description: 'A mind becoming galaxy.' },
+    },
+    canvas_theme: {
+      aurora:      { name: 'Aurora',      description: 'Green fire at the pole.' },
+      deep_ocean:  { name: 'Deep Ocean',  description: 'Pressure turns to light.' },
+      deep_space:  { name: 'Deep Space',  description: 'Alone, not lonely.' },
+      temple:      { name: 'Temple',      description: 'Warm stone, old gold.' },
+      genius_gold: { name: 'Genius Gold', description: 'For those who stay.' },
+      neon_pulse:  { name: 'Neon Pulse',  description: 'First awakening, bright.' },
+    },
+    glow_pack: {
+      firefly: { name: 'Firefly', description: 'Soft. Summer nights.' },
+      halo:    { name: 'Halo',    description: 'Wide. Reverent.' },
+      plasma:  { name: 'Plasma',  description: 'Tight and fierce.' },
+    },
+    hud_style: {
+      minimal: { name: 'Minimal', description: 'Less to see, more to feel.' },
+    },
   },
 
   // Sprint 8b Phase 8b.6 — Transcendence confirm dialog (per Sprint 3.6 audit).
