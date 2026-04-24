@@ -13,6 +13,7 @@ import { episodicShardsAtPrestige } from './shards';
 import { applyMoodEvent } from './mood';
 import { applyPrecommitResolution, streakPermanentMemoriaBonus } from './precommits';
 import { integratedMindMemoryMult, isFullyIntegrated } from './integratedMind';
+import { resonanceGainOnPrestige } from './resonance';
 import type { GameState } from '../types/GameState';
 import type { AwakeningEntry, PatternNode, DiaryEntry } from '../types';
 
@@ -25,6 +26,7 @@ export interface PrestigeOutcome {
   momentumBonus: number;
   nextThreshold: number;
   wasPersonalBest: boolean;
+  resonanceGained: number;
 }
 
 function ownedUpgradeIds(upgrades: GameState['upgrades']): Set<string> {
@@ -89,12 +91,10 @@ export function handlePrestige(state: GameState, timestamp: number): { state: Ga
   const lastCycleEndProduction = state.effectiveProductionPerSecond;
   const cycleDurationMs = timestamp - state.cycleStartTimestamp;
   const cycleMinutes = cycleDurationMs / 60_000; // CONST-OK (ms→min)
-  // Step 3 — personal best at PRE-increment prestigeCount (BUG-04).
   const { next: personalBests, wasPersonalBest } = updatePersonalBests(state.personalBests, state.prestigeCount, cycleMinutes);
-  // Steps 4-7: patterns (4b) / resonance (8b stub) / RP (6.6) / Memories.
   const newPatterns = grantPatterns(state, timestamp);
   const patternsGained = newPatterns.length;
-  const resonanceGain = 0;
+  const resonanceGain = resonanceGainOnPrestige(state, cycleDurationMs);
   const rp = checkAllResonantPatterns(state);
   const baseMemoriesGained = computeMemoriesGained(state);
   // Sprint 7.5.4/7.5.8 — Pre-commit resolution + Integrated Mind Memoria mult applied BEFORE Memory grant.
@@ -193,6 +193,7 @@ export function handlePrestige(state: GameState, timestamp: number): { state: Ga
       momentumBonus,
       nextThreshold,
       wasPersonalBest,
+      resonanceGained: resonanceGain,
     },
   };
 }

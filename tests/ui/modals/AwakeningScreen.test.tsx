@@ -17,6 +17,7 @@ function makeOutcome(overrides: Partial<PrestigeOutcome> = {}): PrestigeOutcome 
     momentumBonus: 1800,
     nextThreshold: 450_000,
     wasPersonalBest: false,
+    resonanceGained: 0,
     ...overrides,
   };
 }
