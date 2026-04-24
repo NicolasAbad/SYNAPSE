@@ -1,4 +1,4 @@
-// Implements GDD §15 RESON-1..3 Resonance upgrade consumers. Sprint 8b Phase 8b.4.
+// Implements docs/GDD.md §15 RESON-1..3 Resonance upgrade consumers. Sprint 8b Phase 8b.4.
 //
 // Pure helpers (CODE-9). Each accessor reads state.resonanceUpgrades (array of
 // owned ids) and returns the relevant modifier value. Each accessor is consumed

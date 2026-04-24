@@ -1,4 +1,4 @@
-// Implements GDD §21 Run-exclusive upgrade consumers. Sprint 8b Phase 8b.5.
+// Implements docs/GDD.md §21 Run-exclusive upgrade consumers. Sprint 8b Phase 8b.5.
 // Pure helpers (CODE-9). Consumed by offline.ts / production.ts.
 
 import { RUN_UPGRADES_BY_ID } from '../config/runUpgrades';

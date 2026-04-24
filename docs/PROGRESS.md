@@ -6,10 +6,41 @@
 
 ## Current status
 
-**Phase:** Sprint 8c CLOSED — **Engine + infrastructure portions only**. RP detection verified (fully implemented Sprint 6); multi-Run Balance Scout Sim extension shipped; TEST-5 canonical runner + report generator shipped. **TEST-5 BLOCKING tuning gate FAILS: 2065 cycles flagged >20% off §9 targets + TUTOR-2 P0 fails 7-9min target (2.9 min).** Tuning iterations (Phase 8c.5+) deferred to a dedicated Nico-in-the-loop balance sprint. **1683 tests pass** (+7 from Sprint 8b close 1676); 4/4 gates green (ratio 0.82); typecheck + lint clean. **GameState invariant: 121 stable.**
-**Last updated:** 2026-04-23 after Sprint 8c close (infrastructure shipped; tuning gate OPEN).
-**Active sprint:** Sprint 8c CLOSED (engine / infrastructure). Awaiting next-sprint scope decision.
-**Next action:** Nico decision — **Sprint 8c-tuning** (dedicated threshold rebalance sprint; interactive with TEST-5 iteration loop) vs **Sprint 9a** (Core SDK + Ads, parallel track since 8c engine is done) vs **deferred 8b.4b polish** (wire the 9 stubbed Resonance/Run upgrade effect kinds).
+**Phase:** Sprint 9a Phase 9a.1 COMPLETE — pre-code catalog approved (V-1..V-13 all `i aprove all`), SDK plugins installed (RevenueCat v9.2.2 + AdMob v6.2.0 — both Capacitor-6-peer-compatible, no ERESOLVE), Gate 2 warning cleaned (resonanceUpgrades.ts + runUpgrades.ts now carry `docs/GDD.md §N` refs). **1683 tests pass** / **4/4 gates PASS (ratio 0.82, zero warnings)** / typecheck + lint clean / GameState 121 (unchanged this phase).
+**Last updated:** 2026-04-23 during Sprint 9a Phase 9a.1.
+**Active sprint:** Sprint 9a (Core SDK + Ads) — Phase 9a.1 shipped; Phase 9a.2 (RevenueCat adapter + SettingsModal) pending Nico green light.
+**Next action:** Phase 9a.2 — `src/platform/revenuecat.ts` adapter (with mock) + `SettingsModal.tsx` with Restore Purchases button + `isSubscribed` wiring from `customerInfo.entitlements`. Expected +10-15 tests, 0 field bumps. STOP-for-approval gate at phase start.
+
+### Sprint 9a dashboard (open — 2026-04-23)
+
+**Scope:** Core SDK + Ads per SPRINTS.md §810-856 + GDD §26. Platform integration sprint (HIGH RISK per SPRINTS.md).
+
+**Pre-code catalog (Phase 9a.1) — V-points resolved:**
+- V-1: **5 ad placements** in 9a (dropped redundant post-Discharge slot B); 7th streak-save lands Sprint 10
+- V-2: New `lastAdWatchedAt: number` field → GameState **121 → 122** (Phase 9a.3). PRESERVE on prestige + Transcendence.
+- V-3: Plugin pinning policy = match Capacitor 6. Pinned `@revenuecat/purchases-capacitor@^9.2.2` (peer `@capacitor/core: ^6.0.0`), `@capacitor-community/admob@^6.2.0` (peer `@capacitor/core: ^6.0.0`).
+- V-4: New `SettingsModal.tsx` for Restore Purchases (Phase 9a.2). Opens via HUD gear icon.
+- V-5: Option B — new `installedAt: number` field for MONEY-4 literal 10-min-from-install gate → GameState **122 → 123** (Phase 9a.3). Set once on first launch, PRESERVE across prestige + Transcendence.
+- V-6: Ad-failure toast approved: `'Ad not available — try again in a moment'`.
+- V-8: Analytics logEvent calls stubbed as no-ops in 9a; Sprint 10 wires Firebase.
+- V-9: ATT iOS string approved (Phase 9a.5): "SYNAPSE uses this identifier to show more relevant ads that support free gameplay. You can opt out; the game plays the same either way."
+- V-11: Gate 2 cleanup shipped in Phase 9a.1 ✓ (this phase).
+- V-12: TEST-5 tuning gate stays deferred to dedicated Sprint 8c-tuning (independent from 9a).
+- V-13: 15 commits ahead of origin/main; Nico will push when convenient.
+
+**Phase 9a.1 deliverables shipped:**
+- `src/engine/resonanceUpgrades.ts` + `src/engine/runUpgrades.ts`: GDD refs updated `GDD §` → `docs/GDD.md §` (Gate 2 WARN → PASS)
+- `package.json`: `@revenuecat/purchases-capacitor@^9.2.2` + `@capacitor-community/admob@^6.2.0` added to dependencies
+- `package-lock.json`: updated (+3 packages total, no peer-dep conflicts)
+
+**Validations Phase 9a.1:**
+- 4/4 gates PASS (zero warnings, vs prior 1 warning)
+- Typecheck clean, lint clean
+- 1683 tests / 0 fail / 37 skipped / 109 files (unchanged from baseline — Phase 9a.1 adds no code under test)
+
+**Plugin version audit (for future maintainers):**
+- `@revenuecat/purchases-capacitor` versioning: v8-9 = Capacitor 6 peer; v10-11 = Capacitor 7+ peer; v12-13 = Capacitor 8+ peer. Upgrading SYNAPSE to Capacitor 7 (POSTLAUNCH) will require bumping RevenueCat alongside.
+- `@capacitor-community/admob` versioning: v6 = Capacitor 6; v7 = Capacitor 7; v8 = Capacitor 8. Same upgrade coupling.
 
 ### Sprint 8c close dashboard (2026-04-23 — RP verification + TEST-5 infrastructure)
 
