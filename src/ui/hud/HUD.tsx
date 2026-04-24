@@ -15,7 +15,7 @@ import { AwakeningFlow } from './AwakeningFlow';
 import { PendingDecisionFlow } from './PendingDecisionFlow';
 import { SettingsButton } from './SettingsButton';
 import { PostDischargeAdToast } from './PostDischargeAdToast';
-import { PiggyBankAdChip } from './PiggyBankAdChip';
+import { OfferOrchestrator } from './OfferOrchestrator';
 import { TabPanelContainer } from '../panels/TabPanelContainer';
 import { NamedMomentPrompt } from '../modals/NamedMomentPrompt';
 
@@ -71,7 +71,7 @@ export const HUD = memo(function HUD({ onOpenSettings }: HUDProps = {}) {
       <PendingDecisionFlow />
       <NamedMomentPrompt />
       <PostDischargeAdToast />
-      <PiggyBankAdChip />
+      <OfferOrchestrator />
       {onOpenSettings && <SettingsButton onOpen={onOpenSettings} />}
       <TabBar />
     </div>

@@ -35,6 +35,9 @@ import { applyMasteryXpGain } from '../engine/mastery';
 import { applyOfflineProgress } from '../engine/offline';
 import { ACHIEVEMENTS_BY_ID } from '../config/achievements';
 import { COSMETIC_CATALOG } from '../config/cosmeticCatalog';
+import { findLimitedTimeOffer } from '../config/limitedTimeOffers';
+import { evaluateSparksPurchase, startOfCurrentMonthUTC } from '../engine/sparksPurchaseCap';
+import { mulberry32 } from '../engine/rng';
 import type { DiaryEntry } from '../types';
 
 /**
@@ -396,6 +399,37 @@ export interface GameStoreActions {
    */
   recordGeniusPassOfferShown: (nowTimestamp: number) => void;
   /**
+   * Sprint 9b Phase 9b.5 — Piggy Bank claim: transfer `piggyBankSparks` to
+   * `sparks`, reset `piggyBankSparks: 0`, set `piggyBankBroken: true`. Called
+   * by RevenueCat purchase success for the `piggy_break` product. Idempotent:
+   * no-op when piggyBankBroken is already true.
+   */
+  claimPiggyBank: () => void;
+  /**
+   * Sprint 9b Phase 9b.5 — Spark Pack purchase: MONEY-8 cap-enforced Sparks grant.
+   * Uses `evaluateSparksPurchase` to detect UTC-month rollover + check cap.
+   * Returns 'ok' on success, 'cap_reached' on MONEY-8 block.
+   */
+  purchaseSparks: (packAmount: number, nowTimestamp: number) => 'ok' | 'cap_reached';
+  /**
+   * Sprint 9b Phase 9b.5 — stamp the active Limited-Time Offer window (48h)
+   * when the offer first becomes eligible. Idempotent — second stamp for
+   * the same offer ID is a no-op.
+   */
+  stampLimitedTimeOffer: (offerId: string, nowTimestamp: number) => void;
+  /**
+   * Sprint 9b Phase 9b.5 — Limited-Time Offer acceptance. RevenueCat purchase
+   * success callback. Applies bundle contents per `LIMITED_TIME_OFFERS` catalog;
+   * random cosmetic selections use `mulberry32` seeded by (installedAt, offerId).
+   */
+  acceptLimitedTimeOffer: (offerId: string) => void;
+  /**
+   * Sprint 9b Phase 9b.5 — Limited-Time Offer dismissal or expiry — adds offer
+   * ID to `purchasedLimitedOffers` (acting as a "consumed" marker) so the
+   * offer never re-triggers. Clears `activeLimitedOffer`.
+   */
+  consumeLimitedTimeOffer: (offerId: string) => void;
+  /**
    * Sprint 3 Phase 3: purchase a neuron of `type` at the current scaled cost
    * (GDD §4 `baseCost × 1.28^owned`). Returns 'ok' on success or a reason
    * code on failure. Recomputes connectionMult on new-type entry (C(n,2)),
@@ -731,6 +765,78 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
   },
   recordGeniusPassOfferShown: (nowTimestamp) => {
     set({ geniusPassLastOfferTimestamp: nowTimestamp });
+  },
+  claimPiggyBank: () => {
+    const state = get();
+    if (state.piggyBankBroken) return;
+    set({
+      sparks: state.sparks + state.piggyBankSparks,
+      piggyBankSparks: 0,
+      piggyBankBroken: true,
+    });
+  },
+  purchaseSparks: (packAmount, nowTimestamp) => {
+    const state = get();
+    const decision = evaluateSparksPurchase({ state, packAmount, nowTimestamp });
+    if (!decision.allowed) return decision.reason;
+    const monthStart = startOfCurrentMonthUTC(nowTimestamp);
+    set({
+      sparks: state.sparks + packAmount,
+      sparksPurchasedThisMonth: decision.effectivePurchasedThisMonth + packAmount,
+      sparksPurchaseMonthStart: monthStart,
+    });
+    return 'ok';
+  },
+  stampLimitedTimeOffer: (offerId, nowTimestamp) => {
+    const state = get();
+    if (state.activeLimitedOffer?.id === offerId) return;
+    set({
+      activeLimitedOffer: { id: offerId, expiresAt: nowTimestamp + SYNAPSE_CONSTANTS.limitedOfferExpiryMs },
+    });
+  },
+  acceptLimitedTimeOffer: (offerId) => {
+    const state = get();
+    if (state.purchasedLimitedOffers.includes(offerId)) return;
+    const def = findLimitedTimeOffer(offerId);
+    if (!def) return;
+    const updates: Partial<GameState> = {
+      sparks: state.sparks + (def.contents.sparks ?? 0),
+      memories: state.memories + (def.contents.memories ?? 0),
+      purchasedLimitedOffers: [...state.purchasedLimitedOffers, offerId],
+      activeLimitedOffer: null,
+    };
+    // Random cosmetic selection via mulberry32 seeded by (installedAt, offerId).
+    // Uses the same seeded-RNG pattern as mutations.ts — deterministic per install.
+    if (def.contents.randomNeuronSkin || def.contents.randomGlowPack || def.contents.randomCanvasTheme) {
+      const seed = (state.installedAt + offerId.split('').reduce((a, c) => a + c.charCodeAt(0), 0)) >>> 0;
+      const rng = mulberry32(seed);
+      const pickUnowned = (category: 'neuron_skin' | 'canvas_theme' | 'glow_pack', ownedList: readonly string[]): string | null => {
+        const eligible = COSMETIC_CATALOG.filter((c) => c.category === category && c.exclusive === null && !ownedList.includes(c.id));
+        if (eligible.length === 0) return null;
+        return eligible[Math.floor(rng() * eligible.length)].id;
+      };
+      if (def.contents.randomNeuronSkin) {
+        const pick = pickUnowned('neuron_skin', state.ownedNeuronSkins);
+        if (pick) updates.ownedNeuronSkins = [...state.ownedNeuronSkins, pick];
+      }
+      if (def.contents.randomGlowPack) {
+        const pick = pickUnowned('glow_pack', state.ownedGlowPacks);
+        if (pick) updates.ownedGlowPacks = [...state.ownedGlowPacks, pick];
+      }
+      if (def.contents.randomCanvasTheme) {
+        const pick = pickUnowned('canvas_theme', state.ownedCanvasThemes);
+        if (pick) updates.ownedCanvasThemes = [...state.ownedCanvasThemes, pick];
+      }
+    }
+    set(updates);
+  },
+  consumeLimitedTimeOffer: (offerId) => {
+    const state = get();
+    if (state.purchasedLimitedOffers.includes(offerId)) return;
+    set({
+      purchasedLimitedOffers: [...state.purchasedLimitedOffers, offerId],
+      activeLimitedOffer: null,
+    });
   },
   buyNeuron: (type, nowTimestamp) => {
     const state = get();

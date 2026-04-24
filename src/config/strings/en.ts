@@ -713,6 +713,51 @@ export const en = {
     cosmeticsButton: 'Cosmetics',
   },
 
+  // Sprint 9b Phase 9b.5 — Piggy Bank claim + Spark packs + Limited-Time Offers.
+  piggyBank: {
+    chipFull: 'Piggy full — tap to break',
+    modalTitle: 'Piggy Bank',
+    modalBody: 'Break the piggy to claim your saved Sparks.',
+    sparksAvailable: 'Sparks available',
+    breakButton: 'Break ($0.99)',
+    dismissButton: 'Later',
+    brokenNote: 'The piggy is broken. Fills start again next cycle.',
+  },
+
+  sparkPack: {
+    modalTitle: 'Spark Packs',
+    subtitle: 'Fuel your next breakthrough.',
+    smallTier: 'Small',
+    mediumTier: 'Medium',
+    largeTier: 'Large',
+    smallAmount: '20 Sparks',
+    mediumAmount: '110 Sparks (10% bonus)',
+    largeAmount: '300 Sparks (25% bonus)',
+    monthlyCapLabel: 'Monthly cap',
+    capRemaining: 'remaining this month',
+    capReachedToast: "Monthly Spark cap reached — resets on the 1st of next month.",
+    buyButton: 'Buy',
+    closeButton: 'Close',
+  },
+
+  limitedTimeOffer: {
+    timerLabel: 'Offer ends in',
+    buyButton: 'Accept',
+    dismissButton: 'Not now',
+    dual_nature_pack: {
+      name: 'Dual Nature Pack',
+      description: 'A neuron skin and 30 Sparks — the mind wants both halves.',
+    },
+    mutant_bundle: {
+      name: 'Mutant Bundle',
+      description: 'A new glow, a new canvas — variety to match your volatility.',
+    },
+    deep_mind_pack: {
+      name: 'Deep Mind Pack',
+      description: '50 Sparks + 3 Memories. You earned this depth.',
+    },
+  },
+
   // Sprint 9b Phase 9b.4 — Starter Pack + Genius Pass offer modals.
   starterPack: {
     title: 'Neural Awakening Pack',

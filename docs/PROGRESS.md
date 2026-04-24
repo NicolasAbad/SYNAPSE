@@ -6,10 +6,52 @@
 
 ## Current status
 
-**Phase:** Sprint 9b Phase 9b.4 COMPLETE (skipped 9b.3 pending RevenueCat propagation). New `geniusPassDismissals: number` GameState field (V-7, **123 → 124**) with full PRESTIGE_PRESERVE + TRANSCENDENCE_PRESERVE coverage; 2 pure engine helpers (`starterPackTrigger.ts` + `geniusPassOffers.ts` — MONEY-9 dismissal cap + 72h interval); 5 new store actions (`acceptStarterPack` / `dismissStarterPack` / `stampStarterPackExpiry` / `dismissGeniusPassOffer` / `recordGeniusPassOfferShown`); `StarterPackModal.tsx` (3-item bundle display + 48h countdown); `GeniusPassOfferModal.tsx` (MONEY-9/MONEY-2 compliance: free-badge + 6 benefits + auto-renew + cancel instructions before CTAs); Genius Pass +1 Mutation option consumer wired in AwakeningFlow; 2 new constants (`starterPackSparkReward: 50`, `starterPackMemoryReward: 5`). **1837 tests pass** (+43 vs 9b.2 baseline 1794) / **4/4 gates PASS (ratio 0.80)** / typecheck + lint clean / **GameState 123 → 124**. Buffer-1 sim 0/0 across 20 cycles.
-**Last updated:** 2026-04-24 during Sprint 9b Phase 9b.4.
-**Active sprint:** Sprint 9b (Offerings + Cosmetics + Analytics) — Phases 9b.1 + 9b.2 + 9b.4 shipped; 9b.3 (RevenueCat product config) still deferred pending propagation; 9b.5 (Piggy Bank claim modal + Limited-Time Offers + Spark monthly cap full flow) next if propagation still blocked, else 9b.3 unblocks first.
-**Next action:** Nico checks RevenueCat dashboard — if transitioned to "Connected", proceed to Phase 9b.3 (RevenueCat product configuration — interactive). If still pending propagation, proceed to Phase 9b.5. Expected +15-20 tests per phase.
+**Phase:** Sprint 9b Phase 9b.5 COMPLETE. 3 Limited-Time Offers (dual_nature_pack P3, mutant_bundle P7, deep_mind_pack P13 — Run-2 "50% off" dropped per V-c to POSTLAUNCH); MONEY-8 Spark monthly cap engine helper (`sparksPurchaseCap.ts` with UTC month rollover per GDD §26 pseudocode); Piggy Bank claim modal (replaces Sprint 9a.4 stub; ad path dropped per V-4); Spark Pack purchase modal with cap disclosure; Limited-Time Offer modal (generic shell); `OfferOrchestrator.tsx` (V-d centralized modal mounting + trigger detection); 5 new store actions (`claimPiggyBank` / `purchaseSparks` / `stampLimitedTimeOffer` / `acceptLimitedTimeOffer` / `consumeLimitedTimeOffer`). `PiggyBankAdChip.tsx` deleted (V-4 cleanup); replaced by `PiggyBankClaimChip.tsx` (modal-opening chip). **1895 tests pass** (+58 vs 9b.4 baseline 1837) / **4/4 gates PASS (ratio 0.81)** / typecheck + lint clean / **GameState 124 stable** (no bump — all reused existing `LimitedOffer` + monetization fields). Buffer-1 sim 0/0.
+**Last updated:** 2026-04-24 during Sprint 9b Phase 9b.5.
+**Active sprint:** Sprint 9b — Phases 9b.1/2/4/5 shipped; 9b.3 (RevenueCat product config) still deferred pending propagation; 9b.6 (Firebase Analytics + 11 monetization events) next if propagation still blocked.
+**Next action:** Nico checks RevenueCat dashboard. If "Connected", proceed to Phase 9b.3 (RevenueCat product configuration — interactive). If still pending, proceed to Phase 9b.6 (Firebase Analytics). Expected +30-40 tests.
+
+### Phase 9b.5 deliverables (offer infrastructure + cap enforcement)
+
+**Files created (8 new):**
+- `src/engine/sparksPurchaseCap.ts` — `evaluateSparksPurchase` + `startOfCurrentMonthUTC` pure helpers implementing MONEY-8 cap + UTC month rollover per GDD §26 pseudocode.
+- `src/engine/limitedTimeOfferTrigger.ts` — `activeLimitedTimeOffer` pure helper detecting milestone-based offer visibility with in-window / purchased-consumed logic.
+- `src/config/limitedTimeOffers.ts` — 3-offer catalog (`dual_nature_pack` / `mutant_bundle` / `deep_mind_pack`); Run-2 "50% off" offer dropped per V-c.
+- `src/ui/modals/PiggyBankClaimModal.tsx` — $0.99 break button + broken-state note + dismiss. Replaces Sprint 9a.4 ad stub per V-4.
+- `src/ui/modals/SparkPackPurchaseModal.tsx` — 3 tier tiles ($0.99/$3.99/$7.99 → 20/110/300 Sparks) + MONEY-8 cap disclosure BEFORE purchase (Apple compliance).
+- `src/ui/modals/LimitedTimeOfferModal.tsx` — generic shell; 48h countdown header; Accept + Dismiss.
+- `src/ui/hud/PiggyBankClaimChip.tsx` — replaces PiggyBankAdChip; opens PiggyBankClaimModal (no ad).
+- `src/ui/hud/OfferOrchestrator.tsx` — V-d centralized mounting of Starter / Genius / Limited / Piggy / SparkPack modals + auto-open trigger detection (starter post-P2 first-open; limited on milestone crossing).
+- 3 new test files (`sparksPurchaseCap` 8 + `limitedTimeOfferTrigger` 7 + `offerActionsPhase5` 14).
+
+**Files modified:**
+- `src/store/gameStore.ts` — 5 new actions: `claimPiggyBank` / `purchaseSparks` / `stampLimitedTimeOffer` / `acceptLimitedTimeOffer` / `consumeLimitedTimeOffer`. Imports `evaluateSparksPurchase` / `startOfCurrentMonthUTC` / `findLimitedTimeOffer` / `mulberry32`.
+- `src/config/strings/en.ts` — 3 new namespaces (`piggyBank.*` 7 strings + `sparkPack.*` 13 + `limitedTimeOffer.*` 12 = 32 strings).
+- `src/ui/hud/HUD.tsx` — replaced `PiggyBankAdChip` import with `OfferOrchestrator`; rendered in place.
+
+**Files deleted:**
+- `src/ui/hud/PiggyBankAdChip.tsx` — Sprint 9a.4 stub, superseded by PiggyBankClaimChip per V-4.
+
+**Validations Phase 9b.5:**
+- 4/4 gates PASS (ratio 0.81, 224 constants / 54 literals)
+- ESLint clean, typecheck clean
+- 1895 tests / 0 fail / 37 skipped / 127 files (+58 tests, +3 files vs 9b.4 baseline 1837)
+- Buffer-1 prestige sim: 0/0 (GameState 124 stable)
+
+**Architectural decisions:**
+- **Offer randomness via `mulberry32(installedAt + offerId hash)`**: `acceptLimitedTimeOffer` picks random not-yet-owned cosmetics via seeded RNG (CODE-9 compliant, no `Math.random`). Deterministic per install — same (installedAt, offerId) always yields same cosmetic, making tests reproducible.
+- **Graceful all-cosmetics-owned**: if offer demands a random cosmetic but the player owns them all, bundle still fires but skips that cosmetic slot. No error, no frustration.
+- **Run-2 "50% off all cosmetics" dropped**: per V-c approved. Requires RevenueCat Offering-swap logic out of 9b.5 scope; pushed to POSTLAUNCH v1.1.
+- **OfferOrchestrator React-local state**: all modal open-states live in one component (V-d). No GameState bump needed. One-shot trigger guards via `hasAutoOpened*` refs.
+- **MONEY-8 cap displayed BEFORE purchase**: per Apple compliance SparkPackPurchaseModal renders the remaining-this-month line ABOVE the tier tiles. Also: buy buttons disable when a tier would exceed cap.
+- **`acceptLimitedTimeOffer` idempotent**: `purchasedLimitedOffers.includes` guard prevents double-grant on replay. Same pattern as `acceptStarterPack`.
+
+**Stubbed for Phase 9b.6 / later:**
+- Trigger orchestration for Genius Pass offers at the 5 contexts (post-P1/PB/P5/P10/Transcendence) — OfferOrchestrator has `geniusPassOpen` state but needs dedicated listeners in AwakeningFlow + handleTranscendence callback. Phase 9b.6 wires this alongside analytics events.
+- RevenueCat `purchasePackage()` callbacks (Phase 9b.3 when propagation resolves).
+- Firebase Analytics + 11 monetization events (Phase 9b.6).
+- HD Neural Snapshot feature (Sprint 10).
+- 10 Sparks/week accrual (Sprint 10, per V-a option C).
 
 ### Phase 9b.4 deliverables (Offer infrastructure)
 
