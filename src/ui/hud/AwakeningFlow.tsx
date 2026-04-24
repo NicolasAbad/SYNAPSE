@@ -48,7 +48,7 @@ export const AwakeningFlow = memo(function AwakeningFlow() {
   // Mutation options drawn at CycleSetupScreen open. Creativa archetype
   // adds +1 option per GDD §12 (Sprint 6 Phase 6.2 wired); Genius Pass /
   // Pattern / Weekly Challenge ctx expand in Sprint 9 / 4b / 7.
-  const mutationOptions = useGameStore((s) => getMutationOptions(s, { creativaArchetype: s.archetype === 'creativa' }));
+  const mutationOptions = useGameStore((s) => getMutationOptions(s, { creativaArchetype: s.archetype === 'creativa', geniusPass: s.isSubscribed }));
 
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [outcome, setOutcome] = useState<PrestigeOutcome | null>(null);

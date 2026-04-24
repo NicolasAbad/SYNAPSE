@@ -7,9 +7,9 @@ import { SYNAPSE_CONSTANTS } from '../../src/config/constants';
 import type { GameState } from '../../src/types/GameState';
 
 describe('createDefaultState — field count and purity', () => {
-  test('returns state with exactly 123 top-level keys (§32 invariant, post-Sprint-9a.3)', () => {
+  test('returns state with exactly 124 top-level keys (§32 invariant, post-Sprint-9b.4)', () => {
     const s = createDefaultState();
-    expect(Object.keys(s).length).toBe(123);
+    expect(Object.keys(s).length).toBe(124);
   });
 
   test('is pure — calling twice returns deep-equal state (INIT-1, CODE-9)', () => {
@@ -18,10 +18,10 @@ describe('createDefaultState — field count and purity', () => {
     expect(JSON.stringify(a)).toBe(JSON.stringify(b));
   });
 
-  test('JSON round-trip preserves all 123 fields (no Date/function/symbol leakage)', () => {
+  test('JSON round-trip preserves all 124 fields (no Date/function/symbol leakage)', () => {
     const s = createDefaultState();
     const roundTripped = JSON.parse(JSON.stringify(s)) as GameState;
-    expect(Object.keys(roundTripped).length).toBe(123);
+    expect(Object.keys(roundTripped).length).toBe(124);
   });
 });
 

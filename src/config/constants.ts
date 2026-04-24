@@ -356,6 +356,8 @@ export const SYNAPSE_CONSTANTS = {
   geniusPassMaxDismissals: 3,
   starterPackExpiryMs: 172_800_000, // 48h
   starterPackShownAtPrestige: 2, // post-P2, not P1 (tonal fix)
+  starterPackSparkReward: 50, // GDD §26 bundle contents
+  starterPackMemoryReward: 5, // GDD §26 bundle contents
   limitedOfferExpiryMs: 172_800_000,
 
   // ── Daily login ──
@@ -393,9 +395,8 @@ export const SYNAPSE_CONSTANTS = {
   gameVersion: '1.0.0',
 
   // ── Field-count runtime verification (§32) ──
-  // 123 fields after Sprint 9a Phase 9a.3 (was 121 post-7.10.5). The +2 fields
-  // are `installedAt` (Session group, MONEY-4 install-time anchor per V-5) and
-  // `lastAdWatchedAt` (new Monetization runtime group, MONEY-6 3-min cooldown
-  // per V-2). Both PRESERVE on prestige + Transcendence (anti-exploit).
-  GAMESTATE_FIELD_COUNT: 123,
+  // 124 fields after Sprint 9b Phase 9b.4 (was 123 post-9a.3). The +1 field is
+  // `geniusPassDismissals` (Genius Pass group, MONEY-9 max-3-dismissals counter
+  // per V-7). PRESERVE on prestige + Transcendence (lifetime).
+  GAMESTATE_FIELD_COUNT: 124,
 } as const;

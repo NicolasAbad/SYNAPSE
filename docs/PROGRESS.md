@@ -6,10 +6,55 @@
 
 ## Current status
 
-**Phase:** Sprint 9b Phase 9b.2 COMPLETE — 4 cosmetic registries populated (18 entries total: 8 neuron skins + 6 canvas themes including 2 exclusives + 3 glow packs + 1 HUD style); `src/config/cosmeticCatalog.ts` product metadata for all 18; 4 new store actions (`unlockCosmetic` / `equipCosmetic` / `unequipCosmetic` / dev-only `unlockAllCosmetics`); `CosmeticsStoreModal.tsx` with 4 tabs + grid + 3-second preview + SettingsModal integration; 36 cosmetic names/descriptions + store UI strings approved via V-d "propose + Nico edits" workflow. **1794 tests pass** (+33 vs 9b.1 baseline 1761) / **4/4 gates PASS (ratio 0.81)** / typecheck + lint clean / **GameState 123 stable** (no bump — all reused existing owned*/active* fields).
-**Last updated:** 2026-04-24 during Sprint 9b Phase 9b.2.
-**Active sprint:** Sprint 9b (Offerings + Cosmetics + Analytics) — Phases 9b.1 + 9b.2 shipped; Phase 9b.3 (RevenueCat products + entitlement configuration) deferred pending RevenueCat propagation (still "Credentials need attention" as of session start; expected resolution 2026-04-26).
-**Next action:** Phase 9b.4 (skipping 9b.3 until propagation resolves) — Starter Pack modal (post-P2 trigger, 48h window, one-time) + Genius Pass offer triggers (5 context-specific) + new GameState field `geniusPassDismissals` (bump 123 → 124) + +1 Mutation option consumer + 10 Sparks/week accrual. Expected +15-20 tests, +1 GameState field. STOP-for-approval gate at phase start.
+**Phase:** Sprint 9b Phase 9b.4 COMPLETE (skipped 9b.3 pending RevenueCat propagation). New `geniusPassDismissals: number` GameState field (V-7, **123 → 124**) with full PRESTIGE_PRESERVE + TRANSCENDENCE_PRESERVE coverage; 2 pure engine helpers (`starterPackTrigger.ts` + `geniusPassOffers.ts` — MONEY-9 dismissal cap + 72h interval); 5 new store actions (`acceptStarterPack` / `dismissStarterPack` / `stampStarterPackExpiry` / `dismissGeniusPassOffer` / `recordGeniusPassOfferShown`); `StarterPackModal.tsx` (3-item bundle display + 48h countdown); `GeniusPassOfferModal.tsx` (MONEY-9/MONEY-2 compliance: free-badge + 6 benefits + auto-renew + cancel instructions before CTAs); Genius Pass +1 Mutation option consumer wired in AwakeningFlow; 2 new constants (`starterPackSparkReward: 50`, `starterPackMemoryReward: 5`). **1837 tests pass** (+43 vs 9b.2 baseline 1794) / **4/4 gates PASS (ratio 0.80)** / typecheck + lint clean / **GameState 123 → 124**. Buffer-1 sim 0/0 across 20 cycles.
+**Last updated:** 2026-04-24 during Sprint 9b Phase 9b.4.
+**Active sprint:** Sprint 9b (Offerings + Cosmetics + Analytics) — Phases 9b.1 + 9b.2 + 9b.4 shipped; 9b.3 (RevenueCat product config) still deferred pending propagation; 9b.5 (Piggy Bank claim modal + Limited-Time Offers + Spark monthly cap full flow) next if propagation still blocked, else 9b.3 unblocks first.
+**Next action:** Nico checks RevenueCat dashboard — if transitioned to "Connected", proceed to Phase 9b.3 (RevenueCat product configuration — interactive). If still pending propagation, proceed to Phase 9b.5. Expected +15-20 tests per phase.
+
+### Phase 9b.4 deliverables (Offer infrastructure)
+
+**Files created (5 new):**
+- `src/engine/starterPackTrigger.ts` — pure helpers: `isStarterPackVisible` (P2+ gate + 48h window + terminal-state checks), `computeStarterPackExpiry` (now + 48h).
+- `src/engine/geniusPassOffers.ts` — pure helper: `shouldOfferGeniusPass(state, context, nowTimestamp)` enforcing MONEY-9 dismissal cap (max 3) + 72h min-interval + subscribed short-circuit. 5 trigger contexts: `post_p1` / `post_personal_best` / `post_p5` / `post_p10` / `post_transcendence`.
+- `src/ui/modals/StarterPackModal.tsx` — 3-item bundle (50 Sparks + 5 Memories + `neon_pulse` canvas theme) + 48h countdown (30s tick) + Accept/Dismiss buttons. Render gates: not purchased + not dismissed + P2+ + inside 48h window.
+- `src/ui/modals/GeniusPassOfferModal.tsx` — MONEY-9/MONEY-2 layout: free-badge → 6 benefits → auto-renew statement → cancel instructions → 2 subscribe CTAs (monthly $4.99 + weekly $1.99 as pre-Offerings placeholders per MONEY-1) → "Not now" dismiss. `onSubscribeMonthly/Weekly` props wire to RevenueCat in Phase 9b.3.
+- 5 new test files: `tests/engine/starterPackTrigger.test.ts` (9) + `tests/engine/geniusPassOffers.test.ts` (7) + `tests/store/offerActions.test.ts` (10) + `tests/ui/modals/StarterPackModal.test.tsx` (8) + `tests/ui/modals/GeniusPassOfferModal.test.tsx` (8) = 42 new tests + 1 consistency update.
+
+**Files modified:**
+- `src/types/GameState.ts` — new `geniusPassDismissals: number` field (Genius Pass group 2→3, total 123→124); CODE-2 Exception A docstring updated.
+- `src/store/gameStore.ts` — 5 new actions; defaults for `geniusPassDismissals: 0`; CODE-2 Exception B 123→124; Genius Pass group 2→3.
+- `src/config/constants.ts` — `GAMESTATE_FIELD_COUNT 123 → 124`; new `starterPackSparkReward: 50` + `starterPackMemoryReward: 5` (GDD §26 bundle contents).
+- `src/config/prestige.ts` — header 123/70 → 124/71; `geniusPassDismissals` added to PRESTIGE_PRESERVE_FIELDS (lifetime counter).
+- `src/config/transcendence.ts` — header 123/57 → 124/58; `geniusPassDismissals` added to TRANSCENDENCE_PRESERVE_FIELDS.
+- `src/store/migrate.ts` — backfills `geniusPassDismissals: 0` for legacy saves.
+- `src/config/strings/en.ts` — `starterPack.*` namespace (9 strings) + `geniusPassOffer.*` namespace (11 strings). Both MONEY-9 compliant (free-badge verbatim).
+- `src/ui/hud/AwakeningFlow.tsx` — `getMutationOptions` now reads `geniusPass: s.isSubscribed` for +1 Mutation option (V-b additive stacking with Creativa archetype).
+- `tests/consistency.test.ts` — field-count 123→124; PRESTIGE_PRESERVE 70→71; TRANSCENDENCE_PRESERVE 57→58; new explicit "geniusPassDismissals is PRESERVE" assertion.
+- Test fixtures updated for 124-field shape (tick/tick-order/gameStore/migrate/saveGame/saveScheduler/transcendence + scripts/buffer-1-prestige-sim).
+
+**Validations Phase 9b.4:**
+- 4/4 gates PASS (ratio 0.80 — was 0.81; dipped 1pt from 5 engine/modal files adding non-const-scope literals, absorbed by CONST-OK annotations)
+- ESLint clean, typecheck clean (`tsc -b --noEmit`)
+- 1837 tests / 0 fail / 37 skipped / 124 files (+43 tests, +5 files vs 9b.2 baseline 1794)
+- Buffer-1 prestige sim: 0 errors / 0 warnings / field count **124** stable across 20 cycles
+- **Reviewer fabrications: 0**
+
+**Architectural decisions:**
+- **`stampStarterPackExpiry` is a separate action from `acceptStarterPack`** — the pack becomes visible at P2 (gates in `isStarterPackVisible`), but the 48h countdown starts the first time the modal OPENS, not on P2 itself. This gives the player a fair window even if they're afk at P2 transition. Idempotent: second stamp is a no-op.
+- **Genius Pass +1 Mutation wired now** (V-b): existing `MutationOptionsContext.geniusPass` field + `geniusPassMutationBonusOptions` constant already existed (Sprint 5 scaffolding). Just needed the caller at `AwakeningFlow.tsx:51` to pass `geniusPass: s.isSubscribed`. Additive with Creativa archetype as per V-b senior-dev rec.
+- **10 Sparks/week accrual DEFERRED to Sprint 10** (V-a option C): Sprint 10 owns retention + daily login; bundling weekly Sparks there keeps 9b.4 tight. Documented as pending.
+- **Bundle Sparks not counting toward monthly cap**: `acceptStarterPack` adds to `sparks` directly; does NOT increment `sparksPurchasedThisMonth`. Matches V-c: Starter Pack is a distinct IAP SKU, not a Spark pack.
+- **GeniusPassOfferModal pre-fetch price placeholders**: `$4.99` monthly / `$1.99` weekly are GDD §26 sticker prices, displayed before RevenueCat Offerings resolve. Phase 9b.3 replaces them with `product.priceString` (MONEY-1 never-hardcoded compliance).
+- **No App.tsx wiring of the 2 new modals yet**: Phase 9b.4 ships the components + store actions + strings + tests. The trigger orchestration (when to open each) lives in the Awakening flow (Starter Pack at P2 first open) + Pattern success listeners (Genius Pass offers at 5 contexts). Wiring those triggers is Sprint 9b.5 scope.
+
+**Stubbed for Phase 9b.5 / later:**
+- App.tsx trigger orchestration: Starter Pack post-P2 first-open + Genius Pass offer at the 5 contexts
+- Piggy Bank claim modal (replaces `PiggyBankAdChip` stub)
+- Limited-Time Offers (4 milestones per GDD §26: P3 / P7 / P13 / Run 2 start)
+- Spark Pack purchase flow + monthly cap (MONEY-8) full UI
+- 10 Sparks/week accrual (Sprint 10)
+- HD Neural Snapshot feature (Sprint 10 or POSTLAUNCH)
+- RevenueCat `purchasePackage()` wiring for all 4 subscribe/buy CTAs (Phase 9b.3)
 
 ### Phase 9b.2 deliverables (Cosmetics)
 

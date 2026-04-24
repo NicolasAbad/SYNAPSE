@@ -1,15 +1,15 @@
-// Implements docs/GDD.md §33 (PRESTIGE_RESET 48 / PRESTIGE_PRESERVE 70 /
-// PRESTIGE_UPDATE 4 / lifetime 1 = 123 total).
+// Implements docs/GDD.md §33 (PRESTIGE_RESET 48 / PRESTIGE_PRESERVE 71 /
+// PRESTIGE_UPDATE 4 / lifetime 1 = 124 total).
 //
 // Pure data file — no logic. handlePrestige() in src/engine/prestige.ts
 // (Sprint 4a Phase 4a.2) consumes these to produce a post-prestige state.
 //
 // Field-count invariants (asserted by tests/consistency.test.ts §33 block):
 //   PRESTIGE_RESET_FIELDS.length === 48
-//   PRESTIGE_PRESERVE_FIELDS.length === 70
+//   PRESTIGE_PRESERVE_FIELDS.length === 71
 //   PRESTIGE_UPDATE_FIELDS.length === 4
 //   PRESTIGE_LIFETIME_FIELDS.length === 1
-//   48 + 70 + 4 + 1 === 123 === Object.keys(createDefaultState()).length
+//   48 + 71 + 4 + 1 === 124 === Object.keys(createDefaultState()).length
 //   RESET ∩ PRESERVE === ∅ (disjoint — no field in both)
 //
 // Ordering within each tuple mirrors GDD §33 for audit readability, but
@@ -167,8 +167,9 @@ export const PRESTIGE_PRESERVE_FIELDS = [
   'starterPackPurchased', 'starterPackDismissed', 'starterPackExpiresAt',
   'activeLimitedOffer', 'purchasedLimitedOffers',
   'sparksPurchasedThisMonth', 'sparksPurchaseMonthStart',
-  // Genius Pass (2)
-  'geniusPassLastOfferTimestamp', 'isSubscribed',
+  // Genius Pass (3) — Sprint 9b Phase 9b.4 added geniusPassDismissals (V-7).
+  // Lifetime counter for MONEY-9 max-3-dismissals; prestige spam must NOT reset it.
+  'geniusPassLastOfferTimestamp', 'isSubscribed', 'geniusPassDismissals',
   // Monetization runtime (1) — Sprint 9a Phase 9a.3 (V-2 anti-exploit: prestige
   // spam must NOT reset MONEY-6 3-min cooldown).
   'lastAdWatchedAt',

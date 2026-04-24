@@ -5,11 +5,11 @@
 // Mount-time timestamps are populated via initSessionTimestamps action
 // per INIT-1 — see src/store/initSession.ts for the React boundary.
 //
-// CODE-2 exception: enumerating all 123 fields with section comments
+// CODE-2 exception: enumerating all 124 fields with section comments
 // and per-field inline rationale pushes this file above the 200-line
 // cap. Same justification as src/types/GameState.ts — the interface is
 // a single-source-of-truth artifact; splitting it would lose the
-// invariant that Object.keys(createDefaultState()).length === 123.
+// invariant that Object.keys(createDefaultState()).length === 124.
 
 import { create } from 'zustand';
 import { SYNAPSE_CONSTANTS } from '../config/constants';
@@ -38,11 +38,12 @@ import { COSMETIC_CATALOG } from '../config/cosmeticCatalog';
 import type { DiaryEntry } from '../types';
 
 /**
- * Pure default state. Matches GDD §32 123-field enumeration exactly.
+ * Pure default state. Matches GDD §32 124-field enumeration exactly.
  * 13 non-trivial initial values per §32 "DEFAULT_STATE non-trivial initial values"
  * (Phase 7.5.1 added `mood: 50` as the 13th, from SYNAPSE_CONSTANTS.moodInitialValue).
  * 5 impure timestamp fields stay at 0/null per INIT-1; mount effect populates them
  * (Sprint 9a Phase 9a.3 added `installedAt` to the impure-timestamp set per V-5).
+ * Sprint 9b Phase 9b.4 added `geniusPassDismissals: 0` (lifetime counter, V-7).
  */
 export function createDefaultState(): GameState {
   return {
@@ -202,9 +203,10 @@ export function createDefaultState(): GameState {
     purchasedLimitedOffers: [],
     sparksPurchasedThisMonth: 0,
     sparksPurchaseMonthStart: 0,
-    // === Genius Pass (2) ===
+    // === Genius Pass (3) — Sprint 9b Phase 9b.4 added geniusPassDismissals (V-7). ===
     geniusPassLastOfferTimestamp: 0,
     isSubscribed: false,
+    geniusPassDismissals: 0,
     // === Monetization runtime (1) — Sprint 9a Phase 9a.3 (V-2, MONEY-6 cooldown). ===
     lastAdWatchedAt: 0,
     // === Narrative (2) ===
@@ -366,6 +368,33 @@ export interface GameStoreActions {
    * `import.meta.env.DEV`; compiled out of production bundles.
    */
   unlockAllCosmetics: () => void;
+  /**
+   * Sprint 9b Phase 9b.4 — Starter Pack acceptance (RevenueCat success callback
+   * in 9b.3 wires this). Unlocks the 3-item bundle per GDD §26: +50 Sparks +
+   * +5 Memories + the `neon_pulse` exclusive canvas theme. Idempotent — replay
+   * guard via `starterPackPurchased`. Sparks DO NOT count toward the monthly
+   * cap (V-c) since Starter Pack is a distinct IAP SKU.
+   */
+  acceptStarterPack: () => void;
+  /** Sprint 9b Phase 9b.4 — Starter Pack dismissal: sets `starterPackDismissed=true`. */
+  dismissStarterPack: () => void;
+  /**
+   * Sprint 9b Phase 9b.4 — stamp `starterPackExpiresAt` the first time the
+   * pack becomes eligible (post-P2, first open). Idempotent.
+   */
+  stampStarterPackExpiry: (nowTimestamp: number) => void;
+  /**
+   * Sprint 9b Phase 9b.4 — Genius Pass offer dismissal: bumps
+   * `geniusPassDismissals` + stamps `geniusPassLastOfferTimestamp`. Called by
+   * the GeniusPassOfferModal's "Not now" button.
+   */
+  dismissGeniusPassOffer: (nowTimestamp: number) => void;
+  /**
+   * Sprint 9b Phase 9b.4 — record that the Genius Pass offer was shown to the
+   * player (but not yet dismissed or accepted). Stamps the timestamp so the
+   * 72h interval gate applies even if they close the app mid-decision.
+   */
+  recordGeniusPassOfferShown: (nowTimestamp: number) => void;
   /**
    * Sprint 3 Phase 3: purchase a neuron of `type` at the current scaled cost
    * (GDD §4 `baseCost × 1.28^owned`). Returns 'ok' on success or a reason
@@ -669,6 +698,39 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
       ownedGlowPacks: COSMETIC_CATALOG.filter((c) => c.category === 'glow_pack').map((c) => c.id),
       ownedHudStyles: COSMETIC_CATALOG.filter((c) => c.category === 'hud_style').map((c) => c.id),
     });
+  },
+  acceptStarterPack: () => {
+    const state = get();
+    if (state.starterPackPurchased) return;
+    const nextOwnedCanvasThemes = state.ownedCanvasThemes.includes('neon_pulse')
+      ? state.ownedCanvasThemes
+      : [...state.ownedCanvasThemes, 'neon_pulse'];
+    set({
+      starterPackPurchased: true,
+      sparks: state.sparks + SYNAPSE_CONSTANTS.starterPackSparkReward,
+      memories: state.memories + SYNAPSE_CONSTANTS.starterPackMemoryReward,
+      ownedCanvasThemes: nextOwnedCanvasThemes,
+    });
+  },
+  dismissStarterPack: () => {
+    const state = get();
+    if (state.starterPackDismissed || state.starterPackPurchased) return;
+    set({ starterPackDismissed: true });
+  },
+  stampStarterPackExpiry: (nowTimestamp) => {
+    const state = get();
+    if (state.starterPackExpiresAt !== 0) return;
+    set({ starterPackExpiresAt: nowTimestamp + SYNAPSE_CONSTANTS.starterPackExpiryMs });
+  },
+  dismissGeniusPassOffer: (nowTimestamp) => {
+    const state = get();
+    set({
+      geniusPassDismissals: state.geniusPassDismissals + 1,
+      geniusPassLastOfferTimestamp: nowTimestamp,
+    });
+  },
+  recordGeniusPassOfferShown: (nowTimestamp) => {
+    set({ geniusPassLastOfferTimestamp: nowTimestamp });
   },
   buyNeuron: (type, nowTimestamp) => {
     const state = get();

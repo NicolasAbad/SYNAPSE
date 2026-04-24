@@ -1,18 +1,20 @@
-// Implements docs/GDD.md §32 (GameState — 123 fields) — v1.0 post-Sprint-9a.3
+// Implements docs/GDD.md §32 (GameState — 124 fields) — v1.0 post-Sprint-9b.4
 //
-// CRITICAL: this interface must have EXACTLY 123 properties. Sprint 1 invariant
-// asserts `Object.keys(DEFAULT_STATE).length === 123`. Section-by-section count
-// per §32 breakdown sums to 123 (verified line-by-line in GDD §32).
+// CRITICAL: this interface must have EXACTLY 124 properties. Sprint 1 invariant
+// asserts `Object.keys(DEFAULT_STATE).length === 124`. Section-by-section count
+// per §32 breakdown sums to 124 (verified line-by-line in GDD §32).
 // Sprint 7.10.4 added `pendingOfflineSummary` (Offline group, 119 → 120).
 // Sprint 7.10.5 added `lucidDreamActiveUntil` (Session bonuses, 120 → 121).
 // Sprint 9a Phase 9a.3 added `installedAt` (Session, 121 → 122) and
 // `lastAdWatchedAt` (Monetization runtime, 122 → 123) per V-2 + V-5.
+// Sprint 9b Phase 9b.4 added `geniusPassDismissals` (Genius Pass, 123 → 124)
+// per V-7 for MONEY-9 max-3-dismissals enforcement.
 //
 /**
- * GameState — the canonical application state (123 fields).
+ * GameState — the canonical application state (124 fields).
  *
  * CODE-2 exception (second audit followup, refreshed Sprint 7.5.1):
- * this file exceeds the 200-line cap due to 121 one-line field
+ * this file exceeds the 200-line cap due to 122 one-line field
  * declarations + section-header comments + interface boilerplate.
  * Cannot be reduced without either (a) dropping load-bearing
  * audit comments that map fields to GDD §32 categories, or
@@ -25,9 +27,9 @@
  *
  * This exception is documented in CLAUDE.md under CODE-2.
  *
- * Field count MUST remain 123. Adding/removing fields requires:
+ * Field count MUST remain 124. Adding/removing fields requires:
  * - updating docs/GDD.md §32
- * - updating the 48/70/4/1 PRESTIGE_RESET/PRESERVE/UPDATE split
+ * - updating the 48/71/4/1 PRESTIGE_RESET/PRESERVE/UPDATE split
  * - updating the consistency test that asserts exact count
  */
 
@@ -248,9 +250,12 @@ export interface GameState {
   sparksPurchasedThisMonth: number;
   sparksPurchaseMonthStart: number;
 
-  // === Genius Pass (2) ===
+  // === Genius Pass (3) — Sprint 9b Phase 9b.4 added geniusPassDismissals (V-7). ===
   geniusPassLastOfferTimestamp: number;
   isSubscribed: boolean;
+  // PRESERVE on prestige + Transcendence (lifetime counter per GDD §26 MONEY-9
+  // "max 3 total dismissals — after which the offer is Store-only").
+  geniusPassDismissals: number;
 
   // === Monetization runtime (1) — Sprint 9a Phase 9a.3 (V-2). ===
   // PRESERVE on prestige + Transcendence (anti-exploit: prestige spamming

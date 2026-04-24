@@ -1,5 +1,5 @@
-// Implements docs/GDD.md §20 + §34 (TRANSCENDENCE_RESET 59 / TRANSCENDENCE_PRESERVE 57 /
-// TRANSCENDENCE_UPDATE 7 = 123 total).
+// Implements docs/GDD.md §20 + §34 (TRANSCENDENCE_RESET 59 / TRANSCENDENCE_PRESERVE 58 /
+// TRANSCENDENCE_UPDATE 7 = 124 total).
 //
 // Pure data file — no logic. handleTranscendence() in src/engine/transcendence.ts
 // (Sprint 8b Phase 8b.2) consumes these to produce a post-Transcendence state.
@@ -195,8 +195,9 @@ export const TRANSCENDENCE_PRESERVE_FIELDS = [
   'starterPackPurchased', 'starterPackDismissed', 'starterPackExpiresAt',
   'activeLimitedOffer', 'purchasedLimitedOffers',
   'sparksPurchasedThisMonth', 'sparksPurchaseMonthStart',
-  // Genius Pass (2)
-  'geniusPassLastOfferTimestamp', 'isSubscribed',
+  // Genius Pass (3) — Sprint 9b Phase 9b.4 added geniusPassDismissals (V-7).
+  // Lifetime counter: Transcendence must not reset MONEY-9 max-3-dismissals.
+  'geniusPassLastOfferTimestamp', 'isSubscribed', 'geniusPassDismissals',
   // Monetization runtime (1) — Sprint 9a Phase 9a.3 (V-2): cooldown survives
   // Transcendence so Run-2 starts honoring the prior cooldown.
   'lastAdWatchedAt',

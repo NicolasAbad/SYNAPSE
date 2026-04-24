@@ -713,6 +713,37 @@ export const en = {
     cosmeticsButton: 'Cosmetics',
   },
 
+  // Sprint 9b Phase 9b.4 — Starter Pack + Genius Pass offer modals.
+  starterPack: {
+    title: 'Neural Awakening Pack',
+    subtitle: 'A welcome bundle for your growing mind.',
+    itemSparks: '50 Sparks',
+    itemMemories: '5 Memories',
+    itemTheme: 'Neon Pulse canvas theme',
+    timerLabel: 'Offer ends in',
+    buyButton: 'Accept',
+    dismissButton: 'Not now',
+    expiredNote: 'This offer has expired.',
+  },
+
+  geniusPassOffer: {
+    title: 'Genius Pass',
+    // MONEY-9 compliance — must appear BEFORE the subscription CTA per GDD §26.
+    freeBadge: 'All content accessible for free — subscription is convenience only.',
+    benefitNoAds: 'No rewarded ads',
+    benefitOfflineBoost: '+25% offline production',
+    benefitMutation: '+1 Mutation option per cycle',
+    benefitWeeklySparks: '10 Sparks each week',
+    benefitHdSnapshot: 'HD Neural Snapshot',
+    benefitGoldTheme: 'Genius Gold canvas theme',
+    autoRenewStatement: 'Subscription auto-renews monthly unless cancelled.',
+    cancelInstructions: 'Cancel anytime via App Store or Play Store settings.',
+    subscribeMonthly: 'Subscribe monthly',
+    subscribeWeekly: 'Subscribe weekly',
+    dismissButton: 'Not now',
+    maxDismissalsNote: 'This offer is available in the Store anytime.',
+  },
+
   // Sprint 9b Phase 9b.2 — Cosmetics store + 18 cosmetic names/descriptions.
   // Names are terse (≤6 words) to match SleepScreen + narrative fragments tone.
   cosmetics: {

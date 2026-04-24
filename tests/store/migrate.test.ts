@@ -28,6 +28,7 @@ const NEW_FIELDS = [
   'lucidDreamActiveUntil', // Sprint 7.10.5
   'installedAt',           // Sprint 9a Phase 9a.3 — V-5
   'lastAdWatchedAt',       // Sprint 9a Phase 9a.3 — V-2
+  'geniusPassDismissals',  // Sprint 9b Phase 9b.4 — V-7
 ] as const;
 
 /** Build a synthetic legacy 110-field payload by stripping the 13 backfill fields from a current default. */
@@ -38,12 +39,12 @@ function legacy110(): Record<string, unknown> {
   return stripped;
 }
 
-describe('migrateState — 110 → 123 backfill (Sprint 7.5.1 + 7.10.4 + 7.10.5 + 9a.3)', () => {
-  test('legacy 110-field payload becomes a 123-field payload', () => {
+describe('migrateState — 110 → 124 backfill (Sprint 7.5.1 + 7.10.4 + 7.10.5 + 9a.3 + 9b.4)', () => {
+  test('legacy 110-field payload becomes a 124-field payload', () => {
     const legacy = legacy110();
     expect(Object.keys(legacy).length).toBe(110);
     const migrated = migrateState(legacy) as Record<string, unknown>;
-    expect(Object.keys(migrated).length).toBe(123);
+    expect(Object.keys(migrated).length).toBe(124);
   });
 
   test('all 11 new fields are present after migration', () => {
@@ -68,6 +69,7 @@ describe('migrateState — 110 → 123 backfill (Sprint 7.5.1 + 7.10.4 + 7.10.5 
     expect(migrated.lucidDreamActiveUntil).toBeNull();
     expect(migrated.installedAt).toBe(0);
     expect(migrated.lastAdWatchedAt).toBe(0);
+    expect(migrated.geniusPassDismissals).toBe(0);
   });
 
   test('migration preserves all pre-existing 110 fields untouched', () => {
@@ -83,10 +85,10 @@ describe('migrateState — 110 → 123 backfill (Sprint 7.5.1 + 7.10.4 + 7.10.5 
 });
 
 describe('migrateState — idempotency', () => {
-  test('a fully-formed 123-field payload passes through unchanged', () => {
+  test('a fully-formed 124-field payload passes through unchanged', () => {
     const current = createDefaultState() as unknown as Record<string, unknown>;
     const migrated = migrateState(current) as Record<string, unknown>;
-    expect(Object.keys(migrated).length).toBe(123);
+    expect(Object.keys(migrated).length).toBe(124);
     // Deep-equal — defaults didn't override the existing values.
     expect(migrated).toEqual(current);
   });

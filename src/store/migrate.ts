@@ -25,6 +25,8 @@
 //     next launch since legacy save means we don't know real install date) and
 //     `lastAdWatchedAt: 0` (V-2, MONEY-6 cooldown — 0 means "no prior ad,
 //     cooldown immediately satisfied").
+//   - Sprint 9b Phase 9b.4: 123 → 124 fields. Backfills `geniusPassDismissals: 0`
+//     (V-7, lifetime counter for MONEY-9 max-3-dismissals enforcement).
 
 import { SYNAPSE_CONSTANTS } from '../config/constants';
 
@@ -68,6 +70,7 @@ export function migrateState(parsed: unknown): unknown {
     lucidDreamActiveUntil: null, // Sprint 7.10.5 — Lucid Dream Option A buff expiry
     installedAt: 0, // Sprint 9a Phase 9a.3 — initSessionTimestamps stamps post-load
     lastAdWatchedAt: 0, // Sprint 9a Phase 9a.3 — 0 means cooldown satisfied
+    geniusPassDismissals: 0, // Sprint 9b Phase 9b.4 — V-7 MONEY-9 counter
   };
   const out: Record<string, unknown> = { ...obj };
   for (const key of Object.keys(defaults)) {

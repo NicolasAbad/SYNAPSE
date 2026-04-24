@@ -118,6 +118,7 @@ function makeState(overrides: Partial<GameState> = {}): GameState {
     sparksPurchaseMonthStart: 0,
     geniusPassLastOfferTimestamp: 0,
     isSubscribed: false,
+    geniusPassDismissals: 0,
     lastAdWatchedAt: 0,
     narrativeFragmentsSeen: [],
     eraVisualTheme: 'bioluminescent',
