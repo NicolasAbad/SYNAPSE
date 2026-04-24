@@ -6,10 +6,51 @@
 
 ## Current status
 
-**Phase:** Sprint 9a Phase 9a.3 COMPLETE — AdMob adapter (real + mock), `adGate.canShowAd` engine helper (MONEY-4/5/6 + Genius Pass shielding), 2 new GameState fields (`installedAt` 121→122 V-5, `lastAdWatchedAt` 122→123 V-2), `recordAdWatched` store action, full PRESTIGE_PRESERVE + TRANSCENDENCE_PRESERVE updates (68→70 / 55→57). **1744 tests pass** (+32 vs 9a.2 baseline 1712) / **4/4 gates PASS (ratio 0.81, zero warnings)** / typecheck + lint clean / **GameState 123 stable**. Buffer-1 prestige sim: 0 errors / 0 warnings / field count 123 across cycles.
-**Last updated:** 2026-04-23 during Sprint 9a Phase 9a.3.
-**Active sprint:** Sprint 9a (Core SDK + Ads) — Phases 9a.1 / 9a.2 / 9a.3 shipped; Phase 9a.4 (5 ad placements + MONEY-4/5/6/7 guardrails enforced per placement) pending Nico green light.
-**Next action:** Phase 9a.4 — wire 5 ad placements (SleepScreen offline-boost is already stubbed, will become live; post-Discharge CTA, mutation-reroll on CycleSetupScreen, decision-retry on PatternDecisionModal, piggy-refill placeholder). Each placement gate-checks `canShowAd(state, now, isPostCascade?)` before `loadRewardedAd → showRewardedAd → recordAdWatched`. Expected +15-20 tests, 0 GameState fields. STOP-for-approval gate at phase start.
+**Phase:** Sprint 9a Phase 9a.4 COMPLETE — 5 ad placements wired through a single `AdContext` provider (`tryShowAd(placement, opts?)` composes `canShowAd` gate + adapter calls + `recordAdWatched` cooldown stamping). SleepScreen offline_boost is fully live (2× thoughts via `applyAdRewardOfflineDouble`); PostDischargeAdToast HUD detects non-Cascade discharges + offers reward; MutationSlot has reroll-via-ad button (full live via `rerollMutationOptions`); PendingDecisionFlow surfaces post-pick "switch via ad" toast (full live via `retryPatternDecision`); PiggyBankAdChip is a stub for Sprint 9b reward-claim modal. **1761 tests pass** (+17 vs 9a.3 baseline 1744) / **4/4 gates PASS (ratio 0.81, zero warnings)** / typecheck + lint clean / **GameState 123 stable**. Buffer-1 prestige sim: 0 errors / 0 warnings.
+**Last updated:** 2026-04-23 during Sprint 9a Phase 9a.4.
+**Active sprint:** Sprint 9a (Core SDK + Ads) — Phases 9a.1 / 9a.2 / 9a.3 / 9a.4 shipped; Phase 9a.5 (iOS Info.plist + Android AndroidManifest.xml + ATT string + sandbox setup checklist) pending Nico green light.
+**Next action:** Phase 9a.5 — `android/app/src/main/AndroidManifest.xml` AdMob `APPLICATION_ID` + `AD_ID` permission; `ios/App/App/Info.plist` `GADApplicationIdentifier` + `NSUserTrackingUsageDescription` (V-9 approved string); sandbox setup checklist in PROGRESS.md (manual Nico steps). Expected +0-2 tests, 0 GameState fields. STOP-for-approval gate at phase start.
+
+### Phase 9a.4 deliverables (added to Sprint 9a dashboard below)
+
+**Files created (4 new):**
+- `src/platform/AdContext.tsx` — single React context exposing `tryShowAd(placement, { isPostCascade? })` returning `{ status: 'shown' | 'dismissed' | 'blocked' | 'failed'; reason? }`. Internally: gate via `canShowAd` → `loadRewardedAd` → `showRewardedAd` → `recordAdWatched`. Cooldown stamped on shown OR dismissed (anti-grind). Inert when adapter is null (web/test → tryShowAd returns `{ status: 'blocked' }`).
+- `src/ui/hud/PostDischargeAdToast.tsx` — placement #2 (post_discharge). Detects non-Cascade discharge by tracking `dischargeLastTimestamp` + `cycleCascades` deltas via `useRef`. Burst tracked via `effectiveProductionPerSecond * 2` heuristic (full burst capture deferred to v1.1 — would need transient store field). Auto-dismiss 12s.
+- `src/ui/hud/PiggyBankAdChip.tsx` — placement #5 (piggy_refill). Visible only when `piggyBankSparks === piggyBankMaxSparks` AND adapter wired. Calls tryShowAd; on success renders placeholder note ("Sprint 9b will wire the bonus payout"). Reward path is intentionally a stub.
+- 2 new test files: `tests/store/adRewardActions.test.ts` (8) + `tests/platform/adContext.test.tsx` (9) = 17 new tests
+
+**Files modified:**
+- `src/store/gameStore.ts` — 4 new actions: `applyAdRewardOfflineDouble` (doubles `pendingOfflineSummary.gained` → adds to thoughts/cycleGenerated/totalGenerated, then dismisses summary), `applyAdRewardDischargeDouble(burst)` (adds burst extra thoughts), `rerollMutationOptions` (clears currentMutation + bumps mutationSeed; tutorial no-op), `retryPatternDecision(nodeIndex)` (deletes lock so PendingDecisionFlow re-prompts)
+- `src/config/strings/en.ts` — new `ads.*` namespace (9 strings: failedToast, postDischargeOffer/Dismiss, rerollMutation, decisionRetry, piggyChipFull, rewardEarnedToast, rewardDismissedToast, placeholderToast)
+- `src/ui/modals/SleepScreen.tsx` — replaced `sleep-rewarded-ad-stub` with live `sleep-rewarded-ad` button; click → tryShowAd('offline_boost') → applyAdRewardOfflineDouble on success; failure/dismiss → status note
+- `src/ui/modals/MutationSlot.tsx` — added "Reroll mutations (watch ad)" button (placement #3 mutation_reroll); visible only when `!ad.inert`; on success → rerollMutationOptions
+- `src/ui/hud/PendingDecisionFlow.tsx` — added post-pick `decision-retry-toast` (placement #4 decision_retry); auto-dismiss 12s; tap → tryShowAd('decision_retry') → retryPatternDecision (modal re-opens via existing pending-detection logic)
+- `src/App.tsx` — created `adMobAdapter` via `useMemo` (native-only, mirrors RevenueCat pattern); init flow calls `adMobAdapter.initialize()` with try/catch; wraps render in `<AdProvider adapter={adMobAdapter}>`
+- `src/ui/hud/HUD.tsx` — renders `PostDischargeAdToast` + `PiggyBankAdChip`
+- `tests/ui/modals/SleepScreen.test.tsx` — old test for `sleep-rewarded-ad-stub` testid updated: new testid + wraps in `AdProvider` with mock adapter (ad button is hidden when adapter is null per phase 9a.4 design)
+
+**Validations Phase 9a.4:**
+- 4/4 gates PASS (ratio 0.81, 211 constants / 49 literals)
+- ESLint clean (1 warning resolved with eslint-disable on `useAdContext` export — co-located with AdProvider per common React-context pattern)
+- Typecheck clean (tsc -b --noEmit)
+- 1761 tests / 0 fail / 37 skipped / 119 files (+17 tests, +2 files vs 9a.3 baseline)
+- Buffer-1 prestige sim: 0 errors / 0 warnings (vanilla + Focus Persistente, 20 cycles, field count 123 stable)
+
+**Architectural decisions:**
+- **Single AdContext over per-placement props**: 5 placement components × 1 `tryShowAd` callback beats prop-drilling 5 callbacks through scattered components. Provider placement (App.tsx) keeps adapter construction at the native-platform boundary.
+- **Cooldown stamped on dismiss too**: spec says "max 1 ad per 3 min" — interpreted as "the user spent their slot." Failure (load/show error) does NOT stamp cooldown (player can retry). Anti-grind: dismissing 3 ads in quick succession would otherwise bypass MONEY-6.
+- **Burst heuristic for post-Discharge reward**: capturing the exact discharge burst would require a transient store field (would bump GameState 123 → 124). For Phase 9a.4 we use `effectiveProductionPerSecond * 2` as a stand-in. The 2× ad reward then pays out `burst` extra thoughts. This produces a reasonable but approximate doubling. Full burst capture is a v1.1 enhancement candidate.
+- **Mutation reroll: full live, decision retry: full live**: both touch only existing GameState fields (currentMutation/mutationSeed; patternDecisions). No schema bumps required.
+- **Piggy refill: stub only** per V-1 / SPRINTS.md "piggy refill placeholder (full piggy in Sprint 9b)". The placement IS wired through the cooldown + MONEY-7 fallback; only the reward UX is deferred. This proves the placement compiles into the cooldown bucket without committing to UX before 9b's claim modal.
+- **Inert mode**: when `adapter === null` (web preview, tests without explicit AdProvider), `useAdContext` returns a fallback `{ tryShowAd: → blocked, inert: true }`. Placement components inspect `ad.inert` to hide their CTAs entirely (reroll button, piggy chip, post-discharge toast). Avoids "Watch ad" buttons that would never work on web.
+
+**Stubbed for Phase 9a.5 / 9b / 10:**
+- `android/AndroidManifest.xml` AdMob APPLICATION_ID + AD_ID permission (Phase 9a.5)
+- `ios/Info.plist` GADApplicationIdentifier + NSUserTrackingUsageDescription V-9 string (Phase 9a.5)
+- Sandbox account setup checklist (Phase 9a.5 docs-only)
+- Real burst capture for post-Discharge ad (Phase 9b or v1.1)
+- Piggy claim modal + 2× refill mechanics (Phase 9b)
+- Analytics `ad_offered / ad_watched / ad_failed` events (Sprint 10)
 
 ### Phase 9a.3 deliverables (added to Sprint 9a dashboard below)
 

@@ -83,7 +83,9 @@ describe('SleepScreen — conditional banners', () => {
     expect(queryByTestId('lucid-option-b')).not.toBeNull();
   });
 
-  test('rewarded-ad button shows ONLY when elapsed ≥ minOfflineMinutes AND no Lucid Dream', () => {
+  test('rewarded-ad button shows ONLY when elapsed ≥ minOfflineMinutes AND no Lucid Dream AND adapter wired', async () => {
+    const { AdProvider } = await import('../../../src/platform/AdContext');
+    const { createMockAdMobAdapter } = await import('../../../src/platform/admob.mock');
     act(() => {
       useGameStore.setState({
         pendingOfflineSummary: {
@@ -93,8 +95,12 @@ describe('SleepScreen — conditional banners', () => {
         },
       });
     });
-    const { queryByTestId } = render(<SleepScreen />);
-    expect(queryByTestId('sleep-rewarded-ad-stub')).not.toBeNull();
+    const { queryByTestId } = render(
+      <AdProvider adapter={createMockAdMobAdapter()}>
+        <SleepScreen />
+      </AdProvider>,
+    );
+    expect(queryByTestId('sleep-rewarded-ad')).not.toBeNull();
   });
 
   test('cycle-cap note shows when cappedHit is true', () => {

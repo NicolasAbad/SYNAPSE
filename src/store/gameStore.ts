@@ -323,6 +323,30 @@ export interface GameStoreActions {
    */
   recordAdWatched: (nowTimestamp: number) => void;
   /**
+   * Sprint 9a Phase 9a.4 — ad reward payout: double the pending offline-return
+   * summary. Adds `summary.gained` extra thoughts and dismisses the Sleep
+   * screen summary. No-op when `pendingOfflineSummary` is null.
+   */
+  applyAdRewardOfflineDouble: () => void;
+  /**
+   * Sprint 9a Phase 9a.4 — ad reward payout: double the last Discharge burst.
+   * Caller passes the burst magnitude from the DischargeOutcome (transient —
+   * no GameState field tracks per-discharge burst).
+   */
+  applyAdRewardDischargeDouble: (burst: number) => void;
+  /**
+   * Sprint 9a Phase 9a.4 — mutation-reroll ad reward: clears currentMutation
+   * and advances mutationSeed so getMutationOptions() yields a fresh set on
+   * next read. No-op during a tutorial cycle (mutations not yet unlocked).
+   */
+  rerollMutationOptions: () => void;
+  /**
+   * Sprint 9a Phase 9a.4 — pattern-decision retry: removes a previously-locked
+   * decision so the PendingDecisionFlow can re-prompt. `nodeIndex` must be an
+   * existing decision node. Idempotent — a no-op when the node has no decision.
+   */
+  retryPatternDecision: (nodeIndex: number) => void;
+  /**
    * Sprint 3 Phase 3: purchase a neuron of `type` at the current scaled cost
    * (GDD §4 `baseCost × 1.28^owned`). Returns 'ok' on success or a reason
    * code on failure. Recomputes connectionMult on new-type entry (C(n,2)),
@@ -546,6 +570,38 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
   setAnalyticsConsent: (consent) => set({ analyticsConsent: consent }),
   setSubscriptionStatus: (isSubscribed) => set({ isSubscribed }),
   recordAdWatched: (nowTimestamp) => set({ lastAdWatchedAt: nowTimestamp }),
+  applyAdRewardOfflineDouble: () => {
+    const state = get();
+    const summary = state.pendingOfflineSummary;
+    if (summary === null) return;
+    set({
+      thoughts: state.thoughts + summary.gained,
+      cycleGenerated: state.cycleGenerated + summary.gained,
+      totalGenerated: state.totalGenerated + summary.gained,
+      pendingOfflineSummary: null,
+    });
+  },
+  applyAdRewardDischargeDouble: (burst) => {
+    if (burst <= 0) return;
+    const state = get();
+    set({
+      thoughts: state.thoughts + burst,
+      cycleGenerated: state.cycleGenerated + burst,
+      totalGenerated: state.totalGenerated + burst,
+    });
+  },
+  rerollMutationOptions: () => {
+    const state = get();
+    if (state.isTutorialCycle) return;
+    set({ currentMutation: null, mutationSeed: state.mutationSeed + 1 });
+  },
+  retryPatternDecision: (nodeIndex) => {
+    const state = get();
+    if (state.patternDecisions[nodeIndex] === undefined) return;
+    const nextDecisions = { ...state.patternDecisions };
+    delete nextDecisions[nodeIndex];
+    set({ patternDecisions: nextDecisions });
+  },
   buyNeuron: (type, nowTimestamp) => {
     const state = get();
     const result = tryBuyNeuron(state, type, nowTimestamp);

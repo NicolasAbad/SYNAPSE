@@ -15,6 +15,8 @@ import { SleepScreen } from './ui/modals/SleepScreen';
 import { SettingsModal } from './ui/modals/SettingsModal';
 import { EchoLayer } from './ui/canvas/EchoLayer';
 import { createRevenueCatAdapter, type RevenueCatAdapter } from './platform/revenuecat';
+import { createAdMobAdapter, type AdMobAdapter } from './platform/admob';
+import { AdProvider } from './platform/AdContext';
 
 export function App() {
   // Sprint 9a Phase 9a.2 — RevenueCat adapter is created once on native; null on
@@ -23,6 +25,13 @@ export function App() {
   // tries to dynamic-import @revenuecat/purchases-capacitor.
   const revenueCatAdapter = useMemo<RevenueCatAdapter | null>(() => {
     return Capacitor.isNativePlatform() ? createRevenueCatAdapter() : null;
+  }, []);
+
+  // Sprint 9a Phase 9a.4 — AdMob adapter mirrors the RevenueCat pattern. Both
+  // are null on web/test so the Ad placement components render their inert
+  // (button-hidden) variants.
+  const adMobAdapter = useMemo<AdMobAdapter | null>(() => {
+    return Capacitor.isNativePlatform() ? createAdMobAdapter() : null;
   }, []);
 
   // Sequential mount: load saved state first, then init timestamps ONLY if no
@@ -67,10 +76,19 @@ export function App() {
           console.error('[RevenueCat] init failed:', e);
         }
       }
+      if (adMobAdapter !== null) {
+        try {
+          await adMobAdapter.initialize();
+        } catch (e) {
+          // CODE-8: AdMob init failure → ad placements remain unavailable
+          // (tryShowAd will return 'failed') but the game continues.
+          console.error('[AdMob] init failed:', e);
+        }
+      }
     };
     void initialize();
     return () => cleanups.forEach((off) => off());
-  }, [revenueCatAdapter]);
+  }, [revenueCatAdapter, adMobAdapter]);
 
   useTickScheduler(); // game tick runtime
   useSaveScheduler();
@@ -85,32 +103,34 @@ export function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   return (
-    <main
-      style={{
-        margin: 0,
-        padding: 0,
-        height: '100%', // CONST-OK: CSS full-height idiom (CODE-1 exception)
-        position: 'relative',
-        background: 'var(--color-bg-deep, #05070d)', // CONST-OK: CSS fallback (CODE-1 exception)
-        color: 'var(--color-text-primary)',
-        fontFamily: 'var(--font-body)',
-        overflow: 'hidden',
-      }}
-    >
-      <NeuronCanvas />
-      <HUD onOpenSettings={() => setSettingsOpen(true)} />
-      <TutorialHints />
-      <EchoLayer />
-      <FragmentOverlay />
-      <Era3EventModal />
-      <SleepScreen />
-      <SettingsModal
-        open={settingsOpen}
-        onClose={() => setSettingsOpen(false)}
-        restorePurchases={revenueCatAdapter?.restorePurchases}
-      />
-      {!splashDone && <SplashScreen onComplete={() => setSplashDone(true)} />}
-      {splashDone && isEU && !gdprDone && <GdprModal onComplete={() => setGdprDone(true)} />}
-    </main>
+    <AdProvider adapter={adMobAdapter}>
+      <main
+        style={{
+          margin: 0,
+          padding: 0,
+          height: '100%', // CONST-OK: CSS full-height idiom (CODE-1 exception)
+          position: 'relative',
+          background: 'var(--color-bg-deep, #05070d)', // CONST-OK: CSS fallback (CODE-1 exception)
+          color: 'var(--color-text-primary)',
+          fontFamily: 'var(--font-body)',
+          overflow: 'hidden',
+        }}
+      >
+        <NeuronCanvas />
+        <HUD onOpenSettings={() => setSettingsOpen(true)} />
+        <TutorialHints />
+        <EchoLayer />
+        <FragmentOverlay />
+        <Era3EventModal />
+        <SleepScreen />
+        <SettingsModal
+          open={settingsOpen}
+          onClose={() => setSettingsOpen(false)}
+          restorePurchases={revenueCatAdapter?.restorePurchases}
+        />
+        {!splashDone && <SplashScreen onComplete={() => setSplashDone(true)} />}
+        {splashDone && isEU && !gdprDone && <GdprModal onComplete={() => setGdprDone(true)} />}
+      </main>
+    </AdProvider>
   );
 }

@@ -687,6 +687,19 @@ export const en = {
     },
   },
 
+  // Sprint 9a Phase 9a.4 — ad placement labels + MONEY-7 fallback toast.
+  ads: {
+    failedToast: 'Ad not available — try again in a moment',
+    postDischargeOffer: 'Watch ad — double your last Discharge',
+    postDischargeDismiss: 'No thanks',
+    rerollMutation: 'Reroll mutations (watch ad)',
+    decisionRetry: 'Pick the other option (watch ad)',
+    piggyChipFull: 'Piggy full — watch ad to claim',
+    rewardEarnedToast: 'Reward applied',
+    rewardDismissedToast: 'Ad closed early — no reward',
+    placeholderToast: 'Reward placement — Sprint 9b wires the bonus payout',
+  },
+
   // Sprint 9a Phase 9a.2 — Settings modal + Restore Purchases (MONEY-3).
   settings: {
     title: 'Settings',

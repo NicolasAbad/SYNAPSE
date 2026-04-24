@@ -1,7 +1,12 @@
-import { memo } from 'react';
+import { memo, useCallback, useState } from 'react';
 import { t } from '../../config/strings';
 import { HUD } from '../tokens';
 import type { Mutation } from '../../types';
+import { useAdContext } from '../../platform/AdContext';
+import { useGameStore } from '../../store/gameStore';
+import { en } from '../../config/strings/en';
+
+const tAds = en.ads;
 
 /**
  * Interactive Mutation picker slot — Sprint 5 Phase 5.5.
@@ -23,6 +28,24 @@ export interface MutationSlotProps {
 }
 
 export const MutationSlot = memo(function MutationSlot({ options, selected, onSelect }: MutationSlotProps) {
+  const ad = useAdContext();
+  const reroll = useGameStore((s) => s.rerollMutationOptions);
+  const [adNote, setAdNote] = useState<string>('');
+
+  const onRerollClick = useCallback(async () => {
+    setAdNote('');
+    const result = await ad.tryShowAd('mutation_reroll');
+    if (result.status === 'shown' || result.status === 'dismissed') {
+      // Reroll regardless of reward earned — the user spent their ad cooldown
+      // either way. This matches the SleepScreen offline-double UX (cooldown
+      // is the cost; the watch-vs-dismiss distinction is only for failure
+      // toasts).
+      if (result.status === 'shown') reroll();
+    } else if (result.status === 'failed') {
+      setAdNote(tAds.failedToast);
+    }
+  }, [ad, reroll]);
+
   return (
     <div
       data-testid="cycle-setup-slot-mutation"
@@ -51,6 +74,32 @@ export const MutationSlot = memo(function MutationSlot({ options, selected, onSe
       {options.map((m) => (
         <MutationCard key={m.id} mutation={m} selected={selected === m.id} onSelect={onSelect} />
       ))}
+      {!ad.inert && (
+        <button
+          type="button"
+          data-testid="cycle-setup-mutation-reroll-ad"
+          onPointerDown={onRerollClick}
+          style={{
+            minHeight: HUD.touchTargetMin,
+            padding: 'var(--spacing-2) var(--spacing-3)', // CONST-OK CSS spacing tokens
+            background: 'transparent',
+            border: '1px solid var(--color-border-subtle)',
+            borderRadius: 'var(--radius-md)',
+            color: 'var(--color-text-secondary)',
+            fontFamily: 'var(--font-body)',
+            fontSize: 'var(--text-xs)',
+            cursor: 'pointer',
+            touchAction: 'manipulation',
+          }}
+        >
+          {tAds.rerollMutation}
+        </button>
+      )}
+      {adNote !== '' && (
+        <p data-testid="cycle-setup-mutation-reroll-ad-note" style={{ margin: 0, fontSize: 'var(--text-xs)', opacity: 0.85 /* CONST-OK CSS subdued caption */ }}>
+          {adNote}
+        </p>
+      )}
     </div>
   );
 });

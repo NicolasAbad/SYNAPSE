@@ -3,18 +3,20 @@
 // Composition:
 //   - Header animation (CSS fade-in)
 //   - Summary stats (time / thoughts gathered / efficiency / OFFLINE-2 cap note)
-//   - Conditional banners: OFFLINE-7 enhanced Discharge, Lucid Dream choice, rewarded ad stub
+//   - Conditional banners: OFFLINE-7 enhanced Discharge, Lucid Dream choice, rewarded ad
 //   - Dismiss button
 //
-// Rewarded ad button is a UI stub for Sprint 7.10 (ad SDK + actual reward double
-// land in Sprint 9a). Lucid Dream choices wire via store actions (Phase 7.10.5).
+// Sprint 9a Phase 9a.4 — rewarded ad button now LIVE (placement #1 offline_boost).
+// Lucid Dream choices wire via store actions (Phase 7.10.5).
 
-import { memo } from 'react';
+import { memo, useCallback, useState } from 'react';
 import { SYNAPSE_CONSTANTS } from '../../config/constants';
 import { useGameStore } from '../../store/gameStore';
 import { en } from '../../config/strings/en';
+import { useAdContext } from '../../platform/AdContext';
 
 const t = en.sleep;
+const tAds = en.ads;
 
 // All CSS numeric literals below are design idioms — CONST-OK per CLAUDE.md CODE-1
 // "CSS values" exception. Design tokens live in src/ui/tokens.ts; component-local
@@ -94,11 +96,27 @@ export const SleepScreen = memo(function SleepScreen() {
   const dismiss = useGameStore((s) => s.dismissOfflineSummary);
   const chooseA = useGameStore((s) => s.chooseLucidDreamOptionA);
   const chooseB = useGameStore((s) => s.chooseLucidDreamOptionB);
+  const applyDouble = useGameStore((s) => s.applyAdRewardOfflineDouble);
+  const ad = useAdContext();
+  const [adNote, setAdNote] = useState<string>('');
+
+  const onWatchAd = useCallback(async () => {
+    setAdNote('');
+    const result = await ad.tryShowAd('offline_boost');
+    if (result.status === 'shown') {
+      applyDouble(); // also clears pendingOfflineSummary
+      return;
+    }
+    if (result.status === 'failed') setAdNote(tAds.failedToast);
+    else if (result.status === 'dismissed') setAdNote(tAds.rewardDismissedToast);
+    // 'blocked' is silent (cooldown / GP / tutorial-grace) — button should not
+    // have been visible if blocked, but if user double-tapped we just no-op.
+  }, [ad, applyDouble]);
 
   if (summary === null) return null;
   if (summary.elapsedMs < SYNAPSE_CONSTANTS.offlineModalMinSeconds * 1000) return null; // CONST-OK s→ms
 
-  const eligibleForRewardedAd = summary.elapsedMs >= SYNAPSE_CONSTANTS.lucidDreamMinOfflineMinutes * 60_000; // CONST-OK min→ms
+  const eligibleForRewardedAd = summary.elapsedMs >= SYNAPSE_CONSTANTS.lucidDreamMinOfflineMinutes * 60_000 && !ad.inert; // CONST-OK min→ms
   const showGreeting = summary.elapsedMs >= SYNAPSE_CONSTANTS.lucidDreamMinOfflineMinutes * 60_000; // CONST-OK min→ms
 
   return (
@@ -151,9 +169,14 @@ export const SleepScreen = memo(function SleepScreen() {
         )}
 
         {eligibleForRewardedAd && !summary.lucidDreamTriggered && (
-          <button data-testid="sleep-rewarded-ad-stub" style={secondaryButtonStyle} onClick={() => { /* Sprint 9a wires the ad SDK */ }}>
+          <button data-testid="sleep-rewarded-ad" style={secondaryButtonStyle} onClick={onWatchAd}>
             {t.rewardedAdButton}
           </button>
+        )}
+        {adNote !== '' && (
+          <p data-testid="sleep-ad-note" style={{ marginTop: 'var(--spacing-2)', opacity: 0.85, fontSize: 'var(--text-sm)' /* CONST-OK CSS subdued caption */ }}>
+            {adNote}
+          </p>
         )}
 
         {!summary.lucidDreamTriggered && (
