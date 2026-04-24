@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@capacitor-community/admob": "^6.2.0",
+    "@capacitor-firebase/analytics": "^6.3.1",
     "@capacitor/android": "^6.2.1",
     "@capacitor/app": "^6.0.3",
     "@capacitor/core": "^6.1.0",
@@ -28,6 +29,7 @@
     "@fontsource-variable/jetbrains-mono": "^5.2.8",
     "@fontsource-variable/outfit": "^5.2.8",
     "@revenuecat/purchases-capacitor": "^9.2.2",
+    "firebase": "^11.10.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "zustand": "^4.5.5"

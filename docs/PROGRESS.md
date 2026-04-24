@@ -6,10 +6,46 @@
 
 ## Current status
 
-**Phase:** **Sprint 9a CLOSED** — Core SDK + Ads. All 6 phases (9a.1 → 9a.6) shipped. RevenueCat + AdMob platform adapters with native-only guards + configurable mocks; `AdContext` React provider exposing `tryShowAd(placement, opts?)` composing `canShowAd` gate + adapter calls + `recordAdWatched` cooldown stamping; 5 ad placements wired (3 fully live, 1 live-with-heuristic, 1 placeholder for 9b); SettingsModal with Restore Purchases; 2 new GameState fields (`installedAt` V-5 / `lastAdWatchedAt` V-2) with full PRESTIGE_PRESERVE + TRANSCENDENCE_PRESERVE coverage; Android native config (`AndroidManifest.xml` + `strings.xml`) wired with real AdMob IDs; `.env.local` populated via 5 interactive sandbox-setup activities with Nico. **1761 tests pass** (+78 net across Sprint 9a from baseline 1683) / **4/4 gates PASS (ratio 0.81, zero warnings)** / typecheck + lint clean / **GameState 121 → 123 stable**. Buffer-1 prestige sim: 0 errors / 0 warnings / field count 123 across 20 cycles.
-**Last updated:** 2026-04-24 after Sprint 9a close (Phase 9a.6).
-**Active sprint:** Sprint 9a CLOSED. Awaiting next-sprint scope decision.
-**Next action:** Nico decision — **Sprint 9b** (Offerings UI + Cosmetics + Analytics — unblocks the store tile UX + links RevenueCat products) vs **Sprint 8c-tuning** (interactive threshold rebalance addressing TEST-5 2065 pacing-flagged cycles, still open from Sprint 8c) vs **deferred 8b.4b polish** (wire 9 stubbed Resonance/Run effect kinds) vs **iOS drop-in when Mac available** (Info.plist edits per Phase 9a.5 pending list).
+**Phase:** Sprint 9b Phase 9b.1 COMPLETE — pre-code catalog approved by Nico (V-1..V-10 all `i aprove all`), Firebase Analytics plugins installed (`@capacitor-firebase/analytics@^6.3.1` + `firebase@^11.10.0` — both Capacitor-6 peer-compatible, clean install). **1761 tests pass** (unchanged — 9b.1 is scaffolding only) / **4/4 gates PASS** / typecheck + lint clean / **GameState 123 stable** (no bump this phase).
+**Last updated:** 2026-04-24 during Sprint 9b Phase 9b.1.
+**Active sprint:** Sprint 9b (Offerings + Cosmetics + Analytics) — Phase 9b.1 shipped; Phase 9b.2 (Cosmetics: 18 registry entries + 3-second preview + Cosmetics Store panel) pending Nico green light.
+**Next action:** Phase 9b.2 — populate 4 cosmetic registries in `src/ui/theme/cosmeticOverrides.ts` (8 neuron skins + 6 canvas themes including 2 exclusives + 3 glow packs + 1 HUD style) + React-local 3-second preview mechanic + Cosmetics Store panel + own/equip/unlock store actions. Expected +15-20 tests, 0 GameState fields. STOP-for-approval gate at phase start.
+
+### Sprint 9b dashboard (open — 2026-04-24)
+
+**V-points resolved (Phase 9b.1 catalog):**
+- V-1: Real toast primitive **pulled to Sprint 10** (matches existing Sprint 10 polish scope at §930-937). Inline notes stay in 9b.
+- V-2: 7-phase structure approved (9b.1..9b.7) over 3 days per SPRINTS.md §859.
+- V-3: **19+ individual RevenueCat cosmetic products** (GDD-correct; each $0.99/$1.99 cosmetic is its own SKU).
+- V-4: **Piggy Bank — DROP ad path entirely** (V-4 option C). GDD §26 specifies break $0.99 only; the `PiggyBankAdChip` stub shipped in Sprint 9a.4 is superseded by a proper claim modal in Phase 9b.5. Frees MONEY-6 cooldown bucket for the 4 core ad placements.
+- V-5: Firebase plugin pinned to `@capacitor-firebase/analytics@^6.3.1` + `firebase@^11.10.0` (Capacitor 6 peer compatible, no ERESOLVE).
+- V-6: 3-second cosmetic preview uses React-local state (`previewNeuronSkin` etc.); canvas renderer reads `previewX ?? activeX`; GameState untouched during preview (avoids save-on-preview race).
+- V-7: New `geniusPassDismissals: number` field → **GameState 123 → 124** in Phase 9b.4. PRESERVE on prestige + Transcendence (lifetime counter per GDD §26 max-3-dismissals rule).
+- V-8: Firebase project will layer on existing `synapse-revenuecat` GCP project (single project for all cloud infra). Nico interactive activity in Phase 9b.6.
+- V-9: **RevenueCat propagation as of 2026-04-24: STILL "Credentials need attention"** (within 24-48h window; expected resolution by 2026-04-26). Phase 9b.3 (product configuration) **deferred** until propagation resolves. Phases 9b.2 (Cosmetics code) + 9b.4 + 9b.5 + 9b.6 can proceed without it; 9b.3 slots in as soon as RevenueCat shows Connected.
+- V-10: Per-phase string review workflow — I propose proposed strings in a table at each phase kickoff, Nico approves en masse or edits per-string.
+
+**Phase 9b.1 deliverables shipped:**
+- `npm install @capacitor-firebase/analytics@^6.3.1 firebase@^11.10.0` — clean install, no peer-dep conflicts (matches Capacitor 6 pin-policy from Sprint 9a.1 V-3).
+- `package.json` + `package-lock.json` updated.
+
+**Validations Phase 9b.1:**
+- 4/4 gates PASS (ratio 0.81)
+- Typecheck clean (`tsc -b --noEmit`)
+- Lint clean
+- 1761 tests / 0 fail / 37 skipped / 119 files (unchanged — no JS code touched)
+
+**Plugin version audit:**
+- `@capacitor-firebase/analytics@^6.3.1` peer: `@capacitor/core: ^6.0.0`, `firebase: ^10.9.0 || ^11.0.0` ✓
+- `firebase@^11.10.0` — latest stable, resolves as `11.10.x`
+- Upgrading SYNAPSE to Capacitor 7 (POSTLAUNCH) will require bumping `@capacitor-firebase/analytics` to 7.x alongside. Same coupling rule documented in Sprint 9a.1 entry.
+
+**Phase 9b.1 NOT YET DONE (deferred to 9b.6 — Firebase project creation):**
+- Firebase project layered onto `synapse-revenuecat` GCP project (Nico interactive)
+- Android app registered in Firebase → `google-services.json` at `android/app/google-services.json`
+- Web app config → 7 `VITE_FIREBASE_*` env vars populated in `.env.local` (scaffolds exist in `.env.example`)
+
+This deferral keeps 9b.1 as pure infrastructure and batches all interactive Nico work to Phase 9b.6 (when the analytics SDK actually needs the credentials). Phases 9b.2-9b.5 ship pure code.
 
 ### Sprint 9a close dashboard (2026-04-24 — Core SDK + Ads)
 
