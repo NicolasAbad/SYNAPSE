@@ -6,10 +6,119 @@
 
 ## Current status
 
-**Phase:** Sprint 9b Phase 9b.6 COMPLETE. Firebase Analytics wired (project `synapse-fd25a` — Nico interactive Path A: Firebase Console + Android app + `google-services.json` at `android/app/google-services.json` + Web config → 7 `VITE_FIREBASE_*` env vars in `.env.local`). `src/platform/firebase.ts` exports `initFirebase()` + `logEvent(name, params?, consent?)` wrapper respecting `analyticsConsent` GDPR flag. 13 analytics events wired at call sites (11 Monetization per GDD §27 + 2 Core Genius Pass): `starter_pack_{shown,purchased,dismissed}` / `limited_offer_{shown,purchased,expired}` / `cosmetic_{purchased,previewed,equipped}` / `spark_pack_purchased` / `spark_cap_reached` / `genius_pass_offered` / `genius_pass_purchased`. `App.tsx` calls `initFirebase()` on mount. **1872 tests pass** (+6 vs 9b.5 baseline 1866) / **4/4 gates PASS (ratio 0.81)** / typecheck + lint clean / **GameState 124 stable**.
-**Last updated:** 2026-04-24 during Sprint 9b Phase 9b.6.
-**Active sprint:** Sprint 9b — Phases 9b.1/2/4/5/6 shipped; 9b.3 (RevenueCat product config) still deferred pending propagation; 9b.7 (Sprint close) next once propagation resolves OR deferred to new sprint.
-**Next action:** Nico checks RevenueCat dashboard status. If "Connected", proceed to Phase 9b.3 (RevenueCat product configuration — interactive; 16+ IAP products per V-3). If still pending propagation past 48h, debug with screenshot OR close Sprint 9b with 9b.3 documented as pending and Sprint 9b-post-propagation dedicated to finish.
+**Phase:** **Sprint 9b CLOSED** (Phase 9b.7 close — 6 of 7 planned phases shipped; Phase 9b.3 deferred to Sprint 9b-post-propagation). Offerings + Cosmetics + Analytics infrastructure fully in place except for RevenueCat product-catalog wiring (blocked on Google's service account permission propagation — 3 APIs still show "Credentials need attention" in RevenueCat dashboard as of 2026-04-24 rotation). Cosmetics store with 18 entries + 3-second preview; Starter Pack + Genius Pass offer infra (MONEY-9 + MONEY-2 compliant); 3 Limited-Time Offers with deterministic RNG per install; Piggy Bank claim modal; Spark Pack purchase with MONEY-8 cap; OfferOrchestrator centralizing all modal triggers; Firebase Analytics with 13 events wired (11 Monetization + 2 Core Genius Pass); `geniusPassDismissals` GameState field for MONEY-9 dismissal cap. **1872 tests pass** (+111 net across Sprint 9b from baseline 1761) / **4/4 gates PASS (ratio 0.81)** / typecheck + lint clean / **GameState 123 → 124 stable**. Buffer-1 prestige sim: 0 errors / 0 warnings across 20 cycles.
+**Last updated:** 2026-04-24 after Sprint 9b close (Phase 9b.7 dashboard).
+**Active sprint:** Sprint 9b CLOSED. Awaiting next-sprint scope decision.
+**Next action:** Nico decision:
+- **Option 1: Sprint 9b-post-propagation** (dedicated 1-phase sprint to finish 9b.3 once RevenueCat shows "Connected" — expected within 24-48h of 2026-04-24 service account invite; ~25 min interactive session to configure 19 IAP products in RevenueCat dashboard). Should fire naturally when propagation completes.
+- **Option 2: Sprint 10** (Polish + Infrastructure — 37 remaining analytics events + Daily Login + Streak Save ad placement #7 + Settings panel + audio + accessibility + push notifications + deep-links + Android back-button). Independent of RevenueCat; can proceed now.
+- **Option 3: Sprint 8c-tuning** (interactive threshold rebalance for the 2065 flagged cycles — still open since Sprint 8c close). Independent of 9b.
+
+### Sprint 9b close dashboard (2026-04-24 — Offerings + Cosmetics + Analytics)
+
+**Scope shipped (6 of 7 planned phases):**
+- Phase 9b.1: Pre-code catalog (V-1..V-10 approved) + Firebase plugins installed (`@capacitor-firebase/analytics@^6.3.1` + `firebase@^11.10.0`, Capacitor-6 peer-compatible)
+- Phase 9b.2: 18 cosmetic entries populated (8 neuron skins + 6 canvas themes including 2 exclusives + 3 glow packs + 1 HUD style) + CosmeticsStoreModal + 3-second preview + SettingsModal integration
+- Phase 9b.3: **DEFERRED** — RevenueCat product configuration blocked on Google service account permission propagation (still "Credentials need attention" as of sprint close; key rotated mid-sprint for security reasons after accidental chat-paste; propagation clock still ticking from 2026-04-24 invite)
+- Phase 9b.4: Starter Pack + Genius Pass offer infra + `geniusPassDismissals` field (123 → 124) + 5 store actions + 2 modals + Genius Pass +1 Mutation consumer
+- Phase 9b.5: Piggy Bank claim modal (ad path dropped per V-4) + 3 Limited-Time Offers (Run-2 "50% off" dropped per V-c) + Spark Pack purchase modal with MONEY-8 cap enforcement + OfferOrchestrator
+- Phase 9b.6: Firebase Analytics SDK wired (`initFirebase` + `logEvent` with GDPR consent + closed-union `AnalyticsEvent` type) + 13 events at call sites (11 Monetization + 2 Core GP per GDD §27) — Nico interactive activity: Firebase Console project `synapse-fd25a` + Android app + `google-services.json` + web config
+- Phase 9b.7: Sprint close dashboard (this entry, no code)
+
+**Files created (18 new):**
+- `src/ui/theme/cosmeticOverrides.ts` (EMPTY → 18 entries populated)
+- `src/ui/theme/types.ts` (+ `HudStyleConfig` type)
+- `src/config/cosmeticCatalog.ts`
+- `src/config/limitedTimeOffers.ts`
+- `src/engine/starterPackTrigger.ts`
+- `src/engine/geniusPassOffers.ts`
+- `src/engine/limitedTimeOfferTrigger.ts`
+- `src/engine/sparksPurchaseCap.ts`
+- `src/platform/firebase.ts`
+- `src/ui/modals/CosmeticsStoreModal.tsx`
+- `src/ui/modals/StarterPackModal.tsx`
+- `src/ui/modals/GeniusPassOfferModal.tsx`
+- `src/ui/modals/PiggyBankClaimModal.tsx`
+- `src/ui/modals/SparkPackPurchaseModal.tsx`
+- `src/ui/modals/LimitedTimeOfferModal.tsx`
+- `src/ui/hud/PiggyBankClaimChip.tsx` (replaces deleted `PiggyBankAdChip.tsx`)
+- `src/ui/hud/OfferOrchestrator.tsx`
+- `android/app/google-services.json` (gitignored per Capacitor defaults)
+
+**Files deleted:**
+- `src/ui/hud/PiggyBankAdChip.tsx` (Sprint 9a.4 stub superseded by claim modal per V-4)
+
+**Files modified (key):**
+- `src/types/GameState.ts` — new `geniusPassDismissals` field; 123 → 124; CODE-2 Exception A updated
+- `src/store/gameStore.ts` — 15 new actions total across Sprint 9b (unlockCosmetic/equipCosmetic/unequipCosmetic/unlockAllCosmetics + acceptStarterPack/dismissStarterPack/stampStarterPackExpiry + dismissGeniusPassOffer/recordGeniusPassOfferShown + claimPiggyBank/purchaseSparks/stampLimitedTimeOffer/acceptLimitedTimeOffer/consumeLimitedTimeOffer + setSubscriptionStatus transition guard). 8 new `logEvent` calls.
+- `src/config/constants.ts` — 3 new constants (`starterPackSparkReward: 50`, `starterPackMemoryReward: 5`), GAMESTATE_FIELD_COUNT 123 → 124
+- `src/config/prestige.ts` — 123/70 → 124/71; `geniusPassDismissals` added to PRESTIGE_PRESERVE_FIELDS
+- `src/config/transcendence.ts` — 123/57 → 124/58; `geniusPassDismissals` added to TRANSCENDENCE_PRESERVE_FIELDS
+- `src/store/migrate.ts` — backfill for `geniusPassDismissals: 0`
+- `src/config/strings/en.ts` — 5 new namespaces (cosmetics / starterPack / geniusPassOffer / piggyBank / sparkPack / limitedTimeOffer / settings extension) — ~100 new strings
+- `src/App.tsx` — CosmeticsStoreModal render + `initFirebase()` on mount
+- `src/ui/hud/HUD.tsx` — OfferOrchestrator replaces PiggyBankAdChip
+- `src/ui/hud/AwakeningFlow.tsx` — Genius Pass +1 Mutation option wired
+- `src/ui/modals/SettingsModal.tsx` — "Cosmetics" button opens CosmeticsStoreModal
+- Native: `android/app/google-services.json` (new file, gitignored)
+- Tests: consistency.test.ts + 7 test fixture files updated for 124-field shape
+
+**Nico interactive activities (Phase 9b.6 Path A — Firebase):**
+- Firebase Console → new project `synapse-fd25a` (separate GCP project from `synapse-revenuecat` which houses the RevenueCat service account; clean separation per V-8 flexible decision)
+- Android app registered with package `com.nicoabad.synapse`
+- `google-services.json` downloaded + placed at `android/app/` (verified correct location via `git check-ignore`)
+- Web app registered → 7 config values populated `VITE_FIREBASE_*` env vars in `.env.local`
+
+**Key architectural decisions (sprint-wide):**
+- **Single `OfferOrchestrator` component** owning all offer modal trigger detection + mounting, with React-local state (no GameState bump for modal open-states). One-shot trigger guards via refs prevent re-auto-open within same session.
+- **Deterministic RNG for random cosmetic selection** in Limited-Time Offers — `mulberry32(installedAt + offerId hash)` gives reproducible picks per install, enabling tests + avoiding save-corruption-induced different outcomes.
+- **MONEY-8 UTC month rollover** implemented in `evaluateSparksPurchase` per GDD §26 pseudocode exactly — `startOfCurrentMonthUTC` helper handles the 1st-of-month boundary correctly including DST transitions.
+- **GDPR-compliant analytics**: `logEvent` takes `analyticsConsent` boolean at every call site; false short-circuits to no-op. Closed-union `AnalyticsEvent` type prevents ANALYTICS-5 drift.
+- **19 IAP product model (V-3)**: each cosmetic is its own RevenueCat SKU per GDD §26 compliance. Phase 9b.3 will configure all 19 in RevenueCat dashboard when propagation resolves.
+- **Exclusive cosmetics (genius_gold, neon_pulse)** have `productId: null` in catalog — never standalone purchasable; bundled with parent IAPs (Genius Pass / Starter Pack respectively).
+- **Dev-only `unlockAllCosmetics()`** guarded by `import.meta.env.DEV` — tree-shaken from production, enables 9b.2-9b.5 testing without real RevenueCat.
+
+**Tests added (Sprint 9b total: +111):**
+- Phase 9b.2: cosmetics (+33)
+- Phase 9b.4: starterPackTrigger/geniusPassOffers/offerActions/modals (+43)
+- Phase 9b.5: sparksPurchaseCap/limitedTimeOfferTrigger/offerActionsPhase5 (+29)
+- Phase 9b.6: firebase (+6)
+
+**Validations at close:**
+- 4/4 gates PASS (ratio 0.81, 224 constants / 54 literals)
+- ESLint clean, typecheck clean (`tsc -b --noEmit`)
+- 1872 tests / 0 fail / 37 skipped / 128 files (+111 tests, +9 files from Sprint 9a close baseline 1761/119)
+- Buffer-1 prestige sim: 0/0 across 20 cycles with field count 124 stable
+
+**Commits this sprint (6 phase commits + close):**
+- `5684bc9` Phase 9b.1 — Pre-code catalog + Firebase plugins installed
+- `cc3184d` Phase 9b.2 — Cosmetics registries + store + 18 entries
+- (9b.3 skipped — deferred on propagation)
+- `034d8e7` Phase 9b.4 — Starter Pack + Genius Pass offer infra (123→124)
+- `62b14e9` Phase 9b.5 — Offer orchestration + piggy claim + spark cap
+- `4abfbd3` Phase 9b.6 — Firebase Analytics + 13 monetization events wired
+- (this commit) Phase 9b.7 — Sprint close dashboard
+
+**Reviewer fabrications: 0** across 6 phase commits.
+
+**Pending Nico actions (re-ordered by urgency):**
+1. **RevenueCat propagation verification** — expected resolution by 2026-04-26 per Sprint 9a.5 Activity 5 timeline. Key rotated mid-sprint after accidental chat-paste security incident (new key generated in Google Cloud; old key deleted; service account itself unchanged, permissions preserved). Rotation does NOT reset the propagation clock since the underlying Play Console permissions (granted Sprint 9a.5) are what's propagating, not the key itself.
+2. **Phase 9b.3 interactive session** when RevenueCat shows "Connected":
+   - 19 RevenueCat products to configure (2 subscription: genius_pass_monthly + genius_pass_weekly / 1 starter_pack / 3 spark_pack_{small,medium,large} / 1 piggy_break / 8 neuron skins / 4 canvas themes / 3 glow packs / 1 HUD style / 3 limited-time bundles)
+   - 1 entitlement: `genius_pass` mapped to both monthly + weekly subscription products
+   - Products must match the productId values in `src/config/cosmeticCatalog.ts` + `src/config/limitedTimeOffers.ts` + SPRINTS.md §881
+3. **APK upload to internal test track** when ready for on-device sandbox verification (`npx cap sync && npx cap open android` → build release APK → upload to draft `0.1.0-internal-scaffold`)
+4. **iOS Info.plist drop-in** when Mac available (Sprint 9a.5 pending item — GADApplicationIdentifier + NSUserTrackingUsageDescription + SKAdNetworkItems)
+
+**Deferred to Sprint 10:**
+- 37 remaining analytics events (9 funnel + 5 feature + 18 core - 2 GP + 3 weekly_challenge per GDD §27)
+- Daily Login Bonus 7-day streak + Streak Save ad placement #7
+- Settings panel + audio + accessibility + push notifications + deep-links + Android back-button
+- HD Neural Snapshot feature (Genius Pass benefit)
+- Weekly 10 Sparks accrual (Genius Pass benefit, V-a deferred)
+- Trigger orchestration for Genius Pass offers at 5 contexts (Sprint 10 lands alongside retention systems — listeners in AwakeningFlow + handleTranscendence)
+- Firebase DebugView sandbox verification (depends on APK upload)
+- Real toast component (V-1 pulled from 9b)
 
 ### Phase 9b.6 deliverables (Firebase Analytics)
 
