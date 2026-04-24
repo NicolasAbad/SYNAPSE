@@ -24,6 +24,7 @@ import type { NamedMomentId } from '../engine/innerVoice';
 import { applyTap } from './tap';
 import { performDischarge, type DischargeOutcome } from '../engine/discharge';
 import { handlePrestige, type PrestigeOutcome } from '../engine/prestige';
+import { handleTranscendence, type TranscendenceOutcome } from '../engine/transcendence';
 import { applyPermanentPatternDecisionsToState } from '../engine/patternDecisions';
 import { dispatchNarrative, applyFragmentRead } from '../engine/narrative';
 import { MUTATIONS_BY_ID } from '../config/mutations';
@@ -409,6 +410,8 @@ export interface GameStoreActions {
    * Diary entry (Sprint 7) but not the GameState per §32 field budget.
    */
   chooseEnding: (id: EndingID, option: 'a' | 'b') => void;
+  /** Sprint 8b Phase 8b.2 — fires after Transcendence confirm modal. Pure engine call. */
+  applyTranscendence: (endingId: EndingID, nowTimestamp: number) => TranscendenceOutcome | null;
   /**
    * Sprint 7 Phase 7.2 (ACH-3): dismiss the achievement toast (player tapped
    * elsewhere or expiry timer fired). Idempotent — no-op if no toast active.
@@ -813,4 +816,11 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
     set({ endingsSeen: post.endingsSeen, diaryEntries: post.diaryEntries, ...ach });
   },
   dismissAchievementToast: () => set({ achievementToast: null }),
+  applyTranscendence: (endingId, nowTimestamp) => {
+    const prev = get();
+    if (prev.prestigeCount < 26) return null; // CONST-OK: P26 is the §9 Transcendence gate
+    const { state: next, outcome } = handleTranscendence(prev as GameState, endingId, nowTimestamp);
+    set(next);
+    return outcome;
+  },
 }));

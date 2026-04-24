@@ -314,6 +314,37 @@ describe('Consistency: PRESTIGE_RESET / PRESERVE / UPDATE split (GDD §33)', () 
     expect(union).toEqual(gameStateKeys);
   });
 
+  test('Sprint 8b: TRANSCENDENCE_RESET has exactly 59 fields', async () => {
+    const { TRANSCENDENCE_RESET, TRANSCENDENCE_RESET_FIELDS } = await import('../src/config/transcendence');
+    expect(TRANSCENDENCE_RESET_FIELDS.length).toBe(59);
+    expect(Object.keys(TRANSCENDENCE_RESET).length).toBe(59);
+    expect(new Set(TRANSCENDENCE_RESET_FIELDS)).toEqual(new Set(Object.keys(TRANSCENDENCE_RESET)));
+  });
+
+  test('Sprint 8b: TRANSCENDENCE_PRESERVE has exactly 55 fields', async () => {
+    const { TRANSCENDENCE_PRESERVE_FIELDS } = await import('../src/config/transcendence');
+    expect(TRANSCENDENCE_PRESERVE_FIELDS.length).toBe(55);
+  });
+
+  test('Sprint 8b: TRANSCENDENCE RESET + PRESERVE + UPDATE covers all 121 GameState fields', async () => {
+    const { TRANSCENDENCE_RESET_FIELDS, TRANSCENDENCE_PRESERVE_FIELDS, TRANSCENDENCE_UPDATE_FIELDS } = await import('../src/config/transcendence');
+    const union = new Set<string>([
+      ...TRANSCENDENCE_RESET_FIELDS,
+      ...TRANSCENDENCE_PRESERVE_FIELDS,
+      ...TRANSCENDENCE_UPDATE_FIELDS,
+    ]);
+    expect(union.size).toBe(121);
+    const gameStateKeys = new Set(Object.keys(createDefaultState()));
+    expect(union).toEqual(gameStateKeys);
+  });
+
+  test('Sprint 8b: TRANSCENDENCE RESET ∩ PRESERVE === ∅ (disjoint)', async () => {
+    const { TRANSCENDENCE_RESET_FIELDS, TRANSCENDENCE_PRESERVE_FIELDS } = await import('../src/config/transcendence');
+    const resetSet = new Set<string>(TRANSCENDENCE_RESET_FIELDS);
+    const overlap = TRANSCENDENCE_PRESERVE_FIELDS.filter((f) => resetSet.has(f));
+    expect(overlap).toEqual([]);
+  });
+
   test('no field appears in both RESET and PRESERVE (disjoint)', () => {
     const resetSet = new Set<string>(PRESTIGE_RESET_FIELDS);
     const overlap = PRESTIGE_PRESERVE_FIELDS.filter((f) => resetSet.has(f));
