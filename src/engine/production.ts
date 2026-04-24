@@ -1,24 +1,7 @@
-// Implements docs/GDD.md §4 (Production formula) + §5 (Neurons — connection multiplier)
-// + §9 (Threshold). Sprint 3 Phase 2 wires the §4 formula stack: per-neuron
-// rate mults (all_neurons_mult, neuron_type_mult) stack on the sum; global
-// mults (all_production_mult, prestige_scaling_mult,
-// lifetime_prestige_add, upgrades_scaling_mult) stack on rawMult; softCap
-// applies to rawMult per §4 line 209-211 ("NOT to the sum"). Stubs for
-// Sprint 5-7 modifiers (archetype, region, mutation, polarity, mental state,
-// spontaneous event, mutation temporal) are identity until their sprints ship.
-//
+// Implements GDD.md §4/§5/§9 — production formula + connection mult + threshold.
 // See §35 rules THRES-1, TUTOR-2, CORE-9.
-//
-// Emergencia Cognitiva interpretation: Sprint 3 Phase 2 kickoff, Nico-approved
-// **Interpretation B (multiplicative)**: mult = min(1.5^floor(ownedCount/5), capMult).
-// See scripts/analyze-emergencia.mjs for the decision rationale (Run 1 shape,
-// cap engagement, idle-genre convention, Era 1→Era 2 power spike).
-//
-// connection_mult_double interpretation: Sprint 3 Phase 1 kickoff, Nico-approved
-// **literal reading**: `connectionMult *= 2` at the time Sincronía Neural is
-// bought (store action, Phase 3). Phase 2 provides computeConnectionMult() as
-// the single helper that accepts `hasSincroniaNeural` and produces the final
-// applied value.
+// Emergencia Cognitiva: Interpretation B (multiplicative) per Sprint 3 Phase 2 Nico-approved.
+// connection_mult_double: literal (`connectionMult *= 2` at sincronia_neural purchase).
 
 import { SYNAPSE_CONSTANTS } from '../config/constants';
 import { NEURON_BASE_RATES } from '../config/neurons';
@@ -30,6 +13,7 @@ import { archetypeActiveProductionMult } from './archetypes';
 import { spontaneousProdMult, spontaneousConnectionMult } from './spontaneous';
 import { era3ProductionMult } from './era3';
 import { upgradeMasteryMult } from './mastery';
+import { resonanceAllProductionMult, resonancePatternCycleCap } from './resonanceUpgrades';
 import type { GameState } from '../types/GameState';
 import type { NeuronState, NeuronType, Polarity, UpgradeEffect } from '../types';
 
@@ -149,9 +133,10 @@ export function countCyclePatterns(state: Pick<GameState, 'patterns' | 'cycleSta
   return n;
 }
 
-export function patternCycleBonus(cyclePatterns: number, decisionAdd = 0): number {
+export function patternCycleBonus(cyclePatterns: number, decisionAdd = 0, capOverride: number | null = null): number {
   const { patternCycleBonusPerNode, patternCycleCap } = SYNAPSE_CONSTANTS;
-  return Math.min(1 + cyclePatterns * patternCycleBonusPerNode + decisionAdd, patternCycleCap);
+  const cap = capOverride ?? patternCycleCap;
+  return Math.min(1 + cyclePatterns * patternCycleBonusPerNode + decisionAdd, cap);
 }
 
 /** GDD §11 production modifier by cycle-selected Polarity (identity when null). */
@@ -187,10 +172,10 @@ export function calculateProduction(state: GameState): { base: number; effective
   // Identity for Rápida / Profunda / no-pathway. Wired Sprint 5 Phase 5.3.
   const globalMult = dampenUpgradeBonus(computeGlobalUpgradeMult(state, ownedIds), pathwayUpgradeBonusDamp(state));
   // Archetype × polarity × mutation × spontaneous × Era3 modifiers.
-  const rawMult = state.connectionMult * spontaneousConnectionMult(state) * globalMult * polarityProdMult(state.currentPolarity) * mutationProdMult(state) * archetypeActiveProductionMult(state) * spontaneousProdMult(state) * era3ProductionMult(state);
+  const rawMult = state.connectionMult * spontaneousConnectionMult(state) * globalMult * polarityProdMult(state.currentPolarity) * mutationProdMult(state) * archetypeActiveProductionMult(state) * spontaneousProdMult(state) * era3ProductionMult(state) * resonanceAllProductionMult(state);
   const finalMult = softCap(rawMult);
   // Pattern cycle bonus: post-softCap mult, capped at patternCycleCap (§10).
-  const cycleMult = patternCycleBonus(countCyclePatterns(state), patternCycleBonusAdd(state));
+  const cycleMult = patternCycleBonus(countCyclePatterns(state), patternCycleBonusAdd(state), resonancePatternCycleCap(state));
   const base = sum * finalMult * cycleMult;
   // Mental State + Mood multipliers applied in tick.ts (clock-dependent).
   const effective = state.insightActive ? base * state.insightMultiplier : base;

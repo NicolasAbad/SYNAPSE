@@ -5,6 +5,7 @@
 // Resonance" on Awakening screen (UI consumer at Phase 8b.4).
 
 import { SYNAPSE_CONSTANTS } from '../config/constants';
+import { resonanceEarnMult } from './resonanceUpgrades';
 import type { GameState } from '../types/GameState';
 
 /** Per-cycle metrics consumed by the §15 formula. */
@@ -44,7 +45,7 @@ export function buildResonanceCycleMetrics(
  *   if archetype === 'creativa': r = round(r × CREATIVA_MULT)
  */
 export function resonanceGainOnPrestige(
-  state: Pick<GameState, 'archetype' | 'cycleCascades' | 'insightTimestamps' | 'prestigeCount'>,
+  state: Pick<GameState, 'archetype' | 'cycleCascades' | 'insightTimestamps' | 'prestigeCount' | 'resonanceUpgrades'>,
   cycleDurationMs: number,
 ): number {
   if (state.prestigeCount < SYNAPSE_CONSTANTS.resonanceUnlockPrestige) return 0;
@@ -58,5 +59,7 @@ export function resonanceGainOnPrestige(
   if (state.archetype === 'creativa') {
     r = Math.round(r * SYNAPSE_CONSTANTS.resonanceCreativaArchetypeMult);
   }
+  // GDD §15 resonancia_profunda (Tier 3) — earn rate ×1.5 stacks AFTER Creativa.
+  r = Math.round(r * resonanceEarnMult(state));
   return r;
 }

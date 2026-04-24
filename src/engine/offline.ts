@@ -9,6 +9,7 @@ import { UPGRADES_BY_ID } from '../config/upgrades';
 import { MUTATIONS_BY_ID } from '../config/mutations';
 import { PATTERN_DECISIONS } from '../config/patterns';
 import { effectiveMoodTier, averageMoodOverWindow } from './mood';
+import { resonanceOfflineCapBonusHours } from './resonanceUpgrades';
 import { seededRandom, hash } from './rng';
 import type { GameState } from '../types/GameState';
 import type { OfflineSummary } from '../types';
@@ -21,13 +22,16 @@ const EMPTY_SUMMARY: OfflineSummary = {
 };
 
 /** OFFLINE-6: effective cap hours = max of all owned `offline_cap_set` effects, clamped to maxOfflineHours. */
-export function computeOfflineCapHours(state: Pick<GameState, 'upgrades'>): number {
+export function computeOfflineCapHours(state: Pick<GameState, 'upgrades' | 'resonanceUpgrades'>): number {
   let cap: number = SYNAPSE_CONSTANTS.baseOfflineCapHours;
   for (const u of state.upgrades) {
     if (!u.purchased) continue;
     const e = UPGRADES_BY_ID[u.id]?.effect;
     if (e?.kind === 'offline_cap_set' && e.hours > cap) cap = e.hours;
   }
+  // GDD §15 time_dilation (Tier 2) — +4h permanent; stacks ADDITIVELY on top
+  // of the max upgrade-set cap. Then clamped at maxOfflineHours.
+  cap += resonanceOfflineCapBonusHours(state);
   return Math.min(cap, SYNAPSE_CONSTANTS.maxOfflineHours);
 }
 
@@ -119,7 +123,7 @@ export function rollLucidDream(
 
 /** OFFLINE-5: detect clock backwards / over-cap. Returns clamped elapsed ms + anomaly kind + cap. */
 export function detectTimeAnomaly(
-  state: Pick<GameState, 'lastActiveTimestamp' | 'upgrades'>,
+  state: Pick<GameState, 'lastActiveTimestamp' | 'upgrades' | 'resonanceUpgrades'>,
   nowTimestamp: number,
 ): { anomaly: 'backward' | 'over_cap' | null; clampedElapsedMs: number; capHours: number } {
   const capHours = computeOfflineCapHours(state);

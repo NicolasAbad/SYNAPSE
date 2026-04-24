@@ -14,6 +14,7 @@ import { applyMoodEvent } from './mood';
 import { applyPrecommitResolution, streakPermanentMemoriaBonus } from './precommits';
 import { integratedMindMemoryMult, isFullyIntegrated } from './integratedMind';
 import { resonanceGainOnPrestige } from './resonance';
+import { resonancePatternsPerPrestigeMult } from './resonanceUpgrades';
 import type { GameState } from '../types/GameState';
 import type { AwakeningEntry, PatternNode, DiaryEntry } from '../types';
 
@@ -37,8 +38,7 @@ function ownedUpgradeIds(upgrades: GameState['upgrades']): Set<string> {
 
 const DIARY_CAP = 500; // CONST-OK §32 + Sprint 7.5 diary cap
 function appendDiaryCapped(prev: readonly DiaryEntry[], entry: DiaryEntry): DiaryEntry[] {
-  const next = [...prev, entry];
-  return next.length > DIARY_CAP ? next.slice(next.length - DIARY_CAP) : next;
+  const next = [...prev, entry]; return next.length > DIARY_CAP ? next.slice(next.length - DIARY_CAP) : next;
 }
 /** GDD §6 + Sprint 7.5.2 §16.1: base × pathwayMult × archetypeMult + Node 24 B + shard_epi_imprint. */
 export function computeMemoriesGained(state: Pick<GameState, 'upgrades' | 'patternDecisions' | 'currentPathway' | 'archetype' | 'memoryShardUpgrades' | 'mastery'>): number {
@@ -71,11 +71,12 @@ function updatePersonalBests(prev: GameState['personalBests'], prestigeCount: nu
   return { next: prev, wasPersonalBest: false };
 }
 
-/** Sprint 4b: sequential PatternNodes from `totalPatterns`, up to tree cap (§10). */
-function grantPatterns(state: Pick<GameState, 'totalPatterns'>, timestamp: number): PatternNode[] {
+/** Sprint 4b PatternNodes from `totalPatterns`. Sprint 8b meta_consciousness Tier-2 ×1.5. */
+function grantPatterns(state: Pick<GameState, 'totalPatterns' | 'resonanceUpgrades'>, timestamp: number): PatternNode[] {
   const { patternsPerPrestige, patternTreeSize, patternDecisionNodes } = SYNAPSE_CONSTANTS;
+  const perPrestige = Math.round(patternsPerPrestige * resonancePatternsPerPrestigeMult(state));
   const available = Math.max(0, patternTreeSize - state.totalPatterns);
-  const gained = Math.min(patternsPerPrestige, available);
+  const gained = Math.min(perPrestige, available);
   const decisionSet = new Set<number>(patternDecisionNodes);
   const out: PatternNode[] = [];
   for (let i = 0; i < gained; i++) {
@@ -85,9 +86,8 @@ function grantPatterns(state: Pick<GameState, 'totalPatterns'>, timestamp: numbe
   return out;
 }
 
-/** Apply prestige per PREST-1. Patterns wired 4b.2; Resonance/RP stubs for 8b/8c. */
+/** Apply prestige per PREST-1. Patterns wired 4b.2; Resonance Sprint 8b.3. */
 export function handlePrestige(state: GameState, timestamp: number): { state: GameState; outcome: PrestigeOutcome } {
-  // Step 1 — capture pre-reset PPS for Momentum Bonus.
   const lastCycleEndProduction = state.effectiveProductionPerSecond;
   const cycleDurationMs = timestamp - state.cycleStartTimestamp;
   const cycleMinutes = cycleDurationMs / 60_000; // CONST-OK (ms→min)

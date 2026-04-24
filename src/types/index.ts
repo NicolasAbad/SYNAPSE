@@ -239,6 +239,40 @@ export interface PatternNode {
   acquiredAt: number;
 }
 
+// Sprint 8b Phase 8b.4 — Resonance upgrade effects (GDD §15). Kind discriminants
+// intentionally distinct from UpgradeEffect / PatternDecisionEffect so engine
+// consumers can branch cleanly ("effect from upgrade" vs "effect from Resonance
+// upgrade" vs "effect from pattern decision"). 13 upgrades, 13 effect kinds.
+//
+// Per Sprint 8b catalog V5: the 7 "easy" kinds wire directly into existing
+// engine modules (production / discharge / patterns / focus / offline). The 6
+// "complex" kinds (dream_mult, crossrun_memory, fragment_reread, memory_carryover,
+// spontaneous_frequency, modo_ascension, dual_archetype) are declared here but
+// consumer wiring is partial/stubbed in Sprint 8b — full behavior lands when
+// the underlying system needs the feature (most are marked for v1.1 polish).
+export type ResonanceUpgradeEffect =
+  | { kind: 'all_production_mult_per_resonance_upgrade'; per: number }    // eco_neural
+  | { kind: 'pattern_cycle_cap_set'; cap: number }                        // patron_estable
+  | { kind: 'cascade_mult_set'; mult: number }                            // cascada_eterna
+  | { kind: 'inner_voice_dream_mult'; mult: number }                      // deep_listening
+  | { kind: 'crossrun_fragment_memory_bonus'; memory: number }            // deep_listening side
+  | { kind: 'fragment_reread_memory_bonus'; memory: number }              // cosmic_voice
+  | { kind: 'focus_fill_rate_mult'; mult: number }                        // mente_despierta
+  | { kind: 'memory_carryover_cap'; cap: number }                         // memoria_longeva
+  | { kind: 'spontaneous_frequency_mult'; mult: number }                  // eureka_frecuente
+  | { kind: 'offline_cap_add_hours'; hours: number }                      // time_dilation
+  | { kind: 'patterns_per_prestige_mult'; mult: number }                  // meta_consciousness
+  | { kind: 'resonance_earn_mult'; mult: number }                         // resonancia_profunda
+  | { kind: 'unlocks_modo_ascension' }                                    // consciencia_eterna
+  | { kind: 'unlocks_dual_archetype' };                                   // eternal_witness
+
+export interface ResonanceUpgradeDef {
+  readonly id: string;
+  readonly tier: 1 | 2 | 3;
+  readonly costResonance: number;
+  readonly effect: ResonanceUpgradeEffect;
+}
+
 // Pattern Tree decision-option effects (GDD §10). Kind discriminants are
 // intentionally distinct from UpgradeEffect's so consumers can cleanly tell
 // "effect from upgrade" vs "effect from pattern decision". Sprint 4b Phase 4b.1.
