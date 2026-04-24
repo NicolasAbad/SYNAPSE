@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { App as CapApp, type AppState } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 import { useGameStore } from './store/gameStore';
@@ -12,14 +12,25 @@ import { TutorialHints } from './ui/modals/TutorialHints';
 import { FragmentOverlay } from './ui/modals/FragmentOverlay';
 import { Era3EventModal } from './ui/modals/Era3EventModal';
 import { SleepScreen } from './ui/modals/SleepScreen';
+import { SettingsModal } from './ui/modals/SettingsModal';
 import { EchoLayer } from './ui/canvas/EchoLayer';
+import { createRevenueCatAdapter, type RevenueCatAdapter } from './platform/revenuecat';
 
 export function App() {
+  // Sprint 9a Phase 9a.2 — RevenueCat adapter is created once on native; null on
+  // web/test (SettingsModal disables Restore button when adapter is undefined).
+  // The adapter import lives outside the effect so the test environment never
+  // tries to dynamic-import @revenuecat/purchases-capacitor.
+  const revenueCatAdapter = useMemo<RevenueCatAdapter | null>(() => {
+    return Capacitor.isNativePlatform() ? createRevenueCatAdapter() : null;
+  }, []);
+
   // Sequential mount: load saved state first, then init timestamps ONLY if no
   // save was present, then applyOfflineReturn. Ordering prevents the Phase 7
   // Finding B race AND ensures applyOfflineReturn sees the saved
   // lastActiveTimestamp (Sprint 7.10 Phase 7.10.4). After load, attach
-  // resume listeners (Capacitor App + visibilitychange).
+  // resume listeners (Capacitor App + visibilitychange). Sprint 9a Phase 9a.2
+  // adds RevenueCat init + initial customerInfo → setSubscriptionStatus.
   useEffect(() => {
     const cleanups: Array<() => void> = [];
     const initialize = async () => {
@@ -45,10 +56,21 @@ export function App() {
         document.addEventListener('visibilitychange', onVisibility);
         cleanups.push(() => document.removeEventListener('visibilitychange', onVisibility));
       }
+      if (revenueCatAdapter !== null) {
+        try {
+          await revenueCatAdapter.initialize();
+          const info = await revenueCatAdapter.getCustomerInfo();
+          useGameStore.getState().setSubscriptionStatus(info.activeEntitlements.includes('genius_pass'));
+        } catch (e) {
+          // CODE-8: never throw out of mount; log + continue. RevenueCat init
+          // failure leaves isSubscribed at its persisted/default value.
+          console.error('[RevenueCat] init failed:', e);
+        }
+      }
     };
     void initialize();
     return () => cleanups.forEach((off) => off());
-  }, []);
+  }, [revenueCatAdapter]);
 
   useTickScheduler(); // game tick runtime
   useSaveScheduler();
@@ -58,6 +80,9 @@ export function App() {
   // Canvas + HUD render underneath so the GDPR modal overlays a live game.
   const [splashDone, setSplashDone] = useState(false);
   const [gdprDone, setGdprDone] = useState(false);
+  // Sprint 9a Phase 9a.2 — Settings modal open state lives here so HUD's
+  // SettingsButton (sibling) can toggle it without a new store field.
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   return (
     <main
@@ -73,12 +98,17 @@ export function App() {
       }}
     >
       <NeuronCanvas />
-      <HUD />
+      <HUD onOpenSettings={() => setSettingsOpen(true)} />
       <TutorialHints />
       <EchoLayer />
       <FragmentOverlay />
       <Era3EventModal />
       <SleepScreen />
+      <SettingsModal
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        restorePurchases={revenueCatAdapter?.restorePurchases}
+      />
       {!splashDone && <SplashScreen onComplete={() => setSplashDone(true)} />}
       {splashDone && isEU && !gdprDone && <GdprModal onComplete={() => setGdprDone(true)} />}
     </main>

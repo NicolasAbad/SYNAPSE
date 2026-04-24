@@ -6,10 +6,43 @@
 
 ## Current status
 
-**Phase:** Sprint 9a Phase 9a.1 COMPLETE — pre-code catalog approved (V-1..V-13 all `i aprove all`), SDK plugins installed (RevenueCat v9.2.2 + AdMob v6.2.0 — both Capacitor-6-peer-compatible, no ERESOLVE), Gate 2 warning cleaned (resonanceUpgrades.ts + runUpgrades.ts now carry `docs/GDD.md §N` refs). **1683 tests pass** / **4/4 gates PASS (ratio 0.82, zero warnings)** / typecheck + lint clean / GameState 121 (unchanged this phase).
-**Last updated:** 2026-04-23 during Sprint 9a Phase 9a.1.
-**Active sprint:** Sprint 9a (Core SDK + Ads) — Phase 9a.1 shipped; Phase 9a.2 (RevenueCat adapter + SettingsModal) pending Nico green light.
-**Next action:** Phase 9a.2 — `src/platform/revenuecat.ts` adapter (with mock) + `SettingsModal.tsx` with Restore Purchases button + `isSubscribed` wiring from `customerInfo.entitlements`. Expected +10-15 tests, 0 field bumps. STOP-for-approval gate at phase start.
+**Phase:** Sprint 9a Phase 9a.2 COMPLETE — RevenueCat adapter (real + mock) shipped, SettingsModal with Restore Purchases live, gear icon trigger added to HUD, App.tsx initializes RevenueCat on native and maps initial entitlements → `setSubscriptionStatus`. **1712 tests pass** (+29 vs 9a.1 baseline 1683) / **4/4 gates PASS (ratio 0.82, zero warnings)** / typecheck + lint clean / GameState 121 (unchanged — adapter pattern needed no new field).
+**Last updated:** 2026-04-23 during Sprint 9a Phase 9a.2.
+**Active sprint:** Sprint 9a (Core SDK + Ads) — Phases 9a.1 + 9a.2 shipped; Phase 9a.3 (AdMob adapter + lastAdWatchedAt + installedAt fields, GameState 121→123) pending Nico green light.
+**Next action:** Phase 9a.3 — `src/platform/admob.ts` adapter + mock + persisted MONEY-6 cooldown field (`lastAdWatchedAt`) + MONEY-4 install-time anchor (`installedAt`) + ad-cooldown gate. Expected +12-18 tests, +2 GameState fields (121 → 123). STOP-for-approval gate at phase start.
+
+### Phase 9a.2 deliverables (added to Sprint 9a dashboard below)
+
+**Files created (5 new):**
+- `src/platform/revenuecat.ts` — `RevenueCatAdapter` interface + `createRevenueCatAdapter()` factory (native-only guard); maps RevenueCat's `entitlements.active` → typed `EntitlementId[]`
+- `src/platform/revenuecat.mock.ts` — `createMockRevenueCatAdapter(opts)` with `initialEntitlements` / `failRestore` / `failGetCustomerInfo` modes for MONEY-7 testing
+- `src/ui/modals/SettingsModal.tsx` — modal with Restore button (status-line UI: idle/pending/success/none-found/failed), Esc-to-close, status reset on reopen
+- `src/ui/hud/SettingsButton.tsx` — gear icon (⚙) HUD button, bottom-left above TabBar
+- 4 new test files: `tests/platform/revenuecatMock.test.ts` (8) + `tests/store/setSubscriptionStatus.test.ts` (6) + `tests/ui/modals/SettingsModal.test.tsx` (13) + `tests/ui/hud/SettingsButton.test.tsx` (2)
+
+**Files modified:**
+- `src/store/gameStore.ts` — new action `setSubscriptionStatus(boolean)` + interface entry
+- `src/config/strings/en.ts` — new `settings.*` namespace (8 strings: title/closeButton/restoreButton/restorePending/restoreSuccess/restoreNoneFound/restoreFailed/openButtonAria)
+- `src/App.tsx` — `useMemo` for `revenueCatAdapter` (native-only); init flow calls `initialize()` + `getCustomerInfo()` + `setSubscriptionStatus()`; renders `SettingsModal` controlled by local `settingsOpen` state; passes `onOpenSettings` to HUD
+- `src/ui/hud/HUD.tsx` — accepts optional `onOpenSettings` prop, renders `SettingsButton` when provided
+- `src/vite-env.d.ts` — typed `ImportMetaEnv` for the 10 Sprint 9a/10 env vars
+
+**Validations Phase 9a.2:**
+- 4/4 gates PASS (ratio 0.82, 208 constants / 47 literals — recovered after CONST-OK trailing-comment passes on new CSS literals)
+- ESLint clean, typecheck clean
+- 1712 tests / 0 fail / 37 skipped / 113 files (+29 tests, +4 files vs 9a.1 baseline)
+
+**Architectural decisions:**
+- **Adapter prop drilling over module singleton**: `App.tsx` owns the adapter and passes `restorePurchases` callback down to `SettingsModal`. Tests inject a mock directly. No global state, no DI container.
+- **Native guard at factory**: `createRevenueCatAdapter()` throws if invoked off-native. `App.tsx` checks `Capacitor.isNativePlatform()` before calling. Web/test path: adapter is `null`, modal's Restore button stays disabled.
+- **Dynamic SDK import**: real adapter uses `await import('@revenuecat/purchases-capacitor')` inside each method so the test environment never tries to resolve the native SDK (which would fail in jsdom).
+- **No GameState bump**: `isSubscribed` already existed (Sprint 1). Modal open state lives in App.tsx local React state; doesn't need to persist across reload (re-opening Settings is a one-tap action).
+- **MONEY-7 failure UX**: `try/catch` in modal's restore handler shows `restoreFailed` status line; never throws; never crashes; `isSubscribed` is unchanged on failure.
+
+**Stubbed for later phases:**
+- Subscription PURCHASE flow (Genius Pass tile) — Sprint 9b owns
+- Real toast component for status line — current minimal UI uses inline status text; toast component is 9b polish
+- Analytics `restore_purchases_clicked` / `restore_purchases_completed` events — V-8 deferred to Sprint 10
 
 ### Sprint 9a dashboard (open — 2026-04-23)
 

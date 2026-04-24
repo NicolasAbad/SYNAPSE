@@ -306,6 +306,12 @@ export interface GameStoreActions {
   /** Sprint 2 Phase 6: GDPR analytics opt-in. Writes GameState.analyticsConsent. */
   setAnalyticsConsent: (consent: boolean) => void;
   /**
+   * Sprint 9a Phase 9a.2 — flip Genius Pass subscription status. Called by the
+   * RevenueCat adapter on `customerInfo.entitlements.active['genius_pass']`
+   * presence/absence. Idempotent.
+   */
+  setSubscriptionStatus: (isSubscribed: boolean) => void;
+  /**
    * Sprint 3 Phase 3: purchase a neuron of `type` at the current scaled cost
    * (GDD §4 `baseCost × 1.28^owned`). Returns 'ok' on success or a reason
    * code on failure. Recomputes connectionMult on new-type entry (C(n,2)),
@@ -524,6 +530,7 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
   setActiveTab: (tab) => set({ activeTab: tab, activeMindSubtab: 'home' }),
   setActiveMindSubtab: (subtab) => set({ activeMindSubtab: subtab }),
   setAnalyticsConsent: (consent) => set({ analyticsConsent: consent }),
+  setSubscriptionStatus: (isSubscribed) => set({ isSubscribed }),
   buyNeuron: (type, nowTimestamp) => {
     const state = get();
     const result = tryBuyNeuron(state, type, nowTimestamp);

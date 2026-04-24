@@ -687,6 +687,18 @@ export const en = {
     },
   },
 
+  // Sprint 9a Phase 9a.2 — Settings modal + Restore Purchases (MONEY-3).
+  settings: {
+    title: 'Settings',
+    closeButton: 'Close',
+    restoreButton: 'Restore Purchases',
+    restorePending: 'Restoring…',
+    restoreSuccess: 'Purchases restored',
+    restoreNoneFound: 'No previous purchases found',
+    restoreFailed: 'Restore failed — check your connection',
+    openButtonAria: 'Open settings',
+  },
+
   // Sprint 8b Phase 8b.6 — Transcendence confirm dialog (per Sprint 3.6 audit).
   transcendence_confirm: {
     title: 'Transcend?',

@@ -13,8 +13,14 @@ import { UndoToast } from './UndoToast';
 import { EmergenciaCapBanner } from './EmergenciaCapBanner';
 import { AwakeningFlow } from './AwakeningFlow';
 import { PendingDecisionFlow } from './PendingDecisionFlow';
+import { SettingsButton } from './SettingsButton';
 import { TabPanelContainer } from '../panels/TabPanelContainer';
 import { NamedMomentPrompt } from '../modals/NamedMomentPrompt';
+
+export interface HUDProps {
+  /** Sprint 9a Phase 9a.2 — App owns the SettingsModal open-state; HUD renders the trigger. */
+  onOpenSettings?: () => void;
+}
 
 /**
  * HUD composition overlay. Absolute-positioned sibling of NeuronCanvas
@@ -34,7 +40,7 @@ import { NamedMomentPrompt } from '../modals/NamedMomentPrompt';
  * (top handled via spacing-5 which accounts for notch-adjacent
  * devices; fine-tune in Phase 7 perf + device pass).
  */
-export const HUD = memo(function HUD() {
+export const HUD = memo(function HUD({ onOpenSettings }: HUDProps = {}) {
   return (
     <div
       data-testid="hud-root"
@@ -62,6 +68,7 @@ export const HUD = memo(function HUD() {
       <AwakeningFlow />
       <PendingDecisionFlow />
       <NamedMomentPrompt />
+      {onOpenSettings && <SettingsButton onOpen={onOpenSettings} />}
       <TabBar />
     </div>
   );
