@@ -25,7 +25,8 @@ function pickEnding(archetype: string | null, allRps: boolean): EndingDef | null
 
 export interface EndingScreenProps {
   open: boolean;
-  onContinue: () => void;
+  /** Sprint 8b Phase 8b.6: passes the chosen ending id through to the Transcendence flow. */
+  onContinue: (endingId: EndingDef['id']) => void;
 }
 
 export const EndingScreen = memo(function EndingScreen({ open, onContinue }: EndingScreenProps) {
@@ -46,10 +47,11 @@ export const EndingScreen = memo(function EndingScreen({ open, onContinue }: End
   }, [def, chooseEnding]);
 
   const onContinueClick = useCallback(() => {
+    if (!def) return;
     setPhase('idle');
     setPicked(null);
-    onContinue();
-  }, [onContinue]);
+    onContinue(def.id);
+  }, [def, onContinue]);
 
   if (!open || !def) return null;
 

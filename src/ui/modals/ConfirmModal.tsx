@@ -25,6 +25,8 @@ export interface ConfirmModalProps {
   onConfirm: () => void;
   onCancel: () => void;
   testIdPrefix: string;
+  /** Sprint 8b: anti-misclick cooldown — disables the confirm button while true. */
+  confirmDisabled?: boolean;
 }
 
 export const ConfirmModal = memo(function ConfirmModal({
@@ -36,6 +38,7 @@ export const ConfirmModal = memo(function ConfirmModal({
   onConfirm,
   onCancel,
   testIdPrefix,
+  confirmDisabled = false,
 }: ConfirmModalProps) {
   const cancelRef = useRef<HTMLButtonElement | null>(null);
 
@@ -137,19 +140,21 @@ export const ConfirmModal = memo(function ConfirmModal({
           </button>
           <button
             type="button"
+            disabled={confirmDisabled}
             data-testid={`${testIdPrefix}-confirm`}
-            onPointerDown={onConfirmClick}
+            onPointerDown={confirmDisabled ? undefined : onConfirmClick}
             style={{
               minHeight: HUD.touchTargetMin,
               padding: 'var(--spacing-2) var(--spacing-5)', // CONST-OK: CSS custom property ref
-              background: 'var(--color-primary)',
+              background: confirmDisabled ? 'var(--color-bg-elevated)' : 'var(--color-primary)',
               border: '1px solid var(--color-primary)',
               borderRadius: 'var(--radius-md)',
-              color: 'var(--color-bg-deep)',
+              color: confirmDisabled ? 'var(--color-text-secondary)' : 'var(--color-bg-deep)',
               fontFamily: 'var(--font-body)',
               fontSize: 'var(--text-sm)',
               fontWeight: 'var(--font-weight-semibold)',
-              cursor: 'pointer',
+              cursor: confirmDisabled ? 'not-allowed' : 'pointer',
+              opacity: confirmDisabled ? 0.6 : 1, // CONST-OK CSS faded-state
               touchAction: 'manipulation',
             }}
           >

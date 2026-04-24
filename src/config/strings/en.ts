@@ -687,6 +687,14 @@ export const en = {
     },
   },
 
+  // Sprint 8b Phase 8b.6 — Transcendence confirm dialog (per Sprint 3.6 audit).
+  transcendence_confirm: {
+    title: 'Transcend?',
+    body: "You'll reset everything except Sparks, Patterns, Resonance, and your lifetime tracking. Run {N} begins.",
+    confirm: 'Transcend',
+    cancel: 'Not yet',
+  },
+
   // Sprint 3+ adds keys as new features ship — do NOT preload
   // empty keys for future features (CODE-1 anti-pattern is
   // hardcoding; empty keys anticipating features is NOT a

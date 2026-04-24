@@ -7,6 +7,8 @@ import { AwakeningScreen } from '../modals/AwakeningScreen';
 import { CycleSetupScreen, type CycleSetupChoice } from '../modals/CycleSetupScreen';
 import { ArchetypeChoiceModal } from '../modals/ArchetypeChoiceModal';
 import { EndingScreen } from '../modals/EndingScreen';
+import { TranscendenceConfirmModal } from '../modals/TranscendenceConfirmModal';
+import type { EndingID } from '../../types';
 import { getMutationOptions } from '../../engine/mutations';
 import { t } from '../../config/strings';
 import { HUD } from '../tokens';
@@ -36,11 +38,13 @@ export const AwakeningFlow = memo(function AwakeningFlow() {
   const lastCyclePathwayStr = useGameStore((s) => s.lastCycleConfig?.pathway ?? '');
   const effectivePPS = useGameStore((s) => s.effectiveProductionPerSecond);
   const archetype = useGameStore((s) => s.archetype);
+  const transcendenceCount = useGameStore((s) => s.transcendenceCount);
   const prestige = useGameStore((s) => s.prestige);
   const setPolarity = useGameStore((s) => s.setPolarity);
   const setMutation = useGameStore((s) => s.setMutation);
   const setPathway = useGameStore((s) => s.setPathway);
   const setArchetype = useGameStore((s) => s.setArchetype);
+  const applyTranscendence = useGameStore((s) => s.applyTranscendence);
   // Mutation options drawn at CycleSetupScreen open. Creativa archetype
   // adds +1 option per GDD §12 (Sprint 6 Phase 6.2 wired); Genius Pass /
   // Pattern / Weekly Challenge ctx expand in Sprint 9 / 4b / 7.
@@ -66,6 +70,7 @@ export const AwakeningFlow = memo(function AwakeningFlow() {
   // GDD §23 P26 + NARRATIVE.md §6 — final prestige intercepts AWAKEN with an
   // ending screen instead of the normal confirm → prestige → cycle-setup chain.
   const [showEnding, setShowEnding] = useState(false);
+  const [pendingTranscendence, setPendingTranscendence] = useState<EndingID | null>(null);
   const isEndingPrestige = prestigeCount === 26; // CONST-OK (§23 P26)
 
   const onReadyClick = useCallback(() => {
@@ -108,7 +113,21 @@ export const AwakeningFlow = memo(function AwakeningFlow() {
   }, [setPolarity, setMutation, setPathway]);
 
   const showReadyButton = ready && !confirmOpen && !outcome && !showCycleSetup && !showArchetypeChoice && !showEnding;
-  const onEndingContinue = useCallback(() => setShowEnding(false), []);
+  // EndingScreen "Continue" → open Transcendence confirm modal (instead of dismissing
+  // back to the canvas). Sprint 8b Phase 8b.6.
+  const onEndingContinue = useCallback((chosenEndingId: EndingID) => {
+    setShowEnding(false);
+    setPendingTranscendence(chosenEndingId);
+  }, []);
+  const onTranscendenceCancel = useCallback(() => {
+    setPendingTranscendence(null);
+    setShowEnding(true); // Return to ending pick view if player cancels.
+  }, []);
+  const onTranscendenceConfirm = useCallback(() => {
+    if (pendingTranscendence === null) return;
+    applyTranscendence(pendingTranscendence, Date.now());
+    setPendingTranscendence(null);
+  }, [applyTranscendence, pendingTranscendence]);
 
   return (
     <>
@@ -156,6 +175,12 @@ export const AwakeningFlow = memo(function AwakeningFlow() {
       <AwakeningScreen outcome={outcome} onContinue={onAwakeningContinue} />
       <ArchetypeChoiceModal open={showArchetypeChoice} onChoose={onArchetypeChoose} />
       <EndingScreen open={showEnding} onContinue={onEndingContinue} />
+      <TranscendenceConfirmModal
+        open={pendingTranscendence !== null}
+        nextRunNumber={transcendenceCount + 2}
+        onConfirm={onTranscendenceConfirm}
+        onCancel={onTranscendenceCancel}
+      />
       {showCycleSetup && (
         <CycleSetupScreen
           prestigeCount={prestigeCount}

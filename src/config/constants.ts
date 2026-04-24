@@ -168,6 +168,8 @@ export const SYNAPSE_CONSTANTS = {
   // Sprint 8b Phase 8b.3 — Resonance currency unlock + Creativa archetype mult.
   resonanceUnlockPrestige: 13, // GDD §15 header: Resonance system unlocks at P13+
   resonanceCreativaArchetypeMult: 1.5, // GDD §15 formula: r = round(r × 1.5) when archetype === 'creativa'
+  // Sprint 8b Phase 8b.6 — Transcendence confirm modal anti-misclick cooldown.
+  transcendenceConfirmCooldownMs: 2_000, // Sprint 3.6 audit: 2s deliberate-action gate
 
   // ── Regions ──
   regionsUnlockPct: 0.01, // 1% of threshold to trigger first region unlock
