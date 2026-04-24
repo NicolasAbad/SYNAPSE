@@ -7,6 +7,7 @@ import {
   calculateThreshold,
   softCap,
 } from '../../src/engine/production';
+import { SYNAPSE_CONSTANTS } from '../../src/config/constants';
 
 describe('softCap (GDD §4)', () => {
   test('identity at boundary: softCap(100) === 100', () => {
@@ -44,42 +45,42 @@ describe('softCap (GDD §4)', () => {
 });
 
 describe('calculateThreshold (THRES-1, GDD §9)', () => {
-  test('calculateThreshold(0, 0) === 800_000 (P0→P1 Run 1)', () => {
-    expect(calculateThreshold(0, 0)).toBe(800_000);
+  test('calculateThreshold(0, 0) === baseThresholdTable[0] (P0→P1 Run 1)', () => {
+    expect(calculateThreshold(0, 0)).toBe(SYNAPSE_CONSTANTS.baseThresholdTable[0]);
   });
 
-  test('calculateThreshold(0, 1) === 2_800_000 (P0→P1 Run 2, 800K × 3.5)', () => {
-    expect(calculateThreshold(0, 1)).toBe(2_800_000);
+  test('calculateThreshold(0, 1) === baseThresholdTable[0] × runThresholdMult[1] (P0→P1 Run 2)', () => {
+    expect(calculateThreshold(0, 1)).toBe(SYNAPSE_CONSTANTS.baseThresholdTable[0] * SYNAPSE_CONSTANTS.runThresholdMult[1]);
   });
 
-  test('calculateThreshold(25, 2) === 42_000_000_000 (P25→P26 Run 3, post-Batch-3 7B × 6.0)', () => {
-    expect(calculateThreshold(25, 2)).toBe(42_000_000_000);
+  test('calculateThreshold(25, 2) === baseThresholdTable[25] × runThresholdMult[2] (P25→P26 Run 3)', () => {
+    expect(calculateThreshold(25, 2)).toBe(SYNAPSE_CONSTANTS.baseThresholdTable[25] * SYNAPSE_CONSTANTS.runThresholdMult[2]);
   });
 
-  test('calculateThreshold(25, 5) === 105_000_000_000 (P25→P26 Run 6 max, 7B × 15.0)', () => {
-    expect(calculateThreshold(25, 5)).toBe(105_000_000_000);
+  test('calculateThreshold(25, 5) === baseThresholdTable[25] × runThresholdMult[5] (P25→P26 Run 6 max)', () => {
+    expect(calculateThreshold(25, 5)).toBe(SYNAPSE_CONSTANTS.baseThresholdTable[25] * SYNAPSE_CONSTANTS.runThresholdMult[5]);
   });
 
-  test('calculateThreshold(9, 0) === 35_000_000 (P9→P10 Run 1, post-Batch-3 rebalance)', () => {
-    expect(calculateThreshold(9, 0)).toBe(35_000_000);
+  test('calculateThreshold(9, 0) === baseThresholdTable[9] (P9→P10 Run 1)', () => {
+    expect(calculateThreshold(9, 0)).toBe(SYNAPSE_CONSTANTS.baseThresholdTable[9]);
   });
 
   test('clamp low: calculateThreshold(-5, -5) === calculateThreshold(0, 0)', () => {
     expect(calculateThreshold(-5, -5)).toBe(calculateThreshold(0, 0));
-    expect(calculateThreshold(-5, -5)).toBe(800_000);
+    expect(calculateThreshold(-5, -5)).toBe(SYNAPSE_CONSTANTS.baseThresholdTable[0]);
   });
 
   test('clamp high: calculateThreshold(999, 999) === calculateThreshold(25, 5)', () => {
     expect(calculateThreshold(999, 999)).toBe(calculateThreshold(25, 5));
-    expect(calculateThreshold(999, 999)).toBe(105_000_000_000);
+    expect(calculateThreshold(999, 999)).toBe(SYNAPSE_CONSTANTS.baseThresholdTable[25] * SYNAPSE_CONSTANTS.runThresholdMult[5]);
   });
 
-  test('clamp t alone: calculateThreshold(0, 999) === 12_000_000 (800K × 15.0)', () => {
-    expect(calculateThreshold(0, 999)).toBe(12_000_000);
+  test('clamp t alone: calculateThreshold(0, 999) === baseThresholdTable[0] × max runThresholdMult', () => {
+    expect(calculateThreshold(0, 999)).toBe(SYNAPSE_CONSTANTS.baseThresholdTable[0] * SYNAPSE_CONSTANTS.runThresholdMult[5]);
   });
 
-  test('clamp p alone: calculateThreshold(999, 0) === 7_000_000_000 (7B × 1.0)', () => {
-    expect(calculateThreshold(999, 0)).toBe(7_000_000_000);
+  test('clamp p alone: calculateThreshold(999, 0) === baseThresholdTable[25]', () => {
+    expect(calculateThreshold(999, 0)).toBe(SYNAPSE_CONSTANTS.baseThresholdTable[25]);
   });
 
   test('clamp idempotent: further out-of-range values clamp to the same result', () => {
@@ -93,44 +94,44 @@ describe('calculateThreshold (THRES-1, GDD §9)', () => {
 });
 
 describe('calculateCurrentThreshold (TUTOR-2, GDD §9)', () => {
-  test('tutorial cycle returns tutorialThreshold (25K) regardless of prestigeCount', () => {
+  test('tutorial cycle returns tutorialThreshold regardless of prestigeCount', () => {
     expect(
       calculateCurrentThreshold({
         isTutorialCycle: true,
         prestigeCount: 0,
         transcendenceCount: 0,
       }),
-    ).toBe(25_000);
+    ).toBe(SYNAPSE_CONSTANTS.tutorialThreshold);
   });
 
-  test('tutorial cycle on Run 2 uses runThresholdMult: 25K × 3.5 = 87.5K', () => {
+  test('tutorial cycle on Run 2 uses runThresholdMult[1] (3.5×)', () => {
     expect(
       calculateCurrentThreshold({
         isTutorialCycle: true,
         prestigeCount: 0,
         transcendenceCount: 1,
       }),
-    ).toBe(87_500);
+    ).toBe(SYNAPSE_CONSTANTS.tutorialThreshold * 3.5);
   });
 
-  test('normal path at P0/Run 1 returns 800_000 (not 50K)', () => {
+  test('normal path at P0/Run 1 returns baseThresholdTable[0] (not tutorialThreshold)', () => {
     expect(
       calculateCurrentThreshold({
         isTutorialCycle: false,
         prestigeCount: 0,
         transcendenceCount: 0,
       }),
-    ).toBe(800_000);
+    ).toBe(SYNAPSE_CONSTANTS.baseThresholdTable[0]);
   });
 
-  test('normal path mid-game P9/Run 1 returns 35_000_000', () => {
+  test('normal path mid-game P9/Run 1 returns baseThresholdTable[9]', () => {
     expect(
       calculateCurrentThreshold({
         isTutorialCycle: false,
         prestigeCount: 9,
         transcendenceCount: 0,
       }),
-    ).toBe(35_000_000);
+    ).toBe(SYNAPSE_CONSTANTS.baseThresholdTable[9]);
   });
 
   test('purity: identical partial states yield identical results', () => {

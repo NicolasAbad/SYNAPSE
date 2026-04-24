@@ -2,7 +2,7 @@
 
 **Sprint 8c BLOCKING gate** per SPRINTS.md §Sprint 8c.
 **Configs:** 27 (3 tap × 3 arch × 3 path) × 3 Runs each. **Cycle samples:** 2106.
-**Elapsed:** 28.7s real time.
+**Elapsed:** 29.2s real time.
 
 ## Gate summary
 

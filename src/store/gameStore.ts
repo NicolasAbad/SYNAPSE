@@ -96,10 +96,10 @@ export function createDefaultState(): GameState {
     installedAt: 0, // INIT-1 impure — initSessionTimestamps sets ONCE on first ever launch
     // === Prestige & progression (11) ===
     prestigeCount: 0,
-    // 25_000 = TUTOR-2 tutorial threshold (retuned Sprint 3 Phase 7.4b from
-    // 50_000 per tutorial-timing sim finding). Matches calculateCurrentThreshold
-    // for a tutorial-cycle state. Recomputed by prestige to regular values.
-    currentThreshold: 25_000,
+    // Matches calculateCurrentThreshold for a tutorial-cycle state. Recomputed by
+    // prestige. Sprint 8c-tuning: references SYNAPSE_CONSTANTS.tutorialThreshold
+    // so it auto-tracks tuning iterations without parallel edits.
+    currentThreshold: SYNAPSE_CONSTANTS.tutorialThreshold,
     consciousnessBarUnlocked: false,
     patterns: [],
     totalPatterns: 0,

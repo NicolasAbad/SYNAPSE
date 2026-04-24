@@ -19,8 +19,13 @@ export const SYNAPSE_CONSTANTS = {
     // v2 (second audit 4A-1) — INTERIM values from node-simulated 1-tap/sec runs with typical upgrade/archetype kit.
     // Old values were sim-verified to run 40-50% slow in Era 1 tail / 50-80% fast in Era 2-3. See PROGRESS.md Batch 3 for rationale.
     // THESE ARE STILL INTERIM. Sprint 8c TEST-5 is the authoritative gate — run 27 scenarios (3 tap × 3 archetype × 3 pathway), tune any cycle >20% off target.
+    // Sprint 8c-tuning attempt (2026-04-24) executed gradient descent for 5 iterations but hit deadlock
+    // at iter 5 — all sims timed out at P24 because the simulator's greedy-playstyle production ceiling
+    // is reached well before late-game thresholds need to be hit. See PROGRESS.md "Sprint 8c-tuning
+    // deadlock notes" for full findings. Reverted to pre-tuning baseline pending a different strategy
+    // (e.g., smarter sim player, or relaxing the §9 gate to per-config-family targets).
     // See ECO-1 (§35): this table is data, not code — rebalancing never requires engine changes.
-    800_000, // P0→P1:  ~8 min (OVERRIDDEN to 50K by TUTOR-2 for first-ever cycle only)
+    800_000, // P0→P1:  ~8 min (OVERRIDDEN to 25K by TUTOR-2 for first-ever cycle only)
     450_000, // P1→P2:  ~7 min (was 1.2M; sim showed 11.7 min → 40% slow. Rebalanced for post-momentum start)
     1_000_000, // P2→P3:  ~8 min (was 1.8M)
     2_000_000, // P3→P4:  ~9 min (was 2.6M; Polarity unlocked P3)

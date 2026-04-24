@@ -134,8 +134,8 @@ describe('handlePrestige — PRESTIGE_UPDATE + lifetime (§33)', () => {
   test('currentThreshold recalculated per calculateThreshold(newCount, transcendenceCount)', () => {
     const before: GameState = { ...createDefaultState(), prestigeCount: 0, transcendenceCount: 0 };
     const { state: next } = handlePrestige(before, 1_000_000);
-    // New P1, Run 1 → baseThresholdTable[1] × runThresholdMult[0] = 450_000 × 1.0
-    expect(next.currentThreshold).toBe(450_000);
+    // New P1, Run 1 → baseThresholdTable[1] × runThresholdMult[0]
+    expect(next.currentThreshold).toBe(SYNAPSE_CONSTANTS.baseThresholdTable[1]);
   });
 
   test('cycleStartTimestamp set to the timestamp param', () => {
@@ -500,14 +500,17 @@ describe('handlePrestige — Momentum applied to thoughts (PREST-1 step 11)', ()
   });
 
   test('late-game clamp applies cap (10 % of next threshold)', () => {
+    // Raw must exceed cap for the clamp to trigger. Cap = baseThresholdTable[3] × 0.10.
+    // Set production so raw (prod × 30s) definitively exceeds cap under current tuning.
+    const expectedCap = SYNAPSE_CONSTANTS.baseThresholdTable[3] * SYNAPSE_CONSTANTS.maxMomentumPct;
+    const productionForOvercap = (expectedCap * 3) / SYNAPSE_CONSTANTS.momentumBonusSeconds; // 3× cap ensures raw > cap
     const before: GameState = {
       ...createDefaultState(),
-      effectiveProductionPerSecond: 1_000_000, // raw = 30M
-      prestigeCount: 2, // new P3 → baseThresholdTable[3] = 2_000_000 → cap 200K
+      effectiveProductionPerSecond: productionForOvercap,
+      prestigeCount: 2, // new P3 → baseThresholdTable[3] → cap = baseThresholdTable[3] × 0.10
       transcendenceCount: 0,
     };
     const { state: next, outcome } = handlePrestige(before, 1_000_000);
-    const expectedCap = SYNAPSE_CONSTANTS.baseThresholdTable[3] * SYNAPSE_CONSTANTS.maxMomentumPct;
     expect(outcome.momentumBonus).toBe(expectedCap);
     expect(next.thoughts).toBe(expectedCap);
   });
