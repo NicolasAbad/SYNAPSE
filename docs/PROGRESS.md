@@ -6,10 +6,50 @@
 
 ## Current status
 
-**Phase:** Sprint 9a Phase 9a.4 COMPLETE — 5 ad placements wired through a single `AdContext` provider (`tryShowAd(placement, opts?)` composes `canShowAd` gate + adapter calls + `recordAdWatched` cooldown stamping). SleepScreen offline_boost is fully live (2× thoughts via `applyAdRewardOfflineDouble`); PostDischargeAdToast HUD detects non-Cascade discharges + offers reward; MutationSlot has reroll-via-ad button (full live via `rerollMutationOptions`); PendingDecisionFlow surfaces post-pick "switch via ad" toast (full live via `retryPatternDecision`); PiggyBankAdChip is a stub for Sprint 9b reward-claim modal. **1761 tests pass** (+17 vs 9a.3 baseline 1744) / **4/4 gates PASS (ratio 0.81, zero warnings)** / typecheck + lint clean / **GameState 123 stable**. Buffer-1 prestige sim: 0 errors / 0 warnings.
-**Last updated:** 2026-04-23 during Sprint 9a Phase 9a.4.
-**Active sprint:** Sprint 9a (Core SDK + Ads) — Phases 9a.1 / 9a.2 / 9a.3 / 9a.4 shipped; Phase 9a.5 (iOS Info.plist + Android AndroidManifest.xml + ATT string + sandbox setup checklist) pending Nico green light.
-**Next action:** Phase 9a.5 — `android/app/src/main/AndroidManifest.xml` AdMob `APPLICATION_ID` + `AD_ID` permission; `ios/App/App/Info.plist` `GADApplicationIdentifier` + `NSUserTrackingUsageDescription` (V-9 approved string); sandbox setup checklist in PROGRESS.md (manual Nico steps). Expected +0-2 tests, 0 GameState fields. STOP-for-approval gate at phase start.
+**Phase:** Sprint 9a Phase 9a.5 COMPLETE (Android-side native config + interactive sandbox setup). `AndroidManifest.xml` wired with AdMob `APPLICATION_ID` meta-data + `AD_ID` + `ACCESS_NETWORK_STATE` permissions; `strings.xml` carries real `admob_app_id` resource. `.env.local` (gitignored) populated via 3 interactive activities with Nico: RevenueCat Android key + project ID, AdMob Android App ID + 6 ad unit IDs, AdMob iOS App ID + 6 ad unit IDs. Bug fixed during iOS wireup: `src/platform/admob.ts` `adUnitIdFor()` now routes per-platform via `Capacitor.getPlatform()` (same pattern as `revenuecat.ts` `pickApiKey()`) — the prior single-env-var schema would have shipped Android IDs on iOS. `.env.example` + `vite-env.d.ts` updated to the new 12-var schema. Google Play Console internal test track created with tester `synapsegames.support@gmail.com`. RevenueCat ↔ Play Console service account link 90% done — awaiting Google's standard 24-48h permission propagation delay. **1761 tests pass** / **4/4 gates PASS (ratio 0.81)** / typecheck + lint clean / **GameState 123 stable**.
+**Last updated:** 2026-04-24 during Sprint 9a Phase 9a.5.
+**Active sprint:** Sprint 9a (Core SDK + Ads) — Phases 9a.1 / 9a.2 / 9a.3 / 9a.4 / 9a.5 shipped; iOS native config (Info.plist) deferred until Mac available; Phase 9a.6 (sprint close + buffer-1 re-validation + dashboard) pending.
+**Next action:** Phase 9a.6 — Sprint 9a close dashboard in PROGRESS.md, buffer-1 sim re-run, final commit. No new code. Expected +0 tests, 0 GameState fields. Can run autonomously (no V-points).
+
+### Phase 9a.5 deliverables (Android native config + sandbox accounts)
+
+**Files modified:**
+- `android/app/src/main/AndroidManifest.xml` — AdMob `APPLICATION_ID` meta-data pointing at `@string/admob_app_id`; `AD_ID` permission (required on Android 13+ for AdMob to access Advertising ID); `ACCESS_NETWORK_STATE` permission (Google Mobile Ads SDK uses it to detect offline state before ad display, supports MONEY-7).
+- `android/app/src/main/res/values/strings.xml` — new `admob_app_id` resource carrying the real Activity-2 AdMob Android App ID.
+- `.env.example` — refactored rewarded ad unit env vars from 6 single-platform to 12 per-platform (ANDROID/IOS pairs). Test IDs are Google's canonical placeholders (`ca-app-pub-3940256099942544/...`).
+- `src/platform/admob.ts` — `adUnitIdFor(placement)` refactored to route via `Capacitor.getPlatform()` (ios → `*_IOS` env var; else → `*_ANDROID`). Matches the pattern in `revenuecat.ts` `pickApiKey()`.
+- `src/vite-env.d.ts` — typed `ImportMetaEnv` declaration updated from 6 to 12 rewarded-ad env vars.
+- `CLAUDE.md` — quick-reference table corrected: `bundleId: com.nicoabad.synapse` (was stale `app.synapsegame.mind`; caught by Nico during Activity 1).
+
+**Files NOT committed (gitignored):**
+- `.env.local` — real keys + IDs for Nico's Android dev environment. Never committed per `.gitignore`.
+
+**Interactive sandbox setup activities completed with Nico:**
+- **Activity 1: RevenueCat** — project SYNAPSE created (project ID `proj4d8a399d` logged for future reference); Android app with package `com.nicoabad.synapse`; API key `goog_MXWBPxxhTtljBRUecnjDCsMgRya` wired to `VITE_REVENUECAT_ANDROID_KEY`.
+- **Activity 2: AdMob Android** — app entry SYNAPSE created with bundle `com.nicoabad.synapse`; App ID `ca-app-pub-6304825755361246~6503890286` wired; 6 rewarded ad units created (names: `synapse_offline_boost` / `synapse_post_discharge` / `synapse_mutation_reroll` / `synapse_decision_retry` / `synapse_piggy_refill` / `synapse_streak_save`); all 6 IDs wired to `VITE_ADMOB_REWARDED_*_ANDROID` env vars.
+- **Activity 3: AdMob iOS** — app entry SYNAPSE created with same bundle `com.nicoabad.synapse`; App ID `ca-app-pub-6304825755361246~9490602549` wired; 6 rewarded ad units created (same names as Android, different IDs per AdMob's per-platform model); all 6 IDs wired to `VITE_ADMOB_REWARDED_*_IOS` env vars.
+- **Activity 4: Google Play Console internal test track** — created under developer ID `5152301773637159922` (account name: Lacron); draft release `0.1.0-internal-scaffold` sits unpublished (APK upload happens at verification time, not Sprint 9a scope); tester list created with Nico's Pixel 4a email `synapsegames.support@gmail.com`.
+- **Activity 5: RevenueCat ↔ Play Console service account link** — Google Cloud project `synapse-revenuecat` created; 3 APIs enabled (Google Play Android Developer API / Google Play Developer Reporting API / Cloud Pub/Sub API); service account `revenuecat-validator@synapse-revenuecat.iam.gserviceaccount.com` created with JSON key downloaded; invited as Play Console user scoped to SYNAPSE only with 4 permissions (view app info / view financial data / manage orders + subscriptions / manage testing tracks); JSON uploaded to RevenueCat dashboard. **Status: "Credentials need attention" (missing subscriptions API / inappproducts API / monetization API) — this is the standard 24-48h Google permission propagation delay, NOT a setup error.** Expected to transition to "Connected" automatically by 2026-04-26.
+
+**Validations Phase 9a.5:**
+- 4/4 gates PASS (ratio 0.81, 211 constants / 49 literals)
+- Typecheck clean (tsc -b --noEmit)
+- ESLint clean
+- 1761 tests / 0 fail / 37 skipped / 119 files (no test delta — Phase 9a.5 was native config + env wiring, no JS changes requiring new unit tests)
+
+**Architectural decisions:**
+- **Android-only native config this sprint**: iOS `Info.plist` (GADApplicationIdentifier + NSUserTrackingUsageDescription + SKAdNetworkItems) deferred until Nico has Mac access. All 12 env vars are in place, so the iOS drop-in is a single file edit when the time comes — no code changes needed.
+- **Per-platform env var schema (12 total)**: AdMob's per-app/per-platform ad unit model forced this refactor. Initial 6-var schema (Phase 9a.3) was a latent bug — would have shipped Android IDs to iOS. Caught during Nico's Activity 3 when he provided iOS-specific IDs; cheap to fix now (no test changes needed, just env vars + `adUnitIdFor()` re-read).
+- **Service account least-privilege**: gave RevenueCat's service account only 4 permissions scoped to SYNAPSE app — NOT "Administrator" role, NOT "Launch to production" (principle of least privilege for third-party automation).
+- **No pre-flight "Is propagation complete?" test**: could have added a sanity check that hits Google's API with the service account, but (a) it would require network access in tests, violating test isolation, and (b) the 24-48h delay is a Google-side thing, not something we can fix in code. Best to document the delay and re-verify at Sprint 9a.6 or Sprint 9b start.
+
+**Stubbed / pending for Phase 9a.6 and beyond:**
+- Phase 9a.6 (next): Sprint 9a close dashboard + buffer-1 sim re-run + final sprint commit.
+- iOS `Info.plist` edits when Mac available (drop-in: GADApplicationIdentifier + ATT string per V-9 + SKAdNetworkItems list from Google's docs).
+- RevenueCat propagation verification at 2026-04-26 (~48h after service account invite).
+- APK upload to internal test track for on-device sandbox verification.
+- Apple App Store Connect sandbox tester setup (waits for Mac).
+- RevenueCat products + entitlements configuration (`genius_pass_monthly` / `genius_pass_weekly` / `starter_pack` / spark packs) — Sprint 9b owns.
 
 ### Phase 9a.4 deliverables (added to Sprint 9a dashboard below)
 

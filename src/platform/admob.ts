@@ -28,14 +28,25 @@ export interface AdMobAdapter {
   showRewardedAd: (placement: AdPlacement) => Promise<boolean>;
 }
 
-/** Resolve the AdMob ad-unit ID for a placement from env vars. */
+/**
+ * Resolve the AdMob ad-unit ID for a placement on the current platform.
+ *
+ * AdMob assigns ad unit IDs per app, and our Android + iOS apps are distinct
+ * AdMob entries (each with its own 6 rewarded ad units). Sprint 9a Phase 9a.5
+ * split the env vars into ANDROID/IOS pairs so the SDK gets the right ID
+ * regardless of platform. On `web` (dev preview), this returns empty string —
+ * the createAdMobAdapter native-only guard prevents the path from ever firing
+ * with an empty ID in production.
+ */
 export function adUnitIdFor(placement: AdPlacement): string {
-  if (placement === 'offline_boost') return import.meta.env.VITE_ADMOB_REWARDED_OFFLINE_BOOST ?? '';
-  if (placement === 'post_discharge') return import.meta.env.VITE_ADMOB_REWARDED_POST_DISCHARGE ?? '';
-  if (placement === 'mutation_reroll') return import.meta.env.VITE_ADMOB_REWARDED_MUTATION_REROLL ?? '';
-  if (placement === 'decision_retry') return import.meta.env.VITE_ADMOB_REWARDED_DECISION_RETRY ?? '';
-  if (placement === 'piggy_refill') return import.meta.env.VITE_ADMOB_REWARDED_PIGGY_REFILL ?? '';
-  return import.meta.env.VITE_ADMOB_REWARDED_STREAK_SAVE ?? '';
+  const platform = Capacitor.getPlatform();
+  const isIos = platform === 'ios';
+  if (placement === 'offline_boost') return (isIos ? import.meta.env.VITE_ADMOB_REWARDED_OFFLINE_BOOST_IOS : import.meta.env.VITE_ADMOB_REWARDED_OFFLINE_BOOST_ANDROID) ?? '';
+  if (placement === 'post_discharge') return (isIos ? import.meta.env.VITE_ADMOB_REWARDED_POST_DISCHARGE_IOS : import.meta.env.VITE_ADMOB_REWARDED_POST_DISCHARGE_ANDROID) ?? '';
+  if (placement === 'mutation_reroll') return (isIos ? import.meta.env.VITE_ADMOB_REWARDED_MUTATION_REROLL_IOS : import.meta.env.VITE_ADMOB_REWARDED_MUTATION_REROLL_ANDROID) ?? '';
+  if (placement === 'decision_retry') return (isIos ? import.meta.env.VITE_ADMOB_REWARDED_DECISION_RETRY_IOS : import.meta.env.VITE_ADMOB_REWARDED_DECISION_RETRY_ANDROID) ?? '';
+  if (placement === 'piggy_refill') return (isIos ? import.meta.env.VITE_ADMOB_REWARDED_PIGGY_REFILL_IOS : import.meta.env.VITE_ADMOB_REWARDED_PIGGY_REFILL_ANDROID) ?? '';
+  return (isIos ? import.meta.env.VITE_ADMOB_REWARDED_STREAK_SAVE_IOS : import.meta.env.VITE_ADMOB_REWARDED_STREAK_SAVE_ANDROID) ?? '';
 }
 
 export function createAdMobAdapter(): AdMobAdapter {

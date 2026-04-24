@@ -34,9 +34,26 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths"></meta-data>
         </provider>
+
+        <!-- Sprint 9a Phase 9a.5 — AdMob (Google Mobile Ads SDK) requires the
+             APPLICATION_ID metadata. Without this, the SDK throws on init and
+             crashes the app on first launch (see PROGRESS.md note re: prior
+             app.synapsegame.mind crash). The value resolves to admob_app_id
+             in res/values/strings.xml so flavor-specific overrides are easy. -->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="@string/admob_app_id" />
     </application>
 
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Sprint 9a Phase 9a.5 — required for AdMob to access the Android
+         Advertising ID on Android 13+. Without this, AdMob serves limited /
+         non-personalized ads only (lower eCPM). -->
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID" />
+    <!-- Sprint 9a Phase 9a.5 — Google Mobile Ads SDK uses this to detect
+         offline state before showing an ad (avoids show errors on poor
+         connections, MONEY-7). -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 </manifest>

@@ -212,7 +212,7 @@ insightMult:            [3.0, 8.0, 18.0]
 insightDuration:        [15, 12, 8]
 patternCycleBonusPerNode: 0.04
 patternCycleCap:        1.5
-bundleId:               app.synapsegame.mind
+bundleId:               com.nicoabad.synapse
 ```
 
 ## Glossary (Spanish origin ↔ English display)

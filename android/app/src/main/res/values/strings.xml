@@ -4,4 +4,6 @@
     <string name="title_activity_main">SYNAPSE</string>
     <string name="package_name">com.nicoabad.synapse</string>
     <string name="custom_url_scheme">com.nicoabad.synapse</string>
+    <!-- Sprint 9a Phase 9a.5 — AdMob app ID for Android (real, Activity 2). -->
+    <string name="admob_app_id">ca-app-pub-6304825755361246~6503890286</string>
 </resources>
