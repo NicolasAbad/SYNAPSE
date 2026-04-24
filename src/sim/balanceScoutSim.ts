@@ -12,6 +12,7 @@
 
 import { tick } from '../engine/tick';
 import { handlePrestige } from '../engine/prestige';
+import { handleTranscendence } from '../engine/transcendence';
 import { computeTapThought, computeFocusFillPerTap } from '../store/tap';
 import { performDischarge } from '../engine/discharge';
 import { tryBuyNeuron, tryBuyUpgrade } from '../store/purchases';
@@ -22,7 +23,7 @@ import { useGameStore } from '../store/gameStore';
 import { UPGRADES } from '../config/upgrades';
 import { NEURON_CONFIG } from '../config/neurons';
 import type { GameState } from '../types/GameState';
-import type { Archetype, Pathway, NeuronType } from '../types';
+import type { Archetype, Pathway, NeuronType, EndingID } from '../types';
 
 const TICK_MS = 100; // CONST-OK §35 TICK-1
 const NEURON_TYPES: readonly NeuronType[] = ['basica', 'sensorial', 'piramidal', 'espejo', 'integradora'];
@@ -34,9 +35,12 @@ export interface BalanceScoutConfig {
   archetype: Archetype | null;
   pathway: Pathway | null;
   label: string;
+  /** Sprint 8c — number of Runs (Transcendence cycles) to simulate. Default 1; TEST-5 uses 3. */
+  runs?: number;
 }
 
 export interface CycleTelemetry {
+  runIndex: number; // Sprint 8c — 0-indexed Run (0 = first Run, 1 = post-1st-Transcendence, ...)
   prestigeCount: number;
   durationMs: number;
   memoriesGained: number;
@@ -47,6 +51,7 @@ export interface CycleTelemetry {
   shardsProc: number;
   shardsEpi: number;
   dischargesUsed: number;
+  resonanceGained: number; // Sprint 8c — Resonance earned this prestige (P13+ gated)
   anomalies: string[]; // NaN / Infinity / negative-balance flags for this cycle
 }
 
@@ -142,7 +147,6 @@ function detectAnomalies(state: GameState): string[] {
 
 export function runBalanceScoutSim(config: BalanceScoutConfig): ScoutResult {
   let state = freshSimState();
-  // Apply archetype + pathway up front (ignoring unlock gates — sim is exploratory).
   if (config.archetype !== null) state = { ...state, archetype: config.archetype, archetypeHistory: [config.archetype] };
   if (config.pathway !== null) state = { ...state, currentPathway: config.pathway };
 
@@ -153,6 +157,10 @@ export function runBalanceScoutSim(config: BalanceScoutConfig): ScoutResult {
   let dischargesThisCycle = 0;
   let cycleStartTime = 0;
   let timedOut = false;
+  const totalRuns = config.runs ?? 1;
+  const SIM_ENDING_FOR_TRANSCENDENCE: EndingID = 'equation'; // CONST-OK sim placeholder ending
+
+  for (let runIndex = 0; runIndex < totalRuns; runIndex++) {
 
   while (state.prestigeCount < CYCLES_TO_SIMULATE) {
     const target = calculateCurrentThreshold(state);
@@ -206,6 +214,7 @@ export function runBalanceScoutSim(config: BalanceScoutConfig): ScoutResult {
     state = { ...postPrestige, mastery: masteryAfter };
 
     cycles.push({
+      runIndex,
       prestigeCount: outcome.newPrestigeCount,
       durationMs: now - cycleStartTime,
       memoriesGained: outcome.memoriesGained,
@@ -216,14 +225,28 @@ export function runBalanceScoutSim(config: BalanceScoutConfig): ScoutResult {
       shardsProc: state.memoryShards.procedural - preShards.procedural,
       shardsEpi: state.memoryShards.episodic - preShards.episodic,
       dischargesUsed: dischargesThisCycle,
+      resonanceGained: outcome.resonanceGained,
       anomalies: [],
     });
-    // Re-apply pathway + archetype if they were cleared (prestige resets pathway).
     if (config.pathway !== null) state = { ...state, currentPathway: config.pathway };
     cycleStartTime = now;
-    // Sim safety: Memory floor to prevent negative accumulation from test bugs.
     if (preMemories > state.memories) allAnomalies.push(`P${state.prestigeCount}: Memory decreased ${preMemories}→${state.memories}`);
   }
+
+  if (timedOut) break;
+
+  // Sprint 8c — between Runs, apply Transcendence to advance to the next Run.
+  // Skip after the last Run. Re-apply config archetype + pathway since
+  // Transcendence resets them per GDD §20.
+  if (runIndex < totalRuns - 1) {
+    const { state: postT } = handleTranscendence(state, SIM_ENDING_FOR_TRANSCENDENCE, now);
+    state = postT;
+    if (config.archetype !== null) state = { ...state, archetype: config.archetype, archetypeHistory: [...state.archetypeHistory, config.archetype] };
+    if (config.pathway !== null) state = { ...state, currentPathway: config.pathway };
+    cycleStartTime = now;
+  }
+
+  } // end runs loop
 
   return { config, cycles, totalSimMs: now, anomalies: allAnomalies, timedOut };
 }

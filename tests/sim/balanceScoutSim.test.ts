@@ -78,3 +78,34 @@ describe('runBalanceScoutSim — archetype differentiation', () => {
     expect(high.totalSimMs).toBeLessThan(low.totalSimMs);
   });
 });
+
+describe('Sprint 8c — multi-Run extension', () => {
+  test('runs:3 produces 3× the cycle count of runs:1 (same config)', () => {
+    const r1 = runBalanceScoutSim({ tapRate: 5, archetype: 'analitica', pathway: 'rapida', label: 'r1', runs: 1 });
+    const r3 = runBalanceScoutSim({ tapRate: 5, archetype: 'analitica', pathway: 'rapida', label: 'r3', runs: 3 });
+    expect(r3.cycles.length).toBe(r1.cycles.length * 3);
+  });
+
+  test('runs:3 cycles carry runIndex 0 / 1 / 2 in sequence', () => {
+    const r = runBalanceScoutSim({ tapRate: 5, archetype: 'analitica', pathway: 'rapida', label: 'runIndex', runs: 3 });
+    const runIndices = new Set(r.cycles.map((c) => c.runIndex));
+    expect(runIndices).toEqual(new Set([0, 1, 2]));
+  });
+
+  test('Run 2+ threshold is higher than Run 1 (runThresholdMult[1] = 3.5 applied post-Transcendence)', () => {
+    const r = runBalanceScoutSim({ tapRate: 5, archetype: 'analitica', pathway: 'rapida', label: 'threshCheck', runs: 2 });
+    const run1P1 = r.cycles.find((c) => c.runIndex === 0 && c.prestigeCount === 1);
+    const run2P1 = r.cycles.find((c) => c.runIndex === 1 && c.prestigeCount === 1);
+    expect(run1P1).toBeDefined();
+    expect(run2P1).toBeDefined();
+    expect(run2P1!.durationMs).toBeGreaterThan(run1P1!.durationMs);
+  });
+
+  test('resonanceGained is 0 at P12 and non-zero at P13+ (Resonance unlock gate)', () => {
+    const r = runBalanceScoutSim({ tapRate: 5, archetype: 'analitica', pathway: 'rapida', label: 'resonance', runs: 1 });
+    const p12 = r.cycles.find((c) => c.prestigeCount === 12);
+    const p20 = r.cycles.find((c) => c.prestigeCount === 20);
+    if (p12) expect(p12.resonanceGained).toBe(0);
+    if (p20) expect(p20.resonanceGained).toBeGreaterThan(0);
+  });
+});

@@ -136,3 +136,45 @@ describe('chooseEnding action', () => {
     expect(useGameStore.getState().endingsSeen).toEqual(['equation', 'chorus']);
   });
 });
+
+describe('Sprint 8c — RP-3 PRESERVE on Transcendence + Singularity unlock', () => {
+  test('resonantPatternsDiscovered survives Transcendence (RP-3)', async () => {
+    const { handleTranscendence } = await import('../../src/engine/transcendence');
+    const { createDefaultState } = await import('../../src/store/gameStore');
+    const before = {
+      ...createDefaultState(),
+      prestigeCount: 26,
+      archetype: 'analitica' as const,
+      resonantPatternsDiscovered: [true, true, false, true] as [boolean, boolean, boolean, boolean],
+    };
+    const { state } = handleTranscendence(before, 'equation', 1_000_000);
+    expect(state.resonantPatternsDiscovered).toEqual([true, true, false, true]);
+  });
+
+  test('Singularity ending available when all 4 RPs discovered post-Transcendence', async () => {
+    const { handleTranscendence } = await import('../../src/engine/transcendence');
+    const { createDefaultState } = await import('../../src/store/gameStore');
+    const before = {
+      ...createDefaultState(),
+      prestigeCount: 26,
+      archetype: 'creativa' as const,
+      resonantPatternsDiscovered: [true, true, true, true] as [boolean, boolean, boolean, boolean],
+    };
+    const { state } = handleTranscendence(before, 'singularity', 1_000_000);
+    expect(state.resonantPatternsDiscovered).toEqual([true, true, true, true]);
+    expect(allResonantPatternsDiscovered(state)).toBe(true);
+    expect(state.endingsSeen).toContain('singularity');
+  });
+
+  test('partial RP discovery does not unlock Singularity (3 of 4)', () => {
+    const state = {
+      ...defaultRpState(),
+      resonantPatternsDiscovered: [true, true, true, false] as [boolean, boolean, boolean, boolean],
+    };
+    expect(allResonantPatternsDiscovered(state)).toBe(false);
+  });
+});
+
+function defaultRpState() {
+  return { resonantPatternsDiscovered: [false, false, false, false] as [boolean, boolean, boolean, boolean] };
+}
