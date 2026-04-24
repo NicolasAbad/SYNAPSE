@@ -11,6 +11,7 @@ import { memo, useCallback, useEffect, useState } from 'react';
 import { useGameStore } from '../../store/gameStore';
 import { COSMETIC_CATALOG, type CosmeticCategory, type CosmeticCatalogEntry } from '../../config/cosmeticCatalog';
 import { NEURON_SKINS, CANVAS_THEMES, GLOW_PACKS, HUD_STYLES } from '../../ui/theme/cosmeticOverrides';
+import { logEvent } from '../../platform/firebase';
 import { en } from '../../config/strings/en';
 
 const t = en.cosmetics;
@@ -178,8 +179,14 @@ export const CosmeticsStoreModal = memo(function CosmeticsStoreModal({ open, onC
   const activeCanvasTheme = useGameStore((s) => s.activeCanvasTheme);
   const activeGlowPack = useGameStore((s) => s.activeGlowPack);
   const activeHudStyle = useGameStore((s) => s.activeHudStyle);
+  const analyticsConsent = useGameStore((s) => s.analyticsConsent);
   const equipCosmetic = useGameStore((s) => s.equipCosmetic);
   const unequipCosmetic = useGameStore((s) => s.unequipCosmetic);
+
+  const onPreview = useCallback((entry: CosmeticCatalogEntry) => {
+    setPreviewingId(entry.id);
+    logEvent('cosmetic_previewed', { type: entry.category, id: entry.id }, analyticsConsent);
+  }, [analyticsConsent]);
 
   useEffect(() => {
     if (previewingId === null) return;
@@ -250,7 +257,7 @@ export const CosmeticsStoreModal = memo(function CosmeticsStoreModal({ open, onC
                 {entry.exclusive === 'genius_pass' && <span style={exclusiveBadgeStyle}>{t.exclusiveGeniusPass}</span>}
                 {entry.exclusive === 'starter_pack' && <span style={exclusiveBadgeStyle}>{t.exclusiveStarterPack}</span>}
                 {!isOwned && entry.exclusive === null && (
-                  <button type="button" data-testid={`cosmetics-preview-${entry.category}-${entry.id}`} onClick={() => setPreviewingId(entry.id)} style={secondaryButtonStyle}>
+                  <button type="button" data-testid={`cosmetics-preview-${entry.category}-${entry.id}`} onClick={() => onPreview(entry)} style={secondaryButtonStyle}>
                     {isPreviewing ? t.previewingToast : t.previewButton}
                   </button>
                 )}

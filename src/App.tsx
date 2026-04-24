@@ -18,6 +18,7 @@ import { EchoLayer } from './ui/canvas/EchoLayer';
 import { createRevenueCatAdapter, type RevenueCatAdapter } from './platform/revenuecat';
 import { createAdMobAdapter, type AdMobAdapter } from './platform/admob';
 import { AdProvider } from './platform/AdContext';
+import { initFirebase } from './platform/firebase';
 
 export function App() {
   // Sprint 9a Phase 9a.2 — RevenueCat adapter is created once on native; null on
@@ -34,6 +35,11 @@ export function App() {
   const adMobAdapter = useMemo<AdMobAdapter | null>(() => {
     return Capacitor.isNativePlatform() ? createAdMobAdapter() : null;
   }, []);
+
+  // Sprint 9b Phase 9b.6 — Firebase Analytics init. Safe to call at mount on
+  // both native and web: the adapter goes inert if env vars are missing + never
+  // throws. Respects analyticsConsent inside logEvent (GDPR).
+  useEffect(() => { initFirebase(); }, []);
 
   // Sequential mount: load saved state first, then init timestamps ONLY if no
   // save was present, then applyOfflineReturn. Ordering prevents the Phase 7

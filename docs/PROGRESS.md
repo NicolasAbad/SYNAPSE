@@ -6,10 +6,57 @@
 
 ## Current status
 
-**Phase:** Sprint 9b Phase 9b.5 COMPLETE. 3 Limited-Time Offers (dual_nature_pack P3, mutant_bundle P7, deep_mind_pack P13 — Run-2 "50% off" dropped per V-c to POSTLAUNCH); MONEY-8 Spark monthly cap engine helper (`sparksPurchaseCap.ts` with UTC month rollover per GDD §26 pseudocode); Piggy Bank claim modal (replaces Sprint 9a.4 stub; ad path dropped per V-4); Spark Pack purchase modal with cap disclosure; Limited-Time Offer modal (generic shell); `OfferOrchestrator.tsx` (V-d centralized modal mounting + trigger detection); 5 new store actions (`claimPiggyBank` / `purchaseSparks` / `stampLimitedTimeOffer` / `acceptLimitedTimeOffer` / `consumeLimitedTimeOffer`). `PiggyBankAdChip.tsx` deleted (V-4 cleanup); replaced by `PiggyBankClaimChip.tsx` (modal-opening chip). **1895 tests pass** (+58 vs 9b.4 baseline 1837) / **4/4 gates PASS (ratio 0.81)** / typecheck + lint clean / **GameState 124 stable** (no bump — all reused existing `LimitedOffer` + monetization fields). Buffer-1 sim 0/0.
-**Last updated:** 2026-04-24 during Sprint 9b Phase 9b.5.
-**Active sprint:** Sprint 9b — Phases 9b.1/2/4/5 shipped; 9b.3 (RevenueCat product config) still deferred pending propagation; 9b.6 (Firebase Analytics + 11 monetization events) next if propagation still blocked.
-**Next action:** Nico checks RevenueCat dashboard. If "Connected", proceed to Phase 9b.3 (RevenueCat product configuration — interactive). If still pending, proceed to Phase 9b.6 (Firebase Analytics). Expected +30-40 tests.
+**Phase:** Sprint 9b Phase 9b.6 COMPLETE. Firebase Analytics wired (project `synapse-fd25a` — Nico interactive Path A: Firebase Console + Android app + `google-services.json` at `android/app/google-services.json` + Web config → 7 `VITE_FIREBASE_*` env vars in `.env.local`). `src/platform/firebase.ts` exports `initFirebase()` + `logEvent(name, params?, consent?)` wrapper respecting `analyticsConsent` GDPR flag. 13 analytics events wired at call sites (11 Monetization per GDD §27 + 2 Core Genius Pass): `starter_pack_{shown,purchased,dismissed}` / `limited_offer_{shown,purchased,expired}` / `cosmetic_{purchased,previewed,equipped}` / `spark_pack_purchased` / `spark_cap_reached` / `genius_pass_offered` / `genius_pass_purchased`. `App.tsx` calls `initFirebase()` on mount. **1872 tests pass** (+6 vs 9b.5 baseline 1866) / **4/4 gates PASS (ratio 0.81)** / typecheck + lint clean / **GameState 124 stable**.
+**Last updated:** 2026-04-24 during Sprint 9b Phase 9b.6.
+**Active sprint:** Sprint 9b — Phases 9b.1/2/4/5/6 shipped; 9b.3 (RevenueCat product config) still deferred pending propagation; 9b.7 (Sprint close) next once propagation resolves OR deferred to new sprint.
+**Next action:** Nico checks RevenueCat dashboard status. If "Connected", proceed to Phase 9b.3 (RevenueCat product configuration — interactive; 16+ IAP products per V-3). If still pending propagation past 48h, debug with screenshot OR close Sprint 9b with 9b.3 documented as pending and Sprint 9b-post-propagation dedicated to finish.
+
+### Phase 9b.6 deliverables (Firebase Analytics)
+
+**Nico interactive activity (Path A, completed this phase):**
+- Firebase Console → new project `synapse-fd25a` (separate from `synapse-revenuecat` GCP project per V-8 allowing clean separation)
+- Android app registered with package `com.nicoabad.synapse`
+- `google-services.json` downloaded + placed at `android/app/google-services.json` (gitignored per Capacitor defaults)
+- Web app registered → 7 config values captured in `.env.local`
+
+**Files created (2 new):**
+- `src/platform/firebase.ts` — `initFirebase()` (idempotent + inert-if-missing-env + never-throws CODE-8 compliance) + `logEvent(name: AnalyticsEvent, params?, analyticsConsent?): void` respecting GDPR consent + dev `console.log` stub when adapter is inert. `AnalyticsEvent` is a closed union of 13 allowed event names per ANALYTICS-5 (§35 GDD).
+- `tests/platform/firebase.test.ts` (6 tests) — init idempotency + inert-state + consent-off no-op + never-throws safety + event name union verification.
+
+**Files modified:**
+- `src/App.tsx` — `useEffect(() => { initFirebase(); }, [])` added to mount flow.
+- `src/store/gameStore.ts` — 8 `logEvent(...)` calls added to monetization actions:
+  - `starter_pack_shown` in `stampStarterPackExpiry`
+  - `starter_pack_purchased` in `acceptStarterPack`
+  - `starter_pack_dismissed` in `dismissStarterPack`
+  - `genius_pass_offered` in `recordGeniusPassOfferShown`
+  - `limited_offer_shown` in `stampLimitedTimeOffer`
+  - `limited_offer_purchased` in `acceptLimitedTimeOffer`
+  - `limited_offer_expired` in `consumeLimitedTimeOffer`
+  - `spark_pack_purchased` + `spark_cap_reached` in `purchaseSparks`
+  - `cosmetic_purchased` in `unlockCosmetic`
+  - `cosmetic_equipped` in `equipCosmetic`
+  - `genius_pass_purchased` in `setSubscriptionStatus` (transition-guarded: fires only on false→true)
+- `src/ui/modals/CosmeticsStoreModal.tsx` — `cosmetic_previewed` fires on Preview button click (UI-side, not store-side, since preview is React-local state).
+- `.env.local` — 7 real `VITE_FIREBASE_*` values.
+
+**Validations Phase 9b.6:**
+- 4/4 gates PASS (ratio 0.81, 224 constants / 54 literals — unchanged from 9b.5)
+- ESLint clean, typecheck clean
+- 1872 tests / 0 fail / 37 skipped / 128 files (+6 tests, +1 file vs 9b.5 baseline 1866)
+
+**Architectural decisions:**
+- **Closed union event type** (`AnalyticsEvent`): the `logEvent(name, …)` signature takes a union-typed `name` argument. TypeScript errors at compile time if a call site passes an event name not in the union. Prevents Sprint 9b/10 drift from GDD §27 and enforces ANALYTICS-5 without needing a runtime check.
+- **GDPR consent respected at the boundary**: every `logEvent` call passes `state.analyticsConsent`. If false, the adapter short-circuits. No separate "is analytics on?" flag is needed upstream — the consent check lives inside the adapter.
+- **Inert-by-default**: `initFirebase` returns silently if any required env var is missing. `logEvent` logs a `console.log` stub in dev when the adapter is inert. Prevents test + web-preview failures when env vars aren't populated (tests never have them).
+- **Firebase JS SDK (not `@capacitor-firebase/analytics`)**: Capacitor runs the web bundle inside a WebView — `firebase/analytics` works identically there as in web preview. This simplifies wiring + avoids platform-specific code. The `@capacitor-firebase/analytics` plugin (installed in 9b.1) stays available for future native-only features like user properties, but we don't use it in v1.0 scope.
+- **13 events wired (11 Mon + 2 Core GP), not 48**: Sprint 10 wires the remaining 37 events (9 funnel + 5 feature + 20 core - 2 GP + 3 weekly_challenge). Sprint 9b scope per SPRINTS.md §881 is monetization-only.
+
+**Stubbed for later:**
+- Genius Pass trigger orchestration at 5 contexts (post-P1 / post-PB / post-P5 / post-P10 / post-Transcendence) — `recordGeniusPassOfferShown` logs the event but a caller doesn't yet fire at the 5 contexts. Phase 9b.7 wiring OR Sprint 10 scope (depending on propagation timing + phase budget).
+- RevenueCat `purchasePackage()` callbacks (Phase 9b.3 when propagation resolves). When wired, the existing `setSubscriptionStatus` false→true transition will naturally fire `genius_pass_purchased`; the `cosmetic_purchased` events fire from `unlockCosmetic` which the RC success callback will invoke.
+- DebugView sandbox verification (Firebase Analytics DebugView shows events in realtime) — Nico can enable in Firebase Console after `npx cap sync + build` ships the Android APK with `google-services.json`. Documentation in Sprint 9b close.
+- 37 remaining events for Sprint 10 (funnel + feature + core + weekly_challenge).
 
 ### Phase 9b.5 deliverables (offer infrastructure + cap enforcement)
 

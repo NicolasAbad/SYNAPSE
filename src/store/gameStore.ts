@@ -38,6 +38,7 @@ import { COSMETIC_CATALOG } from '../config/cosmeticCatalog';
 import { findLimitedTimeOffer } from '../config/limitedTimeOffers';
 import { evaluateSparksPurchase, startOfCurrentMonthUTC } from '../engine/sparksPurchaseCap';
 import { mulberry32 } from '../engine/rng';
+import { logEvent } from '../platform/firebase';
 import type { DiaryEntry } from '../types';
 
 /**
@@ -651,7 +652,17 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
   setActiveTab: (tab) => set({ activeTab: tab, activeMindSubtab: 'home' }),
   setActiveMindSubtab: (subtab) => set({ activeMindSubtab: subtab }),
   setAnalyticsConsent: (consent) => set({ analyticsConsent: consent }),
-  setSubscriptionStatus: (isSubscribed) => set({ isSubscribed }),
+  setSubscriptionStatus: (isSubscribed) => {
+    const prev = get();
+    set({ isSubscribed });
+    // GDD §27 Core: fire genius_pass_purchased when the flag transitions
+    // false → true (i.e. a real subscription just activated via RevenueCat).
+    // Re-running Restore Purchases for an already-subscribed user does NOT
+    // re-fire the event.
+    if (isSubscribed && !prev.isSubscribed) {
+      logEvent('genius_pass_purchased', {}, prev.analyticsConsent);
+    }
+  },
   recordAdWatched: (nowTimestamp) => set({ lastAdWatchedAt: nowTimestamp }),
   applyAdRewardOfflineDouble: () => {
     const state = get();
@@ -700,6 +711,8 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
       if (state.ownedHudStyles.includes(id)) return;
       set({ ownedHudStyles: [...state.ownedHudStyles, id] });
     }
+    const catalogEntry = COSMETIC_CATALOG.find((c) => c.category === category && c.id === id);
+    logEvent('cosmetic_purchased', { type: category, id, price: catalogEntry?.priceUsd ?? 0 }, state.analyticsConsent);
   },
   equipCosmetic: (category, id) => {
     const state = get();
@@ -716,6 +729,7 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
       if (!state.ownedHudStyles.includes(id)) return;
       set({ activeHudStyle: id });
     }
+    logEvent('cosmetic_equipped', { type: category, id }, state.analyticsConsent);
   },
   unequipCosmetic: (category) => {
     if (category === 'neuron_skin') set({ activeNeuronSkin: null });
@@ -745,16 +759,19 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
       memories: state.memories + SYNAPSE_CONSTANTS.starterPackMemoryReward,
       ownedCanvasThemes: nextOwnedCanvasThemes,
     });
+    logEvent('starter_pack_purchased', {}, state.analyticsConsent);
   },
   dismissStarterPack: () => {
     const state = get();
     if (state.starterPackDismissed || state.starterPackPurchased) return;
     set({ starterPackDismissed: true });
+    logEvent('starter_pack_dismissed', {}, state.analyticsConsent);
   },
   stampStarterPackExpiry: (nowTimestamp) => {
     const state = get();
     if (state.starterPackExpiresAt !== 0) return;
     set({ starterPackExpiresAt: nowTimestamp + SYNAPSE_CONSTANTS.starterPackExpiryMs });
+    logEvent('starter_pack_shown', {}, state.analyticsConsent);
   },
   dismissGeniusPassOffer: (nowTimestamp) => {
     const state = get();
@@ -764,7 +781,9 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
     });
   },
   recordGeniusPassOfferShown: (nowTimestamp) => {
+    const state = get();
     set({ geniusPassLastOfferTimestamp: nowTimestamp });
+    logEvent('genius_pass_offered', {}, state.analyticsConsent);
   },
   claimPiggyBank: () => {
     const state = get();
@@ -778,13 +797,18 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
   purchaseSparks: (packAmount, nowTimestamp) => {
     const state = get();
     const decision = evaluateSparksPurchase({ state, packAmount, nowTimestamp });
-    if (!decision.allowed) return decision.reason;
+    if (!decision.allowed) {
+      logEvent('spark_cap_reached', { remaining: decision.remaining }, state.analyticsConsent);
+      return decision.reason;
+    }
     const monthStart = startOfCurrentMonthUTC(nowTimestamp);
+    const tier = packAmount === 20 ? 'small' : packAmount === 110 ? 'medium' : 'large'; // CONST-OK GDD §26 3-tier mapping
     set({
       sparks: state.sparks + packAmount,
       sparksPurchasedThisMonth: decision.effectivePurchasedThisMonth + packAmount,
       sparksPurchaseMonthStart: monthStart,
     });
+    logEvent('spark_pack_purchased', { tier, amount: packAmount }, state.analyticsConsent);
     return 'ok';
   },
   stampLimitedTimeOffer: (offerId, nowTimestamp) => {
@@ -793,6 +817,7 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
     set({
       activeLimitedOffer: { id: offerId, expiresAt: nowTimestamp + SYNAPSE_CONSTANTS.limitedOfferExpiryMs },
     });
+    logEvent('limited_offer_shown', { id: offerId }, state.analyticsConsent);
   },
   acceptLimitedTimeOffer: (offerId) => {
     const state = get();
@@ -829,6 +854,7 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
       }
     }
     set(updates);
+    logEvent('limited_offer_purchased', { id: offerId, price: def.priceUsd }, state.analyticsConsent);
   },
   consumeLimitedTimeOffer: (offerId) => {
     const state = get();
@@ -837,6 +863,9 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
       purchasedLimitedOffers: [...state.purchasedLimitedOffers, offerId],
       activeLimitedOffer: null,
     });
+    // Fires as `limited_offer_expired` — covers both the timer-expiry case and
+    // the manual-dismiss case (both consume the offer slot terminally).
+    logEvent('limited_offer_expired', { id: offerId }, state.analyticsConsent);
   },
   buyNeuron: (type, nowTimestamp) => {
     const state = get();
