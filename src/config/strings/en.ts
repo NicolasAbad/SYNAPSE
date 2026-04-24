@@ -667,22 +667,22 @@ export const en = {
     gainedLabel: 'Thoughts gathered',
     efficiencyLabel: 'Offline efficiency',
     cappedNote: 'Cycle threshold reached — Awakening ready.',
-    enhancedDischargeBanner: 'An enhanced Discharge awaits. Use it before Awakening?',
+    enhancedDischargeBanner: 'An enhanced Discharge awaits before Awakening.',
     lucidDreamTitle: 'A Lucid Dream stirs',
     lucidDreamOptionA: '+10% production for 1 hour',
     lucidDreamOptionB: '+2 Memories',
-    rewardedAdButton: 'Watch ad → double offline thoughts',
+    rewardedAdButton: 'Watch ad — double offline thoughts',
     dismissButton: 'Wake up',
     // Sprint 7.10 Phase 7.10.6 — OFFLINE-10 returning-player greetings (§19 +
     // §16.5 + §39 Broca Inner Voice). Mood-tier-gated; show only when elapsed
     // >= lucidDreamMinOfflineMinutes (30 min — matches the "long enough to be
-    // missed" threshold). Tier 0/4 lines pulled near-verbatim from GDD §19;
-    // middle 3 are draft English flagged for tone-pass review.
+    // missed" threshold). Numb / Calm / Euphoric pulled near-verbatim from GDD
+    // §19; Engaged + Elevated drafted Sprint 7.10.6 (Nico tone-pass approved).
     greetings: {
       numb: 'Your mind has been waiting.',
       calm: 'Your mind was quiet. It missed you.',
-      engaged: 'Your mind has stirred awake.',
-      elevated: 'Your mind is brighter today.',
+      engaged: 'Your mind was thinking of you.',
+      elevated: 'Your mind was sharp while you were away.',
       euphoric: 'Your mind welcomes you back, still alight.',
     },
   },
