@@ -43,7 +43,8 @@ export const FocusBar = memo(function FocusBar() {
           height: '100%', // CONST-OK: CSS full-height idiom (CODE-1 exception)
           background: 'var(--color-focus-bar)',
           // Sprint 10 Phase 10.5 — reducedMotion suppresses the fill ease.
-          transition: reducedMotion ? 'none' : 'width 200ms linear', // CONST-OK: CSS animation duration (CODE-1 exception)
+          // Sprint 10 Phase 10.6 — ease-out replaces linear for smoother tap feedback.
+          transition: reducedMotion ? 'none' : 'width 200ms ease-out', // CONST-OK: CSS animation duration (CODE-1 exception)
         }}
       />
     </div>

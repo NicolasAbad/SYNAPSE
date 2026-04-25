@@ -19,6 +19,7 @@ export const DischargeButton = memo(function DischargeButton() {
   // DISCHARGE overlapped PatternTreeView's Reset button).
   const activeTab = useGameStore((s) => s.activeTab);
   const activeMindSubtab = useGameStore((s) => s.activeMindSubtab);
+  const reducedMotion = useGameStore((s) => s.reducedMotion);
   const enabled = charges > 0;
   if (activeTab !== 'mind' || activeMindSubtab !== 'home') return null;
 
@@ -47,6 +48,8 @@ export const DischargeButton = memo(function DischargeButton() {
         disabled={!enabled}
         onPointerDown={onTap}
         aria-label={enabled ? 'Discharge — fire neural burst' : 'Discharge unavailable — wait for charges'}
+        // Sprint 10 Phase 10.6 — pulse when ready, off when reducedMotion or disabled.
+        className={enabled && !reducedMotion ? 'discharge-pulse' : undefined}
         style={{
           minWidth: HUD.dischargeButtonMinWidth,
           minHeight: HUD.touchTargetMin,

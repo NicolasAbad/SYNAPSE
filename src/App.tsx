@@ -15,6 +15,7 @@ import { SleepScreen } from './ui/modals/SleepScreen';
 import { SettingsModal } from './ui/modals/SettingsModal';
 import { CosmeticsStoreModal } from './ui/modals/CosmeticsStoreModal';
 import { EchoLayer } from './ui/canvas/EchoLayer';
+import { TapFloaterLayer } from './ui/canvas/TapFloaterLayer';
 import { SaveSyncIndicator } from './ui/hud/SaveSyncIndicator';
 import { DailyLoginModal } from './ui/modals/DailyLoginModal';
 import { createRevenueCatAdapter, type RevenueCatAdapter } from './platform/revenuecat';
@@ -164,6 +165,7 @@ export function App() {
         }}
       >
         <NeuronCanvas />
+        <TapFloaterLayer />
         <HUD onOpenSettings={() => setSettingsOpen(true)} />
         <SaveSyncIndicator />
         <TutorialHints />

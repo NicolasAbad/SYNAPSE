@@ -33,6 +33,7 @@ import { resizeHiDPICanvas, setupHiDPICanvas } from './dpr';
 import { draw } from './renderer';
 import { testHit } from './tapHandler';
 import { installPerfInstrument } from './perfInstrument';
+import { publishTapFloater } from './tapFloaterEvents';
 
 export function NeuronCanvas() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -64,8 +65,17 @@ export function NeuronCanvas() {
 
     // Sprint 3 Phase 4: full TAP-2 via store action + light haptic feedback.
     // hapticLight() silently no-ops on web/dev/jsdom (see src/ui/haptics.ts).
+    const beforeThoughts = state.thoughts;
     useGameStore.getState().onTap(Date.now());
     void hapticLight();
+    // Sprint 10 Phase 10.6 — emit a "+N" floater at the tap point (skip when
+    // reducedMotion or zero gain). Uses viewport-relative coords for the
+    // floater layer's fixed-position rendering.
+    const after = useGameStore.getState();
+    const delta = Math.max(0, Math.floor(after.thoughts) - Math.floor(beforeThoughts));
+    if (delta > 0 && !after.reducedMotion) {
+      publishTapFloater({ x: ev.clientX, y: ev.clientY, amount: delta });
+    }
   };
 
   useEffect(() => {

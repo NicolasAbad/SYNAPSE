@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useEffect, useState } from 'react';
 import { useGameStore } from '../../store/gameStore';
 import { NeuronsPanel } from './NeuronsPanel';
 import { UpgradesPanel } from './UpgradesPanel';
@@ -24,6 +24,18 @@ import { MindPanel } from './MindPanel';
  */
 export const TabPanelContainer = memo(function TabPanelContainer() {
   const activeTab = useGameStore((s) => s.activeTab);
+  const reducedMotion = useGameStore((s) => s.reducedMotion);
+
+  // Sprint 10 Phase 10.6 — 150ms cross-fade between panels. We re-mount
+  // opacity at 0 on activeTab change (via key={activeTab}) and ramp to 1
+  // on the next paint via useEffect. ReducedMotion: skip the ramp.
+  const [opacity, setOpacity] = useState(reducedMotion ? 1 : 0);
+  useEffect(() => {
+    if (reducedMotion) { setOpacity(1); return; }
+    setOpacity(0);
+    const id = window.requestAnimationFrame(() => setOpacity(1));
+    return () => window.cancelAnimationFrame(id);
+  }, [activeTab, reducedMotion]);
 
   if (activeTab === 'mind') {
     // Mind tab default "home" view intentionally renders nothing so
@@ -33,7 +45,9 @@ export const TabPanelContainer = memo(function TabPanelContainer() {
 
   return (
     <div
+      key={activeTab}
       data-testid="tab-panel-container"
+      className="tab-fade"
       style={{
         position: 'absolute',
         top: '45%', // CONST-OK: bottom-sheet idiom — leaves upper 45% for canvas tap area
@@ -45,6 +59,7 @@ export const TabPanelContainer = memo(function TabPanelContainer() {
         borderTop: '1px solid var(--color-border-subtle)',
         overflowY: 'auto',
         pointerEvents: 'auto',
+        opacity,
       }}
     >
       {activeTab === 'neurons' && <NeuronsPanel />}

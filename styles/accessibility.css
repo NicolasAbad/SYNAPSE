@@ -31,3 +31,43 @@
   animation-duration: 0s !important;
   animation-iteration-count: 1 !important;
 }
+
+/* Sprint 10 Phase 10.6 — discharge button pulse animation when a charge is
+ * available. Standard mobile idle affordance. Components apply
+ * .discharge-pulse class to opt in. ReducedMotion: gate at component level
+ * (omit the class) — the .a11y-no-motion override above also forces 0s
+ * animation-duration as a belt-and-suspenders safety net. */
+@keyframes synapse-discharge-pulse {
+  0%   { box-shadow: 0 0 0   0   color-mix(in srgb, var(--color-discharge-btn) 60%, transparent); }
+  70%  { box-shadow: 0 0 12px 8px color-mix(in srgb, var(--color-discharge-btn) 0%, transparent); }
+  100% { box-shadow: 0 0 0   0   color-mix(in srgb, var(--color-discharge-btn) 0%, transparent); }
+}
+.discharge-pulse {
+  animation: synapse-discharge-pulse 1600ms ease-out infinite;
+}
+
+/* Sprint 10 Phase 10.6 — tab cross-fade. The TabPanel switcher applies
+ * .tab-fade and toggles inline opacity 0/1 across the 150ms window. */
+.tab-fade {
+  transition: opacity 150ms ease-in-out;
+}
+
+/* Sprint 10 Phase 10.6 — tap +X floater animation. Floats up + fades.
+ * Caller renders a span with class="tap-floater" + inline left/top + text. */
+@keyframes synapse-tap-floater {
+  0%   { transform: translate(-50%, 0)     scale(0.85); opacity: 0; }
+  20%  { transform: translate(-50%, -8px)  scale(1);    opacity: 1; }
+  100% { transform: translate(-50%, -36px) scale(1);    opacity: 0; }
+}
+.tap-floater {
+  position: absolute;
+  pointer-events: none;
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-thoughts-counter);
+  animation: synapse-tap-floater 400ms ease-out forwards;
+  user-select: none;
+  z-index: 920;
+}
+
