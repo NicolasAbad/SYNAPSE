@@ -19,11 +19,26 @@
 import { initializeApp, type FirebaseApp } from 'firebase/app';
 import { getAnalytics, logEvent as fbLogEvent, type Analytics } from 'firebase/analytics';
 
-// Allowed event names — ANALYTICS-5 alignment with GDD §27.
-// 11 Monetization + 2 Core (genius_pass_offered / genius_pass_purchased per §27 Core (19))
-// + 1 reset_game (Sprint 10 Phase 10.1 — Hard Reset analytics, fires before state wipe).
-// Phase 10.3 will add the remaining 34 events to reach 48 total per GDD §27.
+// Allowed event names — ANALYTICS-5 alignment with GDD §27 (48 events) + 1
+// extension (`reset_game`, Sprint 10 Phase 10.1 from SPRINTS.md scope) = 49.
+// SPRINTS.md ↔ GDD §27 gap: SPRINTS.md line 943 mandates `reset_game` for the
+// Hard Reset flow but GDD §27 does not list it. Carrying as Sprint-10 extension
+// pending Nico's reconciliation (drop event vs extend §27 to 49).
+//
+// Breakdown per GDD §27: 9 Funnel + 11 Monetization + 5 Feature + 20 Core + 3
+// Weekly Challenge = 48. Plus 1 Sprint 10.1 extension = 49 total here.
 export type AnalyticsEvent =
+  // ── Funnel (9) — ANALYTICS-3 ──
+  | 'app_first_open'
+  | 'tutorial_first_tap'
+  | 'tutorial_first_buy'
+  | 'tutorial_first_discharge'
+  | 'first_prestige'
+  | 'reached_p5'
+  | 'reached_p10'
+  | 'first_transcendence'
+  | 'first_purchase'
+  // ── Monetization (11) — ANALYTICS-4 ──
   | 'starter_pack_shown'
   | 'starter_pack_purchased'
   | 'starter_pack_dismissed'
@@ -35,8 +50,38 @@ export type AnalyticsEvent =
   | 'cosmetic_equipped'
   | 'spark_pack_purchased'
   | 'spark_cap_reached'
+  // ── Feature (5) ──
+  | 'achievement_unlocked'
+  | 'mental_state_changed'
+  | 'micro_challenge_completed'
+  | 'micro_challenge_failed'
+  | 'diary_entry_added'
+  // ── Core (20) ──
+  | 'first_tap'
+  | 'first_neuron'
+  | 'upgrade_purchased'
+  | 'discharge_used'
+  | 'insight_activated'
+  | 'prestige_completed'
+  | 'polarity_chosen'
+  | 'mutation_chosen'
+  | 'pathway_chosen'
+  | 'pattern_decision'
+  | 'resonant_pattern_discovered'
+  | 'spontaneous_event'
+  | 'personal_best'
+  | 'transcendence'
+  | 'ending_seen'
+  | 'offline_return'
+  | 'ad_watched'
   | 'genius_pass_offered'
   | 'genius_pass_purchased'
+  | 'pattern_decisions_reset'
+  // ── Weekly Challenge (3) — CORE-9 ──
+  | 'weekly_challenge_started'
+  | 'weekly_challenge_completed'
+  | 'weekly_challenge_expired'
+  // ── Sprint 10.1 extension (carried pending GDD §27 reconciliation) ──
   | 'reset_game';
 
 export type AnalyticsParams = Record<string, string | number | boolean>;
@@ -88,6 +133,26 @@ export function logEvent(name: AnalyticsEvent, params: AnalyticsParams = {}, ana
     // Never throw from analytics — failures are silent.
     if (import.meta.env.DEV) console.error(`[analytics] ${name} failed:`, e);
   }
+}
+
+/**
+ * Sprint 10 Phase 10.3 — fire-once analytics helper for funnel events.
+ * Caller passes the current `firstEventsFired` array; if `name` is already
+ * in it, this is a no-op. Otherwise the event is logged and the helper
+ * returns the new array (for the caller to commit to GameState).
+ *
+ * Returns the (unchanged) input array when the event has already fired.
+ * Returns a new array with `name` appended when the event fires.
+ */
+export function logEventOnce(
+  name: AnalyticsEvent,
+  params: AnalyticsParams,
+  analyticsConsent: boolean,
+  firedBefore: string[],
+): string[] {
+  if (firedBefore.includes(name)) return firedBefore;
+  logEvent(name, params, analyticsConsent);
+  return [...firedBefore, name];
 }
 
 /** For tests: reset the module state. */

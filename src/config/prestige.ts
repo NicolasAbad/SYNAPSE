@@ -1,15 +1,15 @@
-// Implements docs/GDD.md §33 (PRESTIGE_RESET 48 / PRESTIGE_PRESERVE 79 /
-// PRESTIGE_UPDATE 4 / lifetime 1 = 132 total).
+// Implements docs/GDD.md §33 (PRESTIGE_RESET 48 / PRESTIGE_PRESERVE 80 /
+// PRESTIGE_UPDATE 4 / lifetime 1 = 133 total).
 //
 // Pure data file — no logic. handlePrestige() in src/engine/prestige.ts
 // (Sprint 4a Phase 4a.2) consumes these to produce a post-prestige state.
 //
 // Field-count invariants (asserted by tests/consistency.test.ts §33 block):
 //   PRESTIGE_RESET_FIELDS.length === 48
-//   PRESTIGE_PRESERVE_FIELDS.length === 79 (Sprint 10 Phase 10.1: +8 Settings)
+//   PRESTIGE_PRESERVE_FIELDS.length === 80 (Sprint 10 Phase 10.3: +firstEventsFired)
 //   PRESTIGE_UPDATE_FIELDS.length === 4
 //   PRESTIGE_LIFETIME_FIELDS.length === 1
-//   48 + 79 + 4 + 1 === 132 === Object.keys(createDefaultState()).length
+//   48 + 80 + 4 + 1 === 133 === Object.keys(createDefaultState()).length
 //   RESET ∩ PRESERVE === ∅ (disjoint — no field in both)
 //
 // Ordering within each tuple mirrors GDD §33 for audit readability, but
@@ -205,6 +205,8 @@ export const PRESTIGE_PRESERVE_FIELDS = [
   'sfxVolume', 'musicVolume', 'language',
   'colorblindMode', 'reducedMotion', 'highContrast', 'fontSize',
   'notificationsEnabled',
+  // Analytics tracking (1) — Sprint 10 Phase 10.3: lifetime fire-once for funnel events.
+  'firstEventsFired',
 ] as const satisfies readonly (keyof GameState)[];
 
 /**

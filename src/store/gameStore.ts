@@ -5,7 +5,7 @@
 // Mount-time timestamps are populated via initSessionTimestamps action
 // per INIT-1 — see src/store/initSession.ts for the React boundary.
 //
-// CODE-2 exception: enumerating all 132 fields with section comments
+// CODE-2 exception: enumerating all 133 fields with section comments
 // and per-field inline rationale pushes this file above the 200-line
 // cap. Same justification as src/types/GameState.ts — the interface is
 // a single-source-of-truth artifact; splitting it would lose the
@@ -38,7 +38,7 @@ import { COSMETIC_CATALOG } from '../config/cosmeticCatalog';
 import { findLimitedTimeOffer } from '../config/limitedTimeOffers';
 import { evaluateSparksPurchase, startOfCurrentMonthUTC } from '../engine/sparksPurchaseCap';
 import { mulberry32 } from '../engine/rng';
-import { logEvent } from '../platform/firebase';
+import { logEvent, logEventOnce } from '../platform/firebase';
 import { playSfx } from '../platform/audio';
 import type { DiaryEntry } from '../types';
 
@@ -245,6 +245,8 @@ export function createDefaultState(): GameState {
     highContrast: false,
     fontSize: 'medium', // CONST-OK CODE-1 exception: enum literal default per FontSize type
     notificationsEnabled: true,
+    // === Analytics tracking (1) — Sprint 10 Phase 10.3 ===
+    firstEventsFired: [],
   };
 }
 
@@ -598,11 +600,20 @@ function processAchievementUnlocks(
     return { achievementToast: null };
   }
   const sparkBonus = achievementRewardSum(result.newlyUnlocked);
+  // §27 feature — achievement_unlocked per newly-unlocked id. Consent reads
+  // straight off the state we already have here.
+  for (const id of result.newlyUnlocked) {
+    logEvent('achievement_unlocked', { id, prestigeCount: nextState.prestigeCount }, nextState.analyticsConsent);
+  }
   const newDiaryEntries: DiaryEntry[] = result.newlyUnlocked.map((id) => ({
     timestamp: nowTimestamp,
     type: 'achievement' as const,
     data: { achievementId: id, reward: ACHIEVEMENTS_BY_ID[id]?.reward ?? 0 },
   }));
+  // §27 feature — diary_entry_added per achievement diary push.
+  for (const entry of newDiaryEntries) {
+    logEvent('diary_entry_added', { entryType: entry.type }, nextState.analyticsConsent);
+  }
   // Diary cap: 500 entries circular, drop from head when over (Sprint 7.5 spec).
   const allDiary = [...nextState.diaryEntries, ...newDiaryEntries];
   const trimmed = allDiary.length > 500 ? allDiary.slice(allDiary.length - 500) : allDiary; // CONST-OK §24.5 nar_diary_50 + Sprint 7.5 cap
@@ -624,6 +635,7 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
   antiSpamActive: false,
   achievementToast: null,
   initSessionTimestamps: (nowTimestamp) => {
+    const before = get();
     set((state) => {
       // Per INIT-1: only populate if field is still at the pure default sentinel.
       // Saved-state restore must NOT be overwritten.
@@ -637,6 +649,12 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
       if (state.installedAt === 0) updates.installedAt = nowTimestamp;
       return updates;
     });
+    // §27 funnel — app_first_open fires once lifetime. Detected via installedAt
+    // transitioning 0 → nowTimestamp on this very call.
+    if (before.installedAt === 0) {
+      const fired = logEventOnce('app_first_open', { timestamp: nowTimestamp }, before.analyticsConsent, before.firstEventsFired);
+      if (fired !== before.firstEventsFired) set({ firstEventsFired: fired });
+    }
   },
   applyOfflineReturn: (nowTimestamp) => {
     const prev = get();
@@ -645,6 +663,14 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
     // don't overwrite pendingOfflineSummary. Keeps the flow cheap on rapid resumes.
     if (next.lastActiveTimestamp === prev.lastActiveTimestamp && summary.gained === 0) return;
     set({ ...next, pendingOfflineSummary: summary.elapsedMs >= SYNAPSE_CONSTANTS.offlineMinMinutes * 60_000 ? summary : prev.pendingOfflineSummary });
+    // §27 core — offline_return when meaningful elapsed time accrued.
+    if (summary.gained > 0) {
+      logEvent('offline_return', {
+        elapsedHours: summary.elapsedMs / (60 * 60 * 1_000), // CONST-OK ms→hr
+        thoughtsEarned: summary.gained,
+        lucidDream: summary.lucidDreamTriggered,
+      }, prev.analyticsConsent);
+    }
     // Save-on-resume — anti-exploit per Phase 7.10.4 spec. Fire-and-forget.
     saveGame(get() as GameState).catch((e) => console.error('[applyOfflineReturn] save failed:', e));
   },
@@ -680,8 +706,16 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
     await saveGame(rest as GameState);
   },
   onTap: (nowTimestamp) => {
+    const before = get();
     set((state) => applyTap(state, state.antiSpamActive, nowTimestamp));
     playSfx('tap'); // SFX wired in audio adapter (pitch jitter inside adapter)
+    // §27 funnel — first ever tap and first tap of tutorial fire once each lifetime.
+    let fired = before.firstEventsFired;
+    fired = logEventOnce('first_tap', {}, before.analyticsConsent, fired);
+    if (before.isTutorialCycle) {
+      fired = logEventOnce('tutorial_first_tap', {}, before.analyticsConsent, fired);
+    }
+    if (fired !== before.firstEventsFired) set({ firstEventsFired: fired });
   },
   setActiveTab: (tab) => set({ activeTab: tab, activeMindSubtab: 'home' }),
   setActiveMindSubtab: (subtab) => set({ activeMindSubtab: subtab }),
@@ -720,10 +754,19 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
     // Re-running Restore Purchases for an already-subscribed user does NOT
     // re-fire the event.
     if (isSubscribed && !prev.isSubscribed) {
-      logEvent('genius_pass_purchased', {}, prev.analyticsConsent);
+      logEvent('genius_pass_purchased', { plan: 'genius_pass' }, prev.analyticsConsent);
+      // §27 funnel — first_purchase fires once across all monetization paths.
+      const fired = logEventOnce('first_purchase', { source: 'genius_pass' }, prev.analyticsConsent, prev.firstEventsFired);
+      if (fired !== prev.firstEventsFired) set({ firstEventsFired: fired });
     }
   },
-  recordAdWatched: (nowTimestamp) => set({ lastAdWatchedAt: nowTimestamp }),
+  recordAdWatched: (nowTimestamp) => {
+    const state = get();
+    set({ lastAdWatchedAt: nowTimestamp });
+    // §27 core — ad_watched. placementId/reward not tracked at this boundary
+    // (the AdContext would have richer info); fire with timestamp for now.
+    logEvent('ad_watched', { timestamp: nowTimestamp }, state.analyticsConsent);
+  },
   applyAdRewardOfflineDouble: () => {
     const state = get();
     const summary = state.pendingOfflineSummary;
@@ -773,6 +816,9 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
     }
     const catalogEntry = COSMETIC_CATALOG.find((c) => c.category === category && c.id === id);
     logEvent('cosmetic_purchased', { type: category, id, price: catalogEntry?.priceUsd ?? 0 }, state.analyticsConsent);
+    // §27 funnel — first_purchase across all monetization.
+    const fired = logEventOnce('first_purchase', { source: 'cosmetic', id }, state.analyticsConsent, state.firstEventsFired);
+    if (fired !== state.firstEventsFired) set({ firstEventsFired: fired });
   },
   equipCosmetic: (category, id) => {
     const state = get();
@@ -820,6 +866,8 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
       ownedCanvasThemes: nextOwnedCanvasThemes,
     });
     logEvent('starter_pack_purchased', {}, state.analyticsConsent);
+    const fired = logEventOnce('first_purchase', { source: 'starter_pack' }, state.analyticsConsent, state.firstEventsFired);
+    if (fired !== state.firstEventsFired) set({ firstEventsFired: fired });
   },
   dismissStarterPack: () => {
     const state = get();
@@ -869,6 +917,8 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
       sparksPurchaseMonthStart: monthStart,
     });
     logEvent('spark_pack_purchased', { tier, amount: packAmount }, state.analyticsConsent);
+    const fired = logEventOnce('first_purchase', { source: 'spark_pack', tier }, state.analyticsConsent, state.firstEventsFired);
+    if (fired !== state.firstEventsFired) set({ firstEventsFired: fired });
     return 'ok';
   },
   stampLimitedTimeOffer: (offerId, nowTimestamp) => {
@@ -915,6 +965,8 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
     }
     set(updates);
     logEvent('limited_offer_purchased', { id: offerId, price: def.priceUsd }, state.analyticsConsent);
+    const fired = logEventOnce('first_purchase', { source: 'limited_offer', id: offerId }, state.analyticsConsent, state.firstEventsFired);
+    if (fired !== state.firstEventsFired) set({ firstEventsFired: fired });
   },
   consumeLimitedTimeOffer: (offerId) => {
     const state = get();
@@ -937,6 +989,13 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
     const ach = processAchievementUnlocks(post as GameState, nowTimestamp);
     set({ ...result.updates, ...narrative, ...ach, undoToast: result.undoToast });
     playSfx('neuron_buy'); // SFX wired in audio adapter
+    // §27 funnel + first-ever neuron + tutorial-first-buy.
+    let fired = state.firstEventsFired;
+    fired = logEventOnce('first_neuron', { type }, state.analyticsConsent, fired);
+    if (state.isTutorialCycle) {
+      fired = logEventOnce('tutorial_first_buy', {}, state.analyticsConsent, fired);
+    }
+    if (fired !== state.firstEventsFired) set({ firstEventsFired: fired });
     return 'ok';
   },
   buyUpgrade: (id, nowTimestamp) => {
@@ -950,6 +1009,12 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
     const ach = processAchievementUnlocks(post as GameState, nowTimestamp);
     set({ ...result.updates, mastery: masteryAfter, ...ach, undoToast: result.undoToast });
     playSfx('upgrade_buy'); // SFX wired in audio adapter
+    // §27 core — every upgrade purchase. Tutorial-first-buy fires lifetime once.
+    logEvent('upgrade_purchased', { id, prestigeCount: state.prestigeCount }, state.analyticsConsent);
+    if (state.isTutorialCycle) {
+      const fired = logEventOnce('tutorial_first_buy', {}, state.analyticsConsent, state.firstEventsFired);
+      if (fired !== state.firstEventsFired) set({ firstEventsFired: fired });
+    }
     return 'ok';
   },
   buyShardUpgrade: (id, nowTimestamp) => {
@@ -1025,6 +1090,16 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
     const ach = processAchievementUnlocks(post as GameState, nowTimestamp);
     set({ ...updates, ...narrative, ...ach });
     playSfx('discharge'); // SFX wired in audio adapter
+    // §27 core — every discharge. Tutorial-first-discharge fires once.
+    logEvent('discharge_used', {
+      bonus: outcome.burst,
+      cascade: outcome.isCascade,
+      insightActive: state.insightActive,
+    }, state.analyticsConsent);
+    if (state.isTutorialCycle) {
+      const fired = logEventOnce('tutorial_first_discharge', {}, state.analyticsConsent, state.firstEventsFired);
+      if (fired !== state.firstEventsFired) set({ firstEventsFired: fired });
+    }
     return outcome;
   },
   prestige: (nowTimestamp, force = false) => {
@@ -1121,14 +1196,38 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
     for (let i = 0; i < state.resonantPatternsDiscovered.length; i++) {
       if (!state.resonantPatternsDiscovered[i] && nextState.resonantPatternsDiscovered[i]) {
         playSfx('resonant_pattern');
+        // §27 core — RP discovered (per index).
+        logEvent('resonant_pattern_discovered', { index: i }, state.analyticsConsent);
       }
     }
+    // §27 core — prestige_completed every cycle.
+    logEvent('prestige_completed', {
+      prestigeCount: outcome.newPrestigeCount,
+      cycleTime: outcome.cycleDurationMs,
+      productionPeak: state.effectiveProductionPerSecond,
+      patternsTotal: nextState.totalPatterns,
+    }, state.analyticsConsent);
+    if (outcome.wasPersonalBest) {
+      logEvent('personal_best', {
+        prestigeLevel: state.prestigeCount,
+        oldTime: state.personalBests[state.prestigeCount]?.minutes ?? 0,
+        newTime: outcome.cycleDurationMs / 60_000, // CONST-OK ms→min
+      }, state.analyticsConsent);
+    }
+    // §27 funnel — first_prestige + reached_p5/p10 fire once each lifetime.
+    let fired = state.firstEventsFired;
+    fired = logEventOnce('first_prestige', { prestigeCount: outcome.newPrestigeCount }, state.analyticsConsent, fired);
+    if (outcome.newPrestigeCount >= 5) fired = logEventOnce('reached_p5', {}, state.analyticsConsent, fired);
+    if (outcome.newPrestigeCount >= 10) fired = logEventOnce('reached_p10', {}, state.analyticsConsent, fired);
+    if (fired !== state.firstEventsFired) set({ firstEventsFired: fired });
     return { fired: true, outcome };
   },
   resetPatternDecisions: () => {
     const state = get();
     const cost = SYNAPSE_CONSTANTS.patternResetCostResonance;
     if (state.resonance < cost) return { fired: false };
+    // §27 core — pattern_decisions_reset (PAT-3).
+    logEvent('pattern_decisions_reset', { prestigeCount: state.prestigeCount, resonanceCost: cost }, state.analyticsConsent);
     // Node 6 B is the only state-mutating decision — remove its +1 bump.
     const wasSixB = state.patternDecisions[6] === 'B';
     set({
@@ -1150,6 +1249,8 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
       dischargeMaxCharges: state.dischargeMaxCharges,
     });
     set({ patternDecisions: nextDecisions, ...permUpdates });
+    // §27 core — pattern_decision per node + choice.
+    logEvent('pattern_decision', { nodeIndex, choice }, state.analyticsConsent);
     return { fired: true };
   },
   setPolarity: (polarity) => {
@@ -1160,6 +1261,7 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
     const post = { ...state, currentPolarity: polarity };
     const ach = processAchievementUnlocks(post as GameState, Date.now());
     set({ currentPolarity: polarity, ...ach });
+    logEvent('polarity_chosen', { type: polarity, prestigeCount: state.prestigeCount }, state.analyticsConsent);
     return { fired: true };
   },
   setPathway: (pathway) => {
@@ -1170,6 +1272,7 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
     const post = { ...state, currentPathway: pathway, uniquePathwaysUsed: state.uniquePathwaysUsed.includes(pathway) ? state.uniquePathwaysUsed : [...state.uniquePathwaysUsed, pathway] };
     const ach = processAchievementUnlocks(post as GameState, Date.now());
     set({ currentPathway: pathway, uniquePathwaysUsed: post.uniquePathwaysUsed, ...ach });
+    logEvent('pathway_chosen', { type: pathway, prestigeCount: state.prestigeCount }, state.analyticsConsent);
     return { fired: true };
   },
   setMutation: (mutationId) => {
@@ -1190,6 +1293,9 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
     const post = { ...state, currentMutation: { id: mutationId }, upgrades, uniqueMutationsUsed: uniqueMuts };
     const ach = processAchievementUnlocks(post as GameState, Date.now());
     set({ currentMutation: { id: mutationId }, mutationSeed: mutationId === '' ? 0 : state.mutationSeed, upgrades, uniqueMutationsUsed: uniqueMuts, ...ach });
+    // §27 core — mutation_chosen. `options` not tracked here (the options array
+    // lives in the UI side); pass count via state-derived heuristic.
+    logEvent('mutation_chosen', { id: mutationId, prestigeCount: state.prestigeCount }, state.analyticsConsent);
     return { fired: true };
   },
   setArchetype: (archetype) => {
@@ -1234,6 +1340,8 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
     const post = { ...state, endingsSeen: [...state.endingsSeen, id], diaryEntries: [...state.diaryEntries, endingDiary] };
     const ach = processAchievementUnlocks(post as GameState, now);
     set({ endingsSeen: post.endingsSeen, diaryEntries: post.diaryEntries, ...ach });
+    // §27 core — ending_seen.
+    logEvent('ending_seen', { endingId: id, choice: option }, state.analyticsConsent);
   },
   dismissAchievementToast: () => set({ achievementToast: null }),
   applyTranscendence: (endingId, nowTimestamp) => {
@@ -1241,6 +1349,14 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
     if (prev.prestigeCount < 26) return null; // CONST-OK: P26 is the §9 Transcendence gate
     const { state: next, outcome } = handleTranscendence(prev as GameState, endingId, nowTimestamp);
     set(next);
+    // §27 core — transcendence (every time) + funnel first_transcendence (once).
+    logEvent('transcendence', {
+      transcendenceCount: outcome.newTranscendenceCount,
+      totalTime: nowTimestamp - (prev.installedAt ?? 0),
+      archetypeChosen: prev.archetype ?? '',
+    }, prev.analyticsConsent);
+    const fired = logEventOnce('first_transcendence', { transcendenceCount: outcome.newTranscendenceCount }, prev.analyticsConsent, next.firstEventsFired);
+    if (fired !== next.firstEventsFired) set({ firstEventsFired: fired });
     return outcome;
   },
   buyResonanceUpgrade: (id) => {

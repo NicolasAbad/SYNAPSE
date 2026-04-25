@@ -1,14 +1,14 @@
-// Implements docs/GDD.md §20 + §34 (TRANSCENDENCE_RESET 59 / TRANSCENDENCE_PRESERVE 66 /
-// TRANSCENDENCE_UPDATE 7 = 132 total).
+// Implements docs/GDD.md §20 + §34 (TRANSCENDENCE_RESET 59 / TRANSCENDENCE_PRESERVE 67 /
+// TRANSCENDENCE_UPDATE 7 = 133 total).
 //
 // Pure data file — no logic. handleTranscendence() in src/engine/transcendence.ts
 // (Sprint 8b Phase 8b.2) consumes these to produce a post-Transcendence state.
 //
 // Field-count invariants (asserted by tests/consistency.test.ts §34 block):
 //   TRANSCENDENCE_RESET_FIELDS.length === 59
-//   TRANSCENDENCE_PRESERVE_FIELDS.length === 66 (Sprint 10 Phase 10.1: +8 Settings)
+//   TRANSCENDENCE_PRESERVE_FIELDS.length === 67 (Sprint 10 Phase 10.3: +firstEventsFired)
 //   TRANSCENDENCE_UPDATE_FIELDS.length === 7
-//   59 + 66 + 7 === 132 === Object.keys(createDefaultState()).length
+//   59 + 67 + 7 === 133 === Object.keys(createDefaultState()).length
 //   RESET ∩ PRESERVE === ∅ (disjoint — no field in both)
 //
 // Sprint 6.8 TRANS-5 table (GDD §20 lines 1273-1285) is the source of truth for
@@ -217,6 +217,8 @@ export const TRANSCENDENCE_PRESERVE_FIELDS = [
   'sfxVolume', 'musicVolume', 'language',
   'colorblindMode', 'reducedMotion', 'highContrast', 'fontSize',
   'notificationsEnabled',
+  // Analytics tracking (1) — Sprint 10 Phase 10.3: lifetime fire-once for funnel events.
+  'firstEventsFired',
 ] as const satisfies readonly (keyof GameState)[];
 
 /**

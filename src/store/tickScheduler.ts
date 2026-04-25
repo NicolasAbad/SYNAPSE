@@ -33,6 +33,7 @@ import { tick } from '../engine/tick';
 import { era3AutoPrestigeAt45MinElapsed } from '../engine/era3';
 import { useGameStore } from './gameStore';
 import { playSfx } from '../platform/audio';
+import { logEvent } from '../platform/firebase';
 
 export function useTickScheduler(): void {
   useEffect(() => {
@@ -47,8 +48,36 @@ export function useTickScheduler(): void {
       useGameStore.setState({ ...next, antiSpamActive });
       // Sprint 10 Phase 10.2 — fire SFX on engine-state transitions visible
       // only at the tick boundary (insight + spontaneous events).
-      if (!current.insightActive && next.insightActive) playSfx('insight');
-      if (current.activeSpontaneousEvent === null && next.activeSpontaneousEvent !== null) playSfx('spontaneous');
+      // Sprint 10 Phase 10.3 — also fire §27 analytics events for these
+      // transitions plus mental_state_changed.
+      if (!current.insightActive && next.insightActive) {
+        playSfx('insight');
+        logEvent('insight_activated', { level: next.insightMultiplier }, current.analyticsConsent);
+      }
+      if (current.activeSpontaneousEvent === null && next.activeSpontaneousEvent !== null) {
+        playSfx('spontaneous');
+        logEvent('spontaneous_event', {
+          id: next.activeSpontaneousEvent.id,
+          type: next.activeSpontaneousEvent.type,
+        }, current.analyticsConsent);
+      }
+      if (current.currentMentalState !== next.currentMentalState) {
+        logEvent('mental_state_changed', {
+          from: current.currentMentalState ?? '',
+          to: next.currentMentalState ?? '',
+        }, current.analyticsConsent);
+      }
+      // §27 feature — micro_challenge_completed/failed. Detect resolution by
+      // observing activeMicroChallenge transition non-null → null. Distinguish
+      // outcome via the sparks delta (engine adds def.reward on completion only).
+      if (current.activeMicroChallenge !== null && next.activeMicroChallenge === null) {
+        if (next.sparks > current.sparks) {
+          const reward = next.sparks - current.sparks;
+          logEvent('micro_challenge_completed', { id: current.activeMicroChallenge.id, reward }, current.analyticsConsent);
+        } else {
+          logEvent('micro_challenge_failed', { id: current.activeMicroChallenge.id }, current.analyticsConsent);
+        }
+      }
       // GDD §23 P24 Long Thought — auto-awaken at MIN(threshold, 45 min).
       // Threshold path is handled by UI AWAKEN button; 45-min path fires here.
       if (era3AutoPrestigeAt45MinElapsed(next, now)) {

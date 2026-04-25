@@ -430,9 +430,8 @@ export const SYNAPSE_CONSTANTS = {
   gameVersion: '1.0.0',
 
   // ── Field-count runtime verification (§32) ──
-  // 132 fields after Sprint 10 Phase 10.1 (was 124 post-9b.4). The +8 fields
-  // are sfxVolume, musicVolume, language, colorblindMode, reducedMotion,
-  // highContrast, fontSize, notificationsEnabled — all PRESERVE on prestige +
-  // Transcendence; only Hard Reset wipes them via createDefaultState.
-  GAMESTATE_FIELD_COUNT: 132,
+  // 133 fields after Sprint 10 Phase 10.3 (was 132 post-10.1). The +1 field is
+  // `firstEventsFired: string[]` — analytics fire-once tracking for funnel
+  // events. PRESERVE on prestige + Transcendence; resets on Hard Reset.
+  GAMESTATE_FIELD_COUNT: 133,
 } as const;

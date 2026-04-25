@@ -38,8 +38,8 @@ export async function clearSave(): Promise<void> {
 
 /**
  * Boundary defense against corrupt/malicious saves. Structural shape check only:
- * verifies payload is a non-null plain object with exactly 132 top-level keys
- * (the §32 GameState invariant post-Sprint-10.1). Deep field-by-field type
+ * verifies payload is a non-null plain object with exactly 133 top-level keys
+ * (the §32 GameState invariant post-Sprint-10.3). Deep field-by-field type
  * validation would require a runtime schema (adds ~500 lines); deferred to
  * Sprint 11a save fuzzer. For v1.0, structural check + JSON parse is sufficient
  * — any surviving bad fields will surface as runtime errors caught by the

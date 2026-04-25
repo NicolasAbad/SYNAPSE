@@ -149,6 +149,8 @@ function makeState(overrides: Partial<GameState> = {}): GameState {
     highContrast: false,
     fontSize: 'medium',
     notificationsEnabled: true,
+    // Sprint 10 Phase 10.3 — analytics fire-once tracking.
+    firstEventsFired: [],
   };
   return { ...base, ...overrides };
 }

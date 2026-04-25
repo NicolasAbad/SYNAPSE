@@ -179,9 +179,9 @@ describe('Consistency: GDD ↔ constants.ts invariants', () => {
     expect(SYNAPSE_CONSTANTS.sinestesiaTapMult).toBe(0.4);
   });
 
-  test('GameState has exactly 132 fields (GDD §32, Sprint 10 Phase 10.1 added 8 Settings)', () => {
+  test('GameState has exactly 133 fields (GDD §32, Sprint 10 Phase 10.3 added firstEventsFired)', () => {
     const state = createDefaultState();
-    expect(Object.keys(state).length).toBe(132);
+    expect(Object.keys(state).length).toBe(133);
   });
 });
 
@@ -299,20 +299,20 @@ describe('Consistency: PRESTIGE_RESET / PRESERVE / UPDATE split (GDD §33)', () 
     expect(new Set(PRESTIGE_RESET_FIELDS)).toEqual(new Set(Object.keys(PRESTIGE_RESET)));
   });
 
-  test('PRESTIGE_PRESERVE has exactly 79 fields (Sprint 10 Phase 10.1: +8 Settings)', () => {
-    expect(PRESTIGE_PRESERVE_FIELDS.length).toBe(79);
+  test('PRESTIGE_PRESERVE has exactly 80 fields (Sprint 10 Phase 10.3: +firstEventsFired)', () => {
+    expect(PRESTIGE_PRESERVE_FIELDS.length).toBe(80);
   });
 
-  test('RESET + PRESERVE + UPDATE + lifetime covers all 132 GameState fields', () => {
+  test('RESET + PRESERVE + UPDATE + lifetime covers all 133 GameState fields', () => {
     const union = new Set<string>([
       ...PRESTIGE_RESET_FIELDS,
       ...PRESTIGE_PRESERVE_FIELDS,
       ...PRESTIGE_UPDATE_FIELDS,
       ...PRESTIGE_LIFETIME_FIELDS,
     ]);
-    expect(union.size).toBe(132); // also asserts no duplicates across all 4 sets
+    expect(union.size).toBe(133); // also asserts no duplicates across all 4 sets
     const gameStateKeys = new Set(Object.keys(createDefaultState()));
-    expect(gameStateKeys.size).toBe(132);
+    expect(gameStateKeys.size).toBe(133);
     expect(union).toEqual(gameStateKeys);
   });
 
@@ -323,19 +323,19 @@ describe('Consistency: PRESTIGE_RESET / PRESERVE / UPDATE split (GDD §33)', () 
     expect(new Set(TRANSCENDENCE_RESET_FIELDS)).toEqual(new Set(Object.keys(TRANSCENDENCE_RESET)));
   });
 
-  test('Sprint 10 Phase 10.1: TRANSCENDENCE_PRESERVE has exactly 66 fields (+8 Settings)', async () => {
+  test('Sprint 10 Phase 10.3: TRANSCENDENCE_PRESERVE has exactly 67 fields (+firstEventsFired)', async () => {
     const { TRANSCENDENCE_PRESERVE_FIELDS } = await import('../src/config/transcendence');
-    expect(TRANSCENDENCE_PRESERVE_FIELDS.length).toBe(66);
+    expect(TRANSCENDENCE_PRESERVE_FIELDS.length).toBe(67);
   });
 
-  test('Sprint 10 Phase 10.1: TRANSCENDENCE RESET + PRESERVE + UPDATE covers all 132 GameState fields', async () => {
+  test('Sprint 10 Phase 10.1: TRANSCENDENCE RESET + PRESERVE + UPDATE covers all 133 GameState fields', async () => {
     const { TRANSCENDENCE_RESET_FIELDS, TRANSCENDENCE_PRESERVE_FIELDS, TRANSCENDENCE_UPDATE_FIELDS } = await import('../src/config/transcendence');
     const union = new Set<string>([
       ...TRANSCENDENCE_RESET_FIELDS,
       ...TRANSCENDENCE_PRESERVE_FIELDS,
       ...TRANSCENDENCE_UPDATE_FIELDS,
     ]);
-    expect(union.size).toBe(132);
+    expect(union.size).toBe(133);
     const gameStateKeys = new Set(Object.keys(createDefaultState()));
     expect(union).toEqual(gameStateKeys);
   });

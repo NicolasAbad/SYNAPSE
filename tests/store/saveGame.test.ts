@@ -39,7 +39,7 @@ describe('saveGame / loadGame round-trip', () => {
     const loaded = await loadGame();
 
     expect(loaded).not.toBeNull();
-    expect(Object.keys(loaded!).length).toBe(132);
+    expect(Object.keys(loaded!).length).toBe(133);
     expect(loaded!.thoughts).toBe(12345.67);
     expect(loaded!.prestigeCount).toBe(3);
     expect(loaded!.neurons[0].count).toBe(10);
@@ -98,11 +98,11 @@ describe('validateLoadedState — boundary defense', () => {
     expect(validateLoadedState(null)).toBeNull();
   });
 
-  test('accepts a correctly-shaped payload (132 keys)', () => {
+  test('accepts a correctly-shaped payload (133 keys)', () => {
     const good = createDefaultState();
     const result = validateLoadedState(good);
     expect(result).not.toBeNull();
-    expect(Object.keys(result!).length).toBe(132);
+    expect(Object.keys(result!).length).toBe(133);
   });
 
   test('rejects through loadGame end-to-end for corrupted shape', async () => {
@@ -158,7 +158,7 @@ describe('round-trip type fidelity', () => {
     expect(loaded!.insightMultiplier).toBe(1);
   });
 
-  test('JSON.stringify drops actions + UI-local state is stripped → 132 file keys', async () => {
+  test('JSON.stringify drops actions + UI-local state is stripped → 133 file keys', async () => {
     // Store has GameState (124) + UIState (multi-key) + actions. saveToStorage strips
     // UI-local fields before persisting; JSON.stringify drops functions. Result:
     // persisted payload contains exactly the 124 GameState data fields.
@@ -169,7 +169,7 @@ describe('round-trip type fidelity', () => {
     await useGameStore.getState().saveToStorage();
     const loaded = await loadGame();
     expect(loaded).not.toBeNull();
-    expect(Object.keys(loaded!).length).toBe(132);
+    expect(Object.keys(loaded!).length).toBe(133);
   });
 });
 

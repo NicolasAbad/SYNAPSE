@@ -31,6 +31,10 @@
 //     conservative defaults so legacy saves load with sensible audio + accessibility
 //     state. All settings are PRESERVE on prestige + Transcendence; only Hard
 //     Reset wipes them via createDefaultState.
+//   - Sprint 10 Phase 10.3: 132 → 133 fields. Backfills `firstEventsFired: []`
+//     for analytics fire-once tracking. Empty array means a legacy save will
+//     re-fire its funnel events (app_first_open etc.) once on this load — a
+//     one-time noise spike acceptable for v1.0.
 
 import { SYNAPSE_CONSTANTS } from '../config/constants';
 
@@ -87,6 +91,8 @@ export function migrateState(parsed: unknown): unknown {
     highContrast: false,
     fontSize: 'medium',
     notificationsEnabled: true,
+    // Sprint 10 Phase 10.3 — analytics fire-once tracking, empty for legacy saves.
+    firstEventsFired: [],
   };
   const out: Record<string, unknown> = { ...obj };
   for (const key of Object.keys(defaults)) {

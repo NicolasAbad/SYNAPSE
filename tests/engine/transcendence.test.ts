@@ -191,7 +191,7 @@ describe('handleTranscendence — invariants', () => {
   test('field count remains 124 after Transcendence', () => {
     const before = ranOnce();
     const { state } = handleTranscendence(before, 'equation', NOW);
-    expect(Object.keys(state).length).toBe(132);
+    expect(Object.keys(state).length).toBe(133);
   });
 
   test('outcome shape exposes prev + new + ending + threshold + retained count', () => {

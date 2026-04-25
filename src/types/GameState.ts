@@ -1,8 +1,8 @@
-// Implements docs/GDD.md §32 (GameState — 132 fields) — v1.0 post-Sprint-10.1
+// Implements docs/GDD.md §32 (GameState — 133 fields) — v1.0 post-Sprint-10.3
 //
-// CRITICAL: this interface must have EXACTLY 132 properties. Sprint 1 invariant
-// asserts `Object.keys(DEFAULT_STATE).length === 132`. Section-by-section count
-// per §32 breakdown sums to 132 (verified line-by-line in GDD §32).
+// CRITICAL: this interface must have EXACTLY 133 properties. Sprint 1 invariant
+// asserts `Object.keys(DEFAULT_STATE).length === 133`. Section-by-section count
+// per §32 breakdown sums to 133 (verified line-by-line in GDD §32).
 // Sprint 7.10.4 added `pendingOfflineSummary` (Offline group, 119 → 120).
 // Sprint 7.10.5 added `lucidDreamActiveUntil` (Session bonuses, 120 → 121).
 // Sprint 9a Phase 9a.3 added `installedAt` (Session, 121 → 122) and
@@ -14,6 +14,12 @@
 // notificationsEnabled. All PRESERVE on prestige + Transcendence (per V-5/V-6:
 // settings persist across all in-game progression; only Hard Reset wipes them
 // via createDefaultState).
+// Sprint 10 Phase 10.3 added `firstEventsFired: string[]` (132 → 133) — a
+// lifetime array of analytics event names that have already fired their
+// "first ever" variant (e.g. first_tap, first_neuron, first_purchase).
+// PRESERVE on prestige + Transcendence; resets on Hard Reset (acceptable
+// since hard-resetters re-firing first_* is rare and not analytically
+// catastrophic).
 //
 /**
  * GameState — the canonical application state (132 fields).
@@ -32,9 +38,9 @@
  *
  * This exception is documented in CLAUDE.md under CODE-2.
  *
- * Field count MUST remain 132. Adding/removing fields requires:
+ * Field count MUST remain 133. Adding/removing fields requires:
  * - updating docs/GDD.md §32
- * - updating the 48/79/4/1 PRESTIGE_RESET/PRESERVE/UPDATE split
+ * - updating the 48/80/4/1 PRESTIGE_RESET/PRESERVE/UPDATE split
  * - updating the consistency test that asserts exact count
  */
 
@@ -305,4 +311,9 @@ export interface GameState {
   highContrast: boolean;
   fontSize: FontSize;
   notificationsEnabled: boolean;
+
+  // === Analytics tracking (1) — Sprint 10 Phase 10.3 ===
+  // PRESERVE on prestige + Transcendence (lifetime fire-once tracking for
+  // funnel events: app_first_open, first_prestige, first_tap, etc.).
+  firstEventsFired: string[];
 }

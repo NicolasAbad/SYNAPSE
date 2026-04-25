@@ -38,6 +38,8 @@ const NEW_FIELDS = [
   'highContrast',
   'fontSize',
   'notificationsEnabled',
+  // Sprint 10 Phase 10.3 — analytics fire-once tracking (1)
+  'firstEventsFired',
 ] as const;
 
 /** Build a synthetic legacy 110-field payload by stripping the backfill fields from a current default. */
@@ -53,7 +55,7 @@ describe('migrateState — 110 → 132 backfill (Sprint 7.5.1 + 7.10.4 + 7.10.5 
     const legacy = legacy110();
     expect(Object.keys(legacy).length).toBe(110);
     const migrated = migrateState(legacy) as Record<string, unknown>;
-    expect(Object.keys(migrated).length).toBe(132);
+    expect(Object.keys(migrated).length).toBe(133);
   });
 
   test('all backfilled fields are present after migration', () => {
@@ -97,7 +99,7 @@ describe('migrateState — idempotency', () => {
   test('a fully-formed 124-field payload passes through unchanged', () => {
     const current = createDefaultState() as unknown as Record<string, unknown>;
     const migrated = migrateState(current) as Record<string, unknown>;
-    expect(Object.keys(migrated).length).toBe(132);
+    expect(Object.keys(migrated).length).toBe(133);
     // Deep-equal — defaults didn't override the existing values.
     expect(migrated).toEqual(current);
   });
