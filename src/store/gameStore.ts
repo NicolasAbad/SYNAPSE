@@ -40,6 +40,7 @@ import { evaluateSparksPurchase, startOfCurrentMonthUTC } from '../engine/sparks
 import { mulberry32 } from '../engine/rng';
 import { logEvent, logEventOnce } from '../platform/firebase';
 import { playSfx } from '../platform/audio';
+import { evaluateDailyLogin } from '../engine/dailyLogin';
 import type { DiaryEntry } from '../types';
 
 /**
@@ -363,6 +364,35 @@ export interface GameStoreActions {
    * Called by the AdMob adapter on REWARD_RECEIVED.
    */
   recordAdWatched: (nowTimestamp: number) => void;
+  /**
+   * Sprint 10 Phase 10.4 — Daily Login Bonus claim. Caller passes today's
+   * local-date string (YYYY-MM-DD) per the engine's pure contract. Returns
+   * the engine outcome so the UI can render the right modal state.
+   *
+   * Side effects when outcome != 'no_action':
+   *   - sparks += rewardSparks
+   *   - dailyLoginStreak := nextStreak (0..6)
+   *   - lastDailyClaimDate := nowDate
+   *
+   * On 'streak_save_eligible' the action does NOT auto-claim; the UI gates
+   * on `canAutoSave` (subscriber path) vs explicit ad-watch path.
+   */
+  claimDailyLoginReward: (nowDate: string) => import('../engine/dailyLogin').DailyLoginOutcome;
+  /**
+   * Sprint 10 Phase 10.4 — finalize the streak-save flow after the streak-save
+   * outcome was returned. `via` records the path: 'subscriber' (auto), 'ad'
+   * (after rewarded-ad reward), or 'reset' (player declined → streak resets).
+   * Awards the matching reward + advances state. No-op if there's no eligible
+   * pending streak-save (state.dailyLoginStreak unchanged + lastDailyClaimDate
+   * already today).
+   */
+  resolveStreakSave: (nowDate: string, via: 'subscriber' | 'ad' | 'reset') => void;
+  /**
+   * Sprint 10 Phase 10.4 — record that the OS notification permission prompt
+   * has been asked at the given gate (1 = after P1, 3 = after P3 per Sprint 10
+   * spec). Idempotent at each gate — re-recording doesn't bump.
+   */
+  recordNotificationPermissionAsked: (gate: 1 | 3) => void;
   /**
    * Sprint 9a Phase 9a.4 — ad reward payout: double the pending offline-return
    * summary. Adds `summary.gained` extra thoughts and dismisses the Sleep
@@ -766,6 +796,48 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
     // §27 core — ad_watched. placementId/reward not tracked at this boundary
     // (the AdContext would have richer info); fire with timestamp for now.
     logEvent('ad_watched', { timestamp: nowTimestamp }, state.analyticsConsent);
+  },
+  // Sprint 10 Phase 10.4 — Daily Login Bonus.
+  claimDailyLoginReward: (nowDate) => {
+    const state = get();
+    const outcome = evaluateDailyLogin(state, nowDate);
+    if (outcome.kind === 'no_action' || outcome.kind === 'streak_save_eligible') {
+      // No state change here — UI handles the eligible-modal flow.
+      return outcome;
+    }
+    set({
+      sparks: state.sparks + outcome.rewardSparks,
+      dailyLoginStreak: outcome.nextStreak,
+      lastDailyClaimDate: nowDate,
+    });
+    return outcome;
+  },
+  resolveStreakSave: (nowDate, via) => {
+    const state = get();
+    // Re-evaluate to get the eligible reward + nextStreak. If state moved on
+    // (already-claimed today via a parallel path), bail out idempotently.
+    const outcome = evaluateDailyLogin(state, nowDate);
+    if (outcome.kind !== 'streak_save_eligible') return;
+    if (via === 'reset') {
+      // Player declined the save → streak resets, claim Day 1 today.
+      set({
+        sparks: state.sparks + SYNAPSE_CONSTANTS.dailyLoginRewards[0],
+        dailyLoginStreak: 1 % SYNAPSE_CONSTANTS.dailyLoginCycleLength,
+        lastDailyClaimDate: nowDate,
+      });
+      return;
+    }
+    // 'subscriber' or 'ad' — preserve the streak with the eligible reward.
+    set({
+      sparks: state.sparks + outcome.rewardSparks,
+      dailyLoginStreak: outcome.nextStreak,
+      lastDailyClaimDate: nowDate,
+    });
+  },
+  recordNotificationPermissionAsked: (gate) => {
+    const state = get();
+    if (state.notificationPermissionAsked >= gate) return; // already past this gate
+    set({ notificationPermissionAsked: gate });
   },
   applyAdRewardOfflineDouble: () => {
     const state = get();

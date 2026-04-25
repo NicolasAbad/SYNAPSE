@@ -751,6 +751,21 @@ export const en = {
     saving: 'Saving…',
   },
 
+  // Sprint 10 Phase 10.4 — Daily Login Bonus modal.
+  dailyLogin: {
+    title: 'Daily Bonus',
+    rewardLabel: 'Day {{day}} reward',
+    sparksReward: '{{amount}} Sparks',
+    claimButton: 'Claim',
+    streakLabel: 'Streak: {{streak}} / 7',
+    streakSaveTitle: 'Save your streak?',
+    streakSaveBody: 'You missed a day. Watch a quick ad to keep your {{streak}}-day streak going.',
+    streakSaveAdButton: 'Watch ad to save',
+    streakSaveResetButton: 'Start fresh',
+    streakSaveSubscriberToast: 'Genius Pass kept your streak alive.',
+    streakSaveSuccess: 'Streak saved — claim your bonus.',
+  },
+
   // Sprint 9b Phase 9b.5 — Piggy Bank claim + Spark packs + Limited-Time Offers.
   piggyBank: {
     chipFull: 'Piggy full — tap to break',

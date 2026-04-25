@@ -35,6 +35,30 @@ export const SYNAPSE_CONSTANTS = {
   // Below this floor we skip play() entirely to save CPU.
   audioVolumeFloorPct: 1,
 
+  // ── Daily Login Bonus + Push Notifications (Sprint 10 Phase 10.4 — GDD §26 + SPRINTS.md) ──
+  // 7-day reward cycle per Sprint 10 spec line 956: Day 1=5, 2=5, 3=10, 4=10, 5=15, 6=20, 7=50.
+  // Stored 0-indexed: streak 0 → reward index 0 (5 sparks), streak 6 → 50, then wraps.
+  dailyLoginRewards: [5, 5, 10, 10, 15, 20, 50] as const,
+  dailyLoginCycleLength: 7,
+  // Streak-save window per Sprint 10: miss exactly 1 day → ad save offer. Miss
+  // 2+ days → reset to 0 regardless. Day-diff threshold:
+  //   diff=1 → normal claim
+  //   diff=2 → 1 day missed → streak save eligible
+  //   diff>=3 → 2+ missed → reset
+  dailyLoginStreakSaveDayDiff: 2,
+  dailyLoginResetThresholdDayDiff: 3,
+  // Permission-asking cadence per Sprint 10: notificationPermissionAsked = 0 (never) /
+  // 1 (after P1) / 2 (after P3). Each value records that we DID ask at that gate so
+  // we don't re-ask at the same gate.
+  notificationPermissionAskAtP1: 1, // first ask after first prestige
+  notificationPermissionAskAtP3: 3, // second ask after third prestige if first declined
+  // Daily reminder fires at 6 PM local time per push UX convention.
+  dailyReminderHourLocal: 18,
+  // Notification IDs (Capacitor LocalNotifications requires a unique number per scheduled).
+  notificationIdDailyReminder: 1001,
+  notificationIdOfflineCapReached: 1002,
+  notificationIdStreakAboutToBreak: 1003,
+
   // ── Tutorial ──
   tutorialThreshold: 25_000, // P0 of first Run ONLY when isTutorialCycle=true (TUTOR-2 §9). Overrides baseThresholdTable[0]. TUTOR-1 target: 7-9 min. Retuned 50K→25K in Sprint 3 Phase 7.4b per tutorial-timing simulator (50K projected ~14.7 min at 5 taps/sec; 25K projects 7-8 min with same inputs). GDD §31 + §9 currently disagree — PROGRESS.md is the source of truth until Nico updates the GDD.
   tutorialDischargeMult: 3.0,
@@ -395,10 +419,8 @@ export const SYNAPSE_CONSTANTS = {
   starterPackMemoryReward: 5, // GDD §26 bundle contents
   limitedOfferExpiryMs: 172_800_000,
 
-  // ── Daily login ──
-  dailyLoginRewards: [5, 5, 10, 10, 15, 20, 50] as const,
-
-  // ── Runtime scheduler ──
+  // ── Runtime scheduler (Sprint 10 Phase 10.4 collapsed legacy "daily login" block —
+  // canonical dailyLoginRewards lives in the top constants block alongside push IDs.) ──
   tickIntervalMs: 100, // CODE-4 + GDD §35 TICK-1 step 1: fixed 100ms dt (Phase 3.5 surfacing)
 
   // ── Save ──

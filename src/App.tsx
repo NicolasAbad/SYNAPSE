@@ -16,11 +16,13 @@ import { SettingsModal } from './ui/modals/SettingsModal';
 import { CosmeticsStoreModal } from './ui/modals/CosmeticsStoreModal';
 import { EchoLayer } from './ui/canvas/EchoLayer';
 import { SaveSyncIndicator } from './ui/hud/SaveSyncIndicator';
+import { DailyLoginModal } from './ui/modals/DailyLoginModal';
 import { createRevenueCatAdapter, type RevenueCatAdapter } from './platform/revenuecat';
 import { createAdMobAdapter, type AdMobAdapter } from './platform/admob';
 import { AdProvider } from './platform/AdContext';
 import { initFirebase } from './platform/firebase';
 import { useAudioRuntime } from './platform/useAudioRuntime';
+import { evaluateDailyLogin, toLocalDateString, type DailyLoginOutcome } from './engine/dailyLogin';
 
 export function App() {
   // Sprint 9a Phase 9a.2 — RevenueCat adapter is created once on native; null on
@@ -113,6 +115,36 @@ export function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [cosmeticsOpen, setCosmeticsOpen] = useState(false);
 
+  // Sprint 10 Phase 10.4 — Daily Login Bonus modal state. Computed on cold mount
+  // (after splash + GDPR) and on visibilitychange resume. Subscribers auto-resolve
+  // streak_save before the modal renders.
+  const [dailyLoginState, setDailyLoginState] = useState<{ outcome: DailyLoginOutcome; nowDate: string } | null>(null);
+  useEffect(() => {
+    if (!splashDone || (isEU && !gdprDone)) return;
+    const checkDaily = (): void => {
+      const nowDate = toLocalDateString(Date.now());
+      const state = useGameStore.getState();
+      const outcome = evaluateDailyLogin(state, nowDate);
+      if (outcome.kind === 'no_action') return;
+      // Subscriber auto-save: resolve silently before showing the reward card.
+      if (outcome.kind === 'streak_save_eligible' && outcome.canAutoSave) {
+        useGameStore.getState().resolveStreakSave(nowDate, 'subscriber');
+        // Re-evaluate to render the reward card on the saved streak.
+        const after = evaluateDailyLogin(useGameStore.getState(), nowDate);
+        setDailyLoginState(after.kind === 'no_action' ? null : { outcome: after, nowDate });
+        return;
+      }
+      setDailyLoginState({ outcome, nowDate });
+    };
+    checkDaily();
+    const onVis = (): void => { if (document.visibilityState === 'visible') checkDaily(); };
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', onVis);
+      return () => document.removeEventListener('visibilitychange', onVis);
+    }
+    return undefined;
+  }, [splashDone, gdprDone]);
+
   return (
     <AdProvider adapter={adMobAdapter}>
       <main
@@ -147,6 +179,13 @@ export function App() {
         />
         {!splashDone && <SplashScreen onComplete={() => setSplashDone(true)} />}
         {splashDone && isEU && !gdprDone && <GdprModal onComplete={() => setGdprDone(true)} />}
+        {dailyLoginState !== null && (
+          <DailyLoginModal
+            outcome={dailyLoginState.outcome}
+            nowDate={dailyLoginState.nowDate}
+            onClose={() => setDailyLoginState(null)}
+          />
+        )}
       </main>
     </AdProvider>
   );
