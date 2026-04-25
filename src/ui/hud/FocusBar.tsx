@@ -12,11 +12,18 @@ import { HUD } from '../tokens';
  */
 export const FocusBar = memo(function FocusBar() {
   const focus = useGameStore((s) => s.focusBar);
+  const reducedMotion = useGameStore((s) => s.reducedMotion);
   const clamped = Math.max(0, Math.min(1, focus));
+  const percent = clamped * 100; // CONST-OK CSS percent conversion (CODE-1 exception)
 
   return (
     <div
       data-testid="hud-focus-bar"
+      role="progressbar"
+      aria-label="Focus"
+      aria-valuemin={0}
+      aria-valuemax={100} // CONST-OK aria-valuemax for 0-100 percent range
+      aria-valuenow={Math.round(percent)}
       style={{
         position: 'absolute',
         top: 'calc(var(--spacing-5) + var(--text-3xl) + var(--spacing-2))', // CONST-OK: CSS custom property ref (CODE-1 exception)
@@ -32,10 +39,11 @@ export const FocusBar = memo(function FocusBar() {
       <div
         data-testid="hud-focus-bar-fill"
         style={{
-          width: `${clamped * 100}%`, // CONST-OK: CSS percent conversion (CODE-1 exception)
+          width: `${percent}%`, // CONST-OK CSS percent string
           height: '100%', // CONST-OK: CSS full-height idiom (CODE-1 exception)
           background: 'var(--color-focus-bar)',
-          transition: 'width 200ms linear', // CONST-OK: CSS animation duration (CODE-1 exception)
+          // Sprint 10 Phase 10.5 — reducedMotion suppresses the fill ease.
+          transition: reducedMotion ? 'none' : 'width 200ms linear', // CONST-OK: CSS animation duration (CODE-1 exception)
         }}
       />
     </div>

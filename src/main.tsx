@@ -2,9 +2,10 @@
 import '@fontsource-variable/outfit';
 import '@fontsource-variable/jetbrains-mono';
 
-// Styles (Tailwind v4 + safe-area utilities)
+// Styles (Tailwind v4 + safe-area utilities + Phase 10.5 accessibility)
 import '../styles/tailwind.css';
 import '../styles/safe-area.css';
+import '../styles/accessibility.css';
 
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';

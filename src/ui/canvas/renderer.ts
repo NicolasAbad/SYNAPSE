@@ -48,9 +48,13 @@ export function draw(
   ctx.fillStyle = theme.canvasBackground;
   ctx.fillRect(0, 0, dims.width, dims.height);
 
-  const pulsePhase = Math.sin((elapsedMs / MOTION.durPulse) * TWO_PI); // -1..1
+  // Sprint 10 Phase 10.5 — reducedMotion freezes the ambient pulse: radiusMult
+  // pinned to 1, opacity pinned to the glow's max so neurons render statically
+  // at their brightest. Same draw path otherwise; no rAF cancellation needed
+  // since the inputs to drawNeuron are now time-invariant.
+  const pulsePhase = state.reducedMotion ? 0 : Math.sin((elapsedMs / MOTION.durPulse) * TWO_PI); // -1..1
   const radiusMult = 1 + pulsePhase * MOTION.pulseRadiusAmp;
-  const normalized = (pulsePhase + 1) / 2; // CONST-OK: sin(-1..1) → (0..1) mapping
+  const normalized = state.reducedMotion ? 1 : (pulsePhase + 1) / 2; // CONST-OK: sin(-1..1) → (0..1) mapping
   const opacity =
     theme.glowPack.opacityMin + normalized * (theme.glowPack.opacityMax - theme.glowPack.opacityMin);
 

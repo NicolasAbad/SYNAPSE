@@ -20,14 +20,21 @@ export const ConsciousnessBar = memo(function ConsciousnessBar() {
   const unlocked = useGameStore((s) => s.consciousnessBarUnlocked);
   const generated = useGameStore((s) => s.cycleGenerated);
   const threshold = useGameStore((s) => s.currentThreshold);
+  const reducedMotion = useGameStore((s) => s.reducedMotion);
 
   if (!unlocked) return null;
 
   const ratio = threshold > 0 ? Math.max(0, Math.min(1, generated / threshold)) : 0;
+  const percent = ratio * 100; // CONST-OK CSS percent conversion (CODE-1 exception)
 
   return (
     <div
       data-testid="hud-consciousness-bar"
+      role="progressbar"
+      aria-label="Consciousness"
+      aria-valuemin={0}
+      aria-valuemax={100} // CONST-OK aria-valuemax 0-100 percent range
+      aria-valuenow={Math.round(percent)}
       style={{
         position: 'absolute',
         right: 0,
@@ -47,9 +54,10 @@ export const ConsciousnessBar = memo(function ConsciousnessBar() {
         data-testid="hud-consciousness-bar-fill"
         style={{
           width: '100%', // CONST-OK: CSS full-width idiom (CODE-1 exception)
-          height: `${ratio * 100}%`, // CONST-OK: CSS percent conversion (CODE-1 exception)
+          height: `${percent}%`, // CONST-OK CSS percent string
           background: 'var(--color-consciousness-bar)',
-          transition: 'height 300ms linear', // CONST-OK: CSS animation duration (CODE-1 exception)
+          // Sprint 10 Phase 10.5 — reducedMotion suppresses the height ease.
+          transition: reducedMotion ? 'none' : 'height 300ms linear', // CONST-OK: CSS animation duration (CODE-1 exception)
         }}
       />
     </div>

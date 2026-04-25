@@ -46,6 +46,7 @@ export const DischargeButton = memo(function DischargeButton() {
         data-testid="hud-discharge-button"
         disabled={!enabled}
         onPointerDown={onTap}
+        aria-label={enabled ? 'Discharge — fire neural burst' : 'Discharge unavailable — wait for charges'}
         style={{
           minWidth: HUD.dischargeButtonMinWidth,
           minHeight: HUD.touchTargetMin,

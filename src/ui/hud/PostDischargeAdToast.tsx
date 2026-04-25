@@ -102,7 +102,7 @@ export const PostDischargeAdToast = memo(function PostDischargeAdToast() {
 
   if (!open) return null;
   return (
-    <div data-testid="post-discharge-ad-toast" style={containerStyle}>
+    <div data-testid="post-discharge-ad-toast" role="status" aria-live="polite" style={containerStyle}>
       <span>{tAds.postDischargeOffer}</span>
       <button type="button" data-testid="post-discharge-ad-accept" style={acceptStyle} onPointerDown={onAccept}>OK</button>
       <button type="button" data-testid="post-discharge-ad-dismiss" style={dismissStyle} onPointerDown={onDismiss}>{tAds.postDischargeDismiss}</button>

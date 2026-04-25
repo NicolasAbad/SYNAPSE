@@ -23,6 +23,7 @@ import { AdProvider } from './platform/AdContext';
 import { initFirebase } from './platform/firebase';
 import { useAudioRuntime } from './platform/useAudioRuntime';
 import { usePushRuntime } from './platform/usePushRuntime';
+import { useAccessibilityRuntime } from './platform/useAccessibilityRuntime';
 import { evaluateDailyLogin, toLocalDateString, type DailyLoginOutcome } from './engine/dailyLogin';
 
 export function App() {
@@ -106,6 +107,7 @@ export function App() {
   useSaveScheduler();
   useAudioRuntime(); // Howler init + volume sync + ambient + visibility-pause
   usePushRuntime(); // local-notifications: permission cadence + daily/cap/streak schedules
+  useAccessibilityRuntime(); // highContrast root attr + fontSize root scale
 
   // Sprint 2 Phase 6 — UI-9 first-open sequence. Splash shows on every cold
   // open per [D2]; GDPR modal follows only if isEU (false in Sprint 2 per [D1]).

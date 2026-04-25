@@ -1,0 +1,33 @@
+/* Sprint 10 Phase 10.5 — accessibility overrides.
+ *
+ * Two scopes:
+ *   [data-high-contrast="true"] on <html> — boosted text + border + bg contrast
+ *     for low-vision players. Applied by useAccessibilityRuntime.
+ *
+ * fontSize is set as inline style on <html> directly; --text-* tokens are rem-based
+ * so they scale automatically.
+ *
+ * reducedMotion + colorblindMode are NOT styled here — their consumers are
+ * component-local (canvas pulse gate, FocusBar transition, PolaritySlot shape mark).
+ */
+
+/* High-contrast theme — bumps text white, borders white, dims subtle backgrounds. */
+:root[data-high-contrast="true"] {
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #d0d0d0;
+  --color-text-disabled: #909090;
+  --color-border-subtle: #ffffff80;
+  --color-border-medium: #ffffffa0;
+  --color-border-strong: #ffffffd0;
+  --color-bg-deep: #000000;
+  --color-bg-elevated: #050505;
+}
+
+/* Class-based reducedMotion guard — components can opt-in by adding
+ * .a11y-no-motion to a wrapper. CSS transitions inside become 0s. */
+.a11y-no-motion,
+.a11y-no-motion * {
+  transition-duration: 0s !important;
+  animation-duration: 0s !important;
+  animation-iteration-count: 1 !important;
+}

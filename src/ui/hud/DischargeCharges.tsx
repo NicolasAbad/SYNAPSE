@@ -65,6 +65,8 @@ export const DischargeCharges = memo(function DischargeCharges() {
   return (
     <div
       data-testid="hud-charges"
+      role="status"
+      aria-label={`Discharge charges: ${charges} of ${maxCharges}`}
       style={{
         position: 'absolute',
         top: 'var(--spacing-5)', // CONST-OK: CSS custom property ref (CODE-1 exception)
@@ -95,6 +97,7 @@ export const DischargeCharges = memo(function DischargeCharges() {
       </div>
       <div
         data-testid="hud-charge-label"
+        aria-live="polite"
         style={{
           fontFamily: 'var(--font-mono)',
           fontSize: 'var(--text-xs)',
