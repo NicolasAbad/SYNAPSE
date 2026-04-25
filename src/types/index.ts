@@ -456,3 +456,10 @@ export interface AchievementCheckResult {
 }
 
 export type EraVisualTheme = 'bioluminescent' | 'digital' | 'cosmic';
+
+// Sprint 10 Phase 10.1 — Settings types.
+// `Language` will gain more entries when Spanish (es) ships in Phase 10.7.
+// `FontSize` is a discrete tier (not a number) so the consumer can map to
+// CSS scale tokens cleanly: 0.85x / 1.0x / 1.15x.
+export type Language = 'en' | 'es';
+export type FontSize = 'small' | 'medium' | 'large';

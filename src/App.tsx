@@ -15,6 +15,7 @@ import { SleepScreen } from './ui/modals/SleepScreen';
 import { SettingsModal } from './ui/modals/SettingsModal';
 import { CosmeticsStoreModal } from './ui/modals/CosmeticsStoreModal';
 import { EchoLayer } from './ui/canvas/EchoLayer';
+import { SaveSyncIndicator } from './ui/hud/SaveSyncIndicator';
 import { createRevenueCatAdapter, type RevenueCatAdapter } from './platform/revenuecat';
 import { createAdMobAdapter, type AdMobAdapter } from './platform/admob';
 import { AdProvider } from './platform/AdContext';
@@ -126,6 +127,7 @@ export function App() {
       >
         <NeuronCanvas />
         <HUD onOpenSettings={() => setSettingsOpen(true)} />
+        <SaveSyncIndicator />
         <TutorialHints />
         <EchoLayer />
         <FragmentOverlay />

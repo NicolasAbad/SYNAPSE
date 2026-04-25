@@ -1,15 +1,24 @@
-// Sprint 9a Phase 9a.2 — Settings modal hosting Restore Purchases (MONEY-3, GDD §26).
-// Hosts the entry point for: Restore Purchases (here, 9a.2). Subscription tile,
-// Genius Pass info, and other monetization surfaces land in 9b/10.
+// Sprint 9a Phase 9a.2 — Settings modal entry point.
+// Sprint 10 Phase 10.1 expanded into 6 sections per V-6:
+//   General | Audio | Accessibility | Notifications | Account | Game.
+// Volume sliders 0–100 in 5% steps (V-1), apply on slide (V-2).
+// Accessibility + Notifications consumers ship in 10.4/10.5 (V-5/V-7).
 //
 // Adapter injection: parent (App.tsx) creates a RevenueCatAdapter on native and
 // passes its `restorePurchases` method as a prop. In web preview / tests, prop
-// is undefined → button disabled with a "native only" hint. Tests pass a mock.
+// is undefined → button disabled with a "native only" hint.
 
 import { memo, useCallback, useEffect, useState } from 'react';
 import { useGameStore } from '../../store/gameStore';
 import { en } from '../../config/strings/en';
 import type { CustomerInfo } from '../../platform/revenuecat';
+import type { FontSize, Language } from '../../types';
+import { HardResetFlow } from './HardResetFlow';
+import {
+  buttonStyle, captionStyle, cardStyle, disabledButtonStyle, labelStyle,
+  overlayStyle, rowStyle, secondaryButtonStyle, statusLineStyle, titleStyle,
+} from './settings/styles';
+import { Section, SliderRow, ToggleRow } from './settings/widgets';
 
 const t = en.settings;
 
@@ -25,59 +34,6 @@ export interface SettingsModalProps {
   onOpenCosmetics?: () => void;
 }
 
-const overlayStyle = { // CONST-OK CSS style object
-  position: 'fixed' as const,
-  inset: 0,
-  background: 'rgba(5, 7, 13, 0.92)', // CONST-OK CSS dim-overlay alpha
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  zIndex: 945, // CONST-OK above HUD, below splash
-  padding: 'var(--spacing-6)', // CONST-OK CSS spacing token
-};
-
-const cardStyle = { // CONST-OK CSS style object
-  background: 'var(--color-bg-deep, #0a0e1a)',
-  border: '1px solid var(--color-border-subtle, #1f2937)', // CONST-OK CSS fallback
-  borderRadius: 'var(--radius-lg)',
-  padding: 'var(--spacing-6)', // CONST-OK CSS spacing token
-  maxWidth: '420px', // CONST-OK CSS max-width readable
-  width: '100%', // CONST-OK CSS full-width idiom
-};
-
-const titleStyle = { // CONST-OK CSS style object
-  fontFamily: 'var(--font-display)',
-  fontSize: 'var(--text-xl)',
-  fontWeight: 'var(--font-weight-light)',
-  marginTop: 0,
-  marginBottom: 'var(--spacing-4)', // CONST-OK CSS spacing token
-};
-
-const buttonStyle = { // CONST-OK CSS style object
-  display: 'block',
-  width: '100%', // CONST-OK CSS full-width idiom
-  marginTop: 'var(--spacing-3)', // CONST-OK CSS spacing token
-  padding: 'var(--spacing-3) var(--spacing-4)', // CONST-OK CSS spacing tokens
-  background: 'var(--color-accent, #4090E0)', // CONST-OK CSS fallback
-  color: 'var(--color-text-on-accent, #fff)',
-  border: 'none',
-  borderRadius: 'var(--radius-md)',
-  fontFamily: 'var(--font-body)',
-  fontSize: 'var(--text-md)',
-  cursor: 'pointer',
-};
-
-const secondaryButtonStyle = { ...buttonStyle, background: 'transparent', border: '1px solid var(--color-border-subtle, #1f2937)' }; // CONST-OK CSS fallback
-
-const disabledButtonStyle = { ...buttonStyle, opacity: 0.55, cursor: 'not-allowed' as const }; // CONST-OK CSS faded-state
-
-const statusLineStyle = { // CONST-OK CSS style object
-  marginTop: 'var(--spacing-3)', // CONST-OK CSS spacing token
-  fontSize: 'var(--text-sm)',
-  color: 'var(--color-text-secondary)',
-  minHeight: '1.5em', // CONST-OK CSS reserved line-height to prevent layout shift
-};
-
 function statusLabel(status: RestoreStatus): string {
   if (status === 'pending') return t.restorePending;
   if (status === 'success') return t.restoreSuccess;
@@ -88,15 +44,28 @@ function statusLabel(status: RestoreStatus): string {
 
 export const SettingsModal = memo(function SettingsModal({ open, onClose, restorePurchases, onOpenCosmetics }: SettingsModalProps) {
   const setSubscriptionStatus = useGameStore((s) => s.setSubscriptionStatus);
+  const sfxVolume = useGameStore((s) => s.sfxVolume);
+  const musicVolume = useGameStore((s) => s.musicVolume);
+  const language = useGameStore((s) => s.language);
+  const colorblindMode = useGameStore((s) => s.colorblindMode);
+  const reducedMotion = useGameStore((s) => s.reducedMotion);
+  const highContrast = useGameStore((s) => s.highContrast);
+  const fontSize = useGameStore((s) => s.fontSize);
+  const notificationsEnabled = useGameStore((s) => s.notificationsEnabled);
+
+  const setSfxVolume = useGameStore((s) => s.setSfxVolume);
+  const setMusicVolume = useGameStore((s) => s.setMusicVolume);
+  const setLanguage = useGameStore((s) => s.setLanguage);
+  const setColorblindMode = useGameStore((s) => s.setColorblindMode);
+  const setReducedMotion = useGameStore((s) => s.setReducedMotion);
+  const setHighContrast = useGameStore((s) => s.setHighContrast);
+  const setFontSize = useGameStore((s) => s.setFontSize);
+  const setNotificationsEnabled = useGameStore((s) => s.setNotificationsEnabled);
+
   const [status, setStatus] = useState<RestoreStatus>('idle');
 
-  // Reset status whenever the modal re-opens, so a prior failure/success
-  // toast doesn't linger across opens.
-  useEffect(() => {
-    if (open) setStatus('idle');
-  }, [open]);
+  useEffect(() => { if (open) setStatus('idle'); }, [open]);
 
-  // Esc closes (parity with ConfirmModal).
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
@@ -118,7 +87,6 @@ export const SettingsModal = memo(function SettingsModal({ open, onClose, restor
   }, [restorePurchases, setSubscriptionStatus]);
 
   if (!open) return null;
-
   const restoreDisabled = restorePurchases === undefined || status === 'pending';
 
   return (
@@ -126,37 +94,56 @@ export const SettingsModal = memo(function SettingsModal({ open, onClose, restor
       <div style={cardStyle}>
         <h2 id="settings-title" data-testid="settings-title" style={titleStyle}>{t.title}</h2>
 
-        <button
-          type="button"
-          data-testid="settings-restore"
-          disabled={restoreDisabled}
-          onClick={restoreDisabled ? undefined : onRestoreClick}
-          style={restoreDisabled ? disabledButtonStyle : buttonStyle}
-        >
-          {t.restoreButton}
-        </button>
+        <Section title={t.sectionGeneral}>
+          <div style={rowStyle}>
+            <div style={labelStyle}>{t.languageLabel}</div>
+            <select data-testid="settings-language" value={language} onChange={(e) => setLanguage(e.target.value as Language)} aria-label={t.languageLabel}>
+              <option value="en">{t.languageEn}</option>
+              <option value="es">{t.languageEs}</option>
+            </select>
+          </div>
+        </Section>
 
-        <p data-testid="settings-restore-status" style={statusLineStyle}>{statusLabel(status)}</p>
+        <Section title={t.sectionAudio}>
+          <SliderRow label={t.sfxVolumeLabel} value={sfxVolume} onChange={setSfxVolume} testId="settings-sfx-volume" />
+          <SliderRow label={t.musicVolumeLabel} value={musicVolume} onChange={setMusicVolume} testId="settings-music-volume" />
+        </Section>
 
-        {onOpenCosmetics && (
-          <button
-            type="button"
-            data-testid="settings-cosmetics"
-            onClick={onOpenCosmetics}
-            style={buttonStyle}
-          >
-            {t.cosmeticsButton}
+        <Section title={t.sectionAccessibility}>
+          <ToggleRow label={t.colorblindLabel} hint={t.colorblindHint} checked={colorblindMode} onChange={setColorblindMode} testId="settings-colorblind" />
+          <ToggleRow label={t.reducedMotionLabel} hint={t.reducedMotionHint} checked={reducedMotion} onChange={setReducedMotion} testId="settings-reduced-motion" />
+          <ToggleRow label={t.highContrastLabel} hint={t.highContrastHint} checked={highContrast} onChange={setHighContrast} testId="settings-high-contrast" />
+          <div style={rowStyle}>
+            <div style={labelStyle}>{t.fontSizeLabel}</div>
+            <select data-testid="settings-font-size" value={fontSize} onChange={(e) => setFontSize(e.target.value as FontSize)} aria-label={t.fontSizeLabel}>
+              <option value="small">{t.fontSizeSmall}</option>
+              <option value="medium">{t.fontSizeMedium}</option>
+              <option value="large">{t.fontSizeLarge}</option>
+            </select>
+          </div>
+        </Section>
+
+        <Section title={t.sectionNotifications}>
+          <ToggleRow label={t.notificationsLabel} hint={t.notificationsHint} checked={notificationsEnabled} onChange={setNotificationsEnabled} testId="settings-notifications" />
+        </Section>
+
+        <p style={captionStyle}>{t.deferredCaveat}</p>
+
+        <Section title={t.sectionAccount}>
+          <button type="button" data-testid="settings-restore" disabled={restoreDisabled} onClick={restoreDisabled ? undefined : onRestoreClick} style={restoreDisabled ? disabledButtonStyle : buttonStyle}>
+            {t.restoreButton}
           </button>
-        )}
+          <p data-testid="settings-restore-status" style={statusLineStyle}>{statusLabel(status)}</p>
+          {onOpenCosmetics && (
+            <button type="button" data-testid="settings-cosmetics" onClick={onOpenCosmetics} style={buttonStyle}>{t.cosmeticsButton}</button>
+          )}
+        </Section>
 
-        <button
-          type="button"
-          data-testid="settings-close"
-          onClick={onClose}
-          style={secondaryButtonStyle}
-        >
-          {t.closeButton}
-        </button>
+        <Section title={t.sectionGame}>
+          <HardResetFlow />
+        </Section>
+
+        <button type="button" data-testid="settings-close" onClick={onClose} style={secondaryButtonStyle}>{t.closeButton}</button>
       </div>
     </div>
   );

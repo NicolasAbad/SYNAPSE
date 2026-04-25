@@ -1,17 +1,22 @@
-// Implements docs/GDD.md §32 (GameState — 124 fields) — v1.0 post-Sprint-9b.4
+// Implements docs/GDD.md §32 (GameState — 132 fields) — v1.0 post-Sprint-10.1
 //
-// CRITICAL: this interface must have EXACTLY 124 properties. Sprint 1 invariant
-// asserts `Object.keys(DEFAULT_STATE).length === 124`. Section-by-section count
-// per §32 breakdown sums to 124 (verified line-by-line in GDD §32).
+// CRITICAL: this interface must have EXACTLY 132 properties. Sprint 1 invariant
+// asserts `Object.keys(DEFAULT_STATE).length === 132`. Section-by-section count
+// per §32 breakdown sums to 132 (verified line-by-line in GDD §32).
 // Sprint 7.10.4 added `pendingOfflineSummary` (Offline group, 119 → 120).
 // Sprint 7.10.5 added `lucidDreamActiveUntil` (Session bonuses, 120 → 121).
 // Sprint 9a Phase 9a.3 added `installedAt` (Session, 121 → 122) and
 // `lastAdWatchedAt` (Monetization runtime, 122 → 123) per V-2 + V-5.
 // Sprint 9b Phase 9b.4 added `geniusPassDismissals` (Genius Pass, 123 → 124)
 // per V-7 for MONEY-9 max-3-dismissals enforcement.
+// Sprint 10 Phase 10.1 added 8 Settings fields (124 → 132): sfxVolume,
+// musicVolume, language, colorblindMode, reducedMotion, highContrast, fontSize,
+// notificationsEnabled. All PRESERVE on prestige + Transcendence (per V-5/V-6:
+// settings persist across all in-game progression; only Hard Reset wipes them
+// via createDefaultState).
 //
 /**
- * GameState — the canonical application state (124 fields).
+ * GameState — the canonical application state (132 fields).
  *
  * CODE-2 exception (second audit followup, refreshed Sprint 7.5.1):
  * this file exceeds the 200-line cap due to 122 one-line field
@@ -27,9 +32,9 @@
  *
  * This exception is documented in CLAUDE.md under CODE-2.
  *
- * Field count MUST remain 124. Adding/removing fields requires:
+ * Field count MUST remain 132. Adding/removing fields requires:
  * - updating docs/GDD.md §32
- * - updating the 48/71/4/1 PRESTIGE_RESET/PRESERVE/UPDATE split
+ * - updating the 48/79/4/1 PRESTIGE_RESET/PRESERVE/UPDATE split
  * - updating the consistency test that asserts exact count
  */
 
@@ -39,6 +44,8 @@ import type {
   DiaryEntry,
   EndingID,
   EraVisualTheme,
+  FontSize,
+  Language,
   LimitedOffer,
   MicroChallenge,
   MutationActive,
@@ -283,4 +290,19 @@ export interface GameState {
   // === System (2) ===
   lastActiveTimestamp: number;
   gameVersion: string;
+
+  // === Settings (8) — Sprint 10 Phase 10.1 ===
+  // PRESERVE on prestige + Transcendence; only Hard Reset wipes them via createDefaultState.
+  // Volume sliders are 0–100 in 5% steps (V-1). language defaults 'en' until 10.7.
+  // Accessibility consumers (colorblind / reducedMotion / highContrast / fontSize)
+  // ship in Phase 10.5; toggles in 10.1 set state with no visible effect until then.
+  // notificationsEnabled consumer (push scheduler) ships in Phase 10.4.
+  sfxVolume: number;
+  musicVolume: number;
+  language: Language;
+  colorblindMode: boolean;
+  reducedMotion: boolean;
+  highContrast: boolean;
+  fontSize: FontSize;
+  notificationsEnabled: boolean;
 }

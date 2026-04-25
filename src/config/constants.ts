@@ -5,6 +5,21 @@
 // Sprint 1 consistency tests assert each value against the GDD.
 
 export const SYNAPSE_CONSTANTS = {
+  // ── Settings (Sprint 10 Phase 10.1) ──
+  // Volume defaults at 50/100 (mid-volume mobile idiom). Sliders run 0–100 in
+  // 5% steps per V-1 — see `sfxVolumeStepPct` for the UI granularity constant.
+  defaultSfxVolume: 50,
+  defaultMusicVolume: 50,
+  sfxVolumeStepPct: 5, // V-1 slider step (5% increments per spec)
+  // Hard Reset 3-tap window (V-3): user must tap "Hard Reset" 3 times within 5s
+  // to reveal the RESET text input gate. Resets after window expires.
+  hardResetTapWindowMs: 5_000,
+  hardResetTapCount: 3,
+  hardResetConfirmText: 'RESET' as const, // CONST-OK CODE-1 exception: literal user-typed string per V-3
+  // Save-sync indicator (V-4): how long the "Saving..." pill stays visible
+  // after `saveInFlight` flips back to false (gives user time to register it).
+  saveSyncIndicatorFadeMs: 600,
+
   // ── Tutorial ──
   tutorialThreshold: 25_000, // P0 of first Run ONLY when isTutorialCycle=true (TUTOR-2 §9). Overrides baseThresholdTable[0]. TUTOR-1 target: 7-9 min. Retuned 50K→25K in Sprint 3 Phase 7.4b per tutorial-timing simulator (50K projected ~14.7 min at 5 taps/sec; 25K projects 7-8 min with same inputs). GDD §31 + §9 currently disagree — PROGRESS.md is the source of truth until Nico updates the GDD.
   tutorialDischargeMult: 3.0,
@@ -400,8 +415,9 @@ export const SYNAPSE_CONSTANTS = {
   gameVersion: '1.0.0',
 
   // ── Field-count runtime verification (§32) ──
-  // 124 fields after Sprint 9b Phase 9b.4 (was 123 post-9a.3). The +1 field is
-  // `geniusPassDismissals` (Genius Pass group, MONEY-9 max-3-dismissals counter
-  // per V-7). PRESERVE on prestige + Transcendence (lifetime).
-  GAMESTATE_FIELD_COUNT: 124,
+  // 132 fields after Sprint 10 Phase 10.1 (was 124 post-9b.4). The +8 fields
+  // are sfxVolume, musicVolume, language, colorblindMode, reducedMotion,
+  // highContrast, fontSize, notificationsEnabled — all PRESERVE on prestige +
+  // Transcendence; only Hard Reset wipes them via createDefaultState.
+  GAMESTATE_FIELD_COUNT: 132,
 } as const;

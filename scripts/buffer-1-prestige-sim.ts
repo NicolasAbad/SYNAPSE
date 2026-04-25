@@ -42,7 +42,7 @@ function warn(msg: string): void {
 function freshState(): GameState {
   // Reuse the store's createDefaultState via reset() to avoid divergence.
   // Strip UI-state fields + bound action methods so we get the pure GameState
-  // shape (124 fields per §32 invariant post-Sprint-9b.4).
+  // shape (132 fields per §32 invariant post-Sprint-10.1).
   useGameStore.getState().reset();
   const raw = useGameStore.getState() as unknown as Record<string, unknown>;
   const out: Record<string, unknown> = {};

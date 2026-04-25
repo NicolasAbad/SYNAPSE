@@ -147,3 +147,62 @@ describe('SettingsModal — status reset on reopen', () => {
     expect(getByTestId('settings-restore-status').textContent).toBe('');
   });
 });
+
+// Sprint 10 Phase 10.1 — new section coverage.
+describe('SettingsModal — Sprint 10 sections', () => {
+  test('renders all 6 sections + hard-reset entry point', () => {
+    const { getByTestId, getByText } = render(<SettingsModal open={true} onClose={() => {}} />);
+    // All 6 section headers present.
+    expect(getByText(en.settings.sectionGeneral)).toBeTruthy();
+    expect(getByText(en.settings.sectionAudio)).toBeTruthy();
+    expect(getByText(en.settings.sectionAccessibility)).toBeTruthy();
+    expect(getByText(en.settings.sectionNotifications)).toBeTruthy();
+    expect(getByText(en.settings.sectionAccount)).toBeTruthy();
+    expect(getByText(en.settings.sectionGame)).toBeTruthy();
+    // Game section hosts the Hard Reset flow's first-state tap button.
+    expect(getByTestId('hard-reset-tap')).toBeTruthy();
+  });
+
+  test('language select writes setLanguage', () => {
+    const { getByTestId } = render(<SettingsModal open={true} onClose={() => {}} />);
+    fireEvent.change(getByTestId('settings-language'), { target: { value: 'es' } });
+    expect(useGameStore.getState().language).toBe('es');
+  });
+
+  test('SFX volume slider writes setSfxVolume', () => {
+    const { getByTestId } = render(<SettingsModal open={true} onClose={() => {}} />);
+    fireEvent.change(getByTestId('settings-sfx-volume'), { target: { value: '75' } });
+    expect(useGameStore.getState().sfxVolume).toBe(75);
+  });
+
+  test('music volume slider writes setMusicVolume', () => {
+    const { getByTestId } = render(<SettingsModal open={true} onClose={() => {}} />);
+    fireEvent.change(getByTestId('settings-music-volume'), { target: { value: '20' } });
+    expect(useGameStore.getState().musicVolume).toBe(20);
+  });
+
+  test('accessibility toggles write their state fields', () => {
+    const { getByTestId } = render(<SettingsModal open={true} onClose={() => {}} />);
+    fireEvent.click(getByTestId('settings-colorblind'));
+    fireEvent.click(getByTestId('settings-reduced-motion'));
+    fireEvent.click(getByTestId('settings-high-contrast'));
+    const s = useGameStore.getState();
+    expect(s.colorblindMode).toBe(true);
+    expect(s.reducedMotion).toBe(true);
+    expect(s.highContrast).toBe(true);
+  });
+
+  test('font size select writes setFontSize', () => {
+    const { getByTestId } = render(<SettingsModal open={true} onClose={() => {}} />);
+    fireEvent.change(getByTestId('settings-font-size'), { target: { value: 'large' } });
+    expect(useGameStore.getState().fontSize).toBe('large');
+  });
+
+  test('notifications toggle writes setNotificationsEnabled', () => {
+    // Default is true; toggling clears it.
+    const { getByTestId } = render(<SettingsModal open={true} onClose={() => {}} />);
+    expect(useGameStore.getState().notificationsEnabled).toBe(true);
+    fireEvent.click(getByTestId('settings-notifications'));
+    expect(useGameStore.getState().notificationsEnabled).toBe(false);
+  });
+});

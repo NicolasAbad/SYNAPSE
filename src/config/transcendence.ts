@@ -1,14 +1,14 @@
-// Implements docs/GDD.md §20 + §34 (TRANSCENDENCE_RESET 59 / TRANSCENDENCE_PRESERVE 58 /
-// TRANSCENDENCE_UPDATE 7 = 124 total).
+// Implements docs/GDD.md §20 + §34 (TRANSCENDENCE_RESET 59 / TRANSCENDENCE_PRESERVE 66 /
+// TRANSCENDENCE_UPDATE 7 = 132 total).
 //
 // Pure data file — no logic. handleTranscendence() in src/engine/transcendence.ts
 // (Sprint 8b Phase 8b.2) consumes these to produce a post-Transcendence state.
 //
 // Field-count invariants (asserted by tests/consistency.test.ts §34 block):
 //   TRANSCENDENCE_RESET_FIELDS.length === 59
-//   TRANSCENDENCE_PRESERVE_FIELDS.length === 57
+//   TRANSCENDENCE_PRESERVE_FIELDS.length === 66 (Sprint 10 Phase 10.1: +8 Settings)
 //   TRANSCENDENCE_UPDATE_FIELDS.length === 7
-//   59 + 55 + 7 === 121 === Object.keys(createDefaultState()).length
+//   59 + 66 + 7 === 132 === Object.keys(createDefaultState()).length
 //   RESET ∩ PRESERVE === ∅ (disjoint — no field in both)
 //
 // Sprint 6.8 TRANS-5 table (GDD §20 lines 1273-1285) is the source of truth for
@@ -212,6 +212,11 @@ export const TRANSCENDENCE_PRESERVE_FIELDS = [
   'tabBadgesDismissed',
   // System (2)
   'lastActiveTimestamp', 'gameVersion',
+  // Settings (8) — Sprint 10 Phase 10.1: PRESERVE on Transcendence (settings outlast Runs).
+  // Hard Reset wipes them via createDefaultState; Transcendence does not.
+  'sfxVolume', 'musicVolume', 'language',
+  'colorblindMode', 'reducedMotion', 'highContrast', 'fontSize',
+  'notificationsEnabled',
 ] as const satisfies readonly (keyof GameState)[];
 
 /**

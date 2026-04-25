@@ -27,6 +27,10 @@
 //     cooldown immediately satisfied").
 //   - Sprint 9b Phase 9b.4: 123 → 124 fields. Backfills `geniusPassDismissals: 0`
 //     (V-7, lifetime counter for MONEY-9 max-3-dismissals enforcement).
+//   - Sprint 10 Phase 10.1: 124 → 132 fields. Backfills 8 Settings fields with
+//     conservative defaults so legacy saves load with sensible audio + accessibility
+//     state. All settings are PRESERVE on prestige + Transcendence; only Hard
+//     Reset wipes them via createDefaultState.
 
 import { SYNAPSE_CONSTANTS } from '../config/constants';
 
@@ -71,6 +75,18 @@ export function migrateState(parsed: unknown): unknown {
     installedAt: 0, // Sprint 9a Phase 9a.3 — initSessionTimestamps stamps post-load
     lastAdWatchedAt: 0, // Sprint 9a Phase 9a.3 — 0 means cooldown satisfied
     geniusPassDismissals: 0, // Sprint 9b Phase 9b.4 — V-7 MONEY-9 counter
+    // Sprint 10 Phase 10.1 — Settings (8). Defaults match createDefaultState
+    // so a legacy save loads with audible-but-not-loud audio, English UI, no
+    // accessibility tweaks, and notifications opt-in (consumer in 10.4 still
+    // requires platform permission grant before scheduling anything).
+    sfxVolume: SYNAPSE_CONSTANTS.defaultSfxVolume,
+    musicVolume: SYNAPSE_CONSTANTS.defaultMusicVolume,
+    language: 'en',
+    colorblindMode: false,
+    reducedMotion: false,
+    highContrast: false,
+    fontSize: 'medium',
+    notificationsEnabled: true,
   };
   const out: Record<string, unknown> = { ...obj };
   for (const key of Object.keys(defaults)) {

@@ -5,7 +5,7 @@
 // Mount-time timestamps are populated via initSessionTimestamps action
 // per INIT-1 — see src/store/initSession.ts for the React boundary.
 //
-// CODE-2 exception: enumerating all 124 fields with section comments
+// CODE-2 exception: enumerating all 132 fields with section comments
 // and per-field inline rationale pushes this file above the 200-line
 // cap. Same justification as src/types/GameState.ts — the interface is
 // a single-source-of-truth artifact; splitting it would lose the
@@ -14,7 +14,7 @@
 import { create } from 'zustand';
 import { SYNAPSE_CONSTANTS } from '../config/constants';
 import type { GameState } from '../types/GameState';
-import type { NeuronType, Polarity, Pathway, Archetype, EndingID } from '../types';
+import type { NeuronType, Polarity, Pathway, Archetype, EndingID, Language, FontSize } from '../types';
 import { loadGame, saveGame } from './saveGame';
 import { tryBuyNeuron, tryBuyUpgrade, type BuyReason, type UndoToast } from './purchases';
 import { tryBuyShardUpgrade } from './shardPurchases';
@@ -235,6 +235,15 @@ export function createDefaultState(): GameState {
     // === System (2) ===
     lastActiveTimestamp: 0, // INIT-1 impure — mount effect populates
     gameVersion: SYNAPSE_CONSTANTS.gameVersion,
+    // === Settings (8) — Sprint 10 Phase 10.1, all PRESERVE on prestige + Transcendence ===
+    sfxVolume: SYNAPSE_CONSTANTS.defaultSfxVolume,
+    musicVolume: SYNAPSE_CONSTANTS.defaultMusicVolume,
+    language: 'en', // CONST-OK CODE-1 exception: enum literal default per Language type
+    colorblindMode: false,
+    reducedMotion: false,
+    highContrast: false,
+    fontSize: 'medium', // CONST-OK CODE-1 exception: enum literal default per FontSize type
+    notificationsEnabled: true,
   };
 }
 
@@ -316,6 +325,28 @@ export interface GameStoreActions {
   setActiveMindSubtab: (subtab: MindSubtabId) => void;
   /** Sprint 2 Phase 6: GDPR analytics opt-in. Writes GameState.analyticsConsent. */
   setAnalyticsConsent: (consent: boolean) => void;
+  /**
+   * Sprint 10 Phase 10.1 — Settings setters. Each writes its single field
+   * directly. Volume sliders accept 0–100 in 5% steps from the UI; setters
+   * clamp defensively to [0, 100] so out-of-range programmatic calls are safe.
+   * Consumers (Howler, accessibility CSS, push scheduler) ship in 10.2/10.4/10.5.
+   */
+  setSfxVolume: (vol: number) => void;
+  setMusicVolume: (vol: number) => void;
+  setLanguage: (lang: Language) => void;
+  setColorblindMode: (enabled: boolean) => void;
+  setReducedMotion: (enabled: boolean) => void;
+  setHighContrast: (enabled: boolean) => void;
+  setFontSize: (size: FontSize) => void;
+  setNotificationsEnabled: (enabled: boolean) => void;
+  /**
+   * Sprint 10 Phase 10.1 — Hard Reset action (V-3). Wipes ALL state to defaults
+   * via createDefaultState() — including settings (per design: Hard Reset returns
+   * to factory state). Caller (UI) is responsible for: 3-tap counter, RESET text
+   * input gate, logging the `reset_game` analytics event with timestamp BEFORE
+   * calling this. This action just executes the reset.
+   */
+  hardReset: () => void;
   /**
    * Sprint 9a Phase 9a.2 — flip Genius Pass subscription status. Called by the
    * RevenueCat adapter on `customerInfo.entitlements.active['genius_pass']`
@@ -652,6 +683,32 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
   setActiveTab: (tab) => set({ activeTab: tab, activeMindSubtab: 'home' }),
   setActiveMindSubtab: (subtab) => set({ activeMindSubtab: subtab }),
   setAnalyticsConsent: (consent) => set({ analyticsConsent: consent }),
+  // Sprint 10 Phase 10.1 — Settings setters. Volume sliders clamp to [0, 100]
+  // defensively so out-of-range programmatic calls (e.g. malformed save migration
+  // with an old pre-bounded value) don't poison state. UI emits 0–100 in 5% steps.
+  setSfxVolume: (vol) => set({ sfxVolume: Math.max(0, Math.min(100, vol)) }),
+  setMusicVolume: (vol) => set({ musicVolume: Math.max(0, Math.min(100, vol)) }),
+  setLanguage: (lang) => set({ language: lang }),
+  setColorblindMode: (enabled) => set({ colorblindMode: enabled }),
+  setReducedMotion: (enabled) => set({ reducedMotion: enabled }),
+  setHighContrast: (enabled) => set({ highContrast: enabled }),
+  setFontSize: (size) => set({ fontSize: size }),
+  setNotificationsEnabled: (enabled) => set({ notificationsEnabled: enabled }),
+  // Sprint 10 Phase 10.1 — Hard Reset (V-3). Logs `reset_game` with timestamp
+  // BEFORE wiping state so the analytics fire while consent is still readable.
+  // Then full reset to defaults via the existing `reset` action's path.
+  hardReset: () => {
+    const { analyticsConsent } = get();
+    logEvent('reset_game', { timestamp: Date.now() }, analyticsConsent);
+    set(() => ({
+      ...createDefaultState(),
+      activeTab: 'mind' as TabId,
+      activeMindSubtab: 'home' as MindSubtabId,
+      undoToast: null,
+      antiSpamActive: false,
+      achievementToast: null,
+    }));
+  },
   setSubscriptionStatus: (isSubscribed) => {
     const prev = get();
     set({ isSubscribed });

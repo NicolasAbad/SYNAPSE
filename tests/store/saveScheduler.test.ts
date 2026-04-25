@@ -46,7 +46,7 @@ describe('trySave — basic persistence', () => {
   test('saves the full 124-field payload', async () => {
     await trySave();
     const loaded = await loadGame();
-    expect(Object.keys(loaded!).length).toBe(124);
+    expect(Object.keys(loaded!).length).toBe(132);
   });
 
   test('sequential trySave calls produce consistent state', async () => {

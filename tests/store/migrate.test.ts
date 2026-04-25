@@ -29,9 +29,18 @@ const NEW_FIELDS = [
   'installedAt',           // Sprint 9a Phase 9a.3 — V-5
   'lastAdWatchedAt',       // Sprint 9a Phase 9a.3 — V-2
   'geniusPassDismissals',  // Sprint 9b Phase 9b.4 — V-7
+  // Sprint 10 Phase 10.1 — Settings (8)
+  'sfxVolume',
+  'musicVolume',
+  'language',
+  'colorblindMode',
+  'reducedMotion',
+  'highContrast',
+  'fontSize',
+  'notificationsEnabled',
 ] as const;
 
-/** Build a synthetic legacy 110-field payload by stripping the 13 backfill fields from a current default. */
+/** Build a synthetic legacy 110-field payload by stripping the backfill fields from a current default. */
 function legacy110(): Record<string, unknown> {
   const current = createDefaultState() as unknown as Record<string, unknown>;
   const stripped: Record<string, unknown> = { ...current };
@@ -39,15 +48,15 @@ function legacy110(): Record<string, unknown> {
   return stripped;
 }
 
-describe('migrateState — 110 → 124 backfill (Sprint 7.5.1 + 7.10.4 + 7.10.5 + 9a.3 + 9b.4)', () => {
-  test('legacy 110-field payload becomes a 124-field payload', () => {
+describe('migrateState — 110 → 132 backfill (Sprint 7.5.1 + 7.10.4 + 7.10.5 + 9a.3 + 9b.4 + 10.1)', () => {
+  test('legacy 110-field payload becomes a 132-field payload', () => {
     const legacy = legacy110();
     expect(Object.keys(legacy).length).toBe(110);
     const migrated = migrateState(legacy) as Record<string, unknown>;
-    expect(Object.keys(migrated).length).toBe(124);
+    expect(Object.keys(migrated).length).toBe(132);
   });
 
-  test('all 11 new fields are present after migration', () => {
+  test('all backfilled fields are present after migration', () => {
     const migrated = migrateState(legacy110()) as Record<string, unknown>;
     for (const key of NEW_FIELDS) {
       expect(key in migrated).toBe(true);
@@ -88,7 +97,7 @@ describe('migrateState — idempotency', () => {
   test('a fully-formed 124-field payload passes through unchanged', () => {
     const current = createDefaultState() as unknown as Record<string, unknown>;
     const migrated = migrateState(current) as Record<string, unknown>;
-    expect(Object.keys(migrated).length).toBe(124);
+    expect(Object.keys(migrated).length).toBe(132);
     // Deep-equal — defaults didn't override the existing values.
     expect(migrated).toEqual(current);
   });

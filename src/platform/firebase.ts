@@ -20,7 +20,9 @@ import { initializeApp, type FirebaseApp } from 'firebase/app';
 import { getAnalytics, logEvent as fbLogEvent, type Analytics } from 'firebase/analytics';
 
 // Allowed event names — ANALYTICS-5 alignment with GDD §27.
-// 11 Monetization + 2 Core (genius_pass_offered / genius_pass_purchased per §27 Core (19)).
+// 11 Monetization + 2 Core (genius_pass_offered / genius_pass_purchased per §27 Core (19))
+// + 1 reset_game (Sprint 10 Phase 10.1 — Hard Reset analytics, fires before state wipe).
+// Phase 10.3 will add the remaining 34 events to reach 48 total per GDD §27.
 export type AnalyticsEvent =
   | 'starter_pack_shown'
   | 'starter_pack_purchased'
@@ -34,7 +36,8 @@ export type AnalyticsEvent =
   | 'spark_pack_purchased'
   | 'spark_cap_reached'
   | 'genius_pass_offered'
-  | 'genius_pass_purchased';
+  | 'genius_pass_purchased'
+  | 'reset_game';
 
 export type AnalyticsParams = Record<string, string | number | boolean>;
 

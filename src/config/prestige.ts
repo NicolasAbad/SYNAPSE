@@ -1,15 +1,15 @@
-// Implements docs/GDD.md §33 (PRESTIGE_RESET 48 / PRESTIGE_PRESERVE 71 /
-// PRESTIGE_UPDATE 4 / lifetime 1 = 124 total).
+// Implements docs/GDD.md §33 (PRESTIGE_RESET 48 / PRESTIGE_PRESERVE 79 /
+// PRESTIGE_UPDATE 4 / lifetime 1 = 132 total).
 //
 // Pure data file — no logic. handlePrestige() in src/engine/prestige.ts
 // (Sprint 4a Phase 4a.2) consumes these to produce a post-prestige state.
 //
 // Field-count invariants (asserted by tests/consistency.test.ts §33 block):
 //   PRESTIGE_RESET_FIELDS.length === 48
-//   PRESTIGE_PRESERVE_FIELDS.length === 71
+//   PRESTIGE_PRESERVE_FIELDS.length === 79 (Sprint 10 Phase 10.1: +8 Settings)
 //   PRESTIGE_UPDATE_FIELDS.length === 4
 //   PRESTIGE_LIFETIME_FIELDS.length === 1
-//   48 + 71 + 4 + 1 === 124 === Object.keys(createDefaultState()).length
+//   48 + 79 + 4 + 1 === 132 === Object.keys(createDefaultState()).length
 //   RESET ∩ PRESERVE === ∅ (disjoint — no field in both)
 //
 // Ordering within each tuple mirrors GDD §33 for audit readability, but
@@ -200,6 +200,11 @@ export const PRESTIGE_PRESERVE_FIELDS = [
   'mastery',
   // Auto-buy config (1) — Sprint 6.8 QoL pull-in
   'autoBuyConfig',
+  // Settings (8) — Sprint 10 Phase 10.1: PRESERVE on prestige (settings outlast cycles).
+  // Hard Reset wipes them via createDefaultState; prestige does not.
+  'sfxVolume', 'musicVolume', 'language',
+  'colorblindMode', 'reducedMotion', 'highContrast', 'fontSize',
+  'notificationsEnabled',
 ] as const satisfies readonly (keyof GameState)[];
 
 /**

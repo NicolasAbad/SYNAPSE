@@ -140,6 +140,15 @@ function makeState(overrides: Partial<GameState> = {}): GameState {
     brocaNamedMoments: [],
     mastery: {},
     autoBuyConfig: {},
+    // Sprint 10 Phase 10.1 — Settings (8). Test fixture defaults match createDefaultState.
+    sfxVolume: 50,
+    musicVolume: 50,
+    language: 'en',
+    colorblindMode: false,
+    reducedMotion: false,
+    highContrast: false,
+    fontSize: 'medium',
+    notificationsEnabled: true,
   };
   return { ...base, ...overrides };
 }
