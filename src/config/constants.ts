@@ -20,6 +20,21 @@ export const SYNAPSE_CONSTANTS = {
   // after `saveInFlight` flips back to false (gives user time to register it).
   saveSyncIndicatorFadeMs: 600,
 
+  // ── Audio (Sprint 10 Phase 10.2 — GDD §28) ──
+  // Asset path scaffold (V-1): served from public/audio/ at runtime, bundled
+  // into Capacitor builds via the `public/` directory.
+  // Filenames per GDD §28 verbatim — ANALYTICS-5 style anti-drift discipline.
+  audioBasePath: '/audio',
+  // Tap pitch variation per GDD §28 ±5% — implemented as Howler `rate` jitter.
+  tapSfxRateMin: 0.95,
+  tapSfxRateMax: 1.05,
+  // Era ambient crossfade (V-4) on theme change — long enough for smooth swap,
+  // short enough that Era 3 transitions stay narratively impactful.
+  ambientCrossfadeMs: 1500,
+  // Volume scaling (V-5): UI sliders run 0-100; Howler expects 0-1.
+  // Below this floor we skip play() entirely to save CPU.
+  audioVolumeFloorPct: 1,
+
   // ── Tutorial ──
   tutorialThreshold: 25_000, // P0 of first Run ONLY when isTutorialCycle=true (TUTOR-2 §9). Overrides baseThresholdTable[0]. TUTOR-1 target: 7-9 min. Retuned 50K→25K in Sprint 3 Phase 7.4b per tutorial-timing simulator (50K projected ~14.7 min at 5 taps/sec; 25K projects 7-8 min with same inputs). GDD §31 + §9 currently disagree — PROGRESS.md is the source of truth until Nico updates the GDD.
   tutorialDischargeMult: 3.0,

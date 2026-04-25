@@ -20,6 +20,7 @@ import { createRevenueCatAdapter, type RevenueCatAdapter } from './platform/reve
 import { createAdMobAdapter, type AdMobAdapter } from './platform/admob';
 import { AdProvider } from './platform/AdContext';
 import { initFirebase } from './platform/firebase';
+import { useAudioRuntime } from './platform/useAudioRuntime';
 
 export function App() {
   // Sprint 9a Phase 9a.2 — RevenueCat adapter is created once on native; null on
@@ -100,6 +101,7 @@ export function App() {
 
   useTickScheduler(); // game tick runtime
   useSaveScheduler();
+  useAudioRuntime(); // Howler init + volume sync + ambient + visibility-pause
 
   // Sprint 2 Phase 6 — UI-9 first-open sequence. Splash shows on every cold
   // open per [D2]; GDPR modal follows only if isEU (false in Sprint 2 per [D1]).

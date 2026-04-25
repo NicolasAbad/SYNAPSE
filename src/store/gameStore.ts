@@ -39,6 +39,7 @@ import { findLimitedTimeOffer } from '../config/limitedTimeOffers';
 import { evaluateSparksPurchase, startOfCurrentMonthUTC } from '../engine/sparksPurchaseCap';
 import { mulberry32 } from '../engine/rng';
 import { logEvent } from '../platform/firebase';
+import { playSfx } from '../platform/audio';
 import type { DiaryEntry } from '../types';
 
 /**
@@ -678,8 +679,10 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
     void _at;
     await saveGame(rest as GameState);
   },
-  onTap: (nowTimestamp) =>
-    set((state) => applyTap(state, state.antiSpamActive, nowTimestamp)),
+  onTap: (nowTimestamp) => {
+    set((state) => applyTap(state, state.antiSpamActive, nowTimestamp));
+    playSfx('tap'); // SFX wired in audio adapter (pitch jitter inside adapter)
+  },
   setActiveTab: (tab) => set({ activeTab: tab, activeMindSubtab: 'home' }),
   setActiveMindSubtab: (subtab) => set({ activeMindSubtab: subtab }),
   setAnalyticsConsent: (consent) => set({ analyticsConsent: consent }),
@@ -933,6 +936,7 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
     const post = { ...mid, ...narrative };
     const ach = processAchievementUnlocks(post as GameState, nowTimestamp);
     set({ ...result.updates, ...narrative, ...ach, undoToast: result.undoToast });
+    playSfx('neuron_buy'); // SFX wired in audio adapter
     return 'ok';
   },
   buyUpgrade: (id, nowTimestamp) => {
@@ -945,6 +949,7 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
     const post = { ...state, ...result.updates, mastery: masteryAfter };
     const ach = processAchievementUnlocks(post as GameState, nowTimestamp);
     set({ ...result.updates, mastery: masteryAfter, ...ach, undoToast: result.undoToast });
+    playSfx('upgrade_buy'); // SFX wired in audio adapter
     return 'ok';
   },
   buyShardUpgrade: (id, nowTimestamp) => {
@@ -1019,6 +1024,7 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
     const post = { ...mid, ...narrative };
     const ach = processAchievementUnlocks(post as GameState, nowTimestamp);
     set({ ...updates, ...narrative, ...ach });
+    playSfx('discharge'); // SFX wired in audio adapter
     return outcome;
   },
   prestige: (nowTimestamp, force = false) => {
@@ -1109,6 +1115,14 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
     const tutorialSparksBonus = grantsTutorialReward ? SYNAPSE_CONSTANTS.tutorialSparksRewardPerStep : 0;
     const seenAfterTutorial = grantsTutorialReward ? [...effectiveSeen, tutorialStepAdd] : effectiveSeen;
     set({ ...withDiary, ...narrative, ...ach, sparks: (ach.sparks ?? post.sparks) + preReward + tutorialSparksBonus, narrativeFragmentsSeen: seenAfterTutorial, diaryEntries: trimmedDiary, achievementToast: finalToast, undoToast: null });
+    // SFX wired in audio adapter — prestige + RP SFX. RP fires per newly-discovered
+    // pattern; deliberate cascade over multiple discoveries (rare event by design).
+    playSfx('prestige');
+    for (let i = 0; i < state.resonantPatternsDiscovered.length; i++) {
+      if (!state.resonantPatternsDiscovered[i] && nextState.resonantPatternsDiscovered[i]) {
+        playSfx('resonant_pattern');
+      }
+    }
     return { fired: true, outcome };
   },
   resetPatternDecisions: () => {

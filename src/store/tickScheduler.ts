@@ -32,6 +32,7 @@ import { SYNAPSE_CONSTANTS } from '../config/constants';
 import { tick } from '../engine/tick';
 import { era3AutoPrestigeAt45MinElapsed } from '../engine/era3';
 import { useGameStore } from './gameStore';
+import { playSfx } from '../platform/audio';
 
 export function useTickScheduler(): void {
   useEffect(() => {
@@ -44,6 +45,10 @@ export function useTickScheduler(): void {
       // UIState so the tap handler can consume the ×0.10 penalty without
       // recomputing. UI-local — saveScheduler strips it before persistence.
       useGameStore.setState({ ...next, antiSpamActive });
+      // Sprint 10 Phase 10.2 — fire SFX on engine-state transitions visible
+      // only at the tick boundary (insight + spontaneous events).
+      if (!current.insightActive && next.insightActive) playSfx('insight');
+      if (current.activeSpontaneousEvent === null && next.activeSpontaneousEvent !== null) playSfx('spontaneous');
       // GDD §23 P24 Long Thought — auto-awaken at MIN(threshold, 45 min).
       // Threshold path is handled by UI AWAKEN button; 45-min path fires here.
       if (era3AutoPrestigeAt45MinElapsed(next, now)) {
