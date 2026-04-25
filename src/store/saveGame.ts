@@ -8,6 +8,7 @@ import { Preferences } from '@capacitor/preferences';
 import type { GameState } from '../types/GameState';
 import { SYNAPSE_CONSTANTS } from '../config/constants';
 import { migrateState } from './migrate';
+import { getCrashlytics } from '../platform/crashlytics';
 
 /** Versioned storage key. v1 = current schema; migrateState() backfills missing fields per CODE-6. */
 const SAVE_KEY = 'synapse.save.v1';
@@ -28,6 +29,8 @@ export async function loadGame(): Promise<GameState | null> {
     return validateLoadedState(migrateState(parsed));
   } catch (e) {
     console.error('[saveGame] Failed to parse save:', e);
+    // Sprint 10 Phase 10.7 — non-fatal Crashlytics report (save load failure).
+    void getCrashlytics().recordError('saveGame.load', e);
     return null;
   }
 }

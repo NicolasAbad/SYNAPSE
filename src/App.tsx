@@ -25,6 +25,9 @@ import { initFirebase } from './platform/firebase';
 import { useAudioRuntime } from './platform/useAudioRuntime';
 import { usePushRuntime } from './platform/usePushRuntime';
 import { useAccessibilityRuntime } from './platform/useAccessibilityRuntime';
+import { useNativeNavigation } from './platform/useNativeNavigation';
+import { getCrashlytics } from './platform/crashlytics';
+import { initRemoteConfig } from './platform/remoteConfig';
 import { evaluateDailyLogin, toLocalDateString, type DailyLoginOutcome } from './engine/dailyLogin';
 
 export function App() {
@@ -46,7 +49,13 @@ export function App() {
   // Sprint 9b Phase 9b.6 — Firebase Analytics init. Safe to call at mount on
   // both native and web: the adapter goes inert if env vars are missing + never
   // throws. Respects analyticsConsent inside logEvent (GDPR).
-  useEffect(() => { initFirebase(); }, []);
+  // Sprint 10 Phase 10.7 — Remote Config + Crashlytics gated on analyticsConsent
+  // (same GDPR contract). Native-only paths; web preview no-ops.
+  useEffect(() => {
+    initFirebase();
+    void initRemoteConfig();
+    void getCrashlytics().setEnabled(useGameStore.getState().analyticsConsent);
+  }, []);
 
   // Sequential mount: load saved state first, then init timestamps ONLY if no
   // save was present, then applyOfflineReturn. Ordering prevents the Phase 7
@@ -88,6 +97,8 @@ export function App() {
           // CODE-8: never throw out of mount; log + continue. RevenueCat init
           // failure leaves isSubscribed at its persisted/default value.
           console.error('[RevenueCat] init failed:', e);
+          // Sprint 10 Phase 10.7 — non-fatal Crashlytics report.
+          void getCrashlytics().recordError('RevenueCat.init', e);
         }
       }
       if (adMobAdapter !== null) {
@@ -97,6 +108,8 @@ export function App() {
           // CODE-8: AdMob init failure → ad placements remain unavailable
           // (tryShowAd will return 'failed') but the game continues.
           console.error('[AdMob] init failed:', e);
+          // Sprint 10 Phase 10.7 — non-fatal Crashlytics report.
+          void getCrashlytics().recordError('AdMob.init', e);
         }
       }
     };
@@ -109,6 +122,15 @@ export function App() {
   useAudioRuntime(); // Howler init + volume sync + ambient + visibility-pause
   usePushRuntime(); // local-notifications: permission cadence + daily/cap/streak schedules
   useAccessibilityRuntime(); // highContrast root attr + fontSize root scale
+  useNativeNavigation({
+    hasOpenModal: () => settingsOpen || cosmeticsOpen || dailyLoginState !== null,
+    closeTopModal: () => {
+      if (dailyLoginState !== null) setDailyLoginState(null);
+      else if (cosmeticsOpen) setCosmeticsOpen(false);
+      else if (settingsOpen) setSettingsOpen(false);
+    },
+    openCosmetics: () => setCosmeticsOpen(true),
+  });
 
   // Sprint 2 Phase 6 — UI-9 first-open sequence. Splash shows on every cold
   // open per [D2]; GDPR modal follows only if isEU (false in Sprint 2 per [D1]).

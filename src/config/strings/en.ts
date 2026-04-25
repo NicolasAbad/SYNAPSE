@@ -751,6 +751,14 @@ export const en = {
     saving: 'Saving…',
   },
 
+  // Sprint 10 Phase 10.7 — ending share button + Capacitor.Share payload.
+  endingShare: {
+    button: 'Share',
+    title: 'My SYNAPSE journey',
+    text: 'I reached the {{ending}} ending after {{prestiges}} prestiges. The mind has changed.',
+    fallbackError: 'Sharing unavailable on this device.',
+  },
+
   // Sprint 10 Phase 10.4 — Daily Login Bonus modal.
   dailyLogin: {
     title: 'Daily Bonus',
