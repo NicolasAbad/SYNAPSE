@@ -1,7 +1,7 @@
 #!/bin/bash
 # check-invention.sh — verification gates to catch silent invention by Claude Code
 #
-# Runs 5 gates. Any failure blocks the commit.
+# Runs 6 gates. Any failure blocks the commit.
 # Called from: pre-commit hook + npm run check-invention + CI.
 #
 # Usage: bash scripts/check-invention.sh
@@ -25,7 +25,7 @@ echo ""
 # ─────────────────────────────────────────────────
 # GATE 1: No hardcoded numerics in src/engine/
 # ─────────────────────────────────────────────────
-echo "Gate 1/5: No hardcoded numerics in engine code"
+echo "Gate 1/6: No hardcoded numerics in engine code"
 
 if [ -d "src/engine" ]; then
   # Find numeric literals that are NOT:
@@ -73,7 +73,7 @@ echo ""
 # ─────────────────────────────────────────────────
 # GATE 2: GDD references present in engine files
 # ─────────────────────────────────────────────────
-echo "Gate 2/5: GDD section references in engine files"
+echo "Gate 2/6: GDD section references in engine files"
 
 if [ -d "src/engine" ]; then
   MISSING_REFS=()
@@ -104,7 +104,7 @@ echo ""
 # ─────────────────────────────────────────────────
 # GATE 3: Constants coverage ratio
 # ─────────────────────────────────────────────────
-echo "Gate 3/5: Constants coverage ratio (>0.8 target)"
+echo "Gate 3/6: Constants coverage ratio (>0.8 target)"
 
 if [ -d "src" ]; then
   # Count references to SYNAPSE_CONSTANTS in src/
@@ -155,7 +155,7 @@ echo ""
 # ─────────────────────────────────────────────────
 # GATE 4: Consistency tests pass
 # ─────────────────────────────────────────────────
-echo "Gate 4/5: Consistency tests (tests/consistency.test.ts)"
+echo "Gate 4/6: Consistency tests (tests/consistency.test.ts)"
 
 if [ -f "tests/consistency.test.ts" ] || [ -f "src/tests/consistency.test.ts" ]; then
   # Only run if vitest is available (package.json exists with vitest installed)
@@ -188,7 +188,7 @@ echo ""
 # calculateThreshold at four (prestige, transcendence) anchors. Any drift
 # means the implementation diverged from the spec snapshot — fix the code,
 # or update the spec + this snapshot in the same commit.
-echo "Gate 5/5: Canonical snapshots (RNG + softCap + calculateThreshold)"
+echo "Gate 5/6: Canonical snapshots (RNG + softCap + calculateThreshold)"
 
 if [ -f "tests/meta/canonicalSnapshots.test.ts" ]; then
   if [ ! -f "package.json" ]; then
@@ -207,6 +207,29 @@ if [ -f "tests/meta/canonicalSnapshots.test.ts" ]; then
   fi
 else
   echo -e "${YELLOW}  SKIP${NC} — tests/meta/canonicalSnapshots.test.ts not yet created"
+fi
+
+echo ""
+
+# ─────────────────────────────────────────────────
+# GATE 6: Canonical storage drift (palette audit, Sprint 11a Phase 11a.5)
+# ─────────────────────────────────────────────────
+# Compares hex values in docs/UI_MOCKUPS.html against src/ui/tokens.ts COLORS.
+# Drift in either direction (mockup-only or token-only hex not on the
+# allowlist) blocks the commit. Allowlists in scripts/check-palette-drift.sh.
+echo "Gate 6/6: Canonical storage drift (palette: UI_MOCKUPS ↔ tokens.ts)"
+
+if [ -f "scripts/check-palette-drift.sh" ]; then
+  if bash scripts/check-palette-drift.sh >/dev/null 2>&1; then
+    echo -e "${GREEN}  PASS${NC} — palette aligned (no unallowlisted drift)"
+  else
+    echo -e "${RED}  FAIL${NC} — palette drift detected"
+    echo "    Run: bash scripts/check-palette-drift.sh to see the unallowlisted hex values"
+    echo "    Fix: align the missing side OR add to the allowlist with rationale"
+    FAIL=1
+  fi
+else
+  echo -e "${YELLOW}  SKIP${NC} — scripts/check-palette-drift.sh not yet created"
 fi
 
 echo ""

@@ -17,6 +17,8 @@
     "typecheck": "tsc -b --noEmit",
     "lint": "eslint .",
     "check-invention": "bash scripts/check-invention.sh",
+    "check:rules": "bash scripts/check-rule-coverage.sh",
+    "check:palette": "bash scripts/check-palette-drift.sh",
     "prepare": "husky"
   },
   "dependencies": {
