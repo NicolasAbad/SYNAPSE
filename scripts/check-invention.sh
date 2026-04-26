@@ -1,7 +1,7 @@
 #!/bin/bash
 # check-invention.sh — verification gates to catch silent invention by Claude Code
 #
-# Runs 4 gates. Any failure blocks the commit.
+# Runs 5 gates. Any failure blocks the commit.
 # Called from: pre-commit hook + npm run check-invention + CI.
 #
 # Usage: bash scripts/check-invention.sh
@@ -25,7 +25,7 @@ echo ""
 # ─────────────────────────────────────────────────
 # GATE 1: No hardcoded numerics in src/engine/
 # ─────────────────────────────────────────────────
-echo "Gate 1/4: No hardcoded numerics in engine code"
+echo "Gate 1/5: No hardcoded numerics in engine code"
 
 if [ -d "src/engine" ]; then
   # Find numeric literals that are NOT:
@@ -73,7 +73,7 @@ echo ""
 # ─────────────────────────────────────────────────
 # GATE 2: GDD references present in engine files
 # ─────────────────────────────────────────────────
-echo "Gate 2/4: GDD section references in engine files"
+echo "Gate 2/5: GDD section references in engine files"
 
 if [ -d "src/engine" ]; then
   MISSING_REFS=()
@@ -104,7 +104,7 @@ echo ""
 # ─────────────────────────────────────────────────
 # GATE 3: Constants coverage ratio
 # ─────────────────────────────────────────────────
-echo "Gate 3/4: Constants coverage ratio (>0.8 target)"
+echo "Gate 3/5: Constants coverage ratio (>0.8 target)"
 
 if [ -d "src" ]; then
   # Count references to SYNAPSE_CONSTANTS in src/
@@ -155,7 +155,7 @@ echo ""
 # ─────────────────────────────────────────────────
 # GATE 4: Consistency tests pass
 # ─────────────────────────────────────────────────
-echo "Gate 4/4: Consistency tests (tests/consistency.test.ts)"
+echo "Gate 4/5: Consistency tests (tests/consistency.test.ts)"
 
 if [ -f "tests/consistency.test.ts" ] || [ -f "src/tests/consistency.test.ts" ]; then
   # Only run if vitest is available (package.json exists with vitest installed)
@@ -176,6 +176,37 @@ if [ -f "tests/consistency.test.ts" ] || [ -f "src/tests/consistency.test.ts" ];
 else
   echo -e "${YELLOW}  SKIP${NC} — tests/consistency.test.ts not yet created"
   echo "    (will be created in Sprint 1)"
+fi
+
+echo ""
+
+# ─────────────────────────────────────────────────
+# GATE 5: Canonical snapshots (POSTLAUNCH 6A-2, Sprint 11a Phase 11a.4)
+# ─────────────────────────────────────────────────
+# Hardcoded list of values the live implementation MUST produce: mulberry32
+# first three outputs, hash("0"), softCap(100/200/1000/10000), and
+# calculateThreshold at four (prestige, transcendence) anchors. Any drift
+# means the implementation diverged from the spec snapshot — fix the code,
+# or update the spec + this snapshot in the same commit.
+echo "Gate 5/5: Canonical snapshots (RNG + softCap + calculateThreshold)"
+
+if [ -f "tests/meta/canonicalSnapshots.test.ts" ]; then
+  if [ ! -f "package.json" ]; then
+    echo -e "${YELLOW}  SKIP${NC} — package.json not yet created"
+  elif ! command -v npx >/dev/null 2>&1 || ! npx --no-install vitest --version >/dev/null 2>&1; then
+    echo -e "${YELLOW}  SKIP${NC} — vitest not installed"
+  else
+    if npx vitest run tests/meta/canonicalSnapshots.test.ts --reporter=default 2>&1 | tail -20 | grep -qE "Tests\s+\d+\s+passed|PASS|passed"; then
+      echo -e "${GREEN}  PASS${NC} — canonical snapshots match implementation"
+    else
+      echo -e "${RED}  FAIL${NC} — canonical snapshots drifted from implementation"
+      echo "    Run: npx vitest run tests/meta/canonicalSnapshots.test.ts to see which values changed"
+      echo "    Fix: if intentional (balance retune), update both the test snapshot AND docs/GDD.md in this commit"
+      FAIL=1
+    fi
+  fi
+else
+  echo -e "${YELLOW}  SKIP${NC} — tests/meta/canonicalSnapshots.test.ts not yet created"
 fi
 
 echo ""
