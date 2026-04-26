@@ -89,7 +89,7 @@ function runCycles(label: string, withFocusPersistente: boolean): void {
   console.log(`━━━ ${label} ━━━`);
   let state = freshState();
   // Pre-flight invariants.
-  check(fieldCount(state) === 124, `pre: field count = ${fieldCount(state)}, expected 124`);
+  check(fieldCount(state) === 133, `pre: field count = ${fieldCount(state)}, expected 133`);
   check(state.prestigeCount === 0, `pre: prestigeCount = ${state.prestigeCount}, expected 0`);
   check(state.memories === 0, `pre: memories = ${state.memories}, expected 0`);
   check(state.isTutorialCycle === true, `pre: isTutorialCycle = ${state.isTutorialCycle}, expected true`);
@@ -152,7 +152,7 @@ function runCycles(label: string, withFocusPersistente: boolean): void {
     }
 
     // Field count stable.
-    check(fieldCount(state) === 124, `cycle ${i}: field count = ${fieldCount(state)}, expected 124`);
+    check(fieldCount(state) === 133, `cycle ${i}: field count = ${fieldCount(state)}, expected 133`);
 
     // No NaN / Infinity.
     const bad = hasNaNOrInfinity(state);
@@ -240,12 +240,14 @@ console.log('━━━ Field-set invariants ━━━');
 // Sprint 7.5.1: 45/60 → 46/68 (110→119). Sprint 7.10.4 + 7.10.5: 46→48 (119→121).
 // Sprint 9a.3: PRESERVE 68→70 (added installedAt + lastAdWatchedAt; total 121→123).
 // Sprint 9b.4: PRESERVE 70→71 (added geniusPassDismissals; total 123→124).
+// Sprint 10 Phase 10.1: PRESERVE 71→79 (+8 Settings). Sprint 10 Phase 10.3:
+// PRESERVE 79→80 (+firstEventsFired). Total now 48 + 80 + 4 + 1 = 133.
 check(PRESTIGE_RESET_FIELDS.length === 48, `PRESTIGE_RESET_FIELDS length = ${PRESTIGE_RESET_FIELDS.length}, expected 48`);
-check(PRESTIGE_PRESERVE_FIELDS.length === 71, `PRESTIGE_PRESERVE_FIELDS length = ${PRESTIGE_PRESERVE_FIELDS.length}, expected 71`);
+check(PRESTIGE_PRESERVE_FIELDS.length === 80, `PRESTIGE_PRESERVE_FIELDS length = ${PRESTIGE_PRESERVE_FIELDS.length}, expected 80`);
 check(PRESTIGE_UPDATE_FIELDS.length === 4, `PRESTIGE_UPDATE_FIELDS length = ${PRESTIGE_UPDATE_FIELDS.length}, expected 4`);
 check(
-  PRESTIGE_RESET_FIELDS.length + PRESTIGE_PRESERVE_FIELDS.length + PRESTIGE_UPDATE_FIELDS.length === 123,
-  `48 + 71 + 4 = 123 (lifetime field is the 124th, not in any tuple)`,
+  PRESTIGE_RESET_FIELDS.length + PRESTIGE_PRESERVE_FIELDS.length + PRESTIGE_UPDATE_FIELDS.length === 132,
+  `48 + 80 + 4 = 132 (lifetime field is the 133rd, not in any tuple)`,
 );
 
 runCycles('Run A — vanilla 10-cycle prestige loop (no upgrades)', false);
