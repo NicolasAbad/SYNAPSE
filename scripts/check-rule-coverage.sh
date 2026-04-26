@@ -32,32 +32,13 @@ EXCLUDED_PREFIXES="BUG- EXPLOIT- INTER- UX- GAP- WKLY- INT-"
 
 # Known uncovered rules that are design-documented but lack rule-ID-tagged
 # code references. Adding to this list = explicit Nico/sprint acceptance.
-ALLOWLIST=(
-  "CORE-6"        # late-game softCap inflection — implemented in production.ts via softCapExponent
-  "FOCUS-1"       # focus-bar fills via taps — implemented in tap action without tag
-  "FOCUS-3"       # focus-bar resets at discharge — implemented in discharge.ts without tag
-  "FORESIGHT-4"   # T4 visual foresight — implemented in visual.ts via tier derivation
-  "INTEGRATED-2"  # 4-region synergy — implemented in integratedMind.ts without tag
-  "MENTAL-3"      # mental-state stacking rule — implemented in mentalStates.ts without tag
-  "OFFLINE-3"     # focus-bar does not fill offline — implemented as absence
-  "OFFLINE-8"     # offline efficiency final ratio cap — implemented in offline.ts via maxOfflineEfficiencyRatio
-  "PATTERN-1"     # Lost Connection pattern — referenced as RESON_PATTERN-1 (regex pickup mismatch)
-  "PATTERN-2"     # Cascade pattern — RESON_PATTERN-2 mismatch
-  "PATTERN-3"     # Spiral pattern — RESON_PATTERN-3 mismatch
-  "PATTERN-4"     # Convergence pattern — RESON_PATTERN-4 mismatch
-  "REG-3"         # region unlock progress UI — implemented in regions panel without tag
-  "REG-4"         # region tap-to-expand UI — implemented in regions panel without tag
-  "REG-7"         # region brain diagram canvas — implemented in regions panel without tag
-  "RESON-2"       # resonance gain on prestige — implemented in handlePrestige without tag
-  "TUTOR-4"       # tutorial hint dismissal — implemented in tutorial hints without tag
-  "UPGRADES-3"    # upgrade list ordering — implemented in upgrades panel without tag
-  "UPGRADES-4"    # upgrade buy animation — implemented in upgrades panel without tag
-  "UPGRADES-5"    # upgrade locked-state UI — implemented in upgrades panel without tag
-  "UPGRADES-6"    # upgrade tooltip on long-press — implemented in upgrades panel without tag
-  "VOICE-3"       # inner voice fragment cadence — implemented in innerVoice.ts without tag
-  "VOICE-4"       # inner voice fragment selection — implemented in innerVoice.ts without tag
-  "VOICE-5"       # inner voice anti-repetition — implemented in innerVoice.ts without tag
-)
+#
+# Sprint 11a Phase 11a.5 follow-up (2026-04-26): all 24 prior allowlist
+# entries were backfilled with rule-ID comments in their implementation
+# files. The allowlist is now empty — every enforceable GDD rule has a
+# direct code/test/docs reference. Re-introduce only with explicit
+# rationale (and prefer adding the rule-ID comment instead).
+ALLOWLIST=()
 
 is_excluded_prefix() {
   local rule="$1"

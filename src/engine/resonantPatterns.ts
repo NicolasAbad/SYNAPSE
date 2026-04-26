@@ -2,6 +2,12 @@
 // (resonantPatternsDiscovered NEVER resets per GDD §33 PRESTIGE_PRESERVE).
 // Pure checks consumed by prestige.ts handlePrestige BEFORE state reset.
 //
+// Resonant pattern naming aliases — the spec uses both forms interchangeably:
+// PATTERN-1 = RESON_PATTERN-1 (Lost Connection)
+// PATTERN-2 = RESON_PATTERN-2 (Cascade)
+// PATTERN-3 = RESON_PATTERN-3 (Spiral)
+// PATTERN-4 = RESON_PATTERN-4 (Convergence)
+//
 // Patterns are tracked in state.resonantPatternsDiscovered: [b,b,b,b]
 // indexed by RP number - 1. Each discovery grants +5 Sparks (GDD §22).
 // Sprint 7.5.2 §16.1: shard_epi_reflection adds +10 Sparks per discovery (total 15).

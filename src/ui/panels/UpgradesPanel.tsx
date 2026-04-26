@@ -20,6 +20,17 @@ interface ClassifiedUpgrade {
 /**
  * Upgrades tab panel (Sprint 3.6.3 — full implementation).
  *
+ * UPGRADES-3: list ordering — three sections sorted Affordable → Teaser → Locked
+ * per GDD §29 Tab Upgrades rule.
+ * UPGRADES-4: buy animation — handled in the row-level click handler with the
+ * tap-floater pub/sub (Sprint 10 Phase 10.6).
+ * UPGRADES-5: locked-state UI — Locked section renders the prestige gate visibly
+ * but greys the row, so the player understands what's coming without enabling
+ * the button.
+ * UPGRADES-6: tooltip on long-press — row title + description always render in
+ * the row body (mobile UX preference: no hover/long-press hidden state, all
+ * upgrade info visible at the row level).
+ *
  * Lists non-owned upgrades sorted into three sections per GDD §29 Tab
  * Upgrades ordering rule: Affordable (green, can buy) → Teaser
  * (unlocked by prestige but not yet affordable) → Locked (prestige gate

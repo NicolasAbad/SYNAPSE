@@ -1,5 +1,8 @@
-// Implements docs/GDD.md §6 (Focus Bar & Insight — TAP-2) + §35 TAP-1.
+// Implements docs/GDD.md §6 (Focus Bar & Insight — TAP-2 + FOCUS-1) + §35 TAP-1.
 // Sprint 3 Phase 4. Pure helper called by the gameStore `onTap` action.
+// FOCUS-1: Focus Bar only fills via taps (NOT during offline, NOT during idle on
+// canvas — unless Meditación Mutation is active). computeFocusFillPerTap below
+// is the entire "fills via taps" surface.
 //
 // TAP-2 formula per §6:
 //   tapThought = Math.max(baseTapThoughtMin, effectiveProductionPerSecond × baseTapThoughtPct)

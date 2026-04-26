@@ -1,5 +1,5 @@
 // Implements GDD.md §9 (prestige + THRES-1), §33 (45/60/4/1 split), §6 (Memorias),
-// §10 (Patterns 4b.2), §22 (RP 6.6), §35 PREST-1/BUG-01/02/04/06/CORE-8/TUTOR-2.
+// §10 (Patterns 4b.2), §22 (RP 6.6), §35 PREST-1/BUG-01/02/04/06/CORE-8/TUTOR-2/RESON-2.
 
 import { SYNAPSE_CONSTANTS } from '../config/constants';
 import { PRESTIGE_RESET } from '../config/prestige';

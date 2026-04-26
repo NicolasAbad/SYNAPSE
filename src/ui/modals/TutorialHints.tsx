@@ -14,6 +14,11 @@ import { t } from '../../config/strings';
  * polarity → patterns_hipocampo. Only one hint renders at a time.
  * Sparks reward (TUTOR-5 +2 per step) is granted at PRESTIGE-completion
  * inside the store's `prestige` action, not at hint dismiss.
+ *
+ * TUTOR-4: tutorial hint dismissal — auto-dismiss on the action that satisfies
+ * the hint (e.g. `focus_discharge` auto-dismisses on first discharge); manual
+ * dismiss is available per hint via the (×) close affordance. Dismissed
+ * hint IDs persist in completedTutorialSteps so they don't re-render.
  */
 
 type HintId =

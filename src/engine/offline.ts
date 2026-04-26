@@ -2,6 +2,9 @@
 // Sprint 7.10 Phase 7.10.2: base formula + efficiency stack + cap + time anomaly.
 // Sprint 7.10 Phase 7.10.3: Mutation temporal averaging (MUT-1), OFFLINE-9
 // Procedural shard drip, Lucid Dream deterministic RNG roll (§30 RNG-1).
+// OFFLINE-3: Focus Bar does NOT fill offline (implemented as ABSENCE — no
+// focusBar mutation here; focus only fills via taps per FOCUS-1 in tap.ts).
+// OFFLINE-8: final ratio cap via Math.min(eff, maxOfflineEfficiencyRatio).
 // Consumer: src/store/gameStore.ts applyOfflineReturn action (Phase 7.10.4).
 
 import { SYNAPSE_CONSTANTS } from '../config/constants';

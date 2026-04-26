@@ -1,6 +1,11 @@
 // Implements docs/GDD.md §16.5 (Área de Broca — Inner Voice Engine) + §39.
 // Sprint 7.5 Phase 7.5.6. VOICE-1, VOICE-2 (skip default), VOICE-2a (fire
-// regardless of Broca region UI unlock).
+// regardless of Broca region UI unlock), VOICE-3 (cadence — moments fire at
+// distinct narrative trigger points only, never two within the same trigger),
+// VOICE-4 (selection — archetype-keyed default phrase table is the source of
+// truth for skip path), VOICE-5 (anti-repetition — hasFiredNamedMoment guards
+// against the same moment firing twice in a session via brocaNamedMoments
+// idempotency).
 //
 // 5 Named Moments fire at narrative trigger points. Engine layer is purely
 // trigger detection + persistence; UI layer prompts the player to author OR

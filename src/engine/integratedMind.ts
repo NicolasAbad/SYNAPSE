@@ -1,5 +1,6 @@
 // Implements docs/GDD.md §16.6 (Amplitud de Banda — Integrated Mind).
-// Sprint 7.5 Phase 7.5.8. INTEGRATED-1..2.
+// Sprint 7.5 Phase 7.5.8. INTEGRATED-1 (+1 charge at 3-region tier) + INTEGRATED-2
+// (+10% Memoria mult at 4-region tier — see integratedMindMemoryMult below).
 //
 // Synergy bonuses unlock when N "actively-engaged" regions cohere this Run:
 //   - 3 active: +1 permanent max Discharge charge

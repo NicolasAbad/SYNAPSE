@@ -1,5 +1,7 @@
 // Implements docs/GDD.md §16.4 (Corteza Visual — Foresight Tiers) — engine.
-// Sprint 7.5 Phase 7.5.5. FORESIGHT-1..4 + visualInsightTier derivation.
+// Sprint 7.5 Phase 7.5.5. FORESIGHT-1, FORESIGHT-2, FORESIGHT-3, FORESIGHT-4 +
+// visualInsightTier derivation. FORESIGHT-4 = T4 Era 3 event preview at Awakening,
+// gated on prestigeCount >= visualT4PrestigeGate OR vis_prophet_sight upgrade.
 //
 // 4 tiers (T1 → T4) unlock via prestigeCount OR an explicit Memoria upgrade:
 //   T1 — P0+ always-on. What-if Preview shows 3-cycle horizon (was 1 pre-7.5.5).

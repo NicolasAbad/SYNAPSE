@@ -101,6 +101,13 @@ export function checkMentalState(
  * (always 1.15 baseline). Sprint 7.5 wires the Mood field; this function works
  * forwards-compatibly without changes when mood appears.
  */
+/**
+ * Per-mental-state production multiplier per GDD §17 + MENTAL-3 (mental-state mult
+ * stacking rule — applied multiplicatively post-softCap, NOT inside the softCap
+ * input. Stacks alongside Mood mult per §16.3 in tick.ts step 8). Identity (×1) when
+ * no mental state is active, or when the active state's effect is non-production
+ * (e.g. Hyperfocus boosts NEXT Insight, not current production).
+ */
 export function mentalStateProductionMult(
   state: Pick<GameState, 'lastTapTimestamps' | 'lastPurchaseTimestamp' | 'insightTimestamps' | 'focusAbove50Since' | 'neurons' | 'currentMentalState' | 'pendingHyperfocusBonus'>,
   now: number,

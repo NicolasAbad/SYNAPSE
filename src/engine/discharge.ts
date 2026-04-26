@@ -10,6 +10,8 @@
 //
 // Non-Cascade Discharge does NOT consume Focus Bar (§7 "Consumes Focus Bar
 // entirely" is under the Cascade section only).
+// FOCUS-3: focusBar resets at every Cascade Discharge (line ~162 sets it via
+// sincronizacionRefund — full 0 if Sincronización Total not owned).
 
 import { SYNAPSE_CONSTANTS } from '../config/constants';
 import { UPGRADES_BY_ID } from '../config/upgrades';

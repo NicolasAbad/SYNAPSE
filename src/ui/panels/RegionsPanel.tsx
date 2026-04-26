@@ -23,6 +23,14 @@ import type { RegionDef } from '../../types';
  * `state.regionsUnlocked: string[]`. Hipocampo's +3 Memorias bonus fires
  * once at first unlock and surfaces via the HUD MemoriesCounter (no
  * separate notification this sprint — Sprint 7 owns celebrations).
+ *
+ * REG-3: region unlock progress UI — locked regions render in grey-state
+ * with the prestige gate visible (player can see what's coming).
+ * REG-4: region tap-to-expand — each region card is interactive; tap reveals
+ * its in-region upgrades + region-specific mini-panel (Hipocampo shards,
+ * Límbico mood, etc.).
+ * REG-7: region brain-diagram canvas — Sprint 7.5.7 brain-canvas redesign
+ * (replaces the original list-of-rows with 5 positioned region nodes).
  */
 export const RegionsPanel = memo(function RegionsPanel() {
   const state = useGameStore();
