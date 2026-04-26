@@ -46,23 +46,25 @@ describe('RNG — property-based invariants (CODE-9 RNG-1, GDD §30)', () => {
     }));
   });
 
-  test('PROP-31: randomInRange respects bounds — min ≤ result ≤ max for any seed', () => {
+  test('PROP-31: randomInRange respects bounds — min ≤ result ≤ max for any seed (integer domain per jsdoc)', () => {
+    // randomInRange is documented as integer-domain ("integer in [min, max] inclusive").
+    // Property is asserted over its declared input contract: integer min/max.
     fc.assert(fc.property(
-      fc.double({ min: -1_000_000, max: 1_000_000, noNaN: true }),
-      fc.double({ min: -1_000_000, max: 1_000_000, noNaN: true }),
+      fc.integer({ min: -1_000_000, max: 1_000_000 }),
+      fc.integer({ min: -1_000_000, max: 1_000_000 }),
       seedArb,
       (a, b, seed) => {
         const [min, max] = a <= b ? [a, b] : [b, a];
         const v = randomInRange(min, max, seed);
-        return v >= min && v <= max;
+        return Number.isInteger(v) && v >= min && v <= max;
       },
     ));
   });
 
   test('PROP-32: randomInRange deterministic — same args → same output', () => {
     fc.assert(fc.property(
-      fc.double({ min: 0, max: 100, noNaN: true }),
-      fc.double({ min: 100, max: 200, noNaN: true }),
+      fc.integer({ min: 0, max: 100 }),
+      fc.integer({ min: 100, max: 200 }),
       seedArb,
       (min, max, seed) => randomInRange(min, max, seed) === randomInRange(min, max, seed),
     ));
