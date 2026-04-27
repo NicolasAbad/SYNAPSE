@@ -20,6 +20,13 @@ export const DischargeButton = memo(function DischargeButton() {
   const activeTab = useGameStore((s) => s.activeTab);
   const activeMindSubtab = useGameStore((s) => s.activeMindSubtab);
   const reducedMotion = useGameStore((s) => s.reducedMotion);
+  // Pre-launch audit C-3 — show "SUPERCHARGED ×3" badge when the next
+  // Discharge will receive the tutorial multiplier (TUTOR-2 +
+  // tutorialDischargeMult=3.0). Mirrors the engine condition in
+  // src/engine/discharge.ts:54: isTutorialCycle && cycleDischargesUsed===0.
+  const isTutorialCycle = useGameStore((s) => s.isTutorialCycle);
+  const cycleDischargesUsed = useGameStore((s) => s.cycleDischargesUsed);
+  const showTutorialSupercharge = isTutorialCycle && cycleDischargesUsed === 0;
   const enabled = charges > 0;
   if (activeTab !== 'mind' || activeMindSubtab !== 'home') return null;
 
@@ -71,6 +78,31 @@ export const DischargeButton = memo(function DischargeButton() {
       >
         {t('buttons.discharge')}
       </button>
+      {showTutorialSupercharge && enabled && (
+        <div
+          data-testid="hud-discharge-tutorial-badge"
+          aria-label={t('buttons.discharge_tutorial_supercharge')}
+          style={{
+            position: 'absolute',
+            bottom: 'calc(100% + var(--spacing-1))', // CONST-OK CSS positioning idiom
+            left: '50%', // CONST-OK CSS centering idiom
+            transform: 'translateX(-50%)', // CONST-OK CSS centering idiom
+            padding: 'var(--spacing-1) var(--spacing-2)', // CONST-OK CSS spacing tokens
+            background: 'var(--color-discharge-btn)',
+            color: 'var(--color-bg-deep)',
+            fontFamily: 'var(--font-display)',
+            fontSize: 'var(--text-xs)',
+            fontWeight: 'var(--font-weight-bold)',
+            letterSpacing: '0.04em', // CONST-OK CSS typography idiom
+            borderRadius: 'var(--radius-sm)',
+            whiteSpace: 'nowrap',
+            pointerEvents: 'none',
+            userSelect: 'none',
+          }}
+        >
+          {t('buttons.discharge_tutorial_supercharge')}
+        </div>
+      )}
     </div>
   );
 });

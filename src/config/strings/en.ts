@@ -60,6 +60,8 @@ export const en = {
   buttons: {
     discharge: 'DISCHARGE ⚡',
     discharge_locked_tooltip: 'Unlocks in next update',
+    // Pre-launch audit C-3 — tutorial ×3 supercharged badge.
+    discharge_tutorial_supercharge: 'SUPERCHARGED ×3',
   },
   app: {
     name: 'SYNAPSE',
