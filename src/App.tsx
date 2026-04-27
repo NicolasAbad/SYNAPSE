@@ -178,6 +178,13 @@ export function App() {
     const checkDaily = (): void => {
       const nowDate = toLocalDateString(Date.now());
       const state = useGameStore.getState();
+      // Pre-launch audit B-2: don't fire DailyLoginModal during the tutorial
+      // cycle. Cold-start newcomers should hit the "Tap the neuron" hint
+      // immediately — a Day-1 reward popup at this moment costs ~2-3s of
+      // momentum and confuses players who don't yet know what Sparks are.
+      // Daily login resumes from the next visibilitychange after the player
+      // exits the tutorial (first prestige flips isTutorialCycle false).
+      if (state.isTutorialCycle) return;
       const outcome = evaluateDailyLogin(state, nowDate);
       if (outcome.kind === 'no_action') return;
       // Subscriber auto-save: resolve silently before showing the reward card.
