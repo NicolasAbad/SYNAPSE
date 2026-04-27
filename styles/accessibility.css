@@ -153,3 +153,20 @@
   animation: synapse-unlock-pulse 1400ms ease-in-out infinite;
 }
 
+/* Pre-launch audit Dim M Phase 2 (M-7) — tutorial-target callout. Applied
+ * by interactive elements whose useIsTutorialTarget() returns true (the
+ * active tutorial hint points at this button). Subtle primary-violet ring
+ * + outward glow pulse so the player can quickly find the right surface
+ * after reading the hint pill. ReducedMotion: .a11y-no-motion override
+ * forces 0s animation duration; the static ring still renders. */
+@keyframes synapse-tutorial-callout {
+  0%   { box-shadow: 0 0 0 2px var(--color-primary), 0 0 4px  var(--color-primary); }
+  50%  { box-shadow: 0 0 0 3px var(--color-primary), 0 0 16px var(--color-primary); }
+  100% { box-shadow: 0 0 0 2px var(--color-primary), 0 0 4px  var(--color-primary); }
+}
+.synapse-tutorial-callout {
+  animation: synapse-tutorial-callout 1500ms ease-in-out infinite;
+  z-index: 10; /* CONST-OK: lift above sibling chrome so the ring isn't clipped */
+  position: relative;
+}
+

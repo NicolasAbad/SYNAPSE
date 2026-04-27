@@ -4,6 +4,7 @@ import { useGameStore } from '../../store/gameStore';
 import { NEURON_CONFIG, neuronCost } from '../../config/neurons';
 import { MOTION } from '../tokens';
 import { t } from '../../config/strings';
+import { setActiveTutorialTarget } from './tutorialTargetState';
 
 /**
  * Tutorial hint stack per SPRINTS.md §Sprint 3 + PROGRESS.md Decision B +
@@ -24,6 +25,19 @@ import { t } from '../../config/strings';
 type HintId =
   | 'tap' | 'buy' | 'discharge' | 'variety'
   | 'upgrades_tab' | 'focus_discharge' | 'polarity' | 'patterns_hipocampo';
+
+// M-7 hint→target mapping. `null` for tap (canvas self-pulses) and polarity
+// (CycleSetupScreen wiring deferred). Consumed via useIsTutorialTarget.
+const HINT_TARGET: Record<HintId, string | null> = {
+  tap: null,
+  buy: 'neuron-buy-basica',
+  discharge: 'discharge-button',
+  variety: 'neuron-buy-sensorial',
+  upgrades_tab: 'tab-upgrades',
+  focus_discharge: 'discharge-button',
+  polarity: null,
+  patterns_hipocampo: 'tab-mind',
+};
 
 const TEXT_KEY: Record<HintId, string> = {
   tap: 'tutorial.hint_tap',
@@ -104,8 +118,10 @@ export const TutorialHints = memo(function TutorialHints() {
     return () => document.removeEventListener('pointerdown', onTap);
   }, [firstTapDone]);
 
-  if (activeTab !== 'mind' || activeMindSubtab !== 'home') return null;
-
+  // Compute `active` BEFORE the tab/subtab early-return so the M-7 effect
+  // below can publish/clear the target glow even when the hint pill itself
+  // is hidden by tab navigation. The render-time early return remains
+  // (hints render only on Mind/home), but the glow shouldn't strand.
   let active: HintId | null = null;
   if (isTutorialCycle) {
     // First-cycle tutorial hints (fire only during isTutorialCycle).
@@ -144,7 +160,16 @@ export const TutorialHints = memo(function TutorialHints() {
     active = 'buy';
   }
 
-  if (active === null) return null;
+  // M-7: publish the active target for downstream button glow. Clears when
+  // the hint pill is hidden by tab nav OR when no hint is active.
+  const hintVisible = activeTab === 'mind' && activeMindSubtab === 'home';
+  const publishedTarget = hintVisible && active !== null ? HINT_TARGET[active] : null;
+  useEffect(() => {
+    setActiveTutorialTarget(publishedTarget);
+    return () => setActiveTutorialTarget(null);
+  }, [publishedTarget]);
+
+  if (!hintVisible || active === null) return null;
 
   return (
     <div

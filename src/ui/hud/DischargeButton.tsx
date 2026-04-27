@@ -3,6 +3,7 @@ import { t } from '../../config/strings';
 import { HUD } from '../tokens';
 import { useGameStore } from '../../store/gameStore';
 import { hapticHeavy, hapticMedium } from '../haptics';
+import { useIsTutorialTarget } from '../modals/tutorialTargetState';
 
 /**
  * Center-bottom Discharge button (GDD §7). Sprint 3 Phase 6: full wiring.
@@ -28,6 +29,8 @@ export const DischargeButton = memo(function DischargeButton() {
   const cycleDischargesUsed = useGameStore((s) => s.cycleDischargesUsed);
   const showTutorialSupercharge = isTutorialCycle && cycleDischargesUsed === 0;
   const enabled = charges > 0;
+  // M-7: glow when the active tutorial hint targets the discharge button.
+  const isTutorialCallout = useIsTutorialTarget('discharge-button');
   if (activeTab !== 'mind' || activeMindSubtab !== 'home') return null;
 
   const onTap = () => {
@@ -56,7 +59,13 @@ export const DischargeButton = memo(function DischargeButton() {
         onPointerDown={onTap}
         aria-label={enabled ? 'Discharge — fire neural burst' : 'Discharge unavailable — wait for charges'}
         // Sprint 10 Phase 10.6 — pulse when ready, off when reducedMotion or disabled.
-        className={enabled && !reducedMotion ? 'discharge-pulse' : undefined}
+        // M-7 (audit Dim M Phase 2): tutorial-callout class layered on top —
+        // adds a primary-violet ring + pulse when the active hint targets this
+        // button. Both classes can co-exist (different animation properties).
+        className={[
+          enabled && !reducedMotion ? 'discharge-pulse' : null,
+          isTutorialCallout ? 'synapse-tutorial-callout' : null,
+        ].filter(Boolean).join(' ') || undefined}
         style={{
           minWidth: HUD.dischargeButtonMinWidth,
           minHeight: HUD.touchTargetMin,

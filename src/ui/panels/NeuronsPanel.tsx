@@ -5,6 +5,7 @@ import { isNeuronUnlocked, neuronBuyCost } from '../../store/purchases';
 import { formatCurrency, formatNumber } from '../util/formatNumber';
 import { t } from '../../config/strings';
 import { visibleNeuronTypesAt } from './neuronVisibility';
+import { useIsTutorialTarget } from '../modals/tutorialTargetState';
 import type { NeuronType } from '../../types';
 
 type BuyMode = 'x1' | 'x10' | 'max';
@@ -175,6 +176,9 @@ function NeuronRow({ type, count, thoughts, prestigeCount, neurons, onBuy }: Neu
   const cost = neuronBuyCost(type, count);
   const affordable = unlocked && thoughts >= cost;
   const rate = NEURON_CONFIG[type].baseRate * count;
+  // M-7: hint-callout glow on the basica/sensorial buy buttons. Mapped IDs
+  // come from HINT_TARGET in TutorialHints.tsx.
+  const isTutorialCallout = useIsTutorialTarget(`neuron-buy-${type}`);
 
   const affordability: 'locked' | 'afford' | 'cant' = unlocked ? (affordable ? 'afford' : 'cant') : 'locked';
 
@@ -215,6 +219,7 @@ function NeuronRow({ type, count, thoughts, prestigeCount, neurons, onBuy }: Neu
           data-testid={`panel-neurons-buy-${type}`}
           disabled={!affordable}
           onPointerDown={affordable ? onBuy : undefined}
+          className={isTutorialCallout ? 'synapse-tutorial-callout' : undefined}
           style={{
             padding: 'var(--spacing-2) var(--spacing-3)', // CONST-OK: CSS token ref
             background: affordable ? 'var(--color-primary)' : 'transparent',

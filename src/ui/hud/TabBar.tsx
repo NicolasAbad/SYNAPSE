@@ -6,6 +6,7 @@ import { visibleTabsAt } from './tabVisibility';
 import {
   isTabUnlockUnacknowledged, mindTabHasUnacknowledgedSubtab, unlockKeyForTab,
 } from './unlockNotifications';
+import { useIsTutorialTarget } from '../modals/tutorialTargetState';
 
 /**
  * Bottom 4-tab navigation. Mockup Screen 1: rect x=0 y=570 w=390 h=130
@@ -53,6 +54,12 @@ export const TabBar = memo(function TabBar() {
   // every render that matters.
   const badgeState = { prestigeCount, tabBadgesDismissed };
 
+  // M-7: tutorial target glow — TabBar can be the target of upgrades_tab
+  // and patterns_hipocampo hints. Mapping IDs come from HINT_TARGET in
+  // TutorialHints.tsx ('tab-upgrades', 'tab-mind').
+  const upgradesIsCallout = useIsTutorialTarget('tab-upgrades');
+  const mindIsCallout = useIsTutorialTarget('tab-mind');
+
   const onTabTap = (tab: typeof visibleTabs[number]) => {
     setActiveTab(tab);
     // Tapping the tab acknowledges its unlock badge. Mind tab acknowledges
@@ -86,6 +93,9 @@ export const TabBar = memo(function TabBar() {
         const showBadge =
           isTabUnlockUnacknowledged(badgeState, tab) ||
           (tab === 'mind' && mindTabHasUnacknowledgedSubtab(badgeState));
+        const isCallout =
+          (tab === 'upgrades' && upgradesIsCallout) ||
+          (tab === 'mind' && mindIsCallout);
         return (
           <button
             key={tab}
@@ -93,6 +103,7 @@ export const TabBar = memo(function TabBar() {
             data-testid={`hud-tab-${tab}`}
             data-active={isActive}
             data-unlock-badge={showBadge ? 'true' : 'false'}
+            className={isCallout ? 'synapse-tutorial-callout' : undefined}
             onPointerDown={() => onTabTap(tab)}
             style={{
               flex: 1,
