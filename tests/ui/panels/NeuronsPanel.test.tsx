@@ -21,8 +21,29 @@ afterEach(() => {
   useGameStore.getState().reset();
 });
 
-describe('NeuronsPanel — rendering', () => {
-  test('renders all 5 rows', () => {
+describe('NeuronsPanel — rendering (Dimension M chained reveal)', () => {
+  // Pre-launch audit Dimension M (M-2): NeuronsPanel ships chained reveal.
+  // Renders every unlocked tier + the FIRST locked tier as a teaser. P0
+  // cold-start = basica + sensorial (teaser); after each unlock, the next
+  // tier appears. Far-future tiers stay hidden.
+
+  test('P0 default: renders 2 rows (basica unlocked + sensorial teaser)', () => {
+    const { queryByTestId } = render(<NeuronsPanel />);
+    expect(queryByTestId('panel-neurons-row-basica')).not.toBeNull();
+    expect(queryByTestId('panel-neurons-row-sensorial')).not.toBeNull();
+    expect(queryByTestId('panel-neurons-row-piramidal')).toBeNull();
+    expect(queryByTestId('panel-neurons-row-espejo')).toBeNull();
+    expect(queryByTestId('panel-neurons-row-integradora')).toBeNull();
+  });
+
+  test('all 5 rows render once every tier is unlocked (P10 + chain owned)', () => {
+    act(() => {
+      setNeuronCount('basica', 10);
+      setNeuronCount('sensorial', 5);
+      setNeuronCount('piramidal', 5);
+      setNeuronCount('espejo', 1);
+      useGameStore.setState({ prestigeCount: 10 });
+    });
     const { queryByTestId } = render(<NeuronsPanel />);
     for (const type of ['basica', 'sensorial', 'piramidal', 'espejo', 'integradora'] as NeuronType[]) {
       expect(queryByTestId(`panel-neurons-row-${type}`)).not.toBeNull();
@@ -34,7 +55,7 @@ describe('NeuronsPanel — rendering', () => {
     expect(getByTestId('panel-neurons-row-basica').getAttribute('data-affordability')).not.toBe('locked');
   });
 
-  test('sensorial row is locked until basica >= 10', () => {
+  test('sensorial row is locked until basica >= 10 (and stays visible as teaser)', () => {
     const { getByTestId } = render(<NeuronsPanel />);
     expect(getByTestId('panel-neurons-row-sensorial').getAttribute('data-affordability')).toBe('locked');
     act(() => {
@@ -43,16 +64,24 @@ describe('NeuronsPanel — rendering', () => {
     expect(getByTestId('panel-neurons-row-sensorial').getAttribute('data-affordability')).not.toBe('locked');
   });
 
-  test('integradora row is locked until P10', () => {
-    const { getByTestId } = render(<NeuronsPanel />);
-    expect(getByTestId('panel-neurons-row-integradora').getAttribute('data-affordability')).toBe('locked');
+  test('integradora row is hidden at P0 (chained reveal — only revealed after Espejo chain)', () => {
+    const { queryByTestId } = render(<NeuronsPanel />);
+    expect(queryByTestId('panel-neurons-row-integradora')).toBeNull();
+  });
+
+  test('integradora row appears once Espejo (its predecessor) unlocks AND P10 reached', () => {
     act(() => {
+      setNeuronCount('basica', 10);
+      setNeuronCount('sensorial', 5);
+      setNeuronCount('piramidal', 5);
+      setNeuronCount('espejo', 1);
       useGameStore.setState({ prestigeCount: 10 });
     });
+    const { getByTestId } = render(<NeuronsPanel />);
     expect(getByTestId('panel-neurons-row-integradora').getAttribute('data-affordability')).not.toBe('locked');
   });
 
-  test('locked rows render ??? instead of name and show unlock requirement', () => {
+  test('locked teaser row renders ??? instead of name and shows unlock requirement', () => {
     const { getByTestId } = render(<NeuronsPanel />);
     const sensorialRow = getByTestId('panel-neurons-row-sensorial');
     expect(sensorialRow.textContent).toContain('???');

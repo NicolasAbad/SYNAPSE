@@ -1,9 +1,10 @@
 import { memo, useState } from 'react';
 import { useGameStore } from '../../store/gameStore';
-import { NEURON_CONFIG, NEURON_TYPES } from '../../config/neurons';
+import { NEURON_CONFIG } from '../../config/neurons';
 import { isNeuronUnlocked, neuronBuyCost } from '../../store/purchases';
 import { formatCurrency, formatNumber } from '../util/formatNumber';
 import { t } from '../../config/strings';
+import { visibleNeuronTypesAt } from './neuronVisibility';
 import type { NeuronType } from '../../types';
 
 type BuyMode = 'x1' | 'x10' | 'max';
@@ -84,7 +85,7 @@ export const NeuronsPanel = memo(function NeuronsPanel() {
           gap: 'var(--spacing-2)', // CONST-OK: CSS token ref
         }}
       >
-        {NEURON_TYPES.map((type) => (
+        {visibleNeuronTypesAt(neurons, prestigeCount).map((type) => (
           <NeuronRow
             key={type}
             type={type}
