@@ -98,3 +98,4 @@ sim/results/
 
 # Auto-generated Tailwind theme (from tokens.ts)
 styles/_theme.generated.css
+device-screenshot.png
