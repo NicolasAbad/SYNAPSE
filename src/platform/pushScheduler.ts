@@ -22,6 +22,12 @@ export interface PushScheduler {
   scheduleDailyReminder: () => Promise<void>;
   scheduleOfflineCapReached: (capReachedAtMs: number) => Promise<void>;
   scheduleStreakAboutToBreak: (fireAtMs: number) => Promise<void>;
+  /** Pre-launch audit Tier-2 item D — fire a "Starter Pack expires soon"
+   * push at the supplied wall-clock time (typically expiresAt - 24h). */
+  scheduleStarterPackExpiringSoon: (fireAtMs: number) => Promise<void>;
+  /** Cancel a previously-scheduled Starter Pack reminder (player bought
+   * the pack OR offer expired). */
+  cancelStarterPackExpiringSoon: () => Promise<void>;
   cancelAll: () => Promise<void>;
 }
 
@@ -33,6 +39,8 @@ export function createPushScheduler(): PushScheduler {
       scheduleDailyReminder: async () => {},
       scheduleOfflineCapReached: async () => {},
       scheduleStreakAboutToBreak: async () => {},
+      scheduleStarterPackExpiringSoon: async () => {},
+      cancelStarterPackExpiringSoon: async () => {},
       cancelAll: async () => {},
     };
   }
@@ -113,6 +121,41 @@ export function createPushScheduler(): PushScheduler {
       }
     },
 
+    scheduleStarterPackExpiringSoon: async (fireAtMs) => {
+      try {
+        const { LocalNotifications } = await importPlugin();
+        // Cancel-then-schedule pattern (mirrors the other one-shot pushes) so
+        // a re-schedule with a different timestamp doesn't leave a stale entry.
+        await LocalNotifications.cancel({
+          notifications: [{ id: SYNAPSE_CONSTANTS.notificationIdStarterPackExpiringSoon }],
+        });
+        // No-op if the requested fire time is already in the past — Capacitor
+        // would error or fire instantly otherwise.
+        if (fireAtMs <= Date.now()) return;
+        await LocalNotifications.schedule({
+          notifications: [{
+            id: SYNAPSE_CONSTANTS.notificationIdStarterPackExpiringSoon,
+            title: 'Synapse — Starter Pack',
+            body: 'Your Starter Pack offer expires in 24 hours.', // CONST-OK push body literal
+            schedule: { at: new Date(fireAtMs) },
+          }],
+        });
+      } catch (e) {
+        console.error('[pushScheduler] scheduleStarterPackExpiringSoon failed:', e);
+      }
+    },
+
+    cancelStarterPackExpiringSoon: async () => {
+      try {
+        const { LocalNotifications } = await importPlugin();
+        await LocalNotifications.cancel({
+          notifications: [{ id: SYNAPSE_CONSTANTS.notificationIdStarterPackExpiringSoon }],
+        });
+      } catch (e) {
+        console.error('[pushScheduler] cancelStarterPackExpiringSoon failed:', e);
+      }
+    },
+
     cancelAll: async () => {
       try {
         const { LocalNotifications } = await importPlugin();
@@ -121,6 +164,7 @@ export function createPushScheduler(): PushScheduler {
             { id: SYNAPSE_CONSTANTS.notificationIdDailyReminder },
             { id: SYNAPSE_CONSTANTS.notificationIdOfflineCapReached },
             { id: SYNAPSE_CONSTANTS.notificationIdStreakAboutToBreak },
+            { id: SYNAPSE_CONSTANTS.notificationIdStarterPackExpiringSoon },
           ],
         });
       } catch (e) {

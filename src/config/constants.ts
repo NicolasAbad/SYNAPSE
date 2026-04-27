@@ -71,6 +71,10 @@ export const SYNAPSE_CONSTANTS = {
   notificationIdDailyReminder: 1001,
   notificationIdOfflineCapReached: 1002,
   notificationIdStreakAboutToBreak: 1003,
+  // Pre-launch audit Tier-2 item D — Starter Pack expiry reminder (T-24h push).
+  notificationIdStarterPackExpiringSoon: 1004,
+  /** Minutes before `starterPackExpiresAt` to fire the "expiring soon" push (24h). */
+  starterPackExpiryReminderMinutesBefore: 1440,
 
   // ── Tutorial ──
   tutorialThreshold: 25_000, // P0 of first Run ONLY when isTutorialCycle=true (TUTOR-2 §9). Overrides baseThresholdTable[0]. TUTOR-1 target: 7-9 min. Retuned 50K→25K in Sprint 3 Phase 7.4b per tutorial-timing simulator (50K projected ~14.7 min at 5 taps/sec; 25K projects 7-8 min with same inputs). GDD §31 + §9 currently disagree — PROGRESS.md is the source of truth until Nico updates the GDD.

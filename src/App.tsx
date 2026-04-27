@@ -15,6 +15,7 @@ import { Era3EventModal } from './ui/modals/Era3EventModal';
 import { SleepScreen } from './ui/modals/SleepScreen';
 import { SettingsModal } from './ui/modals/SettingsModal';
 import { CosmeticsStoreModal } from './ui/modals/CosmeticsStoreModal';
+import { PushSoftPromptModal } from './ui/modals/PushSoftPromptModal';
 import { EchoLayer } from './ui/canvas/EchoLayer';
 import { TapFloaterLayer } from './ui/canvas/TapFloaterLayer';
 import { SaveSyncIndicator } from './ui/hud/SaveSyncIndicator';
@@ -240,6 +241,7 @@ export function App() {
           open={cosmeticsOpen}
           onClose={() => setCosmeticsOpen(false)}
         />
+        <PushSoftPromptModal />
         {!splashDone && <SplashScreen onComplete={() => setSplashDone(true)} />}
         {splashDone && isEU && !gdprDone && <GdprModal onComplete={() => setGdprDone(true)} />}
         {dailyLoginState !== null && (

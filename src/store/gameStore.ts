@@ -301,6 +301,9 @@ export interface UIState {
    * AchievementToast component (dismissAchievementToast action). UI-local.
    */
   achievementToast: { achievementId: string; expiresAt: number } | null;
+  // Pre-launch audit Tier-2 item D — UI ephemeral. Non-null = the soft-prompt
+  // modal should render with the corresponding gate context.
+  pendingPushSoftPrompt: 1 | 3 | null; // CONST-OK type union (gates 1/3 mirror notificationPermissionAskAtP1/P3)
   /**
    * Pre-launch audit Day 1: surface for save-write failures. Set by
    * saveScheduler.trySave when Capacitor.Preferences.set() throws (quota
@@ -356,6 +359,11 @@ export interface GameStoreActions {
   acknowledgeUnlock: (key: string) => void;
   // Pre-launch audit Tier-2 item C — toggle the tutorial-hints-skipped sentinel.
   setTutorialHintsSkipped: (skipped: boolean) => void;
+  // Pre-launch audit Tier-2 item D — push permission soft-prompt UI state.
+  // Set by usePushRuntime when a gate would otherwise ask the native OS prompt.
+  // Cleared by PushSoftPromptModal on either button tap. UI-only (stripped
+  // before persistence by saveScheduler — parallels undoToast / antiSpamActive).
+  setPendingPushSoftPrompt: (gate: 1 | 3 | null) => void; // CONST-OK type union (mirrors PushGate)
   /** Sprint 2 Phase 6: GDPR analytics opt-in. Writes GameState.analyticsConsent. */
   setAnalyticsConsent: (consent: boolean) => void;
   /** Pre-launch audit Day 1: surface a save-write failure to the UI banner. */
@@ -706,6 +714,7 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
   achievementToast: null,
   lastSaveError: null,
   networkError: null,
+  pendingPushSoftPrompt: null,
   initSessionTimestamps: (nowTimestamp) => {
     const before = get();
     set((state) => {
@@ -769,11 +778,12 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
     // `antiSpamActive` are all transient per session; actions are dropped by
     // JSON.stringify naturally. Keeps the persisted payload at exactly
     // 119 GameState fields per §32 invariant.
-    const { activeTab: _a, activeMindSubtab: _m, undoToast: _u, antiSpamActive: _s, achievementToast: _at, lastSaveError: _le, networkError: _ne, ...rest } = get();
+    const { activeTab: _a, activeMindSubtab: _m, undoToast: _u, antiSpamActive: _s, achievementToast: _at, lastSaveError: _le, networkError: _ne, pendingPushSoftPrompt: _pp, ...rest } = get();
     void _a;
     void _m;
     void _u;
     void _s;
+    void _pp;
     void _at;
     void _le;
     void _ne;
@@ -814,6 +824,7 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
   // the existing tabBadgesDismissed slot via a namespaced key. PRESERVE on
   // prestige + Transcendence per slot semantics — once a player toggles
   // skip on, it sticks across runs (matches the audit recommendation).
+  setPendingPushSoftPrompt: (gate) => set({ pendingPushSoftPrompt: gate }),
   setTutorialHintsSkipped: (skipped) => set((state) => {
     const key = TUTORIAL_HINTS_SKIPPED_KEY;
     const present = state.tabBadgesDismissed.includes(key);
@@ -851,6 +862,7 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
       undoToast: null,
       antiSpamActive: false,
       achievementToast: null,
+      pendingPushSoftPrompt: null,
       lastSaveError: null,
       networkError: null,
     }));

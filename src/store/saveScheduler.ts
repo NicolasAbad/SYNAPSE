@@ -46,7 +46,7 @@ export async function trySave(): Promise<void> {
   saveInFlight = true;
   notifySaveStatus(true);
   try {
-    const { activeTab: _a, activeMindSubtab: _m, undoToast: _u, antiSpamActive: _s, achievementToast: _at, lastSaveError: _le, networkError: _ne, ...rest } = useGameStore.getState();
+    const { activeTab: _a, activeMindSubtab: _m, undoToast: _u, antiSpamActive: _s, achievementToast: _at, lastSaveError: _le, networkError: _ne, pendingPushSoftPrompt: _pp, ...rest } = useGameStore.getState();
     void _a;
     void _m;
     void _u;
@@ -54,6 +54,7 @@ export async function trySave(): Promise<void> {
     void _at;
     void _le;
     void _ne;
+    void _pp;
     await saveGame(rest as GameState);
     // Pre-launch audit Day 1 — successful save clears any prior error.
     if (useGameStore.getState().lastSaveError !== null) {

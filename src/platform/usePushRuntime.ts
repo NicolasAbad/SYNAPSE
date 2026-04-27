@@ -30,6 +30,16 @@ export function usePushRuntime(): void {
   const dailyLoginStreak = useGameStore((s) => s.dailyLoginStreak);
   const currentOfflineCapHours = useGameStore((s) => s.currentOfflineCapHours);
   const recordAsked = useGameStore((s) => s.recordNotificationPermissionAsked);
+  // Pre-launch audit Tier-2 item D — push soft-prompt setter. Replaces the
+  // direct native-OS-prompt call at gate 1/3 with a soft modal first.
+  void recordAsked; // referenced inside soft-prompt modal; kept here so the
+                    // import doesn't drift if an effect needs it later.
+  const setPendingPushSoftPrompt = useGameStore((s) => s.setPendingPushSoftPrompt);
+  // Starter Pack expiry inputs. The reminder
+  // schedules on first appearance and cancels on purchase OR dismissal.
+  const starterPackExpiresAt = useGameStore((s) => s.starterPackExpiresAt);
+  const starterPackPurchased = useGameStore((s) => s.starterPackPurchased);
+  const starterPackDismissed = useGameStore((s) => s.starterPackDismissed);
 
   const permissionGranted = useRef(false);
 
@@ -47,20 +57,39 @@ export function usePushRuntime(): void {
   }, [notificationsEnabled]);
 
   // Permission ask cadence: gate 1 after first prestige, gate 3 after third.
+  // Pre-launch audit Tier-2 item D — instead of asking the OS directly,
+  // surface a soft-prompt modal that explains WHY notifications matter.
+  // PushSoftPromptModal owns the Allow / Maybe-Later flow + the actual
+  // ensurePermission call. Maybe-Later still records the gate as asked so
+  // the soft prompt doesn't keep firing on every prestige.
   useEffect(() => {
     if (!notificationsEnabled) return;
-    const askGate = async (gate: 1 | 3): Promise<void> => {
-      const ok = await scheduler.ensurePermission();
-      permissionGranted.current = ok;
-      recordAsked(gate);
-      if (ok) await scheduler.scheduleDailyReminder();
-    };
     if (prestigeCount >= 1 && notificationPermissionAsked < SYNAPSE_CONSTANTS.notificationPermissionAskAtP1) {
-      void askGate(1);
+      setPendingPushSoftPrompt(1);
     } else if (prestigeCount >= 3 && notificationPermissionAsked < SYNAPSE_CONSTANTS.notificationPermissionAskAtP3) {
-      void askGate(3);
+      setPendingPushSoftPrompt(3);
     }
-  }, [prestigeCount, notificationPermissionAsked, notificationsEnabled, recordAsked]);
+  }, [prestigeCount, notificationPermissionAsked, notificationsEnabled, setPendingPushSoftPrompt]);
+
+  // Pre-launch audit Tier-2 item D — Starter Pack expiry reminder.
+  // Schedules a one-shot push at expiresAt minus the configured offset.
+  // Cancels when the player buys OR dismisses the offer (both stop the
+  // value of the reminder). Permission gating is delegated to the scheduler
+  // itself — Capacitor LocalNotifications no-ops without permission, and the
+  // adapter inert-paths for web/test, so a redundant permission check here
+  // would only block the real-mobile path before permissionGranted resolves.
+  useEffect(() => {
+    if (!notificationsEnabled) return;
+    if (starterPackExpiresAt === 0) return;
+    if (starterPackPurchased || starterPackDismissed) {
+      void scheduler.cancelStarterPackExpiringSoon();
+      return;
+    }
+    const fireAt = starterPackExpiresAt
+      - SYNAPSE_CONSTANTS.starterPackExpiryReminderMinutesBefore * 60 * 1000; // CONST-OK min→ms conversion
+    if (fireAt <= Date.now()) return;
+    void scheduler.scheduleStarterPackExpiringSoon(fireAt);
+  }, [notificationsEnabled, starterPackExpiresAt, starterPackPurchased, starterPackDismissed]);
 
   // visibilitychange→hidden: schedule the two one-shot pushes.
   useEffect(() => {

@@ -10,6 +10,8 @@ const ensurePermission = vi.fn(async () => true);
 const scheduleDailyReminder = vi.fn(async () => {});
 const scheduleOfflineCapReached = vi.fn(async () => {});
 const scheduleStreakAboutToBreak = vi.fn(async () => {});
+const scheduleStarterPackExpiringSoon = vi.fn(async () => {});
+const cancelStarterPackExpiringSoon = vi.fn(async () => {});
 const cancelAll = vi.fn(async () => {});
 
 vi.mock('../../src/platform/pushScheduler', () => ({
@@ -18,6 +20,8 @@ vi.mock('../../src/platform/pushScheduler', () => ({
     scheduleDailyReminder,
     scheduleOfflineCapReached,
     scheduleStreakAboutToBreak,
+    scheduleStarterPackExpiringSoon,
+    cancelStarterPackExpiringSoon,
     cancelAll,
   }),
 }));
@@ -33,7 +37,11 @@ afterEach(() => {
 // Render a tiny harness so we can drive the hook with the real Zustand store.
 async function mountHookWith(stateOverrides: Partial<import('../../src/types/GameState').GameState> = {}): Promise<void> {
   const { useGameStore, createDefaultState } = await import('../../src/store/gameStore');
-  useGameStore.setState({ ...createDefaultState(), ...stateOverrides });
+  // Reset UI ephemeral state alongside the GameState defaults — these fields
+  // live on the store but are not part of GameState (and so not reset by
+  // createDefaultState alone). Without this, soft-prompt state leaks across
+  // tests via the singleton store.
+  useGameStore.setState({ ...createDefaultState(), pendingPushSoftPrompt: null, ...stateOverrides });
   const { usePushRuntime } = await import('../../src/platform/usePushRuntime');
   function Harness(): null { usePushRuntime(); return null; }
   render(<Harness />);
@@ -57,48 +65,47 @@ describe('usePushRuntime — notificationsEnabled toggle', () => {
   });
 });
 
-describe('usePushRuntime — permission ask cadence', () => {
-  test('prestige 1+ with notificationPermissionAsked=0 → asks gate 1 + records', async () => {
+describe('usePushRuntime — soft-prompt gate cadence (audit Tier-2 D)', () => {
+  test('prestige 1+ with notificationPermissionAsked=0 → opens soft-prompt for gate 1', async () => {
     await mountHookWith({
       notificationsEnabled: true,
       prestigeCount: 1,
       notificationPermissionAsked: 0,
     });
-    // ensurePermission called for both the toggle effect AND the gate-1 effect.
-    expect(ensurePermission.mock.calls.length).toBeGreaterThanOrEqual(1);
     const { useGameStore } = await import('../../src/store/gameStore');
-    expect(useGameStore.getState().notificationPermissionAsked).toBeGreaterThanOrEqual(1);
+    expect(useGameStore.getState().pendingPushSoftPrompt).toBe(1);
+    // notificationPermissionAsked is NOT advanced here — the modal does that.
+    expect(useGameStore.getState().notificationPermissionAsked).toBe(0);
   });
 
-  test('prestige 3+ with notificationPermissionAsked=1 → asks gate 3', async () => {
+  test('prestige 3+ with notificationPermissionAsked=1 → opens soft-prompt for gate 3', async () => {
     await mountHookWith({
       notificationsEnabled: true,
       prestigeCount: 3,
       notificationPermissionAsked: 1,
     });
     const { useGameStore } = await import('../../src/store/gameStore');
-    expect(useGameStore.getState().notificationPermissionAsked).toBe(3);
+    expect(useGameStore.getState().pendingPushSoftPrompt).toBe(3);
   });
 
-  test('prestige 0 → does NOT trigger a permission ask via gate', async () => {
+  test('prestige 0 → soft-prompt stays null', async () => {
     await mountHookWith({
       notificationsEnabled: true,
       prestigeCount: 0,
       notificationPermissionAsked: 0,
     });
     const { useGameStore } = await import('../../src/store/gameStore');
-    // gate-1 ask requires prestigeCount >= 1; only the toggle-effect ensurePermission fired.
-    expect(useGameStore.getState().notificationPermissionAsked).toBe(0);
+    expect(useGameStore.getState().pendingPushSoftPrompt).toBeNull();
   });
 
-  test('notificationsEnabled=false suppresses gate asks even at high prestige', async () => {
+  test('notificationsEnabled=false suppresses soft-prompt at any prestige', async () => {
     await mountHookWith({
       notificationsEnabled: false,
       prestigeCount: 5,
       notificationPermissionAsked: 0,
     });
     const { useGameStore } = await import('../../src/store/gameStore');
-    expect(useGameStore.getState().notificationPermissionAsked).toBe(0);
+    expect(useGameStore.getState().pendingPushSoftPrompt).toBeNull();
   });
 });
 
@@ -133,5 +140,65 @@ describe('usePushRuntime — visibilitychange→hidden scheduling', () => {
     await act(async () => { await Promise.resolve(); });
     expect(scheduleOfflineCapReached).not.toHaveBeenCalled();
     expect(scheduleStreakAboutToBreak).not.toHaveBeenCalled();
+  });
+});
+
+describe('usePushRuntime — Starter Pack expiry reminder (audit Tier-2 D)', () => {
+  test('schedules at expiresAt minus 24h when offer is live + permission granted', async () => {
+    const expiresAt = Date.now() + 48 * 60 * 60 * 1000; // 48h ahead
+    await mountHookWith({
+      notificationsEnabled: true,
+      starterPackExpiresAt: expiresAt,
+      starterPackPurchased: false,
+      starterPackDismissed: false,
+    });
+    expect(scheduleStarterPackExpiringSoon).toHaveBeenCalled();
+    const firstCall = scheduleStarterPackExpiringSoon.mock.calls[0] as unknown as [number] | undefined;
+    expect(firstCall).toBeDefined();
+    const fireAt = firstCall?.[0] ?? 0;
+    // Within ±1s of expiresAt - 24h.
+    const expected = expiresAt - 24 * 60 * 60 * 1000;
+    expect(Math.abs(fireAt - expected)).toBeLessThan(1000);
+  });
+
+  test('does NOT schedule when starterPackExpiresAt === 0 (no offer active)', async () => {
+    await mountHookWith({ notificationsEnabled: true, starterPackExpiresAt: 0 });
+    expect(scheduleStarterPackExpiringSoon).not.toHaveBeenCalled();
+  });
+
+  test('cancels when player has purchased the pack', async () => {
+    await mountHookWith({
+      notificationsEnabled: true,
+      starterPackExpiresAt: Date.now() + 48 * 60 * 60 * 1000,
+      starterPackPurchased: true,
+    });
+    expect(cancelStarterPackExpiringSoon).toHaveBeenCalled();
+    expect(scheduleStarterPackExpiringSoon).not.toHaveBeenCalled();
+  });
+
+  test('cancels when player has dismissed the offer', async () => {
+    await mountHookWith({
+      notificationsEnabled: true,
+      starterPackExpiresAt: Date.now() + 48 * 60 * 60 * 1000,
+      starterPackDismissed: true,
+    });
+    expect(cancelStarterPackExpiringSoon).toHaveBeenCalled();
+    expect(scheduleStarterPackExpiringSoon).not.toHaveBeenCalled();
+  });
+
+  test('does NOT schedule when computed fireAt is already in the past (offer ends in <24h)', async () => {
+    await mountHookWith({
+      notificationsEnabled: true,
+      starterPackExpiresAt: Date.now() + 60 * 60 * 1000, // 1h ahead
+    });
+    expect(scheduleStarterPackExpiringSoon).not.toHaveBeenCalled();
+  });
+
+  test('does NOT schedule when notificationsEnabled=false even if offer is live', async () => {
+    await mountHookWith({
+      notificationsEnabled: false,
+      starterPackExpiresAt: Date.now() + 48 * 60 * 60 * 1000,
+    });
+    expect(scheduleStarterPackExpiringSoon).not.toHaveBeenCalled();
   });
 });

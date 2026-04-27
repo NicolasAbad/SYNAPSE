@@ -799,6 +799,14 @@ export const en = {
     hardResetWarning: 'This deletes all neurons, prestige, cosmetics, and settings. Irreversible.',
   },
 
+  // Pre-launch audit Tier-2 item D — push permission soft-prompt copy.
+  pushSoftPrompt: {
+    title: 'Stay in the loop',
+    body: 'Get a daily reminder + nudge before your offline cap fills, so you never miss a streak.',
+    allow: 'Allow notifications',
+    maybeLater: 'Maybe later',
+  },
+
   // Sprint 10 Phase 10.1 (V-4) — save-sync indicator pill copy.
   saveSync: {
     saving: 'Saving…',
