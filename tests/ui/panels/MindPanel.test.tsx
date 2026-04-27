@@ -11,15 +11,51 @@ afterEach(() => {
   useGameStore.getState().reset();
 });
 
-describe('MindPanel — subtab bar rendering', () => {
-  test('renders all 6 subtab buttons', () => {
-    const { getByTestId } = render(<MindPanel />);
-    expect(getByTestId('mind-subtab-home')).toBeTruthy();
-    expect(getByTestId('mind-subtab-patterns')).toBeTruthy();
-    expect(getByTestId('mind-subtab-archetypes')).toBeTruthy();
-    expect(getByTestId('mind-subtab-diary')).toBeTruthy();
-    expect(getByTestId('mind-subtab-achievements')).toBeTruthy();
-    expect(getByTestId('mind-subtab-resonance')).toBeTruthy();
+// Pre-launch audit Dimension M (M-3) — subtabs are gated by prestige.
+// P0 cold-start renders 2 subtabs (home + achievements). Patterns/diary
+// at P1; mastery at P5; archetypes at P7; resonance at P13.
+// Tests seed prestigeCount when they need a gated subtab.
+
+describe('MindPanel — subtab bar rendering (Dimension M)', () => {
+  test('P0 default: renders 2 subtab buttons (home + achievements)', () => {
+    const { queryByTestId } = render(<MindPanel />);
+    expect(queryByTestId('mind-subtab-home')).not.toBeNull();
+    expect(queryByTestId('mind-subtab-achievements')).not.toBeNull();
+    expect(queryByTestId('mind-subtab-patterns')).toBeNull();
+    expect(queryByTestId('mind-subtab-archetypes')).toBeNull();
+    expect(queryByTestId('mind-subtab-diary')).toBeNull();
+    expect(queryByTestId('mind-subtab-resonance')).toBeNull();
+    expect(queryByTestId('mind-subtab-mastery')).toBeNull();
+  });
+
+  test('P1+: patterns + diary subtabs unlock', () => {
+    useGameStore.setState({ prestigeCount: 1 });
+    const { queryByTestId } = render(<MindPanel />);
+    expect(queryByTestId('mind-subtab-patterns')).not.toBeNull();
+    expect(queryByTestId('mind-subtab-diary')).not.toBeNull();
+    expect(queryByTestId('mind-subtab-mastery')).toBeNull(); // still gated
+  });
+
+  test('P5+: mastery subtab unlocks', () => {
+    useGameStore.setState({ prestigeCount: 5 });
+    const { queryByTestId } = render(<MindPanel />);
+    expect(queryByTestId('mind-subtab-mastery')).not.toBeNull();
+    expect(queryByTestId('mind-subtab-archetypes')).toBeNull(); // still gated
+  });
+
+  test('P7+: archetypes subtab unlocks', () => {
+    useGameStore.setState({ prestigeCount: 7 });
+    const { queryByTestId } = render(<MindPanel />);
+    expect(queryByTestId('mind-subtab-archetypes')).not.toBeNull();
+    expect(queryByTestId('mind-subtab-resonance')).toBeNull(); // still gated
+  });
+
+  test('P13+: resonance subtab unlocks (all 7 subtabs visible)', () => {
+    useGameStore.setState({ prestigeCount: 13 });
+    const { queryByTestId } = render(<MindPanel />);
+    for (const id of ['home', 'patterns', 'archetypes', 'diary', 'achievements', 'resonance', 'mastery']) {
+      expect(queryByTestId(`mind-subtab-${id}`)).not.toBeNull();
+    }
   });
 
   test('default subtab is home — no body overlay', () => {
@@ -30,15 +66,17 @@ describe('MindPanel — subtab bar rendering', () => {
   });
 });
 
-describe('MindPanel — switching to non-home subtab overlays body', () => {
-  test('clicking patterns opens the pattern tree body', () => {
+describe('MindPanel — switching to non-home subtab overlays body (gated)', () => {
+  test('P1: clicking patterns opens the pattern tree body', () => {
+    useGameStore.setState({ prestigeCount: 1 });
     const { getByTestId } = render(<MindPanel />);
     fireEvent.pointerDown(getByTestId('mind-subtab-patterns'));
     expect(getByTestId('mind-subtab-body-patterns')).toBeTruthy();
     expect(getByTestId('pattern-tree-view')).toBeTruthy();
   });
 
-  test('clicking archetypes shows the placeholder (Sprint 7.6 will replace with real panel)', () => {
+  test('P7: clicking archetypes shows the placeholder', () => {
+    useGameStore.setState({ prestigeCount: 7 });
     const { getByTestId } = render(<MindPanel />);
     fireEvent.pointerDown(getByTestId('mind-subtab-archetypes'));
     const body = getByTestId('mind-subtab-body-archetypes');
@@ -47,32 +85,40 @@ describe('MindPanel — switching to non-home subtab overlays body', () => {
     expect(placeholder?.textContent).toContain('archetype');
   });
 
-  test('clicking diary shows the DiarySubtab (Sprint 7.5 wired)', () => {
+  test('P1: clicking diary shows the DiarySubtab', () => {
+    useGameStore.setState({ prestigeCount: 1 });
     const { getByTestId } = render(<MindPanel />);
     fireEvent.pointerDown(getByTestId('mind-subtab-diary'));
-    // Empty default state → DiarySubtab renders empty-state component
     expect(getByTestId('diary-subtab-empty')).toBeTruthy();
   });
 
-  test('clicking achievements shows the AchievementsSubtab (Sprint 7.6 wired)', () => {
+  test('P0: clicking achievements shows the AchievementsSubtab (always available)', () => {
     const { getByTestId } = render(<MindPanel />);
     fireEvent.pointerDown(getByTestId('mind-subtab-achievements'));
     expect(getByTestId('achievements-subtab')).toBeTruthy();
   });
 
-  test('clicking resonance shows Sprint 8b placeholder', () => {
+  test('P13: clicking resonance shows Sprint 8b placeholder', () => {
+    useGameStore.setState({ prestigeCount: 13 });
     const { getByTestId } = render(<MindPanel />);
     fireEvent.pointerDown(getByTestId('mind-subtab-resonance'));
     expect(getByTestId('mind-subtab-body-resonance').textContent).toContain('Sprint 8b');
   });
 });
 
-describe('MindPanel — home subtab restoration', () => {
-  test('clicking home after a non-home subtab closes the body', () => {
+describe('MindPanel — home subtab restoration + snap-back', () => {
+  test('P1: clicking home after a non-home subtab closes the body', () => {
+    useGameStore.setState({ prestigeCount: 1 });
     const { getByTestId, queryByTestId } = render(<MindPanel />);
     fireEvent.pointerDown(getByTestId('mind-subtab-patterns'));
     expect(queryByTestId('mind-subtab-body-patterns')).toBeTruthy();
     fireEvent.pointerDown(getByTestId('mind-subtab-home'));
     expect(queryByTestId('mind-subtab-body-patterns')).toBeNull();
+  });
+
+  test('M-3 snap-back: legacy save with activeMindSubtab=resonance at P0 snaps to home', () => {
+    useGameStore.setState({ prestigeCount: 0, activeMindSubtab: 'resonance' });
+    render(<MindPanel />);
+    expect(useGameStore.getState().activeMindSubtab).toBe('home');
   });
 });

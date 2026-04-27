@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useEffect } from 'react';
 import { useGameStore } from '../../store/gameStore';
 import type { MindSubtabId } from '../../store/gameStore';
 import { t } from '../../config/strings';
@@ -6,38 +6,62 @@ import { PatternTreeView } from './PatternTreeView';
 import { DiarySubtab } from './DiarySubtab';
 import { AchievementsSubtab } from './AchievementsSubtab';
 import { MasterySubtab } from './MasterySubtab';
+import { visibleMindSubtabsAt, FALLBACK_MIND_SUBTAB } from './mindSubtabVisibility';
 
 /**
  * Mind tab panel — subtab router per Sprint 4b Phase 4b.4 (scope-addition
  * deferred from 3.6.4).
  *
- * Subtabs (6): home / patterns / archetypes / diary / achievements / resonance.
+ * Subtabs (7): home / patterns / archetypes / diary / achievements / resonance / mastery.
  * `home` is the default first-open view — renders nothing so the canvas +
  * HUD behind stay tappable. Non-home subtabs overlay the bottom-sheet area.
  * Subtab state is React-local — switching main tabs (mind→neurons→mind)
  * intentionally resets to `home` per default-first-open UX.
  *
+ * Pre-launch audit Dimension M (M-3): subtabs are gated by prestige to keep
+ * the start state sparse. P0 cold-start renders 2 subtabs (home + achievements
+ * — achievements anchors a 0/N progress counter as a motivational baseline);
+ * patterns + diary appear at P1; mastery at P5; archetypes at P7; resonance
+ * at P13. The single source of truth is `visibleMindSubtabsAt` in
+ * `mindSubtabVisibility.ts`.
+ *
  * Patterns subtab (this sprint): basic Pattern Tree viz + PAT-3 reset. Other
  * subtabs render "Unlocks in Sprint X" placeholders until Sprint 5/6/7/8b.
  */
-const NON_HOME_SUBTABS: MindSubtabId[] = ['patterns', 'archetypes', 'diary', 'achievements', 'resonance', 'mastery'];
 
 export const MindPanel = memo(function MindPanel() {
   // Subtab state lifted to Zustand (Sprint 4c Phase 4c.6.5) so sibling HUD
   // components can gate on it. See `UIState.activeMindSubtab` in gameStore.ts.
   const subtab = useGameStore((s) => s.activeMindSubtab);
   const setSubtab = useGameStore((s) => s.setActiveMindSubtab);
+  const prestigeCount = useGameStore((s) => s.prestigeCount);
+  const visibleSubtabs = visibleMindSubtabsAt(prestigeCount);
   const showBody = subtab !== 'home';
+
+  // M-3 snap-back: if the active subtab points to one that's no longer
+  // visible (e.g., a save loaded with activeMindSubtab='resonance' at P0
+  // before this gating shipped), snap back to home.
+  useEffect(() => {
+    if (!visibleSubtabs.includes(subtab)) setSubtab(FALLBACK_MIND_SUBTAB);
+  }, [subtab, visibleSubtabs, setSubtab]);
 
   return (
     <>
-      <MindSubtabBar subtab={subtab} onChange={setSubtab} />
-      {showBody && <MindSubtabBody subtab={subtab} />}
+      <MindSubtabBar subtab={subtab} visibleSubtabs={visibleSubtabs} onChange={setSubtab} />
+      {showBody && visibleSubtabs.includes(subtab) && <MindSubtabBody subtab={subtab} />}
     </>
   );
 });
 
-function MindSubtabBar({ subtab, onChange }: { subtab: MindSubtabId; onChange: (s: MindSubtabId) => void }) {
+function MindSubtabBar({
+  subtab,
+  visibleSubtabs,
+  onChange,
+}: {
+  subtab: MindSubtabId;
+  visibleSubtabs: MindSubtabId[];
+  onChange: (s: MindSubtabId) => void;
+}) {
   return (
     <div
       data-testid="mind-subtab-bar"
@@ -68,7 +92,7 @@ function MindSubtabBar({ subtab, onChange }: { subtab: MindSubtabId; onChange: (
         zIndex: 880, // CONST-OK: above HUD, below modals
       }}
     >
-      {(['home', ...NON_HOME_SUBTABS] as MindSubtabId[]).map((s) => (
+      {visibleSubtabs.map((s) => (
         <SubtabButton key={s} value={s} active={subtab === s} onSelect={onChange} />
       ))}
     </div>
