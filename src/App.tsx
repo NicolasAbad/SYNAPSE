@@ -7,7 +7,8 @@ import { useTickScheduler } from './store/tickScheduler';
 import { NeuronCanvas } from './ui/canvas/NeuronCanvas';
 import { HUD } from './ui/hud/HUD';
 import { SplashScreen } from './ui/modals/SplashScreen';
-import { GdprModal, isEU } from './ui/modals/GdprModal';
+import { GdprModal } from './ui/modals/GdprModal';
+import { isEU } from './ui/modals/gdprIsEU';
 import { TutorialHints } from './ui/modals/TutorialHints';
 import { FragmentOverlay } from './ui/modals/FragmentOverlay';
 import { Era3EventModal } from './ui/modals/Era3EventModal';
@@ -29,6 +30,8 @@ import { useNativeNavigation } from './platform/useNativeNavigation';
 import { getCrashlytics } from './platform/crashlytics';
 import { initRemoteConfig } from './platform/remoteConfig';
 import { evaluateDailyLogin, toLocalDateString, type DailyLoginOutcome } from './engine/dailyLogin';
+import { en } from './config/strings/en';
+import { InitSpinner } from './ui/InitSpinner';
 
 export function App() {
   // Sprint 9a Phase 9a.2 — RevenueCat adapter is created once on native; null on
@@ -56,6 +59,11 @@ export function App() {
     void initRemoteConfig();
     void getCrashlytics().setEnabled(useGameStore.getState().analyticsConsent);
   }, []);
+
+  // Pre-launch audit Day 2 — overlay flag for RevenueCat cold-start (2-5s on
+  // slow networks). InitSpinner suppresses display for the first ~700ms so
+  // fast inits don't flash an overlay.
+  const [revenueCatInitializing, setRevenueCatInitializing] = useState(false);
 
   // Sequential mount: load saved state first, then init timestamps ONLY if no
   // save was present, then applyOfflineReturn. Ordering prevents the Phase 7
@@ -100,6 +108,8 @@ export function App() {
         cleanups.push(() => document.removeEventListener('visibilitychange', onVisibility));
       }
       if (revenueCatAdapter !== null) {
+        // Pre-launch audit Day 2 — show overlay during init (suppressed if <700ms).
+        setRevenueCatInitializing(true);
         try {
           await revenueCatAdapter.initialize();
           const info = await revenueCatAdapter.getCustomerInfo();
@@ -110,6 +120,10 @@ export function App() {
           console.error('[RevenueCat] init failed:', e);
           // Sprint 10 Phase 10.7 — non-fatal Crashlytics report.
           void getCrashlytics().recordError('RevenueCat.init', e);
+          // Pre-launch audit Day 2 — surface to NetworkErrorToast.
+          useGameStore.getState().setNetworkError(en.networkError.revenueCatInitFailed);
+        } finally {
+          setRevenueCatInitializing(false);
         }
       }
       if (adMobAdapter !== null) {
@@ -119,6 +133,8 @@ export function App() {
           // CODE-8: AdMob init failure → ad placements remain unavailable
           // (tryShowAd will return 'failed') but the game continues.
           console.error('[AdMob] init failed:', e);
+          // Pre-launch audit Day 2 — surface to NetworkErrorToast.
+          useGameStore.getState().setNetworkError(en.networkError.adMobInitFailed);
           // Sprint 10 Phase 10.7 — non-fatal Crashlytics report.
           void getCrashlytics().recordError('AdMob.init', e);
         }
@@ -201,6 +217,7 @@ export function App() {
         <TapFloaterLayer />
         <HUD onOpenSettings={() => setSettingsOpen(true)} />
         <SaveSyncIndicator />
+        <InitSpinner show={revenueCatInitializing} label={en.initSpinner.revenueCatLoading} />
         <TutorialHints />
         <EchoLayer />
         <FragmentOverlay />

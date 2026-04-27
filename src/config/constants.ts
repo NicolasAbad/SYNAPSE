@@ -4,6 +4,16 @@
 // update BOTH this file AND docs/GDD.md §31 in the same commit (Update Discipline).
 // Sprint 1 consistency tests assert each value against the GDD.
 
+// Pre-launch audit Day 2 — Cascade celebration tunables.
+// `sfxRate` is the rate multiplier passed to Howler when discharge.wav
+// fires on a Cascade event (focusBar >= cascadeThreshold). 1.3 gives a
+// clearly brighter burst (+30% pitch) without sounding broken.
+// `flashDurationMs` gates the FocusBar white-flash overlay.
+export const CASCADE_CELEBRATION = {
+  sfxRate: 1.3,
+  flashDurationMs: 200,
+} as const;
+
 export const SYNAPSE_CONSTANTS = {
   // ── Settings (Sprint 10 Phase 10.1) ──
   // Volume defaults at 50/100 (mid-volume mobile idiom). Sliders run 0–100 in

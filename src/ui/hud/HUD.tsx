@@ -16,6 +16,7 @@ import { PendingDecisionFlow } from './PendingDecisionFlow';
 import { SettingsButton } from './SettingsButton';
 import { PostDischargeAdToast } from './PostDischargeAdToast';
 import { OfferOrchestrator } from './OfferOrchestrator';
+import { NetworkErrorMount } from './NetworkErrorMount';
 import { TabPanelContainer } from '../panels/TabPanelContainer';
 import { NamedMomentPrompt } from '../modals/NamedMomentPrompt';
 
@@ -72,6 +73,7 @@ export const HUD = memo(function HUD({ onOpenSettings }: HUDProps = {}) {
       <NamedMomentPrompt />
       <PostDischargeAdToast />
       <OfferOrchestrator />
+      <NetworkErrorMount />
       {onOpenSettings && <SettingsButton onOpen={onOpenSettings} />}
       <TabBar />
     </div>

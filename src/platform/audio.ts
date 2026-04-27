@@ -64,17 +64,24 @@ export function initAudio(): void {
   initialized = true;
 }
 
-export function playSfx(name: SfxName): void {
+export function playSfx(name: SfxName, opts?: { rate?: number }): void {
   if (!initialized || !audioVisible) return;
   if (!isAboveFloor(sfxVolume)) return;
   if (brokenSfx.has(name)) return;
   const howl = sfxHowls.get(name);
   if (!howl) return;
   try {
-    if (name === 'tap') {
+    if (opts?.rate !== undefined) {
+      // Pre-launch audit Day 2 — explicit rate override (e.g. cascade +30%
+      // to make the burst sonically distinct from a normal Discharge).
+      howl.rate(opts.rate);
+    } else if (name === 'tap') {
       const range = SYNAPSE_CONSTANTS.tapSfxRateMax - SYNAPSE_CONSTANTS.tapSfxRateMin;
       const rate = SYNAPSE_CONSTANTS.tapSfxRateMin + Math.random() * range;
       howl.rate(rate);
+    } else {
+      // Reset rate so a prior cascade-modulated discharge doesn't carry over.
+      howl.rate(1); // CONST-OK rate identity (1x = unmodulated)
     }
     howl.play();
   } catch (e) {

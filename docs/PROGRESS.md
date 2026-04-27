@@ -17,8 +17,50 @@
 **Earlier this session — Sprint 10 Phase 10.4 CLOSED (2026-04-25).** Daily Login Bonus + push notifications complete. Engine: `evaluateDailyLogin` pure helper (CODE-9) returns one of 4 outcomes (no_action / normal_claim / streak_save_eligible / streak_reset) per the 7-day reward cycle [5,5,10,10,15,20,50] with miss-1-day save window. Store: `claimDailyLoginReward`, `resolveStreakSave` (subscriber/ad/reset paths), `recordNotificationPermissionAsked` (gate cadence 1/3). UI: `DailyLoginModal` with two states (reward card + streak-save eligible offering ad-watch via existing `streak_save` AdMob placement #7). Push scheduler: `src/platform/pushScheduler.ts` adapter (Capacitor LocalNotifications, ^6.1.3 for Capacitor-6 peer) exposing ensurePermission + scheduleDailyReminder + scheduleOfflineCapReached + scheduleStreakAboutToBreak + cancelAll, all inert on web/test, all wrapped CODE-8 (never throws). `src/platform/usePushRuntime.ts` React glue mounted in App.tsx wires the four caller responsibilities: (1) cancelAll on Settings toggle off, schedule daily reminder on toggle on; (2) ensurePermission cadence after P1 prestige (gate 1) + after P3 (gate 3) when notificationsEnabled; (3) scheduleOfflineCapReached on visibilitychange→hidden using currentOfflineCapHours from now; (4) scheduleStreakAboutToBreak on hidden when dailyLoginStreak > 0. **1972 tests pass** (+10 net, push hook coverage) / **4/4 gates PASS (ratio 0.81)** / typecheck + lint clean. Sprint 10.1 + 10.2 + 10.3 + 10.4 CLOSED. Sprint 8c-tuning deadlock + Sprint 9b CLOSED preserved.
 
 **Earlier this session — Sprint 10 Phase 10.3 GREEN (2026-04-24).** AnalyticsEvent union extended from 14 → 49 events (48 GDD §27 + 1 Sprint 10.1 extension `reset_game`). New `firstEventsFired: string[]` GameState field (132 → 133, PRESERVE on prestige + Transcendence) tracks lifetime fire-once funnel events. New `logEventOnce(name, params, consent, firedBefore)` helper threads the array through actions. Wired at call sites: 9 funnel (app_first_open in initSessionTimestamps, tutorial_first_tap/buy/discharge in onTap/buyNeuron/buyUpgrade/discharge during isTutorialCycle, first_prestige + reached_p5/10 in prestige action, first_transcendence in applyTranscendence, first_purchase across all 4 IAP success paths), 5 feature (achievement_unlocked + diary_entry_added in processAchievementUnlocks helper, mental_state_changed + micro_challenge_completed/failed in tickScheduler), 18 core (first_tap, first_neuron, upgrade_purchased, discharge_used, insight_activated, prestige_completed, polarity_chosen, mutation_chosen, pathway_chosen, pattern_decision, resonant_pattern_discovered, spontaneous_event, personal_best, transcendence, ending_seen, offline_return, ad_watched, pattern_decisions_reset). Weekly Challenge events (3) defined in union but NOT wired — WC mechanics aren't implemented; events fire when consumer ships in a future sprint. SPRINTS.md ↔ GDD §27 gap documented: SPRINTS.md mandates `reset_game` but GDD §27 doesn't list it (carried as Sprint 10.1 extension; 49 total, pending Nico reconciliation). **GameState 132 → 133**. **1932 tests pass** (+4 net from prior 1928) / **4/4 gates PASS (ratio 0.80)** / typecheck + lint clean. Sprint 10.1 + 10.2 CLOSED; Sprint 8c-tuning deadlock + Sprint 9b CLOSED preserved.
-**Last updated:** 2026-04-26 — Pre-launch audit Day 1 shipped (compliance + stability bundle).
-**Active sprint:** Pre-launch audit launch bundle (Day 1 of 4) — closes audit-flagged CRITICAL/HIGH items before Sprint 11b device matrix.
+**Last updated:** 2026-04-26 — Pre-launch audit Day 2 shipped (monetization + UX bundle).
+**Active sprint:** Pre-launch audit launch bundle (Day 2 of 4) — closes audit-flagged CRITICAL/HIGH items before Sprint 11b device matrix.
+
+### Pre-launch audit Day 2 (2026-04-26 — monetization + UX bundle)
+
+Closes 5 of the remaining Tier-A audit items (NetworkErrorToast mount, Genius Pass re-enable toggle, High-contrast CSS expansion, Cascade celebration, RevenueCat init spinner).
+
+**Items shipped (5 of 30 Tier A):**
+- **A4 — NetworkErrorToast mount** (`src/ui/hud/NetworkErrorMount.tsx` + new UI-local `networkError: string | null` field): NetworkErrorToast existed since Sprint 3.6.5 but was never mounted. New `NetworkErrorMount` wrapper subscribes to `GameStoreState.networkError` and renders the toast with 4s auto-dismiss + tap-to-dismiss. Wired catches: `AdContext.tryShowAd` (ad failure), `App.tsx revenueCatAdapter.initialize()` (store init), `App.tsx adMobAdapter.initialize()` (ad SDK init). New `setNetworkError` action; field stripped from save like other UI-local fields.
+- **A5 — Genius Pass re-enable toggle** (`src/ui/modals/SettingsModal.tsx` Subscription section): new section with `geniusPassReEnable` toggle. ON state when `geniusPassDismissals === 0`; toggling on calls new `resetGeniusPassDismissals` action. Closes the App Review 3.1.2 (Subscription Transparency) gap — previously after 3 dismissals offers stopped permanently with no recovery path. Extracted `LegalLinkButton` to its own file (`settings/LegalLinkButton.tsx`) to keep SettingsModal under the 200-line CODE-2 cap (now 185 lines).
+- **A6 — High-contrast CSS expanded** (`styles/accessibility.css`): Sprint 10.5 only overrode text + border + bg tokens; accent colors stayed at design-token values that fail WCAG AA on near-black bg. Added 11 more overrides (`--color-primary` violet, `--color-success` green, `--color-accent` amber, `--color-error` red, `--color-blue`, `--color-pink`, `--color-cyan`, plus the 4 HUD-specific aliases `--color-thoughts-counter`, `--color-rate-counter`, `--color-consciousness-bar`, `--color-focus-bar`) to brighter higher-luminance variants of the same hue. Each variant validated >=4.5:1 contrast on `#000`.
+- **A8 — Cascade celebration** (`src/store/gameStore.ts` discharge action + `src/platform/audio.ts` + `src/ui/haptics.ts` + new `src/ui/hud/cascadeFlashEvents.ts` + `src/ui/hud/FocusBar.tsx`): three-channel feedback for Cascade Discharge that previously rendered identical to a normal Discharge. (1) **Audio:** `playSfx` extended with optional `rate` opt; cascade plays `discharge.wav` at `CASCADE_CELEBRATION.sfxRate` (1.3x = +30% pitch). (2) **Haptic:** `hapticHeavy()` for Cascade vs `hapticMedium()` for normal Discharge. (3) **Visual:** new `cascadeFlashEvents` pub/sub publishes a flash on Cascade; FocusBar subscribes and renders a 200ms white overlay (suppressed under `reducedMotion`).
+- **A24 — RevenueCat init spinner** (new `src/ui/InitSpinner.tsx` + App.tsx state): `revenueCatInitializing` flag wraps the `revenueCatAdapter.initialize()` + `getCustomerInfo()` calls in a try/finally. New `InitSpinner` overlay component shows a "Loading store…" pill with subtle dot pulse — but suppresses display for the first 700ms so fast inits don't flash an overlay. Auto-hides when init resolves (success or failure).
+
+**Files touched (10):**
+- `src/store/gameStore.ts` (UI-local `networkError` field + `setNetworkError` + `resetGeniusPassDismissals` action; cascade celebration imports)
+- `src/store/saveScheduler.ts` (strip `networkError` on save)
+- `src/config/strings/en.ts` (Subscription / Legal / networkError / initSpinner copy)
+- `src/config/constants.ts` (new `CASCADE_CELEBRATION` block — sfxRate + flashDurationMs)
+- `src/platform/audio.ts` (playSfx accepts optional `rate` opt)
+- `src/platform/AdContext.tsx` (catch surfaces `setNetworkError`)
+- `src/ui/modals/SettingsModal.tsx` (Subscription section + LegalLinkButton extracted)
+- `src/ui/modals/settings/LegalLinkButton.tsx` (NEW — extracted for CODE-2)
+- `src/ui/modals/GdprModal.tsx` + `src/ui/modals/gdprIsEU.ts` (NEW — `isEU` extracted to satisfy react-refresh/only-export-components)
+- `src/ui/hud/HUD.tsx` + `src/ui/hud/NetworkErrorMount.tsx` (NEW) + `src/ui/hud/cascadeFlashEvents.ts` (NEW) + `src/ui/hud/FocusBar.tsx` (flash subscriber)
+- `src/ui/InitSpinner.tsx` (NEW)
+- `src/App.tsx` (revenueCatInitializing state + InitSpinner mount + networkError wires + isEU import path)
+- `tests/ui/modals/GdprModal.test.tsx` (updated isEU import)
+- `styles/accessibility.css` (11 high-contrast color-token overrides)
+
+**Test coverage added (4 new files, 11 net tests):**
+- `tests/ui/hud/NetworkErrorMount.test.tsx` — 3 tests
+- `tests/ui/hud/cascadeFlash.test.tsx` — 3 tests
+- `tests/ui/InitSpinner.test.tsx` — 3 tests
+- `tests/ui/modals/SettingsModal.test.tsx` — +2 tests for Genius Pass re-enable toggle
+
+**Verification (all gates green):**
+- `npm test` → **2197 passed / 1 skipped** (168 files, 32.0s) — up from 2186 Day-1 close.
+- `npm run check-invention` → **6/6 gates PASS**.
+- `npm run typecheck` + `npm run lint` → clean (zero warnings).
+
+**Next:** Day 3 of pre-launch audit launch bundle — Tier 1 enhancements (number-pop celebration, first-Cascade overlay, locked-achievement preview, 7-day daily-login grid, inactivity hint, sticky unviewed-unlock badge) + Tier B yeses (B2 splash 1500ms, B3 daily-login 2-day save window, B7 piggy bank scaling, B8 P10 unlock stagger, B9 RP-4 reverse, B10 reset_game in GDD, B1 RC consumer for offline efficiency).
+
+
 
 ### Pre-launch audit Day 1 (2026-04-26 — compliance + stability bundle)
 

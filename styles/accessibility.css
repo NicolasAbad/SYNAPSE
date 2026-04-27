@@ -11,8 +11,22 @@
  * component-local (canvas pulse gate, FocusBar transition, PolaritySlot shape mark).
  */
 
-/* High-contrast theme — bumps text white, borders white, dims subtle backgrounds. */
+/* High-contrast theme — pre-launch audit Day 2 expanded.
+ *
+ * Audit finding G3: Phase 10.5 only overrode text + border + bg tokens;
+ * accent colors (primary violet, success green, etc.) stayed at design-token
+ * values that fail WCAG AA 4.5:1 on near-black bg. Buttons / bars / HUD chips
+ * inherited their original violet/green/amber.
+ *
+ * High-contrast remaps:
+ *   - text/borders: white / near-white at varying alphas (already shipped).
+ *   - bg: pure black / near-black (already shipped).
+ *   - accent colors: lighter, higher-luminance variants of the same hue so
+ *     the semantic meaning is preserved (violet stays violet, just brighter).
+ *     All variants validated >= WCAG AA 4.5:1 contrast on #000.
+ */
 :root[data-high-contrast="true"] {
+  /* Text + borders + bg (Sprint 10.5 originals — preserved) */
   --color-text-primary: #ffffff;
   --color-text-secondary: #d0d0d0;
   --color-text-disabled: #909090;
@@ -21,6 +35,21 @@
   --color-border-strong: #ffffffd0;
   --color-bg-deep: #000000;
   --color-bg-elevated: #050505;
+  /* Accent + semantic colors — pre-launch audit Day 2 additions.
+   * Each is the brightest variant of the original hue that preserves the
+   * design meaning while clearing 4.5:1 contrast on black. */
+  --color-primary: #b8a8ff;             /* was #8B7FE8 — lighter violet */
+  --color-success: #80ffb0;             /* was #22B07A — brighter green */
+  --color-accent: #ffd060;              /* was #F0A030 — brighter amber */
+  --color-error: #ff8080;               /* was #E85050 — brighter red */
+  --color-blue: #80c0ff;                /* was #4090E0 — brighter blue */
+  --color-pink: #ffa0c0;                /* was #E06090 — brighter pink */
+  --color-cyan: #80ffff;                /* was #40D0D0 — brighter cyan */
+  /* HUD-specific aliases that reuse the accent palette. */
+  --color-thoughts-counter: #ffd060;    /* mirrors --color-accent */
+  --color-rate-counter: #80ffb0;        /* mirrors --color-success */
+  --color-consciousness-bar: #b8a8ff;   /* mirrors --color-primary */
+  --color-focus-bar: #80ffff;           /* mirrors --color-cyan */
 }
 
 /* Class-based reducedMotion guard — components can opt-in by adding

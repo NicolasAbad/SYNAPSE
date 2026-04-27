@@ -19,8 +19,8 @@ import {
   overlayStyle, rowStyle, secondaryButtonStyle, statusLineStyle, titleStyle,
 } from './settings/styles';
 import { Section, SliderRow, ToggleRow } from './settings/widgets';
-import { LEGAL_URLS, isLegalUrlConfigured } from '../../config/legalUrls';
-import { openExternalUrl } from '../../platform/externalUrl';
+import { LEGAL_URLS } from '../../config/legalUrls';
+import { LegalLinkButton } from './settings/LegalLinkButton';
 
 const t = en.settings;
 
@@ -44,27 +44,10 @@ function statusLabel(status: RestoreStatus): string {
   return '';
 }
 
-function LegalLinkButton({ label, url, testId, missingLabel }: { label: string; url: string; testId: string; missingLabel: string }) {
-  const configured = isLegalUrlConfigured(url);
-  const onClick = () => { if (configured) openExternalUrl(url); };
-  return (
-    <div>
-      <button
-        type="button"
-        data-testid={testId}
-        disabled={!configured}
-        onClick={onClick}
-        style={configured ? buttonStyle : disabledButtonStyle}
-      >
-        {label}
-      </button>
-      {!configured && <p style={statusLineStyle}>{missingLabel}</p>}
-    </div>
-  );
-}
-
 export const SettingsModal = memo(function SettingsModal({ open, onClose, restorePurchases, onOpenCosmetics }: SettingsModalProps) {
   const setSubscriptionStatus = useGameStore((s) => s.setSubscriptionStatus);
+  const geniusPassDismissals = useGameStore((s) => s.geniusPassDismissals);
+  const resetGeniusPassDismissals = useGameStore((s) => s.resetGeniusPassDismissals);
   const sfxVolume = useGameStore((s) => s.sfxVolume);
   const musicVolume = useGameStore((s) => s.musicVolume);
   const language = useGameStore((s) => s.language);
@@ -158,6 +141,16 @@ export const SettingsModal = memo(function SettingsModal({ open, onClose, restor
           {onOpenCosmetics && (
             <button type="button" data-testid="settings-cosmetics" onClick={onOpenCosmetics} style={buttonStyle}>{t.cosmeticsButton}</button>
           )}
+        </Section>
+
+        <Section title={t.sectionSubscription}>
+          <ToggleRow
+            label={t.geniusPassReEnableLabel}
+            hint={t.geniusPassReEnableHint}
+            checked={geniusPassDismissals === 0}
+            onChange={(enabled) => { if (enabled) resetGeniusPassDismissals(); }}
+            testId="settings-genius-pass-reenable"
+          />
         </Section>
 
         <Section title={t.sectionGame}>

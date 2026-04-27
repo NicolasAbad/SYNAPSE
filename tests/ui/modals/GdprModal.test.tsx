@@ -3,7 +3,8 @@
 
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { cleanup, fireEvent, render } from '@testing-library/react';
-import { GdprModal, isEU } from '../../../src/ui/modals/GdprModal';
+import { GdprModal } from '../../../src/ui/modals/GdprModal';
+import { isEU } from '../../../src/ui/modals/gdprIsEU';
 import { useGameStore } from '../../../src/store/gameStore';
 
 afterEach(() => {

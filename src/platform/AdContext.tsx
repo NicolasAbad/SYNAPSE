@@ -12,6 +12,7 @@ import { createContext, memo, useCallback, useContext, useMemo, type ReactNode }
 import { useGameStore } from '../store/gameStore';
 import { canShowAd, type AdGateReason } from '../engine/adGate';
 import type { AdMobAdapter, AdPlacement } from './admob';
+import { en } from '../config/strings/en';
 
 export interface TryShowAdOptions {
   isPostCascade?: boolean;
@@ -55,6 +56,9 @@ export const AdProvider = memo(function AdProvider({ adapter, children }: AdProv
       useGameStore.getState().recordAdWatched(Date.now());
       return earned ? { status: 'shown' } : { status: 'dismissed' };
     } catch {
+      // Pre-launch audit Day 2 — surface ad failure to NetworkErrorToast so
+      // the player gets feedback. Previously silent (audit finding G/D).
+      useGameStore.getState().setNetworkError(en.networkError.adFailed);
       return { status: 'failed' };
     }
   }, [adapter]);

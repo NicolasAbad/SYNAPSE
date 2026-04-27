@@ -12,7 +12,7 @@
 // invariant that Object.keys(createDefaultState()).length === 133.
 
 import { create } from 'zustand';
-import { SYNAPSE_CONSTANTS } from '../config/constants';
+import { SYNAPSE_CONSTANTS, CASCADE_CELEBRATION } from '../config/constants';
 import type { GameState } from '../types/GameState';
 import type { NeuronType, Polarity, Pathway, Archetype, EndingID, Language, FontSize } from '../types';
 import { loadGame, saveGame } from './saveGame';
@@ -23,6 +23,8 @@ import { NAMED_MOMENTS, hasMomentBeenLogged, defaultPhraseFor, logNamedMoment } 
 import type { NamedMomentId } from '../engine/innerVoice';
 import { applyTap } from './tap';
 import { performDischarge, type DischargeOutcome } from '../engine/discharge';
+import { hapticHeavy, hapticMedium } from '../ui/haptics';
+import { publishCascadeFlash } from '../ui/hud/cascadeFlashEvents';
 import { handlePrestige, type PrestigeOutcome } from '../engine/prestige';
 import { handleTranscendence, type TranscendenceOutcome } from '../engine/transcendence';
 import { tryBuyResonanceUpgrade } from '../engine/resonanceUpgrades';
@@ -299,6 +301,13 @@ export interface UIState {
    * (a save failure shouldn't itself be saved).
    */
   lastSaveError: string | null;
+  /**
+   * Pre-launch audit Day 2: ephemeral network-error message (ad load
+   * failure, RevenueCat init failure, IAP error, restore failure).
+   * Surfaced by the mounted NetworkErrorToast — auto-dismisses after
+   * 4s or on user tap. UI-local — never persisted.
+   */
+  networkError: string | null;
 }
 
 /** Actions on the store. Sprint 1 ships INIT-1, reset, and Phase 7 save/load. */
@@ -339,6 +348,8 @@ export interface GameStoreActions {
   setAnalyticsConsent: (consent: boolean) => void;
   /** Pre-launch audit Day 1: surface a save-write failure to the UI banner. */
   setLastSaveError: (message: string | null) => void;
+  /** Pre-launch audit Day 2: surface a network/ad/IAP failure as an ephemeral toast. */
+  setNetworkError: (message: string | null) => void;
   /**
    * Sprint 10 Phase 10.1 — Settings setters. Each writes its single field
    * directly. Volume sliders accept 0–100 in 5% steps from the UI; setters
@@ -467,6 +478,13 @@ export interface GameStoreActions {
    * the GeniusPassOfferModal's "Not now" button.
    */
   dismissGeniusPassOffer: (nowTimestamp: number) => void;
+  /**
+   * Pre-launch audit Day 2 — re-enable Genius Pass offers from Settings.
+   * Resets `geniusPassDismissals` to 0 so the offer can fire again. Required
+   * by App Review 3.1.2 (Subscription Transparency): users must have a clear
+   * path to access subscription details and manage opt-in.
+   */
+  resetGeniusPassDismissals: () => void;
   /**
    * Sprint 9b Phase 9b.4 — record that the Genius Pass offer was shown to the
    * player (but not yet dismissed or accepted). Stamps the timestamp so the
@@ -675,6 +693,7 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
   antiSpamActive: false,
   achievementToast: null,
   lastSaveError: null,
+  networkError: null,
   initSessionTimestamps: (nowTimestamp) => {
     const before = get();
     set((state) => {
@@ -724,7 +743,7 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
     memories: s.memories + SYNAPSE_CONSTANTS.lucidDreamOptionBMemoryGain,
     pendingOfflineSummary: null,
   })),
-  reset: () => set(() => ({ ...createDefaultState(), activeTab: 'mind' as TabId, activeMindSubtab: 'home' as MindSubtabId, undoToast: null, antiSpamActive: false, achievementToast: null, lastSaveError: null })),
+  reset: () => set(() => ({ ...createDefaultState(), activeTab: 'mind' as TabId, activeMindSubtab: 'home' as MindSubtabId, undoToast: null, antiSpamActive: false, achievementToast: null, lastSaveError: null, networkError: null })),
   loadFromSave: async () => {
     const loaded = await loadGame();
     if (loaded === null) return false;
@@ -738,13 +757,14 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
     // `antiSpamActive` are all transient per session; actions are dropped by
     // JSON.stringify naturally. Keeps the persisted payload at exactly
     // 119 GameState fields per §32 invariant.
-    const { activeTab: _a, activeMindSubtab: _m, undoToast: _u, antiSpamActive: _s, achievementToast: _at, lastSaveError: _le, ...rest } = get();
+    const { activeTab: _a, activeMindSubtab: _m, undoToast: _u, antiSpamActive: _s, achievementToast: _at, lastSaveError: _le, networkError: _ne, ...rest } = get();
     void _a;
     void _m;
     void _u;
     void _s;
     void _at;
     void _le;
+    void _ne;
     await saveGame(rest as GameState);
   },
   onTap: (nowTimestamp) => {
@@ -763,6 +783,7 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
   setActiveMindSubtab: (subtab) => set({ activeMindSubtab: subtab }),
   setAnalyticsConsent: (consent) => set({ analyticsConsent: consent }),
   setLastSaveError: (message) => set({ lastSaveError: message }),
+  setNetworkError: (message) => set({ networkError: message }),
   // Sprint 10 Phase 10.1 — Settings setters. Volume sliders clamp to [0, 100]
   // defensively so out-of-range programmatic calls (e.g. malformed save migration
   // with an old pre-bounded value) don't poison state. UI emits 0–100 in 5% steps.
@@ -788,6 +809,7 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
       antiSpamActive: false,
       achievementToast: null,
       lastSaveError: null,
+      networkError: null,
     }));
   },
   setSubscriptionStatus: (isSubscribed) => {
@@ -974,6 +996,7 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
       geniusPassLastOfferTimestamp: nowTimestamp,
     });
   },
+  resetGeniusPassDismissals: () => set({ geniusPassDismissals: 0 }),
   recordGeniusPassOfferShown: (nowTimestamp) => {
     const state = get();
     set({ geniusPassLastOfferTimestamp: nowTimestamp });
@@ -1175,7 +1198,17 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
     const post = { ...mid, ...narrative };
     const ach = processAchievementUnlocks(post as GameState, nowTimestamp);
     set({ ...updates, ...narrative, ...ach });
-    playSfx('discharge'); // SFX wired in audio adapter
+    // Pre-launch audit Day 2 — Cascade celebration. Distinct audio rate +
+    // heavier haptic + visual flash for Cascade vs normal Discharge so the
+    // player FEELS the ×2.5+ multiplier moment.
+    if (outcome.isCascade) {
+      playSfx('discharge', { rate: CASCADE_CELEBRATION.sfxRate });
+      void hapticHeavy();
+      publishCascadeFlash();
+    } else {
+      playSfx('discharge');
+      void hapticMedium();
+    }
     // §27 core — every discharge. Tutorial-first-discharge fires once.
     logEvent('discharge_used', {
       bonus: outcome.burst,

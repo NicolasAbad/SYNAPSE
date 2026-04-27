@@ -148,6 +148,31 @@ describe('SettingsModal — status reset on reopen', () => {
   });
 });
 
+// Pre-launch audit Day 2 — Genius Pass re-enable toggle.
+describe('SettingsModal — Genius Pass re-enable toggle (pre-launch audit Day 2)', () => {
+  test('toggle is OFF when geniusPassDismissals > 0 (offers blocked)', () => {
+    useGameStore.getState().reset();
+    // Simulate 3 prior dismissals (max).
+    useGameStore.getState().dismissGeniusPassOffer(0);
+    useGameStore.getState().dismissGeniusPassOffer(0);
+    useGameStore.getState().dismissGeniusPassOffer(0);
+    const { getByTestId } = render(<SettingsModal open={true} onClose={() => {}} />);
+    const toggle = getByTestId('settings-genius-pass-reenable') as HTMLInputElement;
+    expect(toggle.checked).toBe(false);
+  });
+
+  test('toggling ON resets geniusPassDismissals to 0', () => {
+    useGameStore.getState().reset();
+    useGameStore.getState().dismissGeniusPassOffer(0);
+    useGameStore.getState().dismissGeniusPassOffer(0);
+    expect(useGameStore.getState().geniusPassDismissals).toBe(2);
+    const { getByTestId } = render(<SettingsModal open={true} onClose={() => {}} />);
+    const toggle = getByTestId('settings-genius-pass-reenable') as HTMLInputElement;
+    fireEvent.click(toggle);
+    expect(useGameStore.getState().geniusPassDismissals).toBe(0);
+  });
+});
+
 // Pre-launch audit Day 1 — Legal section coverage.
 describe('SettingsModal — Legal section (pre-launch audit)', () => {
   test('renders 3 legal link buttons by testId', () => {

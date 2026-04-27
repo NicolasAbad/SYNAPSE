@@ -723,6 +723,11 @@ export const en = {
     legalTermsButton: 'Terms of Service',
     legalEulaButton: 'Genius Pass EULA',
     legalUrlMissing: 'Link not yet configured',
+    // Pre-launch audit Day 2 — Subscription section + Genius Pass re-enable.
+    sectionSubscription: 'Subscription',
+    geniusPassReEnableLabel: 'Show Genius Pass offers',
+    geniusPassReEnableHint: 'Re-enable subscription offers if you previously dismissed them',
+    geniusPassReEnabledToast: 'Offers re-enabled — you may see Genius Pass again',
     languageLabel: 'Language',
     languageEn: 'English',
     languageEs: 'Español',
@@ -758,6 +763,18 @@ export const en = {
     errorPrefix: 'Save failed',
     errorRetryButton: 'Retry',
     errorDismissButton: 'Dismiss',
+  },
+
+  // Pre-launch audit Day 2 — ephemeral network/ad/IAP error toast copy.
+  networkError: {
+    adFailed: 'Ad unavailable. Try again later.',
+    revenueCatInitFailed: 'Store unavailable. Some features may be limited.',
+    adMobInitFailed: 'Ads unavailable. Tap-to-skip remains available.',
+  },
+
+  // Pre-launch audit Day 2 — RevenueCat cold-start overlay copy.
+  initSpinner: {
+    revenueCatLoading: 'Loading store…',
   },
 
   // Sprint 10 Phase 10.7 — ending share button + Capacitor.Share payload.

@@ -2,19 +2,17 @@ import { memo } from 'react';
 import { useGameStore } from '../../store/gameStore';
 import { t } from '../../config/strings';
 import { HUD } from '../tokens';
-import { detectEU } from '../../platform/euDetection';
 
 /**
  * UI-9 step 2: GDPR consent modal. Shown only if EU detected.
  *
- * Pre-launch audit Day 1: replaced the Sprint 2 `isEU = false` placeholder
- * with locale + timezone detection (see src/platform/euDetection.ts).
- * No network calls, no new deps. Cached per session.
+ * Pre-launch audit Day 2: `isEU` lives in `./gdprIsEU.ts` so this file
+ * stays a pure-component file (react-refresh discipline). Import from
+ * `./gdprIsEU` at call sites (App.tsx, tests).
  *
  * Accept → sets analyticsConsent=true. Manage → dismisses without
  * changing consent. Game continues regardless of choice.
  */
-export const isEU = detectEU();
 
 interface GdprModalProps {
   onComplete: () => void;

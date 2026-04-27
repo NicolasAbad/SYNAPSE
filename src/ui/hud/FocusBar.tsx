@@ -1,6 +1,8 @@
-import { memo } from 'react';
+import { memo, useEffect, useState } from 'react';
 import { useGameStore } from '../../store/gameStore';
 import { HUD } from '../tokens';
+import { CASCADE_CELEBRATION } from '../../config/constants';
+import { subscribeCascadeFlash } from './cascadeFlashEvents';
 
 /**
  * Top horizontal Focus Bar. Mockup: x=80 y=76 w=230 h=4 rx=2, cyan
@@ -9,12 +11,29 @@ import { HUD } from '../tokens';
  *
  * Phase 5: focusBar default = 0 → empty track visible. Sprint 3 wires
  * tap-fill via `focusFillPerTap`.
+ *
+ * Pre-launch audit Day 2: subscribes to cascadeFlash pub/sub. On a
+ * Cascade Discharge, renders a brief white overlay on top of the fill
+ * so the player visually registers the ×2.5+ moment. Reduced-motion
+ * suppresses the visual flash (audio + haptic still fire).
  */
 export const FocusBar = memo(function FocusBar() {
   const focus = useGameStore((s) => s.focusBar);
   const reducedMotion = useGameStore((s) => s.reducedMotion);
   const clamped = Math.max(0, Math.min(1, focus));
   const percent = clamped * 100; // CONST-OK CSS percent conversion (CODE-1 exception)
+
+  const [flashing, setFlashing] = useState(false);
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const unsub = subscribeCascadeFlash(() => {
+      if (reducedMotion) return;
+      setFlashing(true);
+      if (timer !== null) clearTimeout(timer);
+      timer = setTimeout(() => { setFlashing(false); timer = null; }, CASCADE_CELEBRATION.flashDurationMs);
+    });
+    return () => { unsub(); if (timer !== null) clearTimeout(timer); };
+  }, [reducedMotion]);
 
   return (
     <div
@@ -47,6 +66,20 @@ export const FocusBar = memo(function FocusBar() {
           transition: reducedMotion ? 'none' : 'width 200ms ease-out', // CONST-OK: CSS animation duration (CODE-1 exception)
         }}
       />
+      {flashing && (
+        <div
+          data-testid="hud-focus-bar-flash"
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            inset: 0, // CONST-OK CSS full-bleed overlay
+            background: 'rgba(255, 255, 255, 0.85)', // CONST-OK Cascade flash color
+            opacity: 1, // CONST-OK CSS opaque
+            pointerEvents: 'none',
+            transition: `opacity ${CASCADE_CELEBRATION.flashDurationMs}ms ease-out`,
+          }}
+        />
+      )}
     </div>
   );
 });
