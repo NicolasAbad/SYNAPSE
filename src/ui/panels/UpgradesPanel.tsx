@@ -18,6 +18,19 @@ interface ClassifiedUpgrade {
 }
 
 /**
+ * Pre-launch audit Dimension M (M-4) — Locked-section progressive disclosure.
+ * The full upgrade catalog has ~30 rows, with 20+ in the Locked section at
+ * P0. Showing all of them on cold start spoils the entire 26-prestige
+ * roadmap and adds visual noise. Constraints (CONST-OK — progressive-
+ * disclosure cadence, not balance):
+ *   - At P0: Locked section hidden entirely (sparse tutorial start).
+ *   - At P1+: cap Locked to LOCKED_TEASER_LIMIT lowest-prestige rows
+ *     (Cookie Clicker "next building visible" pattern).
+ */
+const LOCKED_SECTION_REVEAL_PRESTIGE = 1;
+const LOCKED_TEASER_LIMIT = 3;
+
+/**
  * Upgrades tab panel (Sprint 3.6.3 — full implementation).
  *
  * UPGRADES-3: list ordering — three sections sorted Affordable → Teaser → Locked
@@ -164,7 +177,14 @@ function classifyUpgrades(state: GameState): Record<Section, ClassifiedUpgrade[]
   teaser.sort(byCurrencyThenCost);
   locked.sort((a, b) => a.unlockPrestige - b.unlockPrestige);
 
-  return { affordable, teaser, locked };
+  // Pre-launch audit Dimension M (M-4): hide Locked section at P0, cap to
+  // LOCKED_TEASER_LIMIT lowest-prestige rows at P1+. Drops P0 Locked count
+  // from ~20 to 0; P1 to 3.
+  const lockedTrimmed = state.prestigeCount < LOCKED_SECTION_REVEAL_PRESTIGE
+    ? []
+    : locked.slice(0, LOCKED_TEASER_LIMIT);
+
+  return { affordable, teaser, locked: lockedTrimmed };
 }
 
 function UpgradeCard({ info, onBuy }: { info: ClassifiedUpgrade; onBuy: () => void }) {

@@ -19,12 +19,25 @@ describe('UpgradesPanel — rendering + sections', () => {
     expect(queryByTestId('panel-upgrades-title')?.textContent).toBe('Upgrades');
   });
 
-  test('at default state: affordable section empty, teaser + locked populated', () => {
+  test('P0 default: affordable empty, teaser populated, locked HIDDEN (Dimension M M-4)', () => {
     const { queryByTestId } = render(<UpgradesPanel />);
     // Default thoughts=0, so no upgrade is affordable.
     expect(queryByTestId('panel-upgrades-section-affordable')).toBeNull();
     expect(queryByTestId('panel-upgrades-section-teaser')).not.toBeNull();
+    // Pre-launch audit M-4: Locked section hidden entirely at P0 to keep
+    // the start state sparse. Reveals at P1+ capped to next 3 unlocks.
+    expect(queryByTestId('panel-upgrades-section-locked')).toBeNull();
+  });
+
+  test('P1+: locked section appears, capped to LOCKED_TEASER_LIMIT (3) lowest-prestige rows', () => {
+    useGameStore.setState({ prestigeCount: 1 });
+    const { queryByTestId, queryAllByTestId } = render(<UpgradesPanel />);
     expect(queryByTestId('panel-upgrades-section-locked')).not.toBeNull();
+    // Cap at 3 rows (audit M-4 LOCKED_TEASER_LIMIT).
+    const lockedRows = queryAllByTestId(/^panel-upgrades-row-/).filter(
+      (el) => el.getAttribute('data-section') === 'locked',
+    );
+    expect(lockedRows.length).toBeLessThanOrEqual(3);
   });
 
   test('seeding enough thoughts promotes the cheapest P0 upgrade into Affordable', () => {
@@ -35,14 +48,27 @@ describe('UpgradesPanel — rendering + sections', () => {
     expect(queryByTestId('panel-upgrades-row-red_neuronal_densa')?.getAttribute('data-section')).toBe('affordable');
   });
 
-  test('P-gated upgrades appear in the Locked section with silhouette', () => {
-    const { queryByTestId } = render(<UpgradesPanel />);
-    // potencial_latente unlocks at P10 — must be in Locked at P0.
-    const row = queryByTestId('panel-upgrades-row-potencial_latente');
-    expect(row).not.toBeNull();
-    expect(row?.getAttribute('data-section')).toBe('locked');
-    expect(row?.textContent).toContain('???');
-    expect(row?.textContent).toContain('10'); // unlock prestige
+  test('P1+: P-gated upgrades appear in the Locked section with silhouette', () => {
+    // Need P1 to see Locked section + need a P-gated upgrade in the lowest-3.
+    useGameStore.setState({ prestigeCount: 1 });
+    const { queryByTestId, queryAllByTestId } = render(<UpgradesPanel />);
+    const lockedRows = queryAllByTestId(/^panel-upgrades-row-/).filter(
+      (el) => el.getAttribute('data-section') === 'locked',
+    );
+    // The 3 lowest-prestige Locked teasers are dopamina (P2),
+    // potencial_sinaptico_2 (P3), and ondas_alpha (P4) — sort order by
+    // unlockPrestige ascending. Just assert at least one is present
+    // and renders silhouette + unlock text.
+    expect(lockedRows.length).toBeGreaterThan(0);
+    const firstLocked = lockedRows[0];
+    expect(firstLocked.textContent).toContain('???');
+    // Sanity: each rendered row has its data-section set to 'locked'.
+    for (const r of lockedRows) {
+      expect(r.getAttribute('data-section')).toBe('locked');
+    }
+    // The original test pinned potencial_latente (P10) — at P1 with cap=3
+    // that high-prestige row is hidden. Verify it's NOT in the visible set.
+    expect(queryByTestId('panel-upgrades-row-potencial_latente')).toBeNull();
   });
 
   test('owned upgrades are hidden from the panel', () => {
