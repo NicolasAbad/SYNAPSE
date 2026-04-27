@@ -17,8 +17,78 @@
 **Earlier this session — Sprint 10 Phase 10.4 CLOSED (2026-04-25).** Daily Login Bonus + push notifications complete. Engine: `evaluateDailyLogin` pure helper (CODE-9) returns one of 4 outcomes (no_action / normal_claim / streak_save_eligible / streak_reset) per the 7-day reward cycle [5,5,10,10,15,20,50] with miss-1-day save window. Store: `claimDailyLoginReward`, `resolveStreakSave` (subscriber/ad/reset paths), `recordNotificationPermissionAsked` (gate cadence 1/3). UI: `DailyLoginModal` with two states (reward card + streak-save eligible offering ad-watch via existing `streak_save` AdMob placement #7). Push scheduler: `src/platform/pushScheduler.ts` adapter (Capacitor LocalNotifications, ^6.1.3 for Capacitor-6 peer) exposing ensurePermission + scheduleDailyReminder + scheduleOfflineCapReached + scheduleStreakAboutToBreak + cancelAll, all inert on web/test, all wrapped CODE-8 (never throws). `src/platform/usePushRuntime.ts` React glue mounted in App.tsx wires the four caller responsibilities: (1) cancelAll on Settings toggle off, schedule daily reminder on toggle on; (2) ensurePermission cadence after P1 prestige (gate 1) + after P3 (gate 3) when notificationsEnabled; (3) scheduleOfflineCapReached on visibilitychange→hidden using currentOfflineCapHours from now; (4) scheduleStreakAboutToBreak on hidden when dailyLoginStreak > 0. **1972 tests pass** (+10 net, push hook coverage) / **4/4 gates PASS (ratio 0.81)** / typecheck + lint clean. Sprint 10.1 + 10.2 + 10.3 + 10.4 CLOSED. Sprint 8c-tuning deadlock + Sprint 9b CLOSED preserved.
 
 **Earlier this session — Sprint 10 Phase 10.3 GREEN (2026-04-24).** AnalyticsEvent union extended from 14 → 49 events (48 GDD §27 + 1 Sprint 10.1 extension `reset_game`). New `firstEventsFired: string[]` GameState field (132 → 133, PRESERVE on prestige + Transcendence) tracks lifetime fire-once funnel events. New `logEventOnce(name, params, consent, firedBefore)` helper threads the array through actions. Wired at call sites: 9 funnel (app_first_open in initSessionTimestamps, tutorial_first_tap/buy/discharge in onTap/buyNeuron/buyUpgrade/discharge during isTutorialCycle, first_prestige + reached_p5/10 in prestige action, first_transcendence in applyTranscendence, first_purchase across all 4 IAP success paths), 5 feature (achievement_unlocked + diary_entry_added in processAchievementUnlocks helper, mental_state_changed + micro_challenge_completed/failed in tickScheduler), 18 core (first_tap, first_neuron, upgrade_purchased, discharge_used, insight_activated, prestige_completed, polarity_chosen, mutation_chosen, pathway_chosen, pattern_decision, resonant_pattern_discovered, spontaneous_event, personal_best, transcendence, ending_seen, offline_return, ad_watched, pattern_decisions_reset). Weekly Challenge events (3) defined in union but NOT wired — WC mechanics aren't implemented; events fire when consumer ships in a future sprint. SPRINTS.md ↔ GDD §27 gap documented: SPRINTS.md mandates `reset_game` but GDD §27 doesn't list it (carried as Sprint 10.1 extension; 49 total, pending Nico reconciliation). **GameState 132 → 133**. **1932 tests pass** (+4 net from prior 1928) / **4/4 gates PASS (ratio 0.80)** / typecheck + lint clean. Sprint 10.1 + 10.2 CLOSED; Sprint 8c-tuning deadlock + Sprint 9b CLOSED preserved.
-**Last updated:** 2026-04-27 — Pre-launch audit Day 5 shipped (Dimension M Phase 2 — celebration polish, 4 commits).
-**Active sprint:** Pre-launch audit launch bundle — Day 5 of N. Dimension M score now estimated **7-8/10** (up from 3/10 pre-audit, 6.5/10 after Phase 1). Next session resumes with remaining Tier 2 fixes (A-1/A-2 Cascade+Insight visual cues, G-1 colorblind coverage, D-1 push permission soft-prompt) OR Sprint 9b-post-propagation if RevenueCat dashboard is cleared.
+**Last updated:** 2026-04-27 — Pre-launch audit Day 5 + Tier 2 sweep COMPLETE (4 additional commits: activation flash, G-1+A-3, C-2, D-1+D-2).
+**Active sprint:** Pre-launch audit launch bundle — Day 5 of N. **Dimension M score 7-8/10** (up from 3/10 pre-audit). **Tier 2 audit items COMPLETE** — 6 implemented (C-1+A-1+A-2 activation flash, G-1 colorblind, A-3 anti-spam, C-2 tutorial skip, D-1 push soft-prompt, D-2 starter pack push), 2 refuted (D-3 + J-5 already shipped earlier). Next session resumes with Sprint 9b-post-propagation (RevenueCat dashboard work) OR Sprint 11b device matrix.
+
+### Pre-launch audit Day 5 — Tier 2 sweep (additional 4 commits, audit-cycle close)
+
+After the morning's Dimension M Phase 2 work (`827ed62`-`25dac7e`), the afternoon shipped the remaining Tier 2 audit items. **4 phase-boundary commits, all green.**
+
+**`9ee4b3b` Tier 2 (C-1 + A-1 + A-2) — activation-flash celebration:**
+- Reusable `ActivationFlash` component (full-bleed tinted overlay + hero label + optional sublabel) with cyan/violet/gold tints.
+- A-1: every-cascade flash with "+X,XXX" sublabel (showing the discharge gain). Stacks with the existing FocusBar inline white flash + once-per-session CASCADE! splash.
+- A-2: every-insight flash with "INSIGHT L1/L2/L3" hero label, color-keyed to level (Claro green / Profundo violet / Trascendente gold).
+- Insight publishes from BOTH engine sites — tickScheduler step 2.5 transition + tap.ts threshold-crossing detected at the store boundary.
+- New `insightActivationEvents.ts` parallel pub/sub; extended `cascadeFlashEvents.ts` with amount channel.
+- 10 new tests in `tests/ui/hud/activationFlash.test.tsx`.
+- ReducedMotion: each consumer skips visual entirely (audio + haptic still fire).
+
+**`aa5a7bb` Tier 2 (G-1 + A-3) — colorblind glyphs + anti-spam badge:**
+- G-1: canvas neuron tier numerals (1-5) overlaid in white when `colorblindMode=true` so type is distinguishable without hue. New `CANVAS.colorblindGlyphSizeRatio` + `CANVAS.colorblindGlyphColor` tokens. Mood already had glyphs (Sprint 7.5). Mental states deliberately skipped — they have no UI surface yet.
+- A-3: when TAP-1 anti-spam cooldown engages, RateCounter shows a `×0.1` red badge with explanatory aria-label. Clears when cooldown lapses.
+- 8 new tests (3 in renderer.test.ts G-1 group, 5 new in RateCounter.test.tsx).
+
+**`e600e32` Tier 2 (C-2) — tutorial skip affordance:**
+- Settings → Game new "Skip tutorial hints" toggle. Sentinel `tutorial:hints_skipped` lives in the existing 133-field `tabBadgesDismissed` slot (no schema bump). PRESERVE on prestige + Transcendence.
+- New `setTutorialHintsSkipped(skipped: boolean)` action handles add/remove of the sentinel idempotently.
+- TutorialHints early-returns null when sentinel present — useful for replays + speedrunner archetypes.
+- 5 new tests in `tests/store/tutorialSkip.test.ts`.
+
+**`02205a1` Tier 2 (D-1 + D-2) — push soft-prompt + starter pack reminder:**
+- D-1: `PushSoftPromptModal` between gate trigger and native OS prompt. Allow → fires native ensurePermission + scheduleDailyReminder + recordAsked. Maybe Later → just records (so soft-prompt doesn't keep re-firing every prestige). New UI ephemeral field `pendingPushSoftPrompt: 1 | 3 | null` (stripped on persist).
+- D-2: Starter Pack T-24h push reminder. New `notificationIdStarterPackExpiringSoon` constant + `starterPackExpiryReminderMinutesBefore: 1440`. Push schedules when offer becomes active + cancels when player buys/dismisses.
+- 11 new tests across `usePushRuntime.test.tsx` (cadence assertions updated) + new `PushSoftPromptModal.test.tsx`.
+
+**Audit items refuted on verification:**
+- D-3 (Spark cap countdown UI) — REFUTED. SparkPackPurchaseModal already shows remaining + reset-date label (Day 3 audit A11).
+- J-5 (top-level ErrorBoundary) — REFUTED. Already shipped Day 1 (`src/ui/ErrorBoundary.tsx` mounted in main.tsx).
+
+**Verification at session close:**
+- 2288 tests passing (1 skipped) — +36 net since Day 4 close
+- typecheck + lint clean
+- 6/6 anti-invention gates green (ratio 0.80)
+- 32 commits ahead of origin/main since Sprint 11a close
+
+**Tier 2 completion summary:**
+| Audit ID | Status | Commit |
+|---|---|---|
+| A-1 (Cascade flash) | DONE | `9ee4b3b` |
+| A-2 (Insight flash) | DONE | `9ee4b3b` |
+| A-3 (anti-spam badge) | DONE | `aa5a7bb` |
+| C-1 (ActivationFlash component) | DONE | `9ee4b3b` |
+| C-2 (tutorial skip) | DONE | `e600e32` |
+| D-1 (push soft-prompt) | DONE | `02205a1` |
+| D-2 (starter pack reminder) | DONE | `02205a1` |
+| D-3 (spark cap countdown) | REFUTED — Day 3 ship | `b5a9a98` (Day 3) |
+| G-1 (colorblind glyphs) | DONE (canvas only) | `aa5a7bb` |
+| H-1 (GDPR data export) | DONE | `566adee` (Day 4) |
+| J-5 (ErrorBoundary) | REFUTED — Day 1 ship | (Day 1) |
+| M-1..9 (Dimension M) | DONE | `046b317` + `827ed62`-`6e6038d` (Phases 1+2) |
+| Tier 0 batch (10 items) | DONE | `1a86638`-`93b647e` (Day 4) |
+
+**Pending audit-tracked work (all Nico-blocked):**
+- N-1 J-3 CRITICAL — Privacy Policy hosting
+- N-2 J-1 CRITICAL — iOS Info.plist + AndroidManifest.xml deep-link config
+- N-3 J-2 CRITICAL — RevenueCat 19 IAP product configuration
+- N-4 J-4 — Firebase Console Remote Config mirror
+- N-5 — SFX assets for Cascade + Insight (the audio half of A-1/A-2)
+- N-6 H-2 partial — RevenueCat customer profile deletion (or Privacy Policy workaround)
+- N-7 I-2 — Native Crashlytics bridge install
+- N-8 F-1 — Mi A3 perf budget verification (Sprint 11b device matrix)
+- N-9 L-3 — 50-100 additional achievements
+- N-10 — Spanish i18n
+- N-11 L-2 — Run 2 mechanic differentiation
+- N-12 I-3 — A/B test infrastructure
 
 ### Pre-launch audit Day 5 (2026-04-27 — Dimension M Phase 2 + Phase 3)
 
