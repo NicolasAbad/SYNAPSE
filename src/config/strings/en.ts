@@ -47,6 +47,14 @@ export const en = {
     subtab_resonance: 'New: Resonance',
     cosmetics: 'Customize your mind — open Settings → Cosmetics',
   },
+  // Pre-launch audit Tier 2 (A-1 / A-2) — activation-flash hero labels.
+  // Cascade fires on every Cascade Discharge (sublabel = "+amount"); Insight
+  // fires on every level-1/2/3 activation (sublabel = unused, level appears
+  // in the main label as "INSIGHT L{N}").
+  activation_flash: {
+    cascade: 'CASCADE!',
+    insight: 'INSIGHT',
+  },
   neurons: {
     basica: {
       name: 'Basic',

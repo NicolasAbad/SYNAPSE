@@ -25,6 +25,8 @@ import { applyTap } from './tap';
 import { performDischarge, type DischargeOutcome } from '../engine/discharge';
 import { hapticHeavy, hapticMedium } from '../ui/haptics';
 import { publishCascadeFlash, publishFirstCascadeOverlay } from '../ui/hud/cascadeFlashEvents';
+import { publishInsightActivation } from '../ui/hud/insightActivationEvents';
+import { getInsightLevel } from '../engine/insight';
 import { handlePrestige, type PrestigeOutcome } from '../engine/prestige';
 import { handleTranscendence, type TranscendenceOutcome } from '../engine/transcendence';
 import { tryBuyResonanceUpgrade } from '../engine/resonanceUpgrades';
@@ -773,6 +775,14 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
     const before = get();
     set((state) => applyTap(state, state.antiSpamActive, nowTimestamp));
     playSfx('tap'); // SFX wired in audio adapter (pitch jitter inside adapter)
+    // Pre-launch audit Tier 2 (A-2) — detect tap-driven Insight activation
+    // (applyTap chains tryActivateInsight on threshold crossings) and surface
+    // the visual flash. Engine itself can't publish (CODE-9); this boundary
+    // owns the side effect.
+    const after = get();
+    if (!before.insightActive && after.insightActive) {
+      publishInsightActivation(getInsightLevel(after.prestigeCount));
+    }
     // §27 funnel — first ever tap and first tap of tutorial fire once each lifetime.
     let fired = before.firstEventsFired;
     fired = logEventOnce('first_tap', {}, before.analyticsConsent, fired);
@@ -1215,7 +1225,9 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
     if (outcome.isCascade) {
       playSfx('discharge', { rate: CASCADE_CELEBRATION.sfxRate });
       void hapticHeavy();
-      publishCascadeFlash();
+      // Pre-launch audit Tier 2 (A-1) — pass the discharge gain so the
+      // CascadeActivationFlash can render the "+X,XXX" sublabel.
+      publishCascadeFlash(outcome.burst);
       publishFirstCascadeOverlay(); // one-time-per-session full-screen "CASCADE!" overlay
     } else {
       playSfx('discharge');

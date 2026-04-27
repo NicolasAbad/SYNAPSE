@@ -34,6 +34,8 @@ import { era3AutoPrestigeAt45MinElapsed } from '../engine/era3';
 import { useGameStore } from './gameStore';
 import { playSfx } from '../platform/audio';
 import { logEvent } from '../platform/firebase';
+import { publishInsightActivation } from '../ui/hud/insightActivationEvents';
+import { getInsightLevel } from '../engine/insight';
 
 export function useTickScheduler(): void {
   useEffect(() => {
@@ -53,6 +55,9 @@ export function useTickScheduler(): void {
       if (!current.insightActive && next.insightActive) {
         playSfx('insight');
         logEvent('insight_activated', { level: next.insightMultiplier }, current.analyticsConsent);
+        // Pre-launch audit Tier 2 (A-2) — visual celebration; engine doesn't
+        // store the level directly, derive from prestigeCount via getInsightLevel.
+        publishInsightActivation(getInsightLevel(next.prestigeCount));
       }
       if (current.activeSpontaneousEvent === null && next.activeSpontaneousEvent !== null) {
         playSfx('spontaneous');

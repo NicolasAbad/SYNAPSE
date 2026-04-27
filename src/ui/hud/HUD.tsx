@@ -18,6 +18,8 @@ import { PostDischargeAdToast } from './PostDischargeAdToast';
 import { OfferOrchestrator } from './OfferOrchestrator';
 import { NetworkErrorMount } from './NetworkErrorMount';
 import { CascadeFirstOverlay } from './CascadeFirstOverlay';
+import { CascadeActivationFlash } from './CascadeActivationFlash';
+import { InsightActivationFlash } from './InsightActivationFlash';
 import { UnlockCelebrationMount } from './UnlockCelebrationMount';
 import { TabPanelContainer } from '../panels/TabPanelContainer';
 import { NamedMomentPrompt } from '../modals/NamedMomentPrompt';
@@ -77,6 +79,8 @@ export const HUD = memo(function HUD({ onOpenSettings }: HUDProps = {}) {
       <OfferOrchestrator />
       <NetworkErrorMount />
       <CascadeFirstOverlay />
+      <CascadeActivationFlash />
+      <InsightActivationFlash />
       <UnlockCelebrationMount />
       {onOpenSettings && <SettingsButton onOpen={onOpenSettings} />}
       <TabBar />
