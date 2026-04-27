@@ -21,6 +21,7 @@ import {
 import { Section, SliderRow, ToggleRow } from './settings/widgets';
 import { LEGAL_URLS } from '../../config/legalUrls';
 import { LegalLinkButton } from './settings/LegalLinkButton';
+import { exportGameState, serializeGameStateForExport, type DataExportOutcome } from '../../platform/dataExport';
 
 const t = en.settings;
 
@@ -72,8 +73,10 @@ export const SettingsModal = memo(function SettingsModal({ open, onClose, restor
   const setAnalyticsConsent = useGameStore((s) => s.setAnalyticsConsent);
 
   const [status, setStatus] = useState<RestoreStatus>('idle');
+  // Pre-launch audit H-1 — GDPR Article 15 data export status surface.
+  const [exportStatus, setExportStatus] = useState<DataExportOutcome['kind'] | 'idle' | 'pending'>('idle');
 
-  useEffect(() => { if (open) setStatus('idle'); }, [open]);
+  useEffect(() => { if (open) { setStatus('idle'); setExportStatus('idle'); } }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -94,6 +97,15 @@ export const SettingsModal = memo(function SettingsModal({ open, onClose, restor
       setStatus('failed');
     }
   }, [restorePurchases, setSubscriptionStatus]);
+
+  // Pre-launch audit H-1 — GDPR Article 15 data export handler.
+  const onExportDataClick = useCallback(async () => {
+    setExportStatus('pending');
+    const state = useGameStore.getState();
+    const payload = serializeGameStateForExport(state, Date.now());
+    const outcome = await exportGameState(payload);
+    setExportStatus(outcome.kind);
+  }, []);
 
   if (!open) return null;
   const restoreDisabled = restorePurchases === undefined || status === 'pending';
@@ -138,6 +150,23 @@ export const SettingsModal = memo(function SettingsModal({ open, onClose, restor
 
         <Section title={t.sectionPrivacy}>
           <ToggleRow label={t.analyticsConsentLabel} hint={t.analyticsConsentHint} checked={analyticsConsent} onChange={setAnalyticsConsent} testId="settings-analytics-consent" />
+          <button
+            type="button"
+            data-testid="settings-data-export"
+            onClick={onExportDataClick}
+            disabled={exportStatus === 'pending'}
+            style={exportStatus === 'pending' ? disabledButtonStyle : buttonStyle}
+          >
+            {t.dataExportButton}
+          </button>
+          <p style={captionStyle}>{t.dataExportHint}</p>
+          <p data-testid="settings-data-export-status" style={statusLineStyle}>
+            {exportStatus === 'shared' ? t.dataExportSuccessShared
+              : exportStatus === 'downloaded' ? t.dataExportSuccessDownloaded
+              : exportStatus === 'copied' ? t.dataExportSuccessCopied
+              : exportStatus === 'failed' ? t.dataExportFailed
+              : ''}
+          </p>
         </Section>
 
         <p style={captionStyle}>{t.deferredCaveat}</p>

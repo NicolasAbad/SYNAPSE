@@ -755,6 +755,13 @@ export const en = {
     sectionPrivacy: 'Privacy',
     analyticsConsentLabel: 'Share anonymous usage data',
     analyticsConsentHint: 'Helps us improve the game; turn off any time',
+    // Pre-launch audit H-1 — GDPR Article 15 data export.
+    dataExportButton: 'Download Your Data',
+    dataExportHint: 'Get a copy of everything Synapse stores about you',
+    dataExportSuccessShared: 'Export shared',
+    dataExportSuccessDownloaded: 'synapse-data.json downloaded',
+    dataExportSuccessCopied: 'Data copied to clipboard',
+    dataExportFailed: 'Export failed — please try again',
     deferredCaveat: 'Audio + accessibility consumers ship in upcoming polish updates.',
     hardResetButton: 'Hard Reset',
     hardResetTapPrompt: 'Tap 2 more times to confirm',
