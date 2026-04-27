@@ -750,16 +750,18 @@ describe('Consistency: Resonant Patterns (GDD §22, Secret Ending gate)', () => 
     expect(typeof rp.checkRP3).toBe('function');
     expect(typeof rp.checkRP4).toBe('function');
   });
-  test('RP-4 Cascade Chorus requires NOT owning Cascada Profunda (INT-12)', async () => {
+  test('RP-4 Cascade Chorus REQUIRES Cascada Profunda (pre-launch audit Day 3 B9 — reversed)', async () => {
     const { checkRP4 } = await import('../src/engine/resonantPatterns');
-    const baseState = {
+    // Pre-audit: condition was "without Cascada Profunda owned" (punished
+    // a recommended upgrade purchase). Audit B9 reversed it: now the RP
+    // rewards Cascada-Profunda-stacking play.
+    const withCascada = {
       cycleCascades: 99,
       upgrades: [{ id: 'cascada_profunda', purchased: true, purchasedAt: 0 }],
     };
-    expect(checkRP4(baseState)).toBe(false);
+    expect(checkRP4(withCascada)).toBe(true);
     const without = { cycleCascades: 99, upgrades: [] };
-    // With enough cascades and no Cascada Profunda, RP-4 should pass.
-    expect(checkRP4(without)).toBe(true);
+    expect(checkRP4(without)).toBe(false);
   });
 });
 

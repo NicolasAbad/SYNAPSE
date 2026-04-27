@@ -25,11 +25,21 @@ export const MasterySubtab = memo(function MasterySubtab() {
       <h2 data-testid="mastery-title" style={masteryTitleStyle}>
         {t('mind_subtabs.mastery_title')}
       </h2>
+      <p data-testid="mastery-intro" style={introStyle}>
+        {t('mind_subtabs.mastery_intro')}
+      </p>
       <SectionTabs active={section} onSelect={setSection} />
       <EntityGrid section={section} mastery={mastery} />
     </div>
   );
 });
+
+const introStyle: CSSProperties = {
+  margin: 0,
+  fontSize: 'var(--text-xs)',
+  color: 'var(--color-text-secondary)',
+  lineHeight: 1.4, // CONST-OK CSS readability idiom
+};
 
 const mastereSubtabWrapperStyle: CSSProperties = {
   display: 'flex',

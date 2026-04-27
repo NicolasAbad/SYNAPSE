@@ -17,6 +17,7 @@ import { SettingsButton } from './SettingsButton';
 import { PostDischargeAdToast } from './PostDischargeAdToast';
 import { OfferOrchestrator } from './OfferOrchestrator';
 import { NetworkErrorMount } from './NetworkErrorMount';
+import { CascadeFirstOverlay } from './CascadeFirstOverlay';
 import { TabPanelContainer } from '../panels/TabPanelContainer';
 import { NamedMomentPrompt } from '../modals/NamedMomentPrompt';
 
@@ -74,6 +75,7 @@ export const HUD = memo(function HUD({ onOpenSettings }: HUDProps = {}) {
       <PostDischargeAdToast />
       <OfferOrchestrator />
       <NetworkErrorMount />
+      <CascadeFirstOverlay />
       {onOpenSettings && <SettingsButton onOpen={onOpenSettings} />}
       <TabBar />
     </div>

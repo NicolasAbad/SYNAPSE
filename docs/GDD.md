@@ -1802,9 +1802,9 @@ Monthly cap: 1000 Sparks purchased (resets 1st of each month UTC). Anti-addict s
 
 ---
 
-# 27. Analytics — 48 events
+# 27. Analytics — 49 events
 
-**Breakdown:** 9 funnel + 11 monetization + 5 feature + 20 core + 3 weekly_challenge = 48 total. (Second audit 9A-2: added `pattern_decisions_reset` to Core category, missing from the original 47 despite being referenced by PAT-3 §10. Total 47 → 48.)
+**Breakdown:** 9 funnel + 11 monetization + 5 feature + 21 core + 3 weekly_challenge = 49 total. (Second audit 9A-2: added `pattern_decisions_reset` to Core category, missing from the original 47 despite being referenced by PAT-3 §10. Total 47 → 48. Pre-launch audit Day 3 (B10): added `reset_game` to Core category to match SPRINTS.md Sprint 10 Phase 10.1 Hard Reset flow — 48 → 49.)
 
 ### Funnel (9) — ANALYTICS-3
 `app_first_open`, `tutorial_first_tap`, `tutorial_first_buy`, `tutorial_first_discharge`, `first_prestige`, `reached_p5`, `reached_p10`, `first_transcendence`, `first_purchase`.
@@ -1817,8 +1817,8 @@ Firebase dashboard configured in Sprint 13.
 ### Feature (5)
 `achievement_unlocked` (id, prestigeCount), `mental_state_changed` (from, to), `micro_challenge_completed` (id, reward), `micro_challenge_failed` (id), `diary_entry_added` (entryType).
 
-### Core (20)
-`first_tap`, `first_neuron` (type), `upgrade_purchased` (id, cost, prestigeCount), `discharge_used` (bonus, cascade, insightActive), `insight_activated` (level), `prestige_completed` (prestigeCount, cycleTime, productionPeak, patternsTotal), `polarity_chosen` (type, prestigeCount), `mutation_chosen` (id, options, prestigeCount), `pathway_chosen` (type, prestigeCount), `pattern_decision` (nodeIndex, choice), `resonant_pattern_discovered` (index), `spontaneous_event` (id, type), `personal_best` (prestigeLevel, oldTime, newTime), `transcendence` (transcendenceCount, totalTime, archetypeChosen), `ending_seen` (endingId, choice), `offline_return` (elapsedHours, thoughtsEarned, lucidDream), `ad_watched` (placementId, reward), `genius_pass_offered` (triggerId, dismissed), `genius_pass_purchased` (plan), `pattern_decisions_reset` (prestigeCount, resonanceCost).
+### Core (21)
+`first_tap`, `first_neuron` (type), `upgrade_purchased` (id, cost, prestigeCount), `discharge_used` (bonus, cascade, insightActive), `insight_activated` (level), `prestige_completed` (prestigeCount, cycleTime, productionPeak, patternsTotal), `polarity_chosen` (type, prestigeCount), `mutation_chosen` (id, options, prestigeCount), `pathway_chosen` (type, prestigeCount), `pattern_decision` (nodeIndex, choice), `resonant_pattern_discovered` (index), `spontaneous_event` (id, type), `personal_best` (prestigeLevel, oldTime, newTime), `transcendence` (transcendenceCount, totalTime, archetypeChosen), `ending_seen` (endingId, choice), `offline_return` (elapsedHours, thoughtsEarned, lucidDream), `ad_watched` (placementId, reward), `genius_pass_offered` (triggerId, dismissed), `genius_pass_purchased` (plan), `pattern_decisions_reset` (prestigeCount, resonanceCost), `reset_game` (timestamp).
 
 ### Weekly Challenge (3) — CORE-9
 `weekly_challenge_started` (id, weekStartTimestamp), `weekly_challenge_completed` (id, daysToComplete), `weekly_challenge_expired` (id).
@@ -2305,7 +2305,7 @@ export const SYNAPSE_CONSTANTS = {
   // UI
   undoToastDurationMs: 3_000,
   undoExpensiveThresholdPct: 0.10,        // >10% of thoughts triggers undo
-  splashDurationMs: 2_000,                // UI-9 step 1: 2s branded splash (Sprint 2 kickoff)
+  splashDurationMs: 1_500,                // UI-9 step 1: branded splash. Pre-launch audit Day 3 (B2): retuned 2_000 → 1_500 for D1 perception (genre benchmark Cookie Clicker 1s, AdCap 0.8s)
   firstOpenTutorialHintIdleMs: 2_000,     // UI-9 step 4: 2s idle → "Tap the neuron" (Sprint 2 kickoff)
 
   // Version

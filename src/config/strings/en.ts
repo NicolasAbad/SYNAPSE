@@ -129,6 +129,10 @@ export const en = {
     mastery_level_label: 'Level',
     mastery_uses_label: 'uses',
     mastery_max_level_suffix: 'MAX',
+    // Pre-launch audit Day 3 (A12) — empty-state explainer banner shown above
+    // the entity grid. Players otherwise see a wall of "???" and don't know
+    // mastery exists or how to engage with it.
+    mastery_intro: 'Mastery tracks how often you use each Mutation, Upgrade, Pathway, and Archetype. Use any 10× to reveal it; +5% effect at max level.',
     patterns_explain: 'Every prestige earns 3 patterns. Each gives +2 thoughts/sec permanent, and +4% cycle production per pattern earned this cycle (cap ×1.5). Squares at 6 / 15 / 24 / 36 / 48 are permanent A/B decisions.',
     reset_button: 'Reset All Decisions',
     reset_confirm_1_title: 'Reset Pattern Decisions?',
@@ -823,6 +827,9 @@ export const en = {
     monthlyCapLabel: 'Monthly cap',
     capRemaining: 'remaining this month',
     capReachedToast: "Monthly Spark cap reached — resets on the 1st of next month.",
+    // Pre-launch audit Day 3 (A11) — show explicit reset date so players know
+    // when the cap rolls over instead of guessing.
+    capResetsOn: 'Resets {{date}}',
     buyButton: 'Buy',
     closeButton: 'Close',
   },

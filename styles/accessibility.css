@@ -61,6 +61,30 @@
   animation-iteration-count: 1 !important;
 }
 
+/* Pre-launch audit Day 3 (Tier 1 #2) — first-Cascade overlay fade.
+ * Full-screen "CASCADE!" overlay scales + fades on the player's first
+ * Cascade Discharge of the session. .a11y-no-motion overrides duration to 0s. */
+@keyframes synapse-cascade-first-fade {
+  0%   { opacity: 0; transform: scale(0.8); }
+  15%  { opacity: 1; transform: scale(1.0); }
+  70%  { opacity: 1; transform: scale(1.05); }
+  100% { opacity: 0; transform: scale(1.1); }
+}
+
+/* Pre-launch audit Day 3 (B2) — splash logo pulse. Subtle gentle scale
+ * + opacity breathing animation while the splash is showing. Triggers a
+ * sense of "loading" without a literal spinner. Class is applied to the
+ * splash title <div>; reducedMotion is via the .a11y-no-motion override
+ * above (which forces 0s animation-duration). */
+@keyframes synapse-splash-pulse {
+  0%   { transform: scale(1);    opacity: 0.85; }
+  50%  { transform: scale(1.05); opacity: 1;    }
+  100% { transform: scale(1);    opacity: 0.85; }
+}
+.splash-pulse {
+  animation: synapse-splash-pulse 1500ms ease-in-out infinite;
+}
+
 /* Sprint 10 Phase 10.6 — discharge button pulse animation when a charge is
  * available. Standard mobile idle affordance. Components apply
  * .discharge-pulse class to opt in. ReducedMotion: gate at component level

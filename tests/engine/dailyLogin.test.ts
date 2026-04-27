@@ -118,10 +118,16 @@ describe('evaluateDailyLogin — streak save (diff=2, missed exactly 1 day)', ()
   });
 });
 
-describe('evaluateDailyLogin — streak reset (diff>=3, 2+ missed days)', () => {
-  test('diff=3 → streak_reset back to Day 1 reward', () => {
+describe('evaluateDailyLogin — streak reset (pre-launch audit Day 3 B3: diff>=4, 3+ missed days)', () => {
+  test('diff=3 → streak_save_eligible (still in widened save window)', () => {
     const state = withDailyState({ lastDailyClaimDate: '2026-04-21', dailyLoginStreak: 5 });
     const o = evaluateDailyLogin(state, '2026-04-24');
+    expect(o.kind).toBe('streak_save_eligible');
+  });
+
+  test('diff=4 → streak_reset back to Day 1 reward (just past widened save window)', () => {
+    const state = withDailyState({ lastDailyClaimDate: '2026-04-21', dailyLoginStreak: 5 });
+    const o = evaluateDailyLogin(state, '2026-04-25');
     expect(o).toEqual({ kind: 'streak_reset', rewardSparks: 5, nextStreak: 1, rewardDay: 1 });
   });
 

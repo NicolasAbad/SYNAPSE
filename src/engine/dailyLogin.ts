@@ -46,7 +46,13 @@ export function toLocalDateString(timestamp: number): DateString {
  * (Day 7, 50 sparks); after claim, nextStreak = (streak + 1) mod 7.
  */
 export function evaluateDailyLogin(state: GameState, nowDate: DateString): DailyLoginOutcome {
-  const { dailyLoginRewards, dailyLoginCycleLength, dailyLoginStreakSaveDayDiff, dailyLoginResetThresholdDayDiff } = SYNAPSE_CONSTANTS;
+  const {
+    dailyLoginRewards,
+    dailyLoginCycleLength,
+    dailyLoginStreakSaveDayDiff,
+    dailyLoginStreakSaveDayDiffMax,
+    dailyLoginResetThresholdDayDiff,
+  } = SYNAPSE_CONSTANTS;
   const last = state.lastDailyClaimDate;
   const currentStreak = state.dailyLoginStreak;
 
@@ -71,10 +77,11 @@ export function evaluateDailyLogin(state: GameState, nowDate: DateString): Daily
     return { kind: 'normal_claim', rewardSparks: reward, nextStreak: next, rewardDay: rewardIdx + 1 };
   }
 
-  if (diff === dailyLoginStreakSaveDayDiff) {
-    // Missed exactly 1 day → streak save offer. Pre-compute the reward the
-    // player WOULD claim if they save (continues current streak) so the modal
-    // can render it. Subscribers auto-save (caller decides).
+  if (diff >= dailyLoginStreakSaveDayDiff && diff <= dailyLoginStreakSaveDayDiffMax) {
+    // Pre-launch audit Day 3 (B3): save window widened from diff===2 to
+    // diff in [2..3]. Missed 1-2 days → streak save offer. Pre-compute the
+    // reward the player WOULD claim if they save (continues current streak)
+    // so the modal can render it. Subscribers auto-save (caller decides).
     const rewardIdx = currentStreak % dailyLoginCycleLength;
     const reward = dailyLoginRewards[rewardIdx];
     const next = (currentStreak + 1) % dailyLoginCycleLength;

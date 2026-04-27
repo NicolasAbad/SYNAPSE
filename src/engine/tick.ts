@@ -2,6 +2,7 @@
 import { SYNAPSE_CONSTANTS } from '../config/constants';
 import { calculateProduction } from './production';
 import { tryActivateInsight } from './insight';
+import { effectivePiggyBankCap } from './piggyBank';
 import { UPGRADES_BY_ID } from '../config/upgrades';
 import { mutationChargeIntervalMs, mutationMaxChargesOverride } from './mutations';
 import { pathwayChargeRateMult } from './pathways';
@@ -68,14 +69,13 @@ function stepProduce(s: GameState): void {
   s.thoughts = s.thoughts + delta;
   s.cycleGenerated = s.cycleGenerated + delta;
   s.totalGenerated = s.totalGenerated + delta;
-  // Piggy Bank: cross-threshold counter on every 10K increment (MONEY-10 hard cap at 500).
+  // Piggy Bank: cross-threshold counter (MONEY-10 §35; cap scales per prestige post-audit B7 via effectivePiggyBankCap).
   const prevBuckets = Math.floor(prevTotal / SYNAPSE_CONSTANTS.piggyBankSparksPerThoughts);
   const nowBuckets = Math.floor(s.totalGenerated / SYNAPSE_CONSTANTS.piggyBankSparksPerThoughts);
   if (nowBuckets > prevBuckets) {
-    const increments = nowBuckets - prevBuckets;
     s.piggyBankSparks = Math.min(
-      SYNAPSE_CONSTANTS.piggyBankMaxSparks,
-      s.piggyBankSparks + increments,
+      effectivePiggyBankCap(s.prestigeCount),
+      s.piggyBankSparks + (nowBuckets - prevBuckets),
     );
   }
 }

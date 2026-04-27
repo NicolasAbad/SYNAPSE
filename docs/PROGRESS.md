@@ -17,8 +17,83 @@
 **Earlier this session — Sprint 10 Phase 10.4 CLOSED (2026-04-25).** Daily Login Bonus + push notifications complete. Engine: `evaluateDailyLogin` pure helper (CODE-9) returns one of 4 outcomes (no_action / normal_claim / streak_save_eligible / streak_reset) per the 7-day reward cycle [5,5,10,10,15,20,50] with miss-1-day save window. Store: `claimDailyLoginReward`, `resolveStreakSave` (subscriber/ad/reset paths), `recordNotificationPermissionAsked` (gate cadence 1/3). UI: `DailyLoginModal` with two states (reward card + streak-save eligible offering ad-watch via existing `streak_save` AdMob placement #7). Push scheduler: `src/platform/pushScheduler.ts` adapter (Capacitor LocalNotifications, ^6.1.3 for Capacitor-6 peer) exposing ensurePermission + scheduleDailyReminder + scheduleOfflineCapReached + scheduleStreakAboutToBreak + cancelAll, all inert on web/test, all wrapped CODE-8 (never throws). `src/platform/usePushRuntime.ts` React glue mounted in App.tsx wires the four caller responsibilities: (1) cancelAll on Settings toggle off, schedule daily reminder on toggle on; (2) ensurePermission cadence after P1 prestige (gate 1) + after P3 (gate 3) when notificationsEnabled; (3) scheduleOfflineCapReached on visibilitychange→hidden using currentOfflineCapHours from now; (4) scheduleStreakAboutToBreak on hidden when dailyLoginStreak > 0. **1972 tests pass** (+10 net, push hook coverage) / **4/4 gates PASS (ratio 0.81)** / typecheck + lint clean. Sprint 10.1 + 10.2 + 10.3 + 10.4 CLOSED. Sprint 8c-tuning deadlock + Sprint 9b CLOSED preserved.
 
 **Earlier this session — Sprint 10 Phase 10.3 GREEN (2026-04-24).** AnalyticsEvent union extended from 14 → 49 events (48 GDD §27 + 1 Sprint 10.1 extension `reset_game`). New `firstEventsFired: string[]` GameState field (132 → 133, PRESERVE on prestige + Transcendence) tracks lifetime fire-once funnel events. New `logEventOnce(name, params, consent, firedBefore)` helper threads the array through actions. Wired at call sites: 9 funnel (app_first_open in initSessionTimestamps, tutorial_first_tap/buy/discharge in onTap/buyNeuron/buyUpgrade/discharge during isTutorialCycle, first_prestige + reached_p5/10 in prestige action, first_transcendence in applyTranscendence, first_purchase across all 4 IAP success paths), 5 feature (achievement_unlocked + diary_entry_added in processAchievementUnlocks helper, mental_state_changed + micro_challenge_completed/failed in tickScheduler), 18 core (first_tap, first_neuron, upgrade_purchased, discharge_used, insight_activated, prestige_completed, polarity_chosen, mutation_chosen, pathway_chosen, pattern_decision, resonant_pattern_discovered, spontaneous_event, personal_best, transcendence, ending_seen, offline_return, ad_watched, pattern_decisions_reset). Weekly Challenge events (3) defined in union but NOT wired — WC mechanics aren't implemented; events fire when consumer ships in a future sprint. SPRINTS.md ↔ GDD §27 gap documented: SPRINTS.md mandates `reset_game` but GDD §27 doesn't list it (carried as Sprint 10.1 extension; 49 total, pending Nico reconciliation). **GameState 132 → 133**. **1932 tests pass** (+4 net from prior 1928) / **4/4 gates PASS (ratio 0.80)** / typecheck + lint clean. Sprint 10.1 + 10.2 CLOSED; Sprint 8c-tuning deadlock + Sprint 9b CLOSED preserved.
-**Last updated:** 2026-04-26 — Pre-launch audit Day 2 shipped (monetization + UX bundle).
-**Active sprint:** Pre-launch audit launch bundle (Day 2 of 4) — closes audit-flagged CRITICAL/HIGH items before Sprint 11b device matrix.
+**Last updated:** 2026-04-26 — Pre-launch audit Day 3 shipped (Tier-B value updates + first Tier-1 enhancement).
+**Active sprint:** Pre-launch audit launch bundle (Day 3 of 4) — closes audit-flagged CRITICAL/HIGH items before Sprint 11b device matrix.
+
+### Pre-launch audit Day 3 (2026-04-26 — Tier B yeses + Tier 1 #2 + small Tier-A wins)
+
+Closes 5 of the 7 Tier-B yeses from the audit recommendation (B2/B3/B7/B9/B10) + 1 of 6 Tier-1 enhancements + 2 small Tier-A items (A11 spark cap reset-date, A12 mastery empty-state).
+
+**Tier B value updates shipped:**
+- **B2 — Splash 2.0s → 1.5s + logo pulse animation.** `splashDurationMs: 2_000` → `1_500` ([src/config/constants.ts:442](src/config/constants.ts#L442)) and matching GDD §31 update. New `synapse-splash-pulse` keyframe in [styles/accessibility.css](styles/accessibility.css) — gentle scale + opacity breathing on the splash title (`<div className="splash-pulse">`). Reduced motion via existing `.a11y-no-motion` override (animation-duration → 0s). Genre benchmarks: Cookie Clicker 1s, AdCap 0.8s; SYNAPSE was outlier at 2s.
+- **B3 — Daily Login save window widened from 1 day → 2 days.** Audit finding (Day 7 cliff B4): missing 2 consecutive days reset the streak entirely, losing 85 sparks of cumulative value. Now: `dailyLoginStreakSaveDayDiff: 2` + new `dailyLoginStreakSaveDayDiffMax: 3` + `dailyLoginResetThresholdDayDiff: 4` (was 3). Engine `evaluateDailyLogin` now treats `diff in [2..3]` as `streak_save_eligible` and only resets at `diff >= 4`. Test updated to assert diff=3 → save_eligible (not reset) + new diff=4 → reset assertion.
+- **B7 — Piggy Bank cap scales per prestige.** Audit finding: hard 500-cap trivializes engagement at P10+ (fills in hours) and at P25 (sub-minute). Formula (new helper `effectivePiggyBankCap(prestigeCount)` in [src/engine/piggyBank.ts](src/engine/piggyBank.ts)): `min(piggyBankMaxSparks + prestigeCount * piggyBankCapPerPrestige, piggyBankCapCeiling)` = `min(500 + p*100, 2000)`. Hard ceiling 2000 prevents runaway hoarding. Engine `stepProduce` in tick.ts uses the helper instead of the bare constant.
+- **B9 — RP-4 condition reversed: 5 Cascades WITH Cascada Profunda owned.** Audit finding: pre-audit RP-4 punished the player for buying a recommended upgrade — contradictory signal vs the game's positive reinforcement. Now rewards Cascada-Profunda-stacking play. Single line change in `checkRP4` (`!hasCascada` → `hasCascada`); 4 tests updated across `tests/engine/resonantPatterns.test.ts` + `tests/consistency.test.ts`. GDD §22 owes a doc update post-sprint.
+- **B10 — `reset_game` analytics event added to GDD §27.** Closes the SPRINTS.md ↔ GDD §27 gap from Sprint 10 Phase 10.3. GDD §27 header bumped from "48 events" → "49 events"; Core category from 20 → 21 with `reset_game (timestamp)` appended. The event was already wired in code; now the docs match. Manual task #7 (reconciliation) cleared.
+
+**Tier B values DEFERRED (with rationale):**
+- **B8 — P10 unlock stagger DEFERRED.** Pre-implementation review: only Pathway has a hard P10 prestige gate (`pathwayUnlockPrestige: 10`). Mental States, Mood, Integrated Mind regions are NOT prestige-gated — they emerge from gameplay conditions (Focus Bar fills, mood ticks, region production thresholds). Audit's premise of "5 hard P10 unlocks" doesn't match implementation. Re-evaluate after Sprint 11b external tester data confirms or refutes a real cliff at P10.
+- **B1 — Remote Config consumer wiring DEFERRED.** Audit recommendation (RC for `baseOfflineEfficiency` as hotfix surface) requires touching every engine consumer of `SYNAPSE_CONSTANTS.baseOfflineEfficiency` to read from a fetched override map. Larger refactor than initially scoped (~4-6h). Carrying as a Day 4+ candidate.
+
+**Tier 1 enhancement shipped (1 of 6):**
+- **#2 First-Cascade overlay.** New full-screen "CASCADE!" splash on the player's first Cascade Discharge of the session. New `publishFirstCascadeOverlay()` + `subscribeFirstCascadeOverlay()` pub/sub added to `src/ui/hud/cascadeFlashEvents.ts`; module-scoped `firstCascadeShownThisSession` boolean ensures one fire per session. New `CascadeFirstOverlay` component in HUD with 1.5s scale+fade animation (`synapse-cascade-first-fade` keyframe, suppressed under `reducedMotion`). Discharge action publishes BOTH the per-cascade flash (FocusBar overlay) AND the first-time full-screen overlay simultaneously on cascade.
+  - Lifetime persistence (true "first cascade ever") deferred — would require a GameState field bump + 8-anchor migration. Per-session fires once per app session, which approximates the same UX since most new players complete first Cascade in their first session.
+
+**Small Tier-A items shipped:**
+- **A7 — Prestige `playSfx('prestige')` already wired.** Audit finding was incorrect — `gameStore.ts:1314` already plays the prestige SFX. No change.
+- **A11 — Spark cap reset-date display.** SparkPackPurchaseModal cap line now shows "X remaining this month · Resets [Mon Day]" instead of just "X remaining". `nextMonthStart` computed UTC-based to match the cap's reset semantics; rendered via `toLocaleDateString` for locale-aware formatting. New `capResetsOn` string with `{{date}}` interpolation token.
+- **A12 — Mastery empty-state explainer.** New intro paragraph above the entity grid explains what Mastery is + how to engage with it: "Mastery tracks how often you use each Mutation, Upgrade, Pathway, and Archetype. Use any 10× to reveal it; +5% effect at max level." Players otherwise saw a wall of "???" with no context.
+
+**Files touched (15):**
+- `src/config/constants.ts` (B2 splash, B3 daily login window, B7 piggy bank scaling)
+- `src/config/strings/en.ts` (A11 capResetsOn, A12 mastery_intro)
+- `src/engine/dailyLogin.ts` (B3 save-window range check)
+- `src/engine/piggyBank.ts` (NEW — B7 effectivePiggyBankCap helper)
+- `src/engine/resonantPatterns.ts` (B9 RP-4 polarity reversed)
+- `src/engine/tick.ts` (B7 use effectivePiggyBankCap helper)
+- `src/store/gameStore.ts` (Tier 1 #2 publishFirstCascadeOverlay wiring)
+- `src/ui/hud/CascadeFirstOverlay.tsx` (NEW — Tier 1 #2)
+- `src/ui/hud/cascadeFlashEvents.ts` (Tier 1 #2 first-overlay pub/sub)
+- `src/ui/hud/HUD.tsx` (mount CascadeFirstOverlay)
+- `src/ui/modals/SparkPackPurchaseModal.tsx` (A11 reset-date display)
+- `src/ui/modals/SplashScreen.tsx` (B2 splash-pulse className)
+- `src/ui/panels/MasterySubtab.tsx` (A12 intro banner)
+- `styles/accessibility.css` (B2 splash-pulse + Tier 1 #2 cascade-first-fade keyframes)
+- `docs/GDD.md` (B2 splashDurationMs match + B10 §27 49 events)
+
+**Tests touched (3):**
+- `tests/engine/dailyLogin.test.ts` (B3 save-window assertion update + 1 new test for diff=4)
+- `tests/engine/resonantPatterns.test.ts` (B9 RP-4 reversed assertions)
+- `tests/consistency.test.ts` (B9 RP-4 INT-12 assertion update)
+
+**Verification (all gates green):**
+- `npm test` → **2198 passed / 1 skipped** (was 2197 Day-2 close; +1 from B3 dailyLogin diff=4 test).
+- `npm run check-invention` → **6/6 gates PASS**.
+- `npm run typecheck` + `npm run lint` → clean (zero warnings).
+
+**Tier 1 enhancements deferred to Day 4 (5 of 6):**
+- #1 Number-pop celebration at 10× milestones
+- #3 Locked-achievement preview
+- #4 7-day daily-login grid (visual)
+- #5 Inactivity hint after 30s pause
+- #6 Sticky badge on unviewed unlocks
+
+**Other Tier A items deferred to Day 4:**
+- A9 migration field-drift detector
+- A10 analytics event-param schema map
+- A13 diary buffer warning
+- A14 tutorial-skip button
+- A19 modal close-button minHeight audit
+- A20 hardcoded English in PostDischargeAdToast + DailyLoginModal → t() pattern
+- A21 LimitedTimeOffers `claimedLimitedOffers` tracking
+- A23 colorblind glyphs Mood + neuron type
+- A25 tutorial-discharge hint
+- A26 tap-floater frame skew fix
+
+**Manual task cleared this Day 3:**
+- Manual task #7 (GDD §27 ↔ AnalyticsEvent reconciliation) — CLOSED via B10.
+
+
 
 ### Pre-launch audit Day 2 (2026-04-26 — monetization + UX bundle)
 

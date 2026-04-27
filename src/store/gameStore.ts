@@ -24,7 +24,7 @@ import type { NamedMomentId } from '../engine/innerVoice';
 import { applyTap } from './tap';
 import { performDischarge, type DischargeOutcome } from '../engine/discharge';
 import { hapticHeavy, hapticMedium } from '../ui/haptics';
-import { publishCascadeFlash } from '../ui/hud/cascadeFlashEvents';
+import { publishCascadeFlash, publishFirstCascadeOverlay } from '../ui/hud/cascadeFlashEvents';
 import { handlePrestige, type PrestigeOutcome } from '../engine/prestige';
 import { handleTranscendence, type TranscendenceOutcome } from '../engine/transcendence';
 import { tryBuyResonanceUpgrade } from '../engine/resonanceUpgrades';
@@ -1205,6 +1205,7 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
       playSfx('discharge', { rate: CASCADE_CELEBRATION.sfxRate });
       void hapticHeavy();
       publishCascadeFlash();
+      publishFirstCascadeOverlay(); // one-time-per-session full-screen "CASCADE!" overlay
     } else {
       playSfx('discharge');
       void hapticMedium();

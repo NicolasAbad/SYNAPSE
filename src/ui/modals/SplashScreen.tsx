@@ -49,6 +49,7 @@ export const SplashScreen = memo(function SplashScreen({ onComplete }: SplashScr
     >
       <div
         data-testid="splash-title"
+        className="splash-pulse"
         style={{
           color: 'var(--color-primary)',
           fontFamily: 'var(--font-display)',

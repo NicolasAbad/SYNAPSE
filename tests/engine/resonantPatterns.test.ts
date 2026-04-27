@@ -75,18 +75,21 @@ describe('RP-3 The Broken Mirror — P10+ with ≥3 Option B decisions', () => {
   });
 });
 
-describe('RP-4 The Cascade Chorus — 5 Cascades without Cascada Profunda', () => {
-  test('true at 5 Cascades with no upgrade', () => {
-    expect(checkRP4({ cycleCascades: 5, upgrades: [] })).toBe(true);
-  });
-  test('false with Cascada Profunda owned', () => {
+describe('RP-4 The Cascade Chorus — 5 Cascades WITH Cascada Profunda (pre-launch audit Day 3 B9)', () => {
+  test('true at 5 Cascades when Cascada Profunda is owned', () => {
     expect(checkRP4({
       cycleCascades: 5,
       upgrades: [{ id: 'cascada_profunda', purchased: true, purchasedAt: 0 }],
-    })).toBe(false);
+    })).toBe(true);
   });
-  test('false with only 4 Cascades', () => {
-    expect(checkRP4({ cycleCascades: 4, upgrades: [] })).toBe(false);
+  test('false when Cascada Profunda is NOT owned (pre-audit polarity inverted)', () => {
+    expect(checkRP4({ cycleCascades: 5, upgrades: [] })).toBe(false);
+  });
+  test('false with only 4 Cascades even when Cascada Profunda is owned', () => {
+    expect(checkRP4({
+      cycleCascades: 4,
+      upgrades: [{ id: 'cascada_profunda', purchased: true, purchasedAt: 0 }],
+    })).toBe(false);
   });
 });
 

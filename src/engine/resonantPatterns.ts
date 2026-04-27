@@ -48,11 +48,23 @@ export function checkRP3(state: Pick<GameState, 'prestigeCount' | 'patternDecisi
   return bCount >= RP3_MIN_B_DECISIONS;
 }
 
-/** RP-4 The Cascade Chorus — 5 Cascades in a cycle without Cascada Profunda. */
+/**
+ * RP-4 The Cascade Chorus — 5 Cascades in a cycle WITH Cascada Profunda owned.
+ *
+ * Pre-launch audit Day 3 (B9): condition reversed. Pre-audit the spec was
+ * "without Cascada Profunda" which punished the player for buying a
+ * recommended upgrade — contradictory signal vs the game's positive
+ * reinforcement of the same upgrade in the shop. Now the condition rewards
+ * Cascada-Profunda-stacking play (a deliberate optimizer's path) without
+ * forcing the player to skip a useful upgrade.
+ *
+ * GDD §22 RP-4 owes a doc update post-sprint to match (CLAUDE.md update
+ * discipline: code + constants + PROGRESS.md changed; GDD by Nico).
+ */
 export function checkRP4(state: Pick<GameState, 'cycleCascades' | 'upgrades'>): boolean {
   if (state.cycleCascades < RP4_MIN_CASCADES) return false;
   const hasCascada = state.upgrades.some((u) => u.id === 'cascada_profunda' && u.purchased);
-  return !hasCascada;
+  return hasCascada;
 }
 
 /**

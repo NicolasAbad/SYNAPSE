@@ -128,6 +128,11 @@ export const SparkPackPurchaseModal = memo(function SparkPackPurchaseModal({ ope
   const monthStart = startOfCurrentMonthUTC(now);
   const effectivePurchased = sparksPurchaseMonthStart === monthStart ? sparksPurchasedThisMonth : 0;
   const remaining = Math.max(0, SYNAPSE_CONSTANTS.maxSparksPurchasedPerMonth - effectivePurchased);
+  // Pre-launch audit Day 3 (A11) — compute next-month-start date string for
+  // the reset-date display (UTC-based to match the cap's reset semantics).
+  const nextMonthStart = new Date(monthStart);
+  nextMonthStart.setUTCMonth(nextMonthStart.getUTCMonth() + 1);
+  const resetDateLabel = nextMonthStart.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 
   return (
     <div data-testid="spark-pack-modal" role="dialog" aria-modal="true" aria-labelledby="spark-pack-title" style={overlayStyle}>
@@ -136,7 +141,7 @@ export const SparkPackPurchaseModal = memo(function SparkPackPurchaseModal({ ope
         <p style={subtitleStyle}>{t.subtitle}</p>
 
         <p data-testid="spark-pack-cap" style={capLineStyle}>
-          {t.monthlyCapLabel}: {remaining} {t.capRemaining}
+          {t.monthlyCapLabel}: {remaining} {t.capRemaining} · {t.capResetsOn.replace('{{date}}', resetDateLabel)}
         </p>
 
         {TIERS.map((tier) => {

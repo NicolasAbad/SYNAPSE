@@ -50,13 +50,16 @@ export const SYNAPSE_CONSTANTS = {
   // Stored 0-indexed: streak 0 → reward index 0 (5 sparks), streak 6 → 50, then wraps.
   dailyLoginRewards: [5, 5, 10, 10, 15, 20, 50] as const,
   dailyLoginCycleLength: 7,
-  // Streak-save window per Sprint 10: miss exactly 1 day → ad save offer. Miss
-  // 2+ days → reset to 0 regardless. Day-diff threshold:
-  //   diff=1 → normal claim
-  //   diff=2 → 1 day missed → streak save eligible
-  //   diff>=3 → 2+ missed → reset
-  dailyLoginStreakSaveDayDiff: 2,
-  dailyLoginResetThresholdDayDiff: 3,
+  // Pre-launch audit Day 3 (B3): widened save window from "miss 1 day" to
+  // "miss 1-2 days" to soften the streak-reset cliff for casual / lapsed
+  // players (audit finding B4: 50-spark Day 7 cliff was punishing 2-day misses).
+  // Day-diff threshold:
+  //   diff=1               → normal claim (claimed yesterday)
+  //   diff in [2..3]       → streak save eligible (missed 1-2 days; ad/sub keeps streak)
+  //   diff>=4              → reset to 0 (missed 3+ days)
+  dailyLoginStreakSaveDayDiff: 2,           // first day of save window
+  dailyLoginStreakSaveDayDiffMax: 3,        // last day of save window (audit Day 3 add)
+  dailyLoginResetThresholdDayDiff: 4,       // was 3; now miss 3+ days → reset
   // Permission-asking cadence per Sprint 10: notificationPermissionAsked = 0 (never) /
   // 1 (after P1) / 2 (after P3). Each value records that we DID ask at that gate so
   // we don't re-ask at the same gate.
@@ -414,7 +417,14 @@ export const SYNAPSE_CONSTANTS = {
   consciousnessBarTriggerRatio: 0.5, // CORE-10 (§35): cycleGenerated / currentThreshold crossover
 
   // ── Piggy Bank ──
-  piggyBankMaxSparks: 500, // MONEY-10 (§35): hard cap
+  // Pre-launch audit Day 3 (B7): piggy bank cap scales per prestige to keep
+  // engagement past P10. Effective cap = base + (prestigeCount * perPrestige),
+  // capped at ceiling. Audit finding: at P10+ the 500-cap fills in hours
+  // and trivializes the engagement hook; at P25 it fills sub-minute.
+  // Formula computed via `effectivePiggyBankCap(prestigeCount)` helper.
+  piggyBankMaxSparks: 500,                  // base (P0); MONEY-10 §35 baseline preserved
+  piggyBankCapPerPrestige: 100,             // +100 per prestige tier
+  piggyBankCapCeiling: 2_000,               // hard ceiling regardless of prestige
   piggyBankSparksPerThoughts: 10_000, // MONEY-8/10: 1 spark per 10K totalGenerated crossed
 
   // ── Monetization ──
@@ -439,7 +449,7 @@ export const SYNAPSE_CONSTANTS = {
   // ── UI ──
   undoToastDurationMs: 3_000,
   undoExpensiveThresholdPct: 0.1, // >10% of thoughts triggers undo
-  splashDurationMs: 2_000, // UI-9 step 1: 2s branded splash (Sprint 2 kickoff)
+  splashDurationMs: 1_500, // Pre-launch audit Day 3 (B2): retuned 2_000 → 1_500 for D1 perception (genre benchmark Cookie Clicker 1s, AdCap 0.8s)
   firstOpenTutorialHintIdleMs: 2_000, // UI-9 step 4: 2s idle → "Tap the neuron" (Sprint 2 kickoff)
   narrativeFragmentDisplayMs: 4_000, // UI-9 step 5: fragment hold duration (fade-in/out use TOKENS.MOTION.durSlow) — Sprint 2 Phase 6
   echoCooldownMs: 90_000, // NARR-3: max 1 Echo per 90 seconds
