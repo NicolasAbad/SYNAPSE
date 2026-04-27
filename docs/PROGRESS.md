@@ -17,8 +17,97 @@
 **Earlier this session — Sprint 10 Phase 10.4 CLOSED (2026-04-25).** Daily Login Bonus + push notifications complete. Engine: `evaluateDailyLogin` pure helper (CODE-9) returns one of 4 outcomes (no_action / normal_claim / streak_save_eligible / streak_reset) per the 7-day reward cycle [5,5,10,10,15,20,50] with miss-1-day save window. Store: `claimDailyLoginReward`, `resolveStreakSave` (subscriber/ad/reset paths), `recordNotificationPermissionAsked` (gate cadence 1/3). UI: `DailyLoginModal` with two states (reward card + streak-save eligible offering ad-watch via existing `streak_save` AdMob placement #7). Push scheduler: `src/platform/pushScheduler.ts` adapter (Capacitor LocalNotifications, ^6.1.3 for Capacitor-6 peer) exposing ensurePermission + scheduleDailyReminder + scheduleOfflineCapReached + scheduleStreakAboutToBreak + cancelAll, all inert on web/test, all wrapped CODE-8 (never throws). `src/platform/usePushRuntime.ts` React glue mounted in App.tsx wires the four caller responsibilities: (1) cancelAll on Settings toggle off, schedule daily reminder on toggle on; (2) ensurePermission cadence after P1 prestige (gate 1) + after P3 (gate 3) when notificationsEnabled; (3) scheduleOfflineCapReached on visibilitychange→hidden using currentOfflineCapHours from now; (4) scheduleStreakAboutToBreak on hidden when dailyLoginStreak > 0. **1972 tests pass** (+10 net, push hook coverage) / **4/4 gates PASS (ratio 0.81)** / typecheck + lint clean. Sprint 10.1 + 10.2 + 10.3 + 10.4 CLOSED. Sprint 8c-tuning deadlock + Sprint 9b CLOSED preserved.
 
 **Earlier this session — Sprint 10 Phase 10.3 GREEN (2026-04-24).** AnalyticsEvent union extended from 14 → 49 events (48 GDD §27 + 1 Sprint 10.1 extension `reset_game`). New `firstEventsFired: string[]` GameState field (132 → 133, PRESERVE on prestige + Transcendence) tracks lifetime fire-once funnel events. New `logEventOnce(name, params, consent, firedBefore)` helper threads the array through actions. Wired at call sites: 9 funnel (app_first_open in initSessionTimestamps, tutorial_first_tap/buy/discharge in onTap/buyNeuron/buyUpgrade/discharge during isTutorialCycle, first_prestige + reached_p5/10 in prestige action, first_transcendence in applyTranscendence, first_purchase across all 4 IAP success paths), 5 feature (achievement_unlocked + diary_entry_added in processAchievementUnlocks helper, mental_state_changed + micro_challenge_completed/failed in tickScheduler), 18 core (first_tap, first_neuron, upgrade_purchased, discharge_used, insight_activated, prestige_completed, polarity_chosen, mutation_chosen, pathway_chosen, pattern_decision, resonant_pattern_discovered, spontaneous_event, personal_best, transcendence, ending_seen, offline_return, ad_watched, pattern_decisions_reset). Weekly Challenge events (3) defined in union but NOT wired — WC mechanics aren't implemented; events fire when consumer ships in a future sprint. SPRINTS.md ↔ GDD §27 gap documented: SPRINTS.md mandates `reset_game` but GDD §27 doesn't list it (carried as Sprint 10.1 extension; 49 total, pending Nico reconciliation). **GameState 132 → 133**. **1932 tests pass** (+4 net from prior 1928) / **4/4 gates PASS (ratio 0.80)** / typecheck + lint clean. Sprint 10.1 + 10.2 CLOSED; Sprint 8c-tuning deadlock + Sprint 9b CLOSED preserved.
-**Last updated:** 2026-04-26 — Pre-launch audit Day 3 shipped (Tier-B value updates + first Tier-1 enhancement).
-**Active sprint:** Pre-launch audit launch bundle (Day 3 of 4) — closes audit-flagged CRITICAL/HIGH items before Sprint 11b device matrix.
+**Last updated:** 2026-04-27 — Pre-launch audit Day 4 shipped (full audit pass + Tier 0 + Dimension M Phase 1 + GDPR data export).
+**Active sprint:** Pre-launch audit launch bundle — Day 4 of N. Dimension M score moved from 3/10 → ~6.5-7/10. Next session resumes with Dimension M Phase 2 (celebration polish).
+
+### Pre-launch audit Day 4 (2026-04-27 — full audit + 13 fixes shipped)
+
+This session: ran the comprehensive multi-disciplinary audit (4 parallel Explore agents + verification battery), wrote `docs/AUDIT.md` (10-section report) + `docs/AUDIT-FIX-PLAN.md` (categorized fix list with effort estimates + Dimension M plan), then executed Tier 0 (10 quick fixes batched into 6 commits) + Dimension M Phase 1 (5 commits, the heavy lift) + GDPR Article 15 data export (1 commit, the other CRITICAL).
+
+**Tier 0 — 6 commits, ~6-8 hrs of audit-flagged quick wins:**
+- `1a86638` Tier 0A: 4 trivial fixes (E-3 buffer-1 sim UI_FIELDS strip-list, I-1 weekly_challenge comment, A-4 audio try/catch, G-2 reducedMotion gates on FragmentOverlay+SplashScreen)
+- `a5a9e83` Tier 0B: Dimension M quick wins (M-5 hide far-future region cards, M-6 ConsciousnessBar comment — existing dynamic 50% trigger was correct, audit overstated)
+- `338181e` Tier 0C: B-2 gate DailyLoginModal during tutorial cycle
+- `f7b1663` Tier 0D: G-3 analyticsConsent toggle in Settings (GDPR Article 21)
+- `3490744` Tier 0E: D-4 Piggy Bank FULL pulse animation (chip already existed; was missing attention-grab)
+- `93b647e` Tier 0F: C-3 SUPERCHARGED ×3 badge above DischargeButton during first tutorial discharge
+
+**Dimension M Phase 1 — 5 commits, the heavy lift:**
+- `ab1406e` M-1 Phase 1.1: gate Regions tab to P1+ via `src/ui/hud/tabVisibility.ts` + activeTab snap-back guard. Adjustments from audit recommendation: Mind/Neurons/Upgrades stay visible at P0 because the tutorial requires them ("Buy your first neuron" hint routes to Neurons; Upgrades has affordable thoughts/memorias rows from start). Only Regions is gated because Hipocampo Memory Shards have zero content at P0.
+- `ca8afef` M-2 Phase 1.2: NeuronsPanel chained reveal via `src/ui/panels/neuronVisibility.ts`. Cookie Clicker pattern — show every unlocked tier + the FIRST locked one as teaser. P0 = basica + sensorial teaser (2 rows, was 5).
+- `a62770e` M-4 Phase 1.3: UpgradesPanel hide Locked section at P0, cap to LOCKED_TEASER_LIMIT=3 lowest-prestige rows at P1+. Drops P0 visible Locked rows from ~20 to 0.
+- `7284482` M-3 Phase 1.4: MindPanel subtab gating via `src/ui/panels/mindSubtabVisibility.ts`. P0 = home + achievements (2 subtabs, was 7). P1 +patterns +diary; P5 +mastery; P7 +archetypes; P13 +resonance. Subtabs use engine constants (`archetypeUnlockPrestige=7`, `resonanceUnlockPrestige=13`) so the UI cadence stays in lockstep with the engine gates.
+- `046b317` Phase 1 wrap: `tests/meta/dimensionMCensus.test.ts` (7 tests) locks the P0 budget at ≤35 visible interactive elements + verifies the per-surface reveal cadence. Catches future regressions before manual device walkthroughs OR a player ever sees the overstuffed UI.
+
+**GDPR data export — 1 commit, the other CRITICAL:**
+- `566adee` H-1: `src/platform/dataExport.ts` (new) + Settings → Privacy → "Download Your Data" button. Cross-platform export with no new Capacitor deps — cascade: native @capacitor/share text → web Blob download → navigator.clipboard fallback. JSON envelope includes bundleId + exportedAt + schemaVersion + state. EU launch is no longer legally blocked on Article 15.
+
+**Dimension M score progress:**
+- Before audit: 3/10 (P0 = ~57 visible interactive elements; "5-57× denser than genre baseline")
+- After Phase 1: ~6.5-7/10 (P0 = ~32 elements; -44%; Realm Grinder / AdCap zone)
+- Target after Phase 2 (next session): 7-8/10 with celebration polish (tab unlock toasts + chime + animated tutorial arrows + cosmetics chip)
+
+**Audit pre-flagged risks closed this session:**
+A-4, B-2, C-3, D-4, E-3, G-2, G-3, H-1, I-1, M-1, M-2, M-3, M-4, M-5, M-6 (note).
+**Pleasant surprises during audit verification (already fixed by Day 1/2/3 work):** Save validation type-aware (was structural-only), Genius Pass re-enable path exists, Pattern reset 2-step confirm exists, Save failure UX wired via SaveSyncIndicator, Remote Config bounds validation exists.
+
+**Files added this session (12):**
+- `docs/AUDIT.md` (10-section pre-launch audit report)
+- `docs/AUDIT-FIX-PLAN.md` (categorized fix list with effort estimates + Dimension M plan)
+- `src/platform/dataExport.ts` (GDPR Article 15)
+- `src/ui/hud/tabVisibility.ts` (Dimension M M-1)
+- `src/ui/panels/neuronVisibility.ts` (Dimension M M-2)
+- `src/ui/panels/mindSubtabVisibility.ts` (Dimension M M-3)
+- `tests/platform/dataExport.test.ts`
+- `tests/meta/dimensionMCensus.test.ts`
+
+**State invariants:**
+- 2222 tests pass (+72 net since session start) / 1 skipped (WC consumer)
+- 6/6 anti-invention gates PASS (ratio 0.81)
+- Typecheck + lint clean
+- Buffer-1 prestige sim 0 errors / 0 warnings
+- GameState 133 fields stable
+- 24 commits ahead of origin/main
+
+**Pending (next session — see `docs/AUDIT-FIX-PLAN.md` for full detail):**
+
+*Dim M Phase 2 (~14 hrs) — celebration polish to make new gates feel earned:*
+- Tab-unlock toast + chime + 30s pulsing "New!" badge on newly-unlocked tabs (Neurons P1, Regions P5)
+- "New Region Available" toast on first region card appearance
+- "New Subtab Available" pulse on Mind tab badge when Patterns/Diary/Mastery/etc. unlock
+- M-7: animated arrow/glow on TutorialHints target buttons
+- ConsciousnessBar comment-only update already shipped
+- M-9: Cosmetics in-game discovery (toast + chip)
+
+*Dim M Phase 3 (~5 hrs) — measure + validate:*
+- Manual P0/P3/P5/P10/P19 census walkthrough in dev preview
+- Update PROGRESS.md with new Dimension M score
+
+*Tier 2 remaining (~30 hrs, pick by priority):*
+- A-1: Cascade visual celebration (visual portion only — SFX needs Nico's asset)
+- A-2: Insight activation visual (visual portion only — SFX needs Nico's asset)
+- C-1 cross-cutting: reusable ActivationFlash component + retrofit at 12 trigger sites
+- G-1: colorblindMode coverage for neuron types + mood tiers + mental states
+- D-1: push permission soft-prompt before native OS modal
+- D-2: Starter Pack push reminder T-24h before expiry
+- D-3: Spark cap countdown UI in SparkPackPurchaseModal
+- M-7: animated tutorial arrow callouts (folds into Phase 2)
+- A-3: anti-spam visible feedback toast
+- C-2: tutorial skip affordance (long-press OR Settings toggle)
+- J-5: top-level ErrorBoundary in App.tsx
+
+*Manual tasks for Nico (cannot auto-solve):*
+- Privacy Policy + ToS legal review + hosting (J-3 CRITICAL)
+- iOS Info.plist URL types + AndroidManifest.xml intent-filter (J-1 CRITICAL — TS routing already in `useNativeNavigation`)
+- Configure 19 RevenueCat IAP products (J-2 CRITICAL — Sprint 9b.3 deferred on RevenueCat propagation; verify dashboard cleared)
+- Mirror 6 Remote Config keys + bounds in Firebase Console (J-4)
+- SFX asset files for Cascade + Insight celebrations
+- RevenueCat customer profile deletion endpoint OR Privacy Policy "contact support" workaround (H-2)
+- Native @capacitor-firebase/crashlytics bridge install + Xcode/Android Studio testing (I-2 deferred to v1.1)
+- Mi A3 perf budget verification via BrowserStack/Firebase Test Lab (Sprint 11b)
+- 50-100 additional achievements (L-3 v1.1 candidate)
+- Spanish i18n per CLAUDE.md per-name approval discipline
+- Push 24 commits to origin/main when convenient
 
 ### Pre-launch audit Day 3 (2026-04-26 — Tier B yeses + Tier 1 #2 + small Tier-A wins)
 
