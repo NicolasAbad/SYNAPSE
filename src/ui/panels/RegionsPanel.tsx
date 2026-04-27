@@ -1,6 +1,11 @@
 import { memo } from 'react';
 import { useGameStore } from '../../store/gameStore';
 import { REGIONS, REGION_META_UPGRADE_ID } from '../../config/regions';
+
+// Pre-launch audit Dimension M (M-5): how many prestiges ahead a region's
+// unlock-gate may be before its card appears as a greyed teaser. CONST-OK —
+// progressive-disclosure cadence value, not a balance/gameplay tunable.
+const REGION_TEASER_LOOKAHEAD = 3;
 import { UPGRADES_BY_ID } from '../../config/upgrades';
 import { canBuyUpgrade } from '../../store/purchases';
 import { formatCurrency } from '../util/formatNumber';
@@ -58,9 +63,18 @@ export const RegionsPanel = memo(function RegionsPanel() {
       </h2>
 
       <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 'var(--spacing-3)' /* CONST-OK */ }}>
-        {REGIONS.map((region) => (
-          <RegionCard key={region.id} region={region} state={state} />
-        ))}
+        {REGIONS
+          // Pre-launch audit Dimension M (M-5): hide far-future region cards. A
+          // P0 player seeing "Broca — Unlock at P14" learns they have 14 prestiges
+          // of grind ahead, which is demotivating. Show only regions whose
+          // unlock-gate is within the next 3 prestiges of where the player is now.
+          // Hipocampo / Prefrontal / Limbico / Visual all carry unlockPrestige: 0
+          // so they're always visible. Broca (P14) appears as a greyed teaser
+          // starting at P11.
+          .filter((region) => region.unlockPrestige <= state.prestigeCount + REGION_TEASER_LOOKAHEAD)
+          .map((region) => (
+            <RegionCard key={region.id} region={region} state={state} />
+          ))}
       </ul>
 
       <RegionMetaUpgradeCard state={state} />

@@ -15,6 +15,14 @@ import { HUD } from '../tokens';
  * Phase 5: wired but will not appear until engine flips the trigger.
  * P26 white-gold override (NARRATIVE.md:476) is NOT wired yet —
  * deferred to Sprint 6 narrative-visual pass.
+ *
+ * Pre-launch audit Dimension M note: the dynamic 50%-threshold reveal is
+ * intentional progressive disclosure on the first cycle. After first
+ * prestige, `consciousnessBarUnlocked` is in PRESTIGE_PRESERVE
+ * (`src/config/prestige.ts:135`) so the bar stays visible for the
+ * lifetime of the save. Audit suggested gating to fixed prestige (P1+),
+ * but that would remove the "you're approaching first prestige" reveal
+ * moment — the current behavior is correct.
  */
 export const ConsciousnessBar = memo(function ConsciousnessBar() {
   const unlocked = useGameStore((s) => s.consciousnessBarUnlocked);
