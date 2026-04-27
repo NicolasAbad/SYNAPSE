@@ -27,6 +27,12 @@ import { hapticHeavy, hapticMedium } from '../ui/haptics';
 import { publishCascadeFlash, publishFirstCascadeOverlay } from '../ui/hud/cascadeFlashEvents';
 import { publishInsightActivation } from '../ui/hud/insightActivationEvents';
 import { getInsightLevel } from '../engine/insight';
+
+// Pre-launch audit Tier-2 audit item C — sentinel key in tabBadgesDismissed.
+// Consumer (TutorialHints.tsx) imports this constant so both sides use the
+// same string; defining it in the store keeps the dependency arrow one-way
+// (UI → store, never the reverse).
+export const TUTORIAL_HINTS_SKIPPED_KEY = 'tutorial:hints_skipped';
 import { handlePrestige, type PrestigeOutcome } from '../engine/prestige';
 import { handleTranscendence, type TranscendenceOutcome } from '../engine/transcendence';
 import { tryBuyResonanceUpgrade } from '../engine/resonanceUpgrades';
@@ -348,6 +354,8 @@ export interface GameStoreActions {
   setActiveMindSubtab: (subtab: MindSubtabId) => void;
   /** Pre-launch audit Dim M Phase 2: mark a tab/subtab unlock badge as acknowledged. */
   acknowledgeUnlock: (key: string) => void;
+  // Pre-launch audit Tier-2 item C — toggle the tutorial-hints-skipped sentinel.
+  setTutorialHintsSkipped: (skipped: boolean) => void;
   /** Sprint 2 Phase 6: GDPR analytics opt-in. Writes GameState.analyticsConsent. */
   setAnalyticsConsent: (consent: boolean) => void;
   /** Pre-launch audit Day 1: surface a save-write failure to the UI banner. */
@@ -802,6 +810,20 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
       ? state
       : { tabBadgesDismissed: [...state.tabBadgesDismissed, key] }
   )),
+  // Pre-launch audit Tier-2 item C — tutorial-hints-skipped sentinel. Reuses
+  // the existing tabBadgesDismissed slot via a namespaced key. PRESERVE on
+  // prestige + Transcendence per slot semantics — once a player toggles
+  // skip on, it sticks across runs (matches the audit recommendation).
+  setTutorialHintsSkipped: (skipped) => set((state) => {
+    const key = TUTORIAL_HINTS_SKIPPED_KEY;
+    const present = state.tabBadgesDismissed.includes(key);
+    if (skipped === present) return state; // no-op
+    return {
+      tabBadgesDismissed: skipped
+        ? [...state.tabBadgesDismissed, key]
+        : state.tabBadgesDismissed.filter((k) => k !== key),
+    };
+  }),
   setAnalyticsConsent: (consent) => set({ analyticsConsent: consent }),
   setLastSaveError: (message) => set({ lastSaveError: message }),
   setNetworkError: (message) => set({ networkError: message }),

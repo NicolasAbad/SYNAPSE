@@ -747,6 +747,9 @@ export const en = {
     sectionNotifications: 'Notifications',
     sectionAccount: 'Account',
     sectionGame: 'Game',
+    // Pre-launch audit Tier-2 item C — tutorial-skip toggle.
+    tutorialSkipLabel: 'Skip tutorial hints',
+    tutorialSkipHint: 'Hide the on-screen tutorial pill. Useful for replays or speedrunners.',
     sectionLegal: 'Legal',
     legalPrivacyButton: 'Privacy Policy',
     legalTermsButton: 'Terms of Service',

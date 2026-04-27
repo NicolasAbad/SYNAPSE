@@ -1,6 +1,6 @@
 import { memo, useEffect, useState } from 'react';
 import { SYNAPSE_CONSTANTS } from '../../config/constants';
-import { useGameStore } from '../../store/gameStore';
+import { useGameStore, TUTORIAL_HINTS_SKIPPED_KEY } from '../../store/gameStore';
 import { NEURON_CONFIG, neuronCost } from '../../config/neurons';
 import { MOTION } from '../tokens';
 import { t } from '../../config/strings';
@@ -94,6 +94,13 @@ export const TutorialHints = memo(function TutorialHints() {
   // Phase 4c.6.5 — also hide on non-home Mind subtabs (same reason as Discharge).
   const activeTab = useGameStore((s) => s.activeTab);
   const activeMindSubtab = useGameStore((s) => s.activeMindSubtab);
+  // Pre-launch audit Tier-2 item C — when the player has flipped the
+  // "Skip tutorial hints" toggle in Settings, suppress every hint surface.
+  // Subscribing to the array keeps the suppression reactive (toggle-on
+  // hides the currently-visible hint pill on the next render).
+  const tutorialHintsSkipped = useGameStore((s) =>
+    s.tabBadgesDismissed.includes(TUTORIAL_HINTS_SKIPPED_KEY),
+  );
 
   const [idleTimerFired, setIdleTimerFired] = useState(false);
   const [firstTapDone, setFirstTapDone] = useState(false);
@@ -169,7 +176,7 @@ export const TutorialHints = memo(function TutorialHints() {
     return () => setActiveTutorialTarget(null);
   }, [publishedTarget]);
 
-  if (!hintVisible || active === null) return null;
+  if (!hintVisible || active === null || tutorialHintsSkipped) return null;
 
   return (
     <div

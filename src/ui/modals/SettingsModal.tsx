@@ -71,6 +71,11 @@ export const SettingsModal = memo(function SettingsModal({ open, onClose, restor
   // this lets them change their mind from Settings any time after.
   const analyticsConsent = useGameStore((s) => s.analyticsConsent);
   const setAnalyticsConsent = useGameStore((s) => s.setAnalyticsConsent);
+  // Pre-launch audit Tier-2 item C — tutorial-skip toggle. Sentinel key
+  // lives in the existing 133-field tabBadgesDismissed slot (no schema bump).
+  const tabBadgesDismissed = useGameStore((s) => s.tabBadgesDismissed);
+  const setTutorialHintsSkipped = useGameStore((s) => s.setTutorialHintsSkipped);
+  const tutorialHintsSkipped = tabBadgesDismissed.includes('tutorial:hints_skipped');
 
   const [status, setStatus] = useState<RestoreStatus>('idle');
   // Pre-launch audit H-1 — GDPR Article 15 data export status surface.
@@ -192,6 +197,14 @@ export const SettingsModal = memo(function SettingsModal({ open, onClose, restor
         </Section>
 
         <Section title={t.sectionGame}>
+          {/* Tutorial-skip toggle (pre-launch audit followup). */}
+          <ToggleRow
+            label={t.tutorialSkipLabel}
+            hint={t.tutorialSkipHint}
+            checked={tutorialHintsSkipped}
+            onChange={setTutorialHintsSkipped}
+            testId="settings-tutorial-skip"
+          />
           <HardResetFlow />
         </Section>
 
