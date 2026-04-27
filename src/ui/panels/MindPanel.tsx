@@ -7,6 +7,10 @@ import { DiarySubtab } from './DiarySubtab';
 import { AchievementsSubtab } from './AchievementsSubtab';
 import { MasterySubtab } from './MasterySubtab';
 import { visibleMindSubtabsAt, FALLBACK_MIND_SUBTAB } from './mindSubtabVisibility';
+import {
+  isSubtabUnlockUnacknowledged, unlockKeyForSubtab,
+} from '../hud/unlockNotifications';
+import { MindSubtabButton } from './MindSubtabButton';
 
 /**
  * Mind tab panel — subtab router per Sprint 4b Phase 4b.4 (scope-addition
@@ -35,6 +39,10 @@ export const MindPanel = memo(function MindPanel() {
   const subtab = useGameStore((s) => s.activeMindSubtab);
   const setSubtab = useGameStore((s) => s.setActiveMindSubtab);
   const prestigeCount = useGameStore((s) => s.prestigeCount);
+  // Pre-launch audit Dim M Phase 2 — unlock-badge state. Subscribing here
+  // keeps the per-subtab badges fresh as acknowledgeUnlock fires.
+  const tabBadgesDismissed = useGameStore((s) => s.tabBadgesDismissed);
+  const acknowledgeUnlock = useGameStore((s) => s.acknowledgeUnlock);
   const visibleSubtabs = visibleMindSubtabsAt(prestigeCount);
   const showBody = subtab !== 'home';
 
@@ -45,9 +53,21 @@ export const MindPanel = memo(function MindPanel() {
     if (!visibleSubtabs.includes(subtab)) setSubtab(FALLBACK_MIND_SUBTAB);
   }, [subtab, visibleSubtabs, setSubtab]);
 
+  const onSubtabTap = (s: MindSubtabId) => {
+    setSubtab(s);
+    if (isSubtabUnlockUnacknowledged({ prestigeCount, tabBadgesDismissed }, s)) {
+      acknowledgeUnlock(unlockKeyForSubtab(s));
+    }
+  };
+
   return (
     <>
-      <MindSubtabBar subtab={subtab} visibleSubtabs={visibleSubtabs} onChange={setSubtab} />
+      <MindSubtabBar
+        subtab={subtab}
+        visibleSubtabs={visibleSubtabs}
+        onChange={onSubtabTap}
+        badgeState={{ prestigeCount, tabBadgesDismissed }}
+      />
       {showBody && visibleSubtabs.includes(subtab) && <MindSubtabBody subtab={subtab} />}
     </>
   );
@@ -57,10 +77,12 @@ function MindSubtabBar({
   subtab,
   visibleSubtabs,
   onChange,
+  badgeState,
 }: {
   subtab: MindSubtabId;
   visibleSubtabs: MindSubtabId[];
   onChange: (s: MindSubtabId) => void;
+  badgeState: { prestigeCount: number; tabBadgesDismissed: string[] };
 }) {
   return (
     <div
@@ -93,51 +115,15 @@ function MindSubtabBar({
       }}
     >
       {visibleSubtabs.map((s) => (
-        <SubtabButton key={s} value={s} active={subtab === s} onSelect={onChange} />
+        <MindSubtabButton
+          key={s}
+          value={s}
+          active={subtab === s}
+          onSelect={onChange}
+          showUnlockBadge={isSubtabUnlockUnacknowledged(badgeState, s)}
+        />
       ))}
     </div>
-  );
-}
-
-function SubtabButton({
-  value,
-  active,
-  onSelect,
-}: {
-  value: MindSubtabId;
-  active: boolean;
-  onSelect: (s: MindSubtabId) => void;
-}) {
-  return (
-    <button
-      type="button"
-      data-testid={`mind-subtab-${value}`}
-      onPointerDown={() => onSelect(value)}
-      style={{
-        // Sprint 4c Phase 4c.6 — tighter padding so 6 buttons fit more comfortably
-        // on 420px-wide viewports (iPhone SE / older Android baseline).
-        padding: 'var(--spacing-1) var(--spacing-2)', // CONST-OK: CSS custom property ref
-        // CODE-4 tap-target: Android/iOS guidance = 48dp / 44pt. `touchTargetMin`
-        // token is 48px (src/ui/tokens.ts); spacing-12 maps to the same 3rem/48px.
-        // Width stays intrinsic so chip row still scrolls on 360px viewports.
-        minHeight: 'var(--spacing-12)', // CONST-OK: CSS custom property ref — WCAG tap-target
-        display: 'flex',
-        alignItems: 'center',
-        background: active ? 'var(--color-primary)' : 'transparent',
-        color: active ? 'var(--color-bg-deep)' : 'var(--color-text-secondary)',
-        border: '1px solid var(--color-border-subtle)',
-        borderRadius: 'var(--radius-full)',
-        fontFamily: 'var(--font-body)',
-        fontSize: 'var(--text-xs)',
-        fontWeight: active ? 'var(--font-weight-semibold)' : 'var(--font-weight-normal)',
-        cursor: 'pointer',
-        touchAction: 'manipulation',
-        whiteSpace: 'nowrap',
-        flexShrink: 0, // CONST-OK: preserve button width inside the scrollable flex row
-      }}
-    >
-      {t(`mind_subtabs.${value}`)}
-    </button>
   );
 }
 

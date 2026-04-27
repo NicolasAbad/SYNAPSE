@@ -3,6 +3,9 @@ import { useGameStore } from '../../store/gameStore';
 import { t } from '../../config/strings';
 import { HUD } from '../tokens';
 import { visibleTabsAt } from './tabVisibility';
+import {
+  isTabUnlockUnacknowledged, mindTabHasUnacknowledgedSubtab, unlockKeyForTab,
+} from './unlockNotifications';
 
 /**
  * Bottom 4-tab navigation. Mockup Screen 1: rect x=0 y=570 w=390 h=130
@@ -30,6 +33,11 @@ export const TabBar = memo(function TabBar() {
   const activeTab = useGameStore((s) => s.activeTab);
   const setActiveTab = useGameStore((s) => s.setActiveTab);
   const prestigeCount = useGameStore((s) => s.prestigeCount);
+  // Pre-launch audit Dim M Phase 2 — selectors for the "New" badge logic.
+  // Subscribing to tabBadgesDismissed makes the badge clear instantly when
+  // acknowledgeUnlock fires from the tap handler below.
+  const tabBadgesDismissed = useGameStore((s) => s.tabBadgesDismissed);
+  const acknowledgeUnlock = useGameStore((s) => s.acknowledgeUnlock);
   const visibleTabs = visibleTabsAt(prestigeCount);
 
   // Snap activeTab back to 'mind' if it points to a now-hidden tab. Defensive
@@ -39,6 +47,21 @@ export const TabBar = memo(function TabBar() {
   useEffect(() => {
     if (!visibleTabs.includes(activeTab)) setActiveTab('mind');
   }, [activeTab, visibleTabs, setActiveTab]);
+
+  // Pre-launch audit Dim M Phase 2 — narrow GameState shape for the badge
+  // helpers. Both fields above are subscribed, so this object is fresh on
+  // every render that matters.
+  const badgeState = { prestigeCount, tabBadgesDismissed };
+
+  const onTabTap = (tab: typeof visibleTabs[number]) => {
+    setActiveTab(tab);
+    // Tapping the tab acknowledges its unlock badge. Mind tab acknowledges
+    // no key directly — its sub-badges clear when the player taps the actual
+    // subtab inside MindPanel.
+    if (isTabUnlockUnacknowledged(badgeState, tab)) {
+      acknowledgeUnlock(unlockKeyForTab(tab));
+    }
+  };
 
   return (
     <nav
@@ -60,13 +83,17 @@ export const TabBar = memo(function TabBar() {
     >
       {visibleTabs.map((tab) => {
         const isActive = activeTab === tab;
+        const showBadge =
+          isTabUnlockUnacknowledged(badgeState, tab) ||
+          (tab === 'mind' && mindTabHasUnacknowledgedSubtab(badgeState));
         return (
           <button
             key={tab}
             type="button"
             data-testid={`hud-tab-${tab}`}
             data-active={isActive}
-            onPointerDown={() => setActiveTab(tab)}
+            data-unlock-badge={showBadge ? 'true' : 'false'}
+            onPointerDown={() => onTabTap(tab)}
             style={{
               flex: 1,
               minHeight: HUD.touchTargetMin,
@@ -79,9 +106,27 @@ export const TabBar = memo(function TabBar() {
               fontWeight: isActive ? 'var(--font-weight-semibold)' : 'var(--font-weight-regular)',
               cursor: 'pointer',
               touchAction: 'manipulation',
+              position: 'relative',
             }}
           >
             {t(`tabs.${tab}`)}
+            {showBadge && (
+              <span
+                data-testid={`hud-tab-${tab}-unlock-badge`}
+                aria-label="new"
+                className="synapse-unlock-pulse"
+                style={{
+                  position: 'absolute',
+                  top: 4, // CONST-OK: visual offset (4px = half of 8 spacing token)
+                  right: 'calc(50% - var(--spacing-6))', // CONST-OK: position relative to centered label
+                  width: 8, // CONST-OK: dot diameter, parallels existing tabBadge dot
+                  height: 8, // CONST-OK
+                  borderRadius: 'var(--radius-full)',
+                  background: 'var(--color-primary)',
+                  boxShadow: '0 0 8px var(--color-primary)', // CONST-OK: glow idiom
+                }}
+              />
+            )}
           </button>
         );
       })}

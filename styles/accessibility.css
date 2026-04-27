@@ -139,3 +139,17 @@
   animation: synapse-piggy-pulse 1800ms ease-out infinite;
 }
 
+/* Pre-launch audit Dim M Phase 2 — unlock-badge pulse. New tab/subtab badges
+ * use this animation to draw attention to a freshly-revealed surface. The
+ * pulse is subtle (1400ms cycle, low-amplitude shadow) so it doesn't
+ * compete with the discharge-pulse on the Discharge button. ReducedMotion
+ * is handled by the .a11y-no-motion override above (forces 0s duration). */
+@keyframes synapse-unlock-pulse {
+  0%   { transform: scale(1);    box-shadow: 0 0 4px var(--color-primary); }
+  50%  { transform: scale(1.35); box-shadow: 0 0 12px var(--color-primary); }
+  100% { transform: scale(1);    box-shadow: 0 0 4px var(--color-primary); }
+}
+.synapse-unlock-pulse {
+  animation: synapse-unlock-pulse 1400ms ease-in-out infinite;
+}
+

@@ -344,6 +344,8 @@ export interface GameStoreActions {
   setActiveTab: (tab: TabId) => void;
   /** Sprint 4c Phase 4c.6.5: Mind subtab selector. Lets sibling HUD components gate visibility. */
   setActiveMindSubtab: (subtab: MindSubtabId) => void;
+  /** Pre-launch audit Dim M Phase 2: mark a tab/subtab unlock badge as acknowledged. */
+  acknowledgeUnlock: (key: string) => void;
   /** Sprint 2 Phase 6: GDPR analytics opt-in. Writes GameState.analyticsConsent. */
   setAnalyticsConsent: (consent: boolean) => void;
   /** Pre-launch audit Day 1: surface a save-write failure to the UI banner. */
@@ -781,6 +783,15 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
   },
   setActiveTab: (tab) => set({ activeTab: tab, activeMindSubtab: 'home' }),
   setActiveMindSubtab: (subtab) => set({ activeMindSubtab: subtab }),
+  // Pre-launch audit Dim M Phase 2 — append-once into the existing 133-field
+  // tabBadgesDismissed array (no schema bump). Idempotent: a duplicate
+  // acknowledge is a no-op so multiple consumers (TabBar + UnlockToast)
+  // can safely fire without thrashing the array.
+  acknowledgeUnlock: (key) => set((state) => (
+    state.tabBadgesDismissed.includes(key)
+      ? state
+      : { tabBadgesDismissed: [...state.tabBadgesDismissed, key] }
+  )),
   setAnalyticsConsent: (consent) => set({ analyticsConsent: consent }),
   setLastSaveError: (message) => set({ lastSaveError: message }),
   setNetworkError: (message) => set({ networkError: message }),

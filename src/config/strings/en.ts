@@ -35,6 +35,17 @@ export const en = {
     upgrades: 'Upgrades',
     regions: 'Regions',
   },
+  // Pre-launch audit Dim M Phase 2 — tab/subtab unlock celebration toasts.
+  // Surfaced at the moment a new UI surface becomes visible (tab or Mind
+  // subtab). Player taps the surface to dismiss the persistent badge.
+  unlock_toast: {
+    tab_regions: 'New tab unlocked: Regions',
+    subtab_patterns: 'New: Patterns tree',
+    subtab_diary: 'New: Neural Diary',
+    subtab_mastery: 'New: Mastery tracking',
+    subtab_archetypes: 'New: Archetypes',
+    subtab_resonance: 'New: Resonance',
+  },
   neurons: {
     basica: {
       name: 'Basic',
