@@ -32,6 +32,13 @@ export const DischargeButton = memo(function DischargeButton() {
   // M-7: glow when the active tutorial hint targets the discharge button.
   const isTutorialCallout = useIsTutorialTarget('discharge-button');
   if (activeTab !== 'mind' || activeMindSubtab !== 'home') return null;
+  // Playtest fix (Mi A3 device feedback 2026-04-27): don't render at all
+  // when no charge is available. Previously we rendered disabled+dimmed,
+  // which players read as a constant distraction in the bottom-center
+  // hot zone. Visible-only-when-actionable is the standard idle pattern
+  // (Cookie Clicker / AdCap / NGU all hide the prestige/discharge equivalent
+  // until the trigger is met).
+  if (!enabled) return null;
 
   const onTap = () => {
     if (!enabled) return;

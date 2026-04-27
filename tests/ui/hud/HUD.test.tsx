@@ -24,6 +24,10 @@ afterEach(() => {
 
 describe('HUD composition', () => {
   test('mounts all 7 sub-components under hud-root', () => {
+    // Seed dischargeCharges=1 so the DischargeButton renders — playtest fix
+    // 2026-04-27 made the button visible-only-when-actionable, so the default
+    // state (charges=0) intentionally returns null.
+    useGameStore.setState({ dischargeCharges: 1 });
     const { getByTestId, queryByTestId } = render(<HUD />);
     expect(getByTestId('hud-root')).toBeTruthy();
     expect(getByTestId('hud-thoughts')).toBeTruthy();
@@ -149,12 +153,14 @@ describe('ConsciousnessBar', () => {
 });
 
 describe('DischargeButton (Sprint 3 Phase 6 wiring)', () => {
-  test('renders disabled button with translated label when no charges', () => {
+  test('renders nothing when no charges (playtest-fix 2026-04-27)', () => {
+    // Pre-fix: button rendered disabled+dimmed, distracted players in the
+    // bottom hot zone. Now: visible-only-when-actionable. Engine state IS
+    // surfaced via the DischargeCharges countdown chip up top.
     useGameStore.setState({ dischargeCharges: 0 });
-    const { getByTestId } = render(<DischargeButton />);
-    const btn = getByTestId('hud-discharge-button') as HTMLButtonElement;
-    expect(btn.disabled).toBe(true);
-    expect(btn.textContent).toContain('DISCHARGE');
+    const { queryByTestId } = render(<DischargeButton />);
+    expect(queryByTestId('hud-discharge-button')).toBeNull();
+    expect(queryByTestId('hud-discharge-button-wrapper')).toBeNull();
   });
 
   test('renders enabled button when charges > 0', () => {
