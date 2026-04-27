@@ -2,6 +2,7 @@ import { memo, useEffect, useState } from 'react';
 import { SYNAPSE_CONSTANTS } from '../../config/constants';
 import { MOTION } from '../tokens';
 import { t } from '../../config/strings';
+import { useGameStore } from '../../store/gameStore';
 
 /**
  * UI-9 step 1: branded splash — full-screen dark overlay with
@@ -17,6 +18,7 @@ interface SplashScreenProps {
 
 export const SplashScreen = memo(function SplashScreen({ onComplete }: SplashScreenProps) {
   const [fadingOut, setFadingOut] = useState(false);
+  const reducedMotion = useGameStore((s) => s.reducedMotion);
 
   useEffect(() => {
     const fadeTimer = setTimeout(() => setFadingOut(true), SYNAPSE_CONSTANTS.splashDurationMs);
@@ -43,7 +45,7 @@ export const SplashScreen = memo(function SplashScreen({ onComplete }: SplashScr
         justifyContent: 'center',
         zIndex: 1000, // CONST-OK: top-layer overlay stacking idiom (CODE-1 exception)
         opacity: fadingOut ? 0 : 1, // CONST-OK: binary visible/hidden (CODE-1 exception)
-        transition: `opacity ${MOTION.durSlow}ms ease-out`,
+        transition: reducedMotion ? 'none' : `opacity ${MOTION.durSlow}ms ease-out`,
         pointerEvents: fadingOut ? 'none' : 'auto',
       }}
     >

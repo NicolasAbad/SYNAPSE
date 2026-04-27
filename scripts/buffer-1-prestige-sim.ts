@@ -46,7 +46,11 @@ function freshState(): GameState {
   useGameStore.getState().reset();
   const raw = useGameStore.getState() as unknown as Record<string, unknown>;
   const out: Record<string, unknown> = {};
-  const UI_FIELDS = new Set(['activeTab', 'activeMindSubtab', 'undoToast', 'antiSpamActive', 'achievementToast']);
+  // Pre-launch audit Day 1 added `lastSaveError` and `networkError` to the store
+  // as UI-state fields surfaced via SaveSyncIndicator + NetworkErrorToast. They
+  // live alongside the 5 prior UI fields and must be stripped here so the sim's
+  // §32 GameState field-count assertion (expects 133) keeps holding.
+  const UI_FIELDS = new Set(['activeTab', 'activeMindSubtab', 'undoToast', 'antiSpamActive', 'achievementToast', 'lastSaveError', 'networkError']);
   for (const [k, v] of Object.entries(raw)) {
     if (typeof v === 'function') continue;
     if (UI_FIELDS.has(k)) continue;

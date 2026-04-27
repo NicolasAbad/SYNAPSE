@@ -78,6 +78,9 @@ export type AnalyticsEvent =
   | 'genius_pass_purchased'
   | 'pattern_decisions_reset'
   // ── Weekly Challenge (3) — CORE-9 ──
+  // Defined for forward-compat. The Weekly Challenge consumer is NOT shipping
+  // in v1.0 (per Sprint 10 close notes); these events have no caller until the
+  // WC mechanics land. If WC is dropped from the roadmap, remove from this union.
   | 'weekly_challenge_started'
   | 'weekly_challenge_completed'
   | 'weekly_challenge_expired'

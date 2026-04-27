@@ -19,6 +19,7 @@ export const FragmentOverlay = memo(function FragmentOverlay() {
   const seen = useGameStore((s) => s.narrativeFragmentsSeen);
   const activeTab = useGameStore((s) => s.activeTab);
   const activeMindSubtab = useGameStore((s) => s.activeMindSubtab);
+  const reducedMotion = useGameStore((s) => s.reducedMotion);
 
   const [queue, setQueue] = useState<readonly string[]>([]);
   const [currentId, setCurrentId] = useState<string | null>(null);
@@ -97,7 +98,7 @@ export const FragmentOverlay = memo(function FragmentOverlay() {
         lineHeight: 1.65, // CONST-OK: NARRATIVE typography idiom
         letterSpacing: '0.02em', // CONST-OK: CSS typography idiom
         opacity,
-        transition: `opacity ${MOTION.durSlow}ms ease-in-out`,
+        transition: reducedMotion ? 'none' : `opacity ${MOTION.durSlow}ms ease-in-out`,
         pointerEvents: 'none',
         zIndex: 500, // CONST-OK: above canvas, below splash
       }}

@@ -51,7 +51,13 @@ export function NeuronCanvas() {
     const tapY = ev.clientY - rect.top;
 
     // AudioContext unlock — iOS Safari requires first user gesture (CODE-5).
-    void unlockAudioOnFirstTap();
+    // Pre-launch audit fix: wrap in try so an iOS denial path or audio-context
+    // construction failure can't bubble out of the tap handler. CODE-8.
+    try {
+      void unlockAudioOnFirstTap();
+    } catch (e) {
+      console.error('[NeuronCanvas] unlockAudioOnFirstTap failed:', e);
+    }
 
     const state = useGameStore.getState();
     const result = testHit(tapX, tapY, state, dimsRef.current.width, dimsRef.current.height);
