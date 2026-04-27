@@ -6,10 +6,12 @@ import { describe, expect, test } from 'vitest';
 import {
   GATED_TABS,
   GATED_SUBTABS,
+  COSMETICS_DISCOVERY_KEY,
   unlockKeyForTab,
   unlockKeyForSubtab,
   isTabUnlockUnacknowledged,
   isSubtabUnlockUnacknowledged,
+  isCosmeticsDiscoveryUnacknowledged,
   mindTabHasUnacknowledgedSubtab,
   pendingUnlocks,
 } from '../../../src/ui/hud/unlockNotifications';
@@ -118,10 +120,13 @@ describe('unlockNotifications — pendingUnlocks', () => {
     expect(pendingUnlocks({ prestigeCount: 0, tabBadgesDismissed: [] })).toEqual([]);
   });
 
-  test('returns regions tab + patterns + diary at P1 (gated subtabs unlock together)', () => {
+  test('returns regions tab + patterns + diary + cosmetics at P1 (full first-prestige bundle)', () => {
     const list = pendingUnlocks({ prestigeCount: 1, tabBadgesDismissed: [] });
     expect(list.map((u) => u.key)).toEqual([
-      'unlock:tab:regions', 'unlock:subtab:patterns', 'unlock:subtab:diary',
+      'unlock:tab:regions',
+      'unlock:subtab:patterns',
+      'unlock:subtab:diary',
+      'unlock:cosmetics:store',
     ]);
   });
 
@@ -131,11 +136,37 @@ describe('unlockNotifications — pendingUnlocks', () => {
     expect(list[1].kind).toBe('subtab');
   });
 
+  test('cosmetics surface comes last in the queue (after gameplay-surface unlocks)', () => {
+    const list = pendingUnlocks({ prestigeCount: 1, tabBadgesDismissed: [] });
+    expect(list[list.length - 1].kind).toBe('cosmetics');
+  });
+
   test('acknowledged keys drop from the queue', () => {
     const list = pendingUnlocks({
       prestigeCount: 1,
-      tabBadgesDismissed: ['unlock:tab:regions', 'unlock:subtab:patterns'],
+      tabBadgesDismissed: ['unlock:tab:regions', 'unlock:subtab:patterns', 'unlock:cosmetics:store'],
     });
     expect(list.map((u) => u.key)).toEqual(['unlock:subtab:diary']);
+  });
+});
+
+describe('unlockNotifications — cosmetics discovery (M-9)', () => {
+  test('false at P0 (cosmetics gate is P1)', () => {
+    expect(isCosmeticsDiscoveryUnacknowledged({ prestigeCount: 0, tabBadgesDismissed: [] })).toBe(false);
+  });
+
+  test('true at P1 with empty dismissed list', () => {
+    expect(isCosmeticsDiscoveryUnacknowledged({ prestigeCount: 1, tabBadgesDismissed: [] })).toBe(true);
+  });
+
+  test('still true at P10+ (lifetime gate, not single-prestige)', () => {
+    expect(isCosmeticsDiscoveryUnacknowledged({ prestigeCount: 25, tabBadgesDismissed: [] })).toBe(true);
+  });
+
+  test('false once acknowledged via COSMETICS_DISCOVERY_KEY', () => {
+    expect(isCosmeticsDiscoveryUnacknowledged({
+      prestigeCount: 5,
+      tabBadgesDismissed: [COSMETICS_DISCOVERY_KEY],
+    })).toBe(false);
   });
 });

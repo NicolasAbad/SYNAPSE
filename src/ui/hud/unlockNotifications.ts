@@ -72,9 +72,25 @@ export function mindTabHasUnacknowledgedSubtab(state: UnlockState): boolean {
   return GATED_SUBTABS.some((s) => isSubtabUnlockUnacknowledged(state, s));
 }
 
+/** Pre-launch audit Dim M Phase 2 (M-9) — sentinel key for the once-per-
+ * lifetime cosmetics discovery toast. Stored in tabBadgesDismissed so the
+ * player only sees the prompt the first time they prestige. */
+export const COSMETICS_DISCOVERY_KEY = 'unlock:cosmetics:store';
+
+/** First prestige at which the cosmetics toast fires — same threshold as
+ * the regions tab unlock. CONST-OK (progressive-disclosure cadence). */
+const COSMETICS_DISCOVERY_PRESTIGE = 1;
+
 export type PendingUnlock =
   | { kind: 'tab'; id: TabId; key: string }
-  | { kind: 'subtab'; id: MindSubtabId; key: string };
+  | { kind: 'subtab'; id: MindSubtabId; key: string }
+  | { kind: 'cosmetics'; id: 'store'; key: string };
+
+/** True when the cosmetics discovery toast has not yet fired this lifetime. */
+export function isCosmeticsDiscoveryUnacknowledged(state: UnlockState): boolean {
+  if (state.prestigeCount < COSMETICS_DISCOVERY_PRESTIGE) return false;
+  return !state.tabBadgesDismissed.includes(COSMETICS_DISCOVERY_KEY);
+}
 
 /**
  * Returns every visible-but-unacknowledged unlock in a stable order
@@ -94,6 +110,12 @@ export function pendingUnlocks(state: UnlockState): PendingUnlock[] {
     if (isSubtabUnlockUnacknowledged(state, subtab)) {
       out.push({ kind: 'subtab', id: subtab, key: unlockKeyForSubtab(subtab) });
     }
+  }
+  // M-9: cosmetics discovery surfaces last in the queue (after the more
+  // urgent gameplay-surface unlocks at the same prestige). Fires once per
+  // lifetime — acknowledged automatically when the player dismisses the toast.
+  if (isCosmeticsDiscoveryUnacknowledged(state)) {
+    out.push({ kind: 'cosmetics', id: 'store', key: COSMETICS_DISCOVERY_KEY });
   }
   return out;
 }

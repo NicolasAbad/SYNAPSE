@@ -45,6 +45,7 @@ export const en = {
     subtab_mastery: 'New: Mastery tracking',
     subtab_archetypes: 'New: Archetypes',
     subtab_resonance: 'New: Resonance',
+    cosmetics: 'Customize your mind — open Settings → Cosmetics',
   },
   neurons: {
     basica: {

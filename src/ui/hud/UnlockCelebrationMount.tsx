@@ -26,12 +26,14 @@ import { playSfx } from '../../platform/audio';
 
 function messageFor(unlock: PendingUnlock): string {
   if (unlock.kind === 'tab') return t(`unlock_toast.tab_${unlock.id}`);
-  return t(`unlock_toast.subtab_${unlock.id}`);
+  if (unlock.kind === 'subtab') return t(`unlock_toast.subtab_${unlock.id}`);
+  return t('unlock_toast.cosmetics');
 }
 
 export const UnlockCelebrationMount = memo(function UnlockCelebrationMount() {
   const tabBadgesDismissed = useGameStore((s) => s.tabBadgesDismissed);
   const prestigeCount = useGameStore((s) => s.prestigeCount);
+  const acknowledgeUnlock = useGameStore((s) => s.acknowledgeUnlock);
   const shownThisSession = useRef<Set<string>>(new Set());
   const [active, setActive] = useState<PendingUnlock | null>(null);
 
@@ -47,10 +49,21 @@ export const UnlockCelebrationMount = memo(function UnlockCelebrationMount() {
     playSfx('tap');
   }, [tabBadgesDismissed, prestigeCount, active]);
 
+  const onDismiss = () => {
+    // M-9: the cosmetics toast is one-shot per lifetime, so dismissing it
+    // also acknowledges (writes the key into tabBadgesDismissed). Tab/subtab
+    // toasts intentionally don't auto-ack here — those keys clear when the
+    // player taps the actual tab/subtab.
+    if (active !== null && active.kind === 'cosmetics') {
+      acknowledgeUnlock(active.key);
+    }
+    setActive(null);
+  };
+
   return (
     <UnlockToast
       message={active === null ? null : messageFor(active)}
-      onDismiss={() => setActive(null)}
+      onDismiss={onDismiss}
     />
   );
 });
