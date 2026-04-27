@@ -182,11 +182,21 @@ describe('DischargeButton (Sprint 3 Phase 6 wiring)', () => {
 });
 
 describe('TabBar', () => {
-  test('renders 4 tabs with translated labels', () => {
-    const { getByTestId } = render(<TabBar />);
+  // Pre-launch audit Dimension M (M-1) — the tab set is now prestige-gated.
+  // P0 cold-start renders 3 tabs (mind / neurons / upgrades); Regions
+  // appears at P1 prestige once Hipocampo Memory Shards become meaningful.
+
+  test('P0: renders 3 tabs (Mind / Neurons / Upgrades) with translated labels', () => {
+    const { getByTestId, queryByTestId } = render(<TabBar />);
     expect(getByTestId('hud-tab-mind').textContent).toBe('Mind');
     expect(getByTestId('hud-tab-neurons').textContent).toBe('Neurons');
     expect(getByTestId('hud-tab-upgrades').textContent).toBe('Upgrades');
+    expect(queryByTestId('hud-tab-regions')).toBeNull();
+  });
+
+  test('P1+: Regions tab unlocks once prestigeCount >= 1', () => {
+    useGameStore.setState({ prestigeCount: 1 });
+    const { getByTestId } = render(<TabBar />);
     expect(getByTestId('hud-tab-regions').textContent).toBe('Regions');
   });
 
@@ -205,6 +215,7 @@ describe('TabBar', () => {
   });
 
   test('tab buttons meet CODE-4 touch target minimum (48px)', () => {
+    useGameStore.setState({ prestigeCount: 1 }); // unlock all tabs to assert on each
     const { getByTestId } = render(<TabBar />);
     for (const tab of ['mind', 'neurons', 'upgrades', 'regions'] as const) {
       const btn = getByTestId(`hud-tab-${tab}`) as HTMLButtonElement;
@@ -213,6 +224,7 @@ describe('TabBar', () => {
   });
 
   test('UI-3: exactly one active tab at any time (max 1 visual badge equivalent)', () => {
+    useGameStore.setState({ prestigeCount: 1 }); // ensure all 4 tabs visible
     const store = useGameStore.getState();
     const tabs = ['mind', 'neurons', 'upgrades', 'regions'] as const;
     for (const tab of tabs) {
@@ -224,6 +236,13 @@ describe('TabBar', () => {
       expect(activeCount).toBe(1);
       unmount();
     }
+  });
+
+  test('M-1 snap-back: legacy save with activeTab=regions at P0 snaps to mind', () => {
+    useGameStore.setState({ prestigeCount: 0, activeTab: 'regions' });
+    render(<TabBar />);
+    // The useEffect runs synchronously on mount → activeTab snaps to 'mind'.
+    expect(useGameStore.getState().activeTab).toBe('mind');
   });
 });
 

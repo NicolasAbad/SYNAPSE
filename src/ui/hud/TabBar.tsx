@@ -1,7 +1,8 @@
-import { memo } from 'react';
-import { useGameStore, type TabId } from '../../store/gameStore';
+import { memo, useEffect } from 'react';
+import { useGameStore } from '../../store/gameStore';
 import { t } from '../../config/strings';
 import { HUD } from '../tokens';
+import { visibleTabsAt } from './tabVisibility';
 
 /**
  * Bottom 4-tab navigation. Mockup Screen 1: rect x=0 y=570 w=390 h=130
@@ -14,12 +15,30 @@ import { HUD } from '../tokens';
  *
  * Tab content panels are empty placeholder divs in Phase 5 — Sprint 3+
  * fills them (Neurons panel first).
+ *
+ * Pre-launch audit Dimension M (M-1): tab visibility is gated by prestige
+ * to keep the start state sparse. The `visibleTabsAt` helper below is the
+ * single source of truth for what renders. Audit-recommended gates of
+ * Neurons→P1 + Regions→P5 were softened — Neurons + Upgrades stay visible
+ * at P0 because the tutorial requires them ("Buy your first neuron" hint
+ * routes the player to the Neurons tab; Upgrades has affordable rows from
+ * P0 priced in thoughts/memorias). Only Regions is gated, because its
+ * Hipocampo Memory Shard tree has zero content at P0 (shards drop from
+ * P1 prestige onward).
  */
-const TABS: TabId[] = ['mind', 'neurons', 'upgrades', 'regions'];
-
 export const TabBar = memo(function TabBar() {
   const activeTab = useGameStore((s) => s.activeTab);
   const setActiveTab = useGameStore((s) => s.setActiveTab);
+  const prestigeCount = useGameStore((s) => s.prestigeCount);
+  const visibleTabs = visibleTabsAt(prestigeCount);
+
+  // Snap activeTab back to 'mind' if it points to a now-hidden tab. Defensive
+  // guard for legacy saves that recorded activeTab='regions' before this
+  // gating shipped — without it, a freshly-loaded P0 save with that activeTab
+  // would render an empty navigation row.
+  useEffect(() => {
+    if (!visibleTabs.includes(activeTab)) setActiveTab('mind');
+  }, [activeTab, visibleTabs, setActiveTab]);
 
   return (
     <nav
@@ -39,7 +58,7 @@ export const TabBar = memo(function TabBar() {
         pointerEvents: 'auto',
       }}
     >
-      {TABS.map((tab) => {
+      {visibleTabs.map((tab) => {
         const isActive = activeTab === tab;
         return (
           <button
