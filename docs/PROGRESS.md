@@ -17,14 +17,42 @@
 **Earlier this session — Sprint 10 Phase 10.4 CLOSED (2026-04-25).** Daily Login Bonus + push notifications complete. Engine: `evaluateDailyLogin` pure helper (CODE-9) returns one of 4 outcomes (no_action / normal_claim / streak_save_eligible / streak_reset) per the 7-day reward cycle [5,5,10,10,15,20,50] with miss-1-day save window. Store: `claimDailyLoginReward`, `resolveStreakSave` (subscriber/ad/reset paths), `recordNotificationPermissionAsked` (gate cadence 1/3). UI: `DailyLoginModal` with two states (reward card + streak-save eligible offering ad-watch via existing `streak_save` AdMob placement #7). Push scheduler: `src/platform/pushScheduler.ts` adapter (Capacitor LocalNotifications, ^6.1.3 for Capacitor-6 peer) exposing ensurePermission + scheduleDailyReminder + scheduleOfflineCapReached + scheduleStreakAboutToBreak + cancelAll, all inert on web/test, all wrapped CODE-8 (never throws). `src/platform/usePushRuntime.ts` React glue mounted in App.tsx wires the four caller responsibilities: (1) cancelAll on Settings toggle off, schedule daily reminder on toggle on; (2) ensurePermission cadence after P1 prestige (gate 1) + after P3 (gate 3) when notificationsEnabled; (3) scheduleOfflineCapReached on visibilitychange→hidden using currentOfflineCapHours from now; (4) scheduleStreakAboutToBreak on hidden when dailyLoginStreak > 0. **1972 tests pass** (+10 net, push hook coverage) / **4/4 gates PASS (ratio 0.81)** / typecheck + lint clean. Sprint 10.1 + 10.2 + 10.3 + 10.4 CLOSED. Sprint 8c-tuning deadlock + Sprint 9b CLOSED preserved.
 
 **Earlier this session — Sprint 10 Phase 10.3 GREEN (2026-04-24).** AnalyticsEvent union extended from 14 → 49 events (48 GDD §27 + 1 Sprint 10.1 extension `reset_game`). New `firstEventsFired: string[]` GameState field (132 → 133, PRESERVE on prestige + Transcendence) tracks lifetime fire-once funnel events. New `logEventOnce(name, params, consent, firedBefore)` helper threads the array through actions. Wired at call sites: 9 funnel (app_first_open in initSessionTimestamps, tutorial_first_tap/buy/discharge in onTap/buyNeuron/buyUpgrade/discharge during isTutorialCycle, first_prestige + reached_p5/10 in prestige action, first_transcendence in applyTranscendence, first_purchase across all 4 IAP success paths), 5 feature (achievement_unlocked + diary_entry_added in processAchievementUnlocks helper, mental_state_changed + micro_challenge_completed/failed in tickScheduler), 18 core (first_tap, first_neuron, upgrade_purchased, discharge_used, insight_activated, prestige_completed, polarity_chosen, mutation_chosen, pathway_chosen, pattern_decision, resonant_pattern_discovered, spontaneous_event, personal_best, transcendence, ending_seen, offline_return, ad_watched, pattern_decisions_reset). Weekly Challenge events (3) defined in union but NOT wired — WC mechanics aren't implemented; events fire when consumer ships in a future sprint. SPRINTS.md ↔ GDD §27 gap documented: SPRINTS.md mandates `reset_game` but GDD §27 doesn't list it (carried as Sprint 10.1 extension; 49 total, pending Nico reconciliation). **GameState 132 → 133**. **1932 tests pass** (+4 net from prior 1928) / **4/4 gates PASS (ratio 0.80)** / typecheck + lint clean. Sprint 10.1 + 10.2 CLOSED; Sprint 8c-tuning deadlock + Sprint 9b CLOSED preserved.
-**Last updated:** 2026-04-26 — Sprint 11a CLOSED.
+**Last updated:** 2026-04-26 — Sprint 11a CLOSED + 3 wrap-up batches shipped.
 **Active sprint:** None (Sprint 11a closed). Next sprint is Sprint 11b per SPRINTS.md.
-**Next action:** Nico decision on next sprint kickoff:
-- **Sprint 11b — Device Matrix + External Testers + Performance** (3 days · CRITICAL per SPRINTS.md line 1051; real devices via BrowserStack/Firebase Test Lab, 2-3 external testers, memory/FPS/battery SLOs, accessibility audit, critical bug fixes). Builds directly on Sprint 11a's coverage + property + determinism + snapshot infrastructure.
-- **Sprint 9b-post-propagation** (if RevenueCat badge cleared — verify dashboard before kickoff). Quick ~25 min interactive sprint to ship 9b.3 (configure 19 IAP products).
+
+**Sprint 11a wrap-up commits this session (after sprint close):**
+- `77da9e2` — backfill 24 rule-ID comments + un-skip 36 of 37 consistency tests (1 stays skipped: WC consumer not yet shipped)
+- `01cedbc` — Sprint 11b prep: perf instrumentation (`src/platform/perf.ts` memory + longtask wrappers + 3 hot-path budget tests catching order-of-magnitude regressions before device matrix runs)
+
+**Final state:** 2150 tests pass / 1 skipped / 6/6 gates / typecheck + lint clean / 11 commits ahead of origin (Sprint 10 close + 11a stack + wrap-up).
+
+**Next action:** Nico decision on next sprint kickoff (or any of the manual tasks listed in **Manual tasks for Nico** below).
+
+**Sprint kickoff candidates:**
+- **Sprint 11b — Device Matrix + External Testers + Performance** (3 days · CRITICAL per SPRINTS.md line 1051). Foundation in place: perf wrappers + budget tests landed in `01cedbc`; coverage thresholds + property tests + determinism gates from Sprint 11a. Outstanding requirements need Nico: BrowserStack/Firebase Test Lab credentials + 2-3 external tester recruitment.
+- **Sprint 9b-post-propagation** (if RevenueCat badge cleared — verify dashboard first). Quick ~25 min interactive sprint to ship 9b.3 (configure 19 IAP products).
 - **Sprint 8c-tuning-round-2** (new strategy needed — see deadlock notes). Blocking TEST-5 finalization which Sprint 11a explicitly deferred.
 - **Spanish i18n Sprint** (per-name approval discipline). v1.1-eligible per CLAUDE.md.
-- **Push commits to origin/main** (Sprint 10 close + 11a.1 + 11a.2 + 11a.2-fix + 11a.3 + 11a.4 + 11a.5 + 11a.6 stack).
+
+### Manual tasks for Nico (carried from this session)
+
+These items can't be done autonomously and need Nico to act:
+
+1. **Verify RevenueCat dashboard cleared** the credentials warning after the prior session's "Gestionar presencia en Play Store" Play Console permission fix. If badge clears → kick off Sprint 9b-post-propagation (~25 min interactive sprint to configure 19 IAP products).
+
+2. **Push 11 commits to origin/main:** Sprint 10 close + 11a.1 + 11a.2 + 11a.2-fix + 11a.3 + 11a.4 + 11a.5 + 11a.6 + session-close + 11a wrap-up + 11b prep. All green with full test/gate coverage. Last pushed commit was Sprint 9a Phase 9a.6.
+
+3. **iOS Info.plist URL types + AndroidManifest.xml intent-filter** for `synapse://` deep links. TS routing handler already ships in `src/platform/useNativeNavigation.ts`; native config requires editing the iOS/Android projects in Xcode/Android Studio.
+
+4. **Firebase Console mirror for the 6 Remote Config keys** defined in `src/config/remoteConfigBounds.ts` (costMult / softCapExponent / cascadeMultiplier / baseOfflineEfficiency / maxOfflineEfficiencyRatio / baseThresholdTable[0]). Adapter ships fetch + bounds validation; remote control requires Nico to mirror keys + bounds in Firebase Console.
+
+5. **Sprint 11b external prerequisites** (when ready to start 11b): BrowserStack/Firebase Test Lab credentials + recruit 2-3 external testers per Sprint 0 manual tasks.
+
+6. **Spanish translation pass** when ready (per-name approval discipline per CLAUDE.md "Language translation per-name approval"). v1.1-eligible.
+
+7. **GDD §27 ↔ AnalyticsEvent reconciliation** — SPRINTS.md mandates `reset_game` event but GDD §27 doesn't list it. Currently shipping as Sprint 10.1 extension (49 total events vs §27's 48). Requires GDD update OR removal of the extension.
+
+8. **TEST-5 strategy decision** for Sprint 8c-tuning-round-2 — three viable paths documented in this PROGRESS.md's Sprint 8c-tuning deadlock notes: (a) smarter sim playstyle, (b) per-archetype-pathway TARGET_MIN arrays, (c) relaxed gate from "all cycles <20% off" to "median cycle within band". Requires Nico's directional pick before any code work resumes.
 
 ### Sprint 11a close dashboard (2026-04-26 — all 6 phases shipped)
 
