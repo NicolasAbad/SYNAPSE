@@ -65,6 +65,11 @@ export const SettingsModal = memo(function SettingsModal({ open, onClose, restor
   const setHighContrast = useGameStore((s) => s.setHighContrast);
   const setFontSize = useGameStore((s) => s.setFontSize);
   const setNotificationsEnabled = useGameStore((s) => s.setNotificationsEnabled);
+  // Pre-launch audit G-3 — GDPR Article 21 right-to-object: post-onboarding
+  // analytics consent toggle. Players can opt out at GdprModal install-time;
+  // this lets them change their mind from Settings any time after.
+  const analyticsConsent = useGameStore((s) => s.analyticsConsent);
+  const setAnalyticsConsent = useGameStore((s) => s.setAnalyticsConsent);
 
   const [status, setStatus] = useState<RestoreStatus>('idle');
 
@@ -129,6 +134,10 @@ export const SettingsModal = memo(function SettingsModal({ open, onClose, restor
 
         <Section title={t.sectionNotifications}>
           <ToggleRow label={t.notificationsLabel} hint={t.notificationsHint} checked={notificationsEnabled} onChange={setNotificationsEnabled} testId="settings-notifications" />
+        </Section>
+
+        <Section title={t.sectionPrivacy}>
+          <ToggleRow label={t.analyticsConsentLabel} hint={t.analyticsConsentHint} checked={analyticsConsent} onChange={setAnalyticsConsent} testId="settings-analytics-consent" />
         </Section>
 
         <p style={captionStyle}>{t.deferredCaveat}</p>

@@ -749,6 +749,10 @@ export const en = {
     fontSizeLarge: 'Large',
     notificationsLabel: 'Daily reminders',
     notificationsHint: 'Reminds you when offline cap is full',
+    // Pre-launch audit G-3 — analyticsConsent toggle (GDPR Article 21).
+    sectionPrivacy: 'Privacy',
+    analyticsConsentLabel: 'Share anonymous usage data',
+    analyticsConsentHint: 'Helps us improve the game; turn off any time',
     deferredCaveat: 'Audio + accessibility consumers ship in upcoming polish updates.',
     hardResetButton: 'Hard Reset',
     hardResetTapPrompt: 'Tap 2 more times to confirm',
