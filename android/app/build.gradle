@@ -48,6 +48,10 @@ try {
     def servicesJSON = file('google-services.json')
     if (servicesJSON.text) {
         apply plugin: 'com.google.gms.google-services'
+        // Pre-launch audit Tier-2 item N-7 (Android portion) — Crashlytics
+        // plugin must be applied AFTER google-services so the build ID
+        // injection has access to the resolved Firebase project config.
+        apply plugin: 'com.google.firebase.crashlytics'
     }
 } catch(Exception e) {
     logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")

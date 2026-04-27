@@ -9,6 +9,14 @@ buildscript {
     dependencies {
         classpath 'com.android.tools.build:gradle:8.2.1'
         classpath 'com.google.gms:google-services:4.4.0'
+        // Pre-launch audit Tier-2 item N-7 (Android portion) — Firebase
+        // Crashlytics Gradle plugin. Required: the @capacitor-firebase/crashlytics
+        // SDK initializes via FirebaseInitProvider at app startup and asserts
+        // the build ID is embedded by this plugin. Without it, the app crashes
+        // immediately on launch with IllegalStateException ("Crashlytics build
+        // ID is missing"). Discovered 2026-04-27 via logcat after the first
+        // device install attempt.
+        classpath 'com.google.firebase:firebase-crashlytics-gradle:3.0.2'
 
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
