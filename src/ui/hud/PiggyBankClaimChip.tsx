@@ -32,6 +32,9 @@ export interface PiggyBankClaimChipProps {
 export const PiggyBankClaimChip = memo(function PiggyBankClaimChip({ onOpen }: PiggyBankClaimChipProps) {
   const piggyBankSparks = useGameStore((s) => s.piggyBankSparks);
   const piggyBankBroken = useGameStore((s) => s.piggyBankBroken);
+  // Pre-launch audit D-4: pulse animation when bank is full to draw attention.
+  // Reduced-motion players get the static chip (no pulse class).
+  const reducedMotion = useGameStore((s) => s.reducedMotion);
 
   const onClick = useCallback(() => onOpen(), [onOpen]);
 
@@ -39,7 +42,13 @@ export const PiggyBankClaimChip = memo(function PiggyBankClaimChip({ onOpen }: P
   if (piggyBankSparks < SYNAPSE_CONSTANTS.piggyBankMaxSparks) return null;
 
   return (
-    <button type="button" data-testid="piggy-claim-chip" style={chipStyle} onPointerDown={onClick}>
+    <button
+      type="button"
+      data-testid="piggy-claim-chip"
+      className={reducedMotion ? undefined : 'piggy-full-pulse'}
+      style={chipStyle}
+      onPointerDown={onClick}
+    >
       {t.chipFull}
     </button>
   );

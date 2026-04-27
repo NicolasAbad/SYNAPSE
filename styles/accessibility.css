@@ -124,3 +124,18 @@
   z-index: 920;
 }
 
+/* Pre-launch audit Tier 0E (D-4) — piggy-bank-full attention pulse. The
+ * PiggyBankClaimChip already renders when the bank hits cap; this animation
+ * makes it grab attention without screaming. Components apply
+ * .piggy-full-pulse class to opt in. ReducedMotion: gate at component level
+ * (omit the class) — the .a11y-no-motion override above also forces 0s
+ * animation-duration as a belt-and-suspenders safety net. */
+@keyframes synapse-piggy-pulse {
+  0%   { box-shadow: 0 0 0   0   color-mix(in srgb, var(--color-warning, #ffb454) 70%, transparent); }
+  70%  { box-shadow: 0 0 10px 6px color-mix(in srgb, var(--color-warning, #ffb454) 0%,  transparent); }
+  100% { box-shadow: 0 0 0   0   color-mix(in srgb, var(--color-warning, #ffb454) 0%,  transparent); }
+}
+.piggy-full-pulse {
+  animation: synapse-piggy-pulse 1800ms ease-out infinite;
+}
+
