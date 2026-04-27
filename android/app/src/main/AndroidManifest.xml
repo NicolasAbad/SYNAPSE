@@ -56,4 +56,9 @@
          offline state before showing an ad (avoids show errors on poor
          connections, MONEY-7). -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- Pre-launch audit Day 1 — Android 13+ (API 33+) requires runtime
+         permission for posting notifications. Without this declaration the
+         LocalNotifications plugin cannot show daily-reminder / offline-cap /
+         streak-save notifications, which are core retention surfaces. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 </manifest>

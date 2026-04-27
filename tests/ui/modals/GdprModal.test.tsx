@@ -38,7 +38,10 @@ describe('GdprModal', () => {
     expect(onComplete).toHaveBeenCalledTimes(1);
   });
 
-  test('Sprint 2 stub: isEU is false (Sprint 9a replaces with real detection)', () => {
-    expect(isEU).toBe(false);
+  test('Pre-launch audit Day 1: isEU is now derived via locale + timezone detection (boolean)', () => {
+    // The Sprint 2 placeholder `isEU = false` was replaced. The actual value
+    // depends on the test environment's navigator.language + Intl timezone.
+    // Detailed detection logic is tested in euDetection.test.ts.
+    expect(typeof isEU).toBe('boolean');
   });
 });

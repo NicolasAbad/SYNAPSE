@@ -17,8 +17,61 @@
 **Earlier this session — Sprint 10 Phase 10.4 CLOSED (2026-04-25).** Daily Login Bonus + push notifications complete. Engine: `evaluateDailyLogin` pure helper (CODE-9) returns one of 4 outcomes (no_action / normal_claim / streak_save_eligible / streak_reset) per the 7-day reward cycle [5,5,10,10,15,20,50] with miss-1-day save window. Store: `claimDailyLoginReward`, `resolveStreakSave` (subscriber/ad/reset paths), `recordNotificationPermissionAsked` (gate cadence 1/3). UI: `DailyLoginModal` with two states (reward card + streak-save eligible offering ad-watch via existing `streak_save` AdMob placement #7). Push scheduler: `src/platform/pushScheduler.ts` adapter (Capacitor LocalNotifications, ^6.1.3 for Capacitor-6 peer) exposing ensurePermission + scheduleDailyReminder + scheduleOfflineCapReached + scheduleStreakAboutToBreak + cancelAll, all inert on web/test, all wrapped CODE-8 (never throws). `src/platform/usePushRuntime.ts` React glue mounted in App.tsx wires the four caller responsibilities: (1) cancelAll on Settings toggle off, schedule daily reminder on toggle on; (2) ensurePermission cadence after P1 prestige (gate 1) + after P3 (gate 3) when notificationsEnabled; (3) scheduleOfflineCapReached on visibilitychange→hidden using currentOfflineCapHours from now; (4) scheduleStreakAboutToBreak on hidden when dailyLoginStreak > 0. **1972 tests pass** (+10 net, push hook coverage) / **4/4 gates PASS (ratio 0.81)** / typecheck + lint clean. Sprint 10.1 + 10.2 + 10.3 + 10.4 CLOSED. Sprint 8c-tuning deadlock + Sprint 9b CLOSED preserved.
 
 **Earlier this session — Sprint 10 Phase 10.3 GREEN (2026-04-24).** AnalyticsEvent union extended from 14 → 49 events (48 GDD §27 + 1 Sprint 10.1 extension `reset_game`). New `firstEventsFired: string[]` GameState field (132 → 133, PRESERVE on prestige + Transcendence) tracks lifetime fire-once funnel events. New `logEventOnce(name, params, consent, firedBefore)` helper threads the array through actions. Wired at call sites: 9 funnel (app_first_open in initSessionTimestamps, tutorial_first_tap/buy/discharge in onTap/buyNeuron/buyUpgrade/discharge during isTutorialCycle, first_prestige + reached_p5/10 in prestige action, first_transcendence in applyTranscendence, first_purchase across all 4 IAP success paths), 5 feature (achievement_unlocked + diary_entry_added in processAchievementUnlocks helper, mental_state_changed + micro_challenge_completed/failed in tickScheduler), 18 core (first_tap, first_neuron, upgrade_purchased, discharge_used, insight_activated, prestige_completed, polarity_chosen, mutation_chosen, pathway_chosen, pattern_decision, resonant_pattern_discovered, spontaneous_event, personal_best, transcendence, ending_seen, offline_return, ad_watched, pattern_decisions_reset). Weekly Challenge events (3) defined in union but NOT wired — WC mechanics aren't implemented; events fire when consumer ships in a future sprint. SPRINTS.md ↔ GDD §27 gap documented: SPRINTS.md mandates `reset_game` but GDD §27 doesn't list it (carried as Sprint 10.1 extension; 49 total, pending Nico reconciliation). **GameState 132 → 133**. **1932 tests pass** (+4 net from prior 1928) / **4/4 gates PASS (ratio 0.80)** / typecheck + lint clean. Sprint 10.1 + 10.2 CLOSED; Sprint 8c-tuning deadlock + Sprint 9b CLOSED preserved.
-**Last updated:** 2026-04-26 — Sprint 11a CLOSED + 3 wrap-up batches shipped.
-**Active sprint:** None (Sprint 11a closed). Next sprint is Sprint 11b per SPRINTS.md.
+**Last updated:** 2026-04-26 — Pre-launch audit Day 1 shipped (compliance + stability bundle).
+**Active sprint:** Pre-launch audit launch bundle (Day 1 of 4) — closes audit-flagged CRITICAL/HIGH items before Sprint 11b device matrix.
+
+### Pre-launch audit Day 1 (2026-04-26 — compliance + stability bundle)
+
+A multi-agent pre-launch audit (`docs/pre-launch-audit-report.md`) flagged 30 Tier-A code-only items + 14 Tier-B value/decision items. Nico approved all Tier A + the recommended Tier B yeses (B2/B3/B7/B8/B9/B10/B1-RC). Day 1 ships the compliance + stability subset.
+
+**Items shipped (8 of 30 Tier A):**
+- **A22 — License audit clean** (`npx license-checker --summary --production`): 54 Apache-2.0, 39 MIT, 11 BSD-3-Clause, 5 ISC, 2 OFL-1.1, 1 0BSD. **Zero GPL/AGPL** in 112 production deps. Safe for proprietary release.
+- **A27 — GDPR EU detection live** (`src/platform/euDetection.ts` + `src/ui/modals/GdprModal.tsx`): replaced Sprint 2 `isEU = false` placeholder with locale + timezone detection (no new deps; uses `navigator.language` + `Intl.DateTimeFormat().resolvedOptions().timeZone`). Region-tagged EEA + UK + Atlantic-EU TZs. Cached per session. 12 tests cover language match, timezone match, false-positive bias rationale (Spanish-language users always see modal — preferred over EEA miss), and broken-Intl fallback.
+- **A28 — Settings Legal section** (`src/ui/modals/SettingsModal.tsx` + `src/config/legalUrls.ts` + `src/platform/externalUrl.ts`): new "Legal" section with 3 buttons (Privacy Policy / Terms of Service / Genius Pass EULA). URLs are placeholder `''` strings in `src/config/legalUrls.ts` — Nico fills in via TODO markers; until filled, buttons render disabled with `legalUrlMissing` hint. Uses `window.open(url, '_system')` (Capacitor-native + web fallback, no `@capacitor/browser` dep).
+- **A29 — iOS launch config documented** (`docs/IOS_LAUNCH_CONFIG.md`): iOS project not yet scaffolded (`ios/` doesn't exist; `npx cap add ios` requires macOS + Xcode). Documented exact Info.plist additions for the moment iOS is generated: `CFBundleURLTypes` for `synapse://`, `NSUserTrackingUsageDescription` for ATT (without it the app crashes on first ATT request on iOS 14.5+), `NSUserNotificationsUsageDescription` for push compliance. Includes post-scaffold verification checklist.
+- **A30 — Android `POST_NOTIFICATIONS` permission** (`android/app/src/main/AndroidManifest.xml`): added `<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />` for Android 13+ (API 33+) runtime push permission. `targetSdkVersion=34` already set via `android/variables.gradle` ✓.
+- **A1 — Save validation type-aware** (`src/store/saveGame.ts`): replaced field-count-only `validateLoadedState` with critical-field type validation. 20 audit-flagged scalar fields (`thoughts`/`memories`/`sparks`/`resonance`/`focusBar`/`dischargeCharges`/`prestigeCount`/etc.) are checked via `Number.isFinite`; nullable timestamps via `integer-or-null`; `firstEventsFired` via `Array.isArray`. 15 tests prove rejection of `thoughts: "NaN"` / `dischargeCharges: null` / `focusBar: undefined` / etc. Function stays under 50-line CODE-2 cap by using a const-array of `[field, kind]` tuples + a `isFieldValid` helper.
+- **A2 — Top-level `ErrorBoundary` + `loadFromSave` try/catch** (`src/ui/ErrorBoundary.tsx` + `src/main.tsx` + `src/App.tsx`): React class-component ErrorBoundary wraps `<App />` in main.tsx. On render-time exception: reports to Crashlytics, renders fallback with [Reload] + [Hard Reset] buttons (44px touch targets per CODE-4). `App.tsx initialize()` now wraps `loadFromSave()` in try/catch — propagates to Crashlytics + falls back to `createDefaultState` instead of throwing out of mount (which was the white-screen path the audit identified). `loadGame()` in `saveGame.ts` also wraps `Preferences.get()` in try/catch (Capacitor read errors no longer escape).
+- **A3 — `lastSaveError` UI banner** (new field in `GameStoreState` UI-local section + `src/store/saveScheduler.ts` + `src/ui/hud/SaveSyncIndicator.tsx`): added `lastSaveError: string | null` as UI-local field (NOT in GameState — stripped before save alongside the other 5 UI-local fields, no field-count change). `saveScheduler.trySave` catch now sets `lastSaveError` + reports Crashlytics. SaveSyncIndicator renders error banner with `role="alert"` + `aria-live="assertive"` showing the error message + [Retry] / [Dismiss] buttons. Successful save clears the error. 4 new tests cover render path + dismiss + a11y attributes.
+
+**Files touched (16):**
+- `android/app/src/main/AndroidManifest.xml` (POST_NOTIFICATIONS permission)
+- `docs/IOS_LAUNCH_CONFIG.md` (NEW — iOS launch config doc)
+- `src/platform/euDetection.ts` (NEW — EU locale + timezone detection)
+- `src/platform/externalUrl.ts` (NEW — `window.open(_system)` wrapper)
+- `src/config/legalUrls.ts` (NEW — placeholder URL config)
+- `src/config/strings/en.ts` (Legal section labels + saveSync error labels)
+- `src/ui/modals/GdprModal.tsx` (consume `detectEU()`)
+- `src/ui/modals/SettingsModal.tsx` (Legal section + LegalLinkButton)
+- `src/store/saveGame.ts` (deep validation + Preferences.get try/catch)
+- `src/store/saveScheduler.ts` (catch → setLastSaveError + Crashlytics)
+- `src/store/gameStore.ts` (UI-local `lastSaveError` field + setter; stripped on save; field-count comment 124 → 133)
+- `src/ui/hud/SaveSyncIndicator.tsx` (error banner with retry/dismiss)
+- `src/ui/ErrorBoundary.tsx` (NEW — top-level error boundary)
+- `src/main.tsx` (wrap App in ErrorBoundary)
+- `src/App.tsx` (try/catch around loadFromSave)
+- `tests/ui/modals/GdprModal.test.tsx` (updated stub assertion to type-check, not value)
+
+**Test coverage added (5 new files, 36 net tests):**
+- `tests/platform/euDetection.test.ts` — 12 tests
+- `tests/store/saveGameValidation.test.ts` — 15 tests
+- `tests/ui/ErrorBoundary.test.tsx` — 3 tests
+- `tests/ui/hud/SaveSyncIndicator.error.test.tsx` — 4 tests
+- `tests/ui/modals/SettingsModal.test.tsx` — +2 tests for Legal section
+
+**Verification (all gates green):**
+- `npm test` → **2186 passed / 1 skipped** (165 files, 29.0s) — up from 2150 baseline.
+- `npm run check-invention` → **6/6 gates PASS** (ratio 0.81, 266 constants, 64 literals).
+- `npm run typecheck` → clean.
+- `npm run lint` → clean.
+
+**Manual tasks added for Nico (placeholders shipped — fill values in):**
+- **Privacy Policy / Terms of Service / Genius Pass EULA URLs**: edit `src/config/legalUrls.ts` (3 TODO markers). Generators if needed: termsfeed.com / iubenda.com. Once filled, Settings → Legal buttons go live automatically.
+- **iOS scaffolding**: when ready (macOS + Xcode), run `npx cap add ios`, then apply the 3 Info.plist additions documented in `docs/IOS_LAUNCH_CONFIG.md` BEFORE the first TestFlight upload.
+
+**Next:** Day 2 of pre-launch audit launch bundle — NetworkErrorToast mount (A4), Genius Pass re-enable toggle (A5), high-contrast CSS overrides (A6), Cascade celebration audio + haptic + flash (A8), RevenueCat init spinner (A24).
+
+
 
 **Sprint 11a wrap-up commits this session (after sprint close):**
 - `77da9e2` — backfill 24 rule-ID comments + un-skip 36 of 37 consistency tests (1 stays skipped: WC consumer not yet shipped)

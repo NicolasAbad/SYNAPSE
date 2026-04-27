@@ -9,7 +9,7 @@
 // and per-field inline rationale pushes this file above the 200-line
 // cap. Same justification as src/types/GameState.ts — the interface is
 // a single-source-of-truth artifact; splitting it would lose the
-// invariant that Object.keys(createDefaultState()).length === 124.
+// invariant that Object.keys(createDefaultState()).length === 133.
 
 import { create } from 'zustand';
 import { SYNAPSE_CONSTANTS } from '../config/constants';
@@ -291,6 +291,14 @@ export interface UIState {
    * AchievementToast component (dismissAchievementToast action). UI-local.
    */
   achievementToast: { achievementId: string; expiresAt: number } | null;
+  /**
+   * Pre-launch audit Day 1: surface for save-write failures. Set by
+   * saveScheduler.trySave when Capacitor.Preferences.set() throws (quota
+   * exceeded, device full, permission denied, ...). Surfaced by
+   * SaveSyncIndicator as a red error pill. UI-local — never persisted
+   * (a save failure shouldn't itself be saved).
+   */
+  lastSaveError: string | null;
 }
 
 /** Actions on the store. Sprint 1 ships INIT-1, reset, and Phase 7 save/load. */
@@ -329,6 +337,8 @@ export interface GameStoreActions {
   setActiveMindSubtab: (subtab: MindSubtabId) => void;
   /** Sprint 2 Phase 6: GDPR analytics opt-in. Writes GameState.analyticsConsent. */
   setAnalyticsConsent: (consent: boolean) => void;
+  /** Pre-launch audit Day 1: surface a save-write failure to the UI banner. */
+  setLastSaveError: (message: string | null) => void;
   /**
    * Sprint 10 Phase 10.1 — Settings setters. Each writes its single field
    * directly. Volume sliders accept 0–100 in 5% steps from the UI; setters
@@ -664,6 +674,7 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
   undoToast: null,
   antiSpamActive: false,
   achievementToast: null,
+  lastSaveError: null,
   initSessionTimestamps: (nowTimestamp) => {
     const before = get();
     set((state) => {
@@ -713,7 +724,7 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
     memories: s.memories + SYNAPSE_CONSTANTS.lucidDreamOptionBMemoryGain,
     pendingOfflineSummary: null,
   })),
-  reset: () => set(() => ({ ...createDefaultState(), activeTab: 'mind' as TabId, activeMindSubtab: 'home' as MindSubtabId, undoToast: null, antiSpamActive: false, achievementToast: null })),
+  reset: () => set(() => ({ ...createDefaultState(), activeTab: 'mind' as TabId, activeMindSubtab: 'home' as MindSubtabId, undoToast: null, antiSpamActive: false, achievementToast: null, lastSaveError: null })),
   loadFromSave: async () => {
     const loaded = await loadGame();
     if (loaded === null) return false;
@@ -727,12 +738,13 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
     // `antiSpamActive` are all transient per session; actions are dropped by
     // JSON.stringify naturally. Keeps the persisted payload at exactly
     // 119 GameState fields per §32 invariant.
-    const { activeTab: _a, activeMindSubtab: _m, undoToast: _u, antiSpamActive: _s, achievementToast: _at, ...rest } = get();
+    const { activeTab: _a, activeMindSubtab: _m, undoToast: _u, antiSpamActive: _s, achievementToast: _at, lastSaveError: _le, ...rest } = get();
     void _a;
     void _m;
     void _u;
     void _s;
     void _at;
+    void _le;
     await saveGame(rest as GameState);
   },
   onTap: (nowTimestamp) => {
@@ -750,6 +762,7 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
   setActiveTab: (tab) => set({ activeTab: tab, activeMindSubtab: 'home' }),
   setActiveMindSubtab: (subtab) => set({ activeMindSubtab: subtab }),
   setAnalyticsConsent: (consent) => set({ analyticsConsent: consent }),
+  setLastSaveError: (message) => set({ lastSaveError: message }),
   // Sprint 10 Phase 10.1 — Settings setters. Volume sliders clamp to [0, 100]
   // defensively so out-of-range programmatic calls (e.g. malformed save migration
   // with an old pre-bounded value) don't poison state. UI emits 0–100 in 5% steps.
@@ -774,6 +787,7 @@ export const useGameStore = create<GameState & UIState & GameStoreActions>((set,
       undoToast: null,
       antiSpamActive: false,
       achievementToast: null,
+      lastSaveError: null,
     }));
   },
   setSubscriptionStatus: (isSubscribed) => {

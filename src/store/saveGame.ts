@@ -19,7 +19,17 @@ export async function saveGame(state: GameState): Promise<void> {
 }
 
 export async function loadGame(): Promise<GameState | null> {
-  const result = await Preferences.get({ key: SAVE_KEY });
+  // Pre-launch audit Day 1: wrap Preferences.get itself — on Capacitor,
+  // platform-level read failures (corrupted backing store, IO error,
+  // permission denied) can throw before we get to the JSON.parse path.
+  let result: { value: string | null };
+  try {
+    result = await Preferences.get({ key: SAVE_KEY });
+  } catch (e) {
+    console.error('[saveGame] Preferences.get failed:', e);
+    void getCrashlytics().recordError('saveGame.preferencesGet', e);
+    return null;
+  }
   if (result.value === null) return null;
   try {
     const parsed = JSON.parse(result.value) as unknown;
@@ -40,17 +50,56 @@ export async function clearSave(): Promise<void> {
 }
 
 /**
- * Boundary defense against corrupt/malicious saves. Structural shape check only:
- * verifies payload is a non-null plain object with exactly 133 top-level keys
- * (the §32 GameState invariant post-Sprint-10.3). Deep field-by-field type
- * validation would require a runtime schema (adds ~500 lines); deferred to
- * Sprint 11a save fuzzer. For v1.0, structural check + JSON parse is sufficient
- * — any surviving bad fields will surface as runtime errors caught by the
- * relevant action handler.
+ * Boundary defense against corrupt/malicious saves.
+ *
+ * Pre-launch audit Day 1: upgraded from structural-only to type-aware. The
+ * Sprint 11a save fuzz only verified `migrateState` doesn't throw on garbage
+ * — corrupted scalar values like `thoughts: "NaN"` could pass the field-count
+ * check, then crash arithmetic in the engine on the next tick. We now check
+ * the critical arithmetic-bearing scalar fields are finite numbers, and
+ * structural fields are the right basic kind.
  *
  * Returns null (not throws) so the caller can fall back to createDefaultState
  * silently, per UI-8 (error states fail gracefully).
  */
+
+type FieldKind = 'finite' | 'integer-or-null' | 'array' | 'boolean' | 'string';
+
+// Critical fields used arithmetically in the engine on every tick. If any
+// of these is non-finite (NaN/Infinity/string/null/undefined), the engine
+// crashes. Order: economy, production, focus, discharge, prestige, cycle.
+const CRITICAL_FIELD_KINDS: ReadonlyArray<readonly [string, FieldKind]> = [
+  ['thoughts', 'finite'],
+  ['memories', 'finite'],
+  ['sparks', 'finite'],
+  ['resonance', 'finite'],
+  ['totalGenerated', 'finite'],
+  ['cycleGenerated', 'finite'],
+  ['baseProductionPerSecond', 'finite'],
+  ['effectiveProductionPerSecond', 'finite'],
+  ['focusBar', 'finite'],
+  ['focusFillRate', 'finite'],
+  ['dischargeCharges', 'finite'],
+  ['dischargeMaxCharges', 'finite'],
+  ['prestigeCount', 'finite'],
+  ['currentThreshold', 'finite'],
+  ['installedAt', 'finite'],
+  ['cycleStartTimestamp', 'finite'],
+  ['insightEndTime', 'integer-or-null'],
+  ['eurekaExpiry', 'integer-or-null'],
+  ['lucidDreamActiveUntil', 'integer-or-null'],
+  ['firstEventsFired', 'array'],
+];
+
+function isFieldValid(value: unknown, kind: FieldKind): boolean {
+  if (kind === 'finite') return typeof value === 'number' && Number.isFinite(value);
+  if (kind === 'integer-or-null') return value === null || (typeof value === 'number' && Number.isFinite(value));
+  if (kind === 'array') return Array.isArray(value);
+  if (kind === 'boolean') return typeof value === 'boolean';
+  if (kind === 'string') return typeof value === 'string';
+  return false;
+}
+
 export function validateLoadedState(parsed: unknown): GameState | null {
   if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
     console.error('[saveGame] validateLoadedState: payload is not a plain object:', typeof parsed);
@@ -63,6 +112,13 @@ export function validateLoadedState(parsed: unknown): GameState | null {
       `[saveGame] validateLoadedState: expected ${expectedCount} fields, got ${keys.length}`,
     );
     return null;
+  }
+  const obj = parsed as Record<string, unknown>;
+  for (const [field, kind] of CRITICAL_FIELD_KINDS) {
+    if (!isFieldValid(obj[field], kind)) {
+      console.error(`[saveGame] validateLoadedState: field "${field}" failed ${kind} check, got:`, obj[field]);
+      return null;
+    }
   }
   return parsed as GameState;
 }

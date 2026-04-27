@@ -7,6 +7,7 @@ import { SYNAPSE_CONSTANTS } from '../config/constants';
 import { useGameStore } from './gameStore';
 import { saveGame } from './saveGame';
 import type { GameState } from '../types/GameState';
+import { getCrashlytics } from '../platform/crashlytics';
 
 // Module-scoped flag so concurrent scheduler mounts (e.g. StrictMode dev)
 // share the same in-flight marker rather than racing on instance state.
@@ -45,15 +46,24 @@ export async function trySave(): Promise<void> {
   saveInFlight = true;
   notifySaveStatus(true);
   try {
-    const { activeTab: _a, activeMindSubtab: _m, undoToast: _u, antiSpamActive: _s, achievementToast: _at, ...rest } = useGameStore.getState();
+    const { activeTab: _a, activeMindSubtab: _m, undoToast: _u, antiSpamActive: _s, achievementToast: _at, lastSaveError: _le, ...rest } = useGameStore.getState();
     void _a;
     void _m;
     void _u;
     void _s;
     void _at;
+    void _le;
     await saveGame(rest as GameState);
+    // Pre-launch audit Day 1 — successful save clears any prior error.
+    if (useGameStore.getState().lastSaveError !== null) {
+      useGameStore.getState().setLastSaveError(null);
+    }
   } catch (e) {
     console.error('[saveScheduler] save failed:', e);
+    // Pre-launch audit Day 1 — surface failure to UI + Crashlytics.
+    const message = e instanceof Error ? e.message : 'Save failed';
+    useGameStore.getState().setLastSaveError(message);
+    void getCrashlytics().recordError('saveScheduler.trySave', e);
   } finally {
     saveInFlight = false;
     notifySaveStatus(false);

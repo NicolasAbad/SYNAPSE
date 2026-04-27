@@ -66,7 +66,18 @@ export function App() {
   useEffect(() => {
     const cleanups: Array<() => void> = [];
     const initialize = async () => {
-      const loaded = await useGameStore.getState().loadFromSave();
+      // Pre-launch audit Day 1: wrap loadFromSave in try/catch. A defensive
+      // boundary so platform-level Preferences errors or migration crashes
+      // surface to Crashlytics + fall back to a clean session instead of
+      // throwing out of the mount effect (which would white-screen the app).
+      let loaded = false;
+      try {
+        loaded = await useGameStore.getState().loadFromSave();
+      } catch (e) {
+        console.error('[App.initialize] loadFromSave threw:', e);
+        void getCrashlytics().recordError('App.initialize.loadFromSave', e);
+        loaded = false;
+      }
       if (!loaded) {
         useGameStore.getState().initSessionTimestamps(Date.now());
       }

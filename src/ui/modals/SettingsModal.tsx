@@ -19,6 +19,8 @@ import {
   overlayStyle, rowStyle, secondaryButtonStyle, statusLineStyle, titleStyle,
 } from './settings/styles';
 import { Section, SliderRow, ToggleRow } from './settings/widgets';
+import { LEGAL_URLS, isLegalUrlConfigured } from '../../config/legalUrls';
+import { openExternalUrl } from '../../platform/externalUrl';
 
 const t = en.settings;
 
@@ -40,6 +42,25 @@ function statusLabel(status: RestoreStatus): string {
   if (status === 'none-found') return t.restoreNoneFound;
   if (status === 'failed') return t.restoreFailed;
   return '';
+}
+
+function LegalLinkButton({ label, url, testId, missingLabel }: { label: string; url: string; testId: string; missingLabel: string }) {
+  const configured = isLegalUrlConfigured(url);
+  const onClick = () => { if (configured) openExternalUrl(url); };
+  return (
+    <div>
+      <button
+        type="button"
+        data-testid={testId}
+        disabled={!configured}
+        onClick={onClick}
+        style={configured ? buttonStyle : disabledButtonStyle}
+      >
+        {label}
+      </button>
+      {!configured && <p style={statusLineStyle}>{missingLabel}</p>}
+    </div>
+  );
 }
 
 export const SettingsModal = memo(function SettingsModal({ open, onClose, restorePurchases, onOpenCosmetics }: SettingsModalProps) {
@@ -141,6 +162,27 @@ export const SettingsModal = memo(function SettingsModal({ open, onClose, restor
 
         <Section title={t.sectionGame}>
           <HardResetFlow />
+        </Section>
+
+        <Section title={t.sectionLegal}>
+          <LegalLinkButton
+            label={t.legalPrivacyButton}
+            url={LEGAL_URLS.privacyPolicy}
+            testId="settings-legal-privacy"
+            missingLabel={t.legalUrlMissing}
+          />
+          <LegalLinkButton
+            label={t.legalTermsButton}
+            url={LEGAL_URLS.termsOfService}
+            testId="settings-legal-terms"
+            missingLabel={t.legalUrlMissing}
+          />
+          <LegalLinkButton
+            label={t.legalEulaButton}
+            url={LEGAL_URLS.geniusPassEula}
+            testId="settings-legal-eula"
+            missingLabel={t.legalUrlMissing}
+          />
         </Section>
 
         <button type="button" data-testid="settings-close" onClick={onClose} style={secondaryButtonStyle}>{t.closeButton}</button>

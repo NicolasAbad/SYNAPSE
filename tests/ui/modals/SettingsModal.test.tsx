@@ -148,17 +148,36 @@ describe('SettingsModal — status reset on reopen', () => {
   });
 });
 
+// Pre-launch audit Day 1 — Legal section coverage.
+describe('SettingsModal — Legal section (pre-launch audit)', () => {
+  test('renders 3 legal link buttons by testId', () => {
+    const { getByTestId } = render(<SettingsModal open={true} onClose={() => {}} />);
+    expect(getByTestId('settings-legal-privacy')).toBeTruthy();
+    expect(getByTestId('settings-legal-terms')).toBeTruthy();
+    expect(getByTestId('settings-legal-eula')).toBeTruthy();
+  });
+
+  test('legal buttons disabled when URL placeholder empty (default)', () => {
+    const { getByTestId } = render(<SettingsModal open={true} onClose={() => {}} />);
+    expect((getByTestId('settings-legal-privacy') as HTMLButtonElement).disabled).toBe(true);
+    expect((getByTestId('settings-legal-terms') as HTMLButtonElement).disabled).toBe(true);
+    expect((getByTestId('settings-legal-eula') as HTMLButtonElement).disabled).toBe(true);
+  });
+});
+
 // Sprint 10 Phase 10.1 — new section coverage.
 describe('SettingsModal — Sprint 10 sections', () => {
   test('renders all 6 sections + hard-reset entry point', () => {
     const { getByTestId, getByText } = render(<SettingsModal open={true} onClose={() => {}} />);
-    // All 6 section headers present.
+    // All 6 (now 7 with Legal) section headers present.
     expect(getByText(en.settings.sectionGeneral)).toBeTruthy();
     expect(getByText(en.settings.sectionAudio)).toBeTruthy();
     expect(getByText(en.settings.sectionAccessibility)).toBeTruthy();
     expect(getByText(en.settings.sectionNotifications)).toBeTruthy();
     expect(getByText(en.settings.sectionAccount)).toBeTruthy();
     expect(getByText(en.settings.sectionGame)).toBeTruthy();
+    // Pre-launch audit Day 1 — Legal section.
+    expect(getByText(en.settings.sectionLegal)).toBeTruthy();
     // Game section hosts the Hard Reset flow's first-state tap button.
     expect(getByTestId('hard-reset-tap')).toBeTruthy();
   });

@@ -718,6 +718,11 @@ export const en = {
     sectionNotifications: 'Notifications',
     sectionAccount: 'Account',
     sectionGame: 'Game',
+    sectionLegal: 'Legal',
+    legalPrivacyButton: 'Privacy Policy',
+    legalTermsButton: 'Terms of Service',
+    legalEulaButton: 'Genius Pass EULA',
+    legalUrlMissing: 'Link not yet configured',
     languageLabel: 'Language',
     languageEn: 'English',
     languageEs: 'Español',
@@ -749,6 +754,10 @@ export const en = {
   // Sprint 10 Phase 10.1 (V-4) — save-sync indicator pill copy.
   saveSync: {
     saving: 'Saving…',
+    // Pre-launch audit Day 1 — save-failure banner.
+    errorPrefix: 'Save failed',
+    errorRetryButton: 'Retry',
+    errorDismissButton: 'Dismiss',
   },
 
   // Sprint 10 Phase 10.7 — ending share button + Capacitor.Share payload.
