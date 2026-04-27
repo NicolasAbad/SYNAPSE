@@ -28,6 +28,9 @@ export const en = {
     charge_countdown_prefix: 'Discharge ⚡',
     focus_bar_percent_suffix: '%',
     consciousness_bar_label: 'Consciousness',
+    // Pre-launch audit Tier 2 (A-3) — anti-spam penalty visible feedback.
+    anti_spam_badge: '×0.1',
+    anti_spam_label: 'Tapping too fast — effectiveness reduced',
   },
   tabs: {
     mind: 'Mind',

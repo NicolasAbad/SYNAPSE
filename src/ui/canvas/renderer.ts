@@ -17,11 +17,27 @@
  */
 
 import type { GameState } from '../../types/GameState';
+import type { NeuronType } from '../../types';
 import { SYNAPSE_CONSTANTS } from '../../config/constants';
 import { CANVAS, MOTION } from '../tokens';
 import type { Theme } from '../theme/types';
 import { THEME_BIOLUMINESCENT } from '../theme/themes';
 import { getGlowSprite } from './glowCache';
+
+/**
+ * Pre-launch audit Tier 2 (G-1) — colorblind tier numeral mapping. Each
+ * neuron type gets a 1-based tier index; when state.colorblindMode is true
+ * the renderer draws this numeral inside the neuron so the type is
+ * distinguishable without color. CONST-OK — the mapping mirrors the
+ * declaration order in src/config/neurons.ts and is canonical.
+ */
+const TIER_NUMERAL: Readonly<Record<NeuronType, string>> = {
+  basica: '1',
+  sensorial: '2', // CONST-OK colorblind glyph (string literal, not a tunable)
+  piramidal: '3', // CONST-OK colorblind glyph (string literal, not a tunable)
+  espejo: '4', // CONST-OK colorblind glyph (string literal, not a tunable)
+  integradora: '5', // CONST-OK colorblind glyph (string literal, not a tunable)
+};
 
 /**
  * Re-exported as `BIOLUMINESCENT_THEME` for backwards-compatible tests
@@ -69,9 +85,13 @@ export function draw(
     if (neuron.count <= 0) continue;
     const baseRadius = CANVAS.neuronRadii[neuron.type];
     const entry = theme.neurons[neuron.type];
+    // G-1: pass the tier numeral only when colorblindMode is enabled.
+    // The drawNeuron signature accepts string|null so the no-glyph fast path
+    // (most players) skips the canvas fillText call entirely.
+    const numeral = state.colorblindMode ? TIER_NUMERAL[neuron.type] : null;
     for (let i = 0; i < neuron.count; i++) {
       if (globalIndex >= visibleCap) break outer;
-      drawNeuron(ctx, entry.color, baseRadius, radiusMult, opacity, globalIndex, dims);
+      drawNeuron(ctx, entry.color, baseRadius, radiusMult, opacity, globalIndex, dims, numeral);
       globalIndex++;
     }
   }
@@ -85,6 +105,7 @@ function drawNeuron(
   opacity: number,
   index: number,
   dims: DrawDims,
+  numeral: string | null,
 ): void {
   const { x, y } = getNeuronPosition(index, dims);
   const pulsedRadius = baseRadius * radiusMult;
@@ -101,6 +122,19 @@ function drawNeuron(
   ctx.strokeStyle = color;
   ctx.lineWidth = CANVAS.neuronStrokeWidth;
   ctx.stroke();
+
+  // G-1: tier numeral overlay (colorblind mode only). Drawn full-opacity
+  // in white (CANVAS.colorblindGlyphColor) so it contrasts against the
+  // semi-transparent fill. Font sized proportional to the radius via
+  // CANVAS.colorblindGlyphSizeRatio.
+  if (numeral !== null) {
+    ctx.globalAlpha = 1; // CONST-OK reset to opaque for legibility
+    ctx.fillStyle = CANVAS.colorblindGlyphColor;
+    ctx.font = `bold ${Math.round(baseRadius * CANVAS.colorblindGlyphSizeRatio)}px var(--font-display, system-ui)`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(numeral, x, y);
+  }
 
   ctx.globalAlpha = prevAlpha;
 }

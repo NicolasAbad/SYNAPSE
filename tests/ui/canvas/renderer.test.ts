@@ -11,6 +11,7 @@ import { createDefaultState } from '../../../src/store/gameStore';
 // Minimal mock CanvasRenderingContext2D — only methods called by draw().
 function makeMockCtx() {
   const calls: string[] = [];
+  const fillTextArgs: string[] = [];
   const track =
     (name: string) =>
     (..._args: unknown[]): void => {
@@ -23,12 +24,19 @@ function makeMockCtx() {
     fill: track('fill'),
     stroke: track('stroke'),
     drawImage: track('drawImage'),
+    fillText: vi.fn().mockImplementation((text: string) => {
+      calls.push('fillText');
+      fillTextArgs.push(text);
+    }),
     fillStyle: '',
     strokeStyle: '',
     lineWidth: 0,
     globalAlpha: 1,
+    font: '',
+    textAlign: '',
+    textBaseline: '',
   } as unknown as CanvasRenderingContext2D;
-  return { ctx, calls };
+  return { ctx, calls, fillTextArgs };
 }
 
 function stateWithNeurons(neurons: NeuronState[]): GameState {
@@ -138,6 +146,38 @@ describe('draw — ambient pulse produces time-varying radius', () => {
     }
     const unique = new Set(radii);
     expect(unique.size).toBeGreaterThan(1); // pulse is actually varying
+  });
+});
+
+describe('draw — colorblindMode tier numerals (Pre-launch audit Tier 2 G-1)', () => {
+  test('default state (colorblindMode=false): no fillText calls', () => {
+    const { ctx, calls } = makeMockCtx();
+    draw(ctx, stateWithNeurons([{ type: 'basica', count: 3 }]), BIOLUMINESCENT_THEME, DIMS, 0);
+    expect(calls.filter((c) => c === 'fillText')).toHaveLength(0);
+  });
+
+  test('colorblindMode=true draws one numeral per visible neuron', () => {
+    const { ctx, calls, fillTextArgs } = makeMockCtx();
+    const state = { ...stateWithNeurons([{ type: 'basica', count: 3 }]), colorblindMode: true };
+    draw(ctx, state, BIOLUMINESCENT_THEME, DIMS, 0);
+    expect(calls.filter((c) => c === 'fillText')).toHaveLength(3);
+    expect(fillTextArgs.every((s) => s === '1')).toBe(true);
+  });
+
+  test('colorblindMode draws each tier numeral 1-5 for its corresponding type', () => {
+    const { ctx, fillTextArgs } = makeMockCtx();
+    const state = {
+      ...stateWithNeurons([
+        { type: 'basica', count: 1 },
+        { type: 'sensorial', count: 1 },
+        { type: 'piramidal', count: 1 },
+        { type: 'espejo', count: 1 },
+        { type: 'integradora', count: 1 },
+      ]),
+      colorblindMode: true,
+    };
+    draw(ctx, state, BIOLUMINESCENT_THEME, DIMS, 0);
+    expect(fillTextArgs).toEqual(['1', '2', '3', '4', '5']);
   });
 });
 
