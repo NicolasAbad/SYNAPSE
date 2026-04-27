@@ -12,6 +12,7 @@ import { describe, expect, test } from 'vitest';
 import { visibleTabsAt } from '../../src/ui/hud/tabVisibility';
 import { visibleNeuronTypesAt } from '../../src/ui/panels/neuronVisibility';
 import { visibleMindSubtabsAt } from '../../src/ui/panels/mindSubtabVisibility';
+import { pendingUnlocks } from '../../src/ui/hud/unlockNotifications';
 import type { NeuronState } from '../../src/types';
 
 const P0_NEURONS: NeuronState[] = [
@@ -82,6 +83,22 @@ describe('Dimension M census (Phase 1 budget lock)', () => {
       { type: 'integradora', count: 0 },
     ];
     expect(visibleNeuronTypesAt(fullChainP10, 10).length).toBe(5);
+  });
+
+  test('Phase 2 P0 cold-start: no celebration toasts queued (cosmetics gate is P1+)', () => {
+    // Phase 2 added a celebration LAYER (toasts + glow), but those layers are
+    // ephemeral / trigger-based — they do NOT contribute to steady-state P0
+    // element density. This test pins that invariant: a fresh P0 player sees
+    // zero pending unlocks until they earn their first prestige.
+    expect(pendingUnlocks({ prestigeCount: 0, tabBadgesDismissed: [] })).toEqual([]);
+  });
+
+  test('Phase 2 P1: full first-prestige celebration bundle queues exactly 4 (regions + patterns + diary + cosmetics)', () => {
+    // Locks the celebration cadence at the genre-critical "first prestige"
+    // moment. Adding a 5th gated unlock at P1 would over-stuff the celebration
+    // queue and re-introduce the silent-overload regression Phase 1 fixed.
+    const list = pendingUnlocks({ prestigeCount: 1, tabBadgesDismissed: [] });
+    expect(list).toHaveLength(4);
   });
 
   test('Phase 1 P0 budget aggregate ≤ 35 visible interactive surface elements', () => {

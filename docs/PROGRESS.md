@@ -17,8 +17,62 @@
 **Earlier this session — Sprint 10 Phase 10.4 CLOSED (2026-04-25).** Daily Login Bonus + push notifications complete. Engine: `evaluateDailyLogin` pure helper (CODE-9) returns one of 4 outcomes (no_action / normal_claim / streak_save_eligible / streak_reset) per the 7-day reward cycle [5,5,10,10,15,20,50] with miss-1-day save window. Store: `claimDailyLoginReward`, `resolveStreakSave` (subscriber/ad/reset paths), `recordNotificationPermissionAsked` (gate cadence 1/3). UI: `DailyLoginModal` with two states (reward card + streak-save eligible offering ad-watch via existing `streak_save` AdMob placement #7). Push scheduler: `src/platform/pushScheduler.ts` adapter (Capacitor LocalNotifications, ^6.1.3 for Capacitor-6 peer) exposing ensurePermission + scheduleDailyReminder + scheduleOfflineCapReached + scheduleStreakAboutToBreak + cancelAll, all inert on web/test, all wrapped CODE-8 (never throws). `src/platform/usePushRuntime.ts` React glue mounted in App.tsx wires the four caller responsibilities: (1) cancelAll on Settings toggle off, schedule daily reminder on toggle on; (2) ensurePermission cadence after P1 prestige (gate 1) + after P3 (gate 3) when notificationsEnabled; (3) scheduleOfflineCapReached on visibilitychange→hidden using currentOfflineCapHours from now; (4) scheduleStreakAboutToBreak on hidden when dailyLoginStreak > 0. **1972 tests pass** (+10 net, push hook coverage) / **4/4 gates PASS (ratio 0.81)** / typecheck + lint clean. Sprint 10.1 + 10.2 + 10.3 + 10.4 CLOSED. Sprint 8c-tuning deadlock + Sprint 9b CLOSED preserved.
 
 **Earlier this session — Sprint 10 Phase 10.3 GREEN (2026-04-24).** AnalyticsEvent union extended from 14 → 49 events (48 GDD §27 + 1 Sprint 10.1 extension `reset_game`). New `firstEventsFired: string[]` GameState field (132 → 133, PRESERVE on prestige + Transcendence) tracks lifetime fire-once funnel events. New `logEventOnce(name, params, consent, firedBefore)` helper threads the array through actions. Wired at call sites: 9 funnel (app_first_open in initSessionTimestamps, tutorial_first_tap/buy/discharge in onTap/buyNeuron/buyUpgrade/discharge during isTutorialCycle, first_prestige + reached_p5/10 in prestige action, first_transcendence in applyTranscendence, first_purchase across all 4 IAP success paths), 5 feature (achievement_unlocked + diary_entry_added in processAchievementUnlocks helper, mental_state_changed + micro_challenge_completed/failed in tickScheduler), 18 core (first_tap, first_neuron, upgrade_purchased, discharge_used, insight_activated, prestige_completed, polarity_chosen, mutation_chosen, pathway_chosen, pattern_decision, resonant_pattern_discovered, spontaneous_event, personal_best, transcendence, ending_seen, offline_return, ad_watched, pattern_decisions_reset). Weekly Challenge events (3) defined in union but NOT wired — WC mechanics aren't implemented; events fire when consumer ships in a future sprint. SPRINTS.md ↔ GDD §27 gap documented: SPRINTS.md mandates `reset_game` but GDD §27 doesn't list it (carried as Sprint 10.1 extension; 49 total, pending Nico reconciliation). **GameState 132 → 133**. **1932 tests pass** (+4 net from prior 1928) / **4/4 gates PASS (ratio 0.80)** / typecheck + lint clean. Sprint 10.1 + 10.2 CLOSED; Sprint 8c-tuning deadlock + Sprint 9b CLOSED preserved.
-**Last updated:** 2026-04-27 — Pre-launch audit Day 4 shipped (full audit pass + Tier 0 + Dimension M Phase 1 + GDPR data export).
-**Active sprint:** Pre-launch audit launch bundle — Day 4 of N. Dimension M score moved from 3/10 → ~6.5-7/10. Next session resumes with Dimension M Phase 2 (celebration polish).
+**Last updated:** 2026-04-27 — Pre-launch audit Day 5 shipped (Dimension M Phase 2 — celebration polish, 4 commits).
+**Active sprint:** Pre-launch audit launch bundle — Day 5 of N. Dimension M score now estimated **7-8/10** (up from 3/10 pre-audit, 6.5/10 after Phase 1). Next session resumes with remaining Tier 2 fixes (A-1/A-2 Cascade+Insight visual cues, G-1 colorblind coverage, D-1 push permission soft-prompt) OR Sprint 9b-post-propagation if RevenueCat dashboard is cleared.
+
+### Pre-launch audit Day 5 (2026-04-27 — Dimension M Phase 2 + Phase 3)
+
+This session: shipped the Dimension M Phase 2 celebration-polish bundle that converts Phase 1's silent gating into earned reveals. **4 phase-boundary commits** (`827ed62` `a76ea6b` `6e6038d` + this PROGRESS.md entry), 2252+ tests passing.
+
+**Phase 2.1 — Tab/subtab unlock celebrations** (`827ed62`):
+- Toast at moment of unlock (3.5s auto-dismiss + soft `playSfx('tap')` chime)
+- Persistent pulsing "New" badge until player taps the new surface
+- Mind tab itself shows badge when ANY of its subtabs are pending (M-3 ask)
+- New `unlockNotifications.ts` helper with namespaced keys (`unlock:tab:<id>` / `unlock:subtab:<id>`) piggy-backing on existing 133-field `tabBadgesDismissed` slot — NO schema bump
+- New `UnlockToast.tsx` + `UnlockCelebrationMount.tsx` + extracted `MindSubtabButton.tsx` (CODE-2 compliance after MindPanel grew past 200)
+- New `synapse-unlock-pulse` keyframes in `styles/accessibility.css`
+- `acknowledgeUnlock(key)` action added to gameStore (idempotent set-append)
+- 20 unit tests in `tests/ui/hud/unlockNotifications.test.ts`
+
+**Phase 2.4 (M-7) — Tutorial target glow** (`a76ea6b`):
+- New `tutorialTargetState.ts` — module-scope signal + `useIsTutorialTarget(id)` via React 18 `useSyncExternalStore` (avoids prop-drill across 5 component layers)
+- TutorialHints publishes the active target via `setActiveTutorialTarget(id)` whenever its hint changes; clears on unmount
+- 6 of 8 hints wired to targets (`buy` → `neuron-buy-basica`; `discharge` + `focus_discharge` → `discharge-button`; `variety` → `neuron-buy-sensorial`; `upgrades_tab` → `tab-upgrades`; `patterns_hipocampo` → `tab-mind`); `tap` deferred (canvas self-pulses) and `polarity` deferred (CycleSetupScreen wiring is a follow-up)
+- New `synapse-tutorial-callout` keyframes — primary-violet pulsing ring on the targeted button
+- 5 unit tests in `tests/ui/modals/tutorialTargetState.test.tsx`
+
+**Phase 2.5 (M-9) — Cosmetics discovery toast** (`6e6038d`):
+- Extends UnlockCelebrationMount queue with a `cosmetics` PendingUnlock kind that fires once per lifetime at first prestige (P1+), pointing the player at Settings → Cosmetics
+- Auto-acknowledges on dismiss (cosmetics is one-shot, not surface-bound like tab/subtab unlocks which clear on tap)
+- Reuses the same `tabBadgesDismissed` storage with sentinel key `unlock:cosmetics:store` (PRESERVE on prestige + Transcendence per existing slot semantics)
+- 5 additional unit tests + extended `pendingUnlocks` integration test (now 25 total in unlockNotifications.test.ts)
+
+**Phase 3 — Census meta-test extension** (this commit):
+- Extended `tests/meta/dimensionMCensus.test.ts` with 2 Phase-2 budget-lock tests:
+  1. P0 cold-start has zero pending celebration toasts (gate is P1+)
+  2. P1 first-prestige bundle queues exactly 4 celebrations (regions tab + patterns subtab + diary subtab + cosmetics) — adding a 5th would re-introduce silent overload
+
+**Files added (7):**
+- `src/ui/hud/unlockNotifications.ts` — pure helpers + UnlockState narrow type + cosmetics
+- `src/ui/hud/UnlockToast.tsx` — presentational top-of-screen pill
+- `src/ui/hud/UnlockCelebrationMount.tsx` — detector + per-session dedupe + auto-ack
+- `src/ui/panels/MindSubtabButton.tsx` — extracted for CODE-2 compliance
+- `src/ui/modals/tutorialTargetState.ts` — pubsub + hook
+- `tests/ui/hud/unlockNotifications.test.ts` — 25 tests
+- `tests/ui/modals/tutorialTargetState.test.tsx` — 5 tests
+
+**Files modified (10):** `src/store/gameStore.ts` (+acknowledgeUnlock action), `src/ui/hud/HUD.tsx` (+UnlockCelebrationMount mount), `src/ui/hud/TabBar.tsx` (+badge + glow + ack), `src/ui/panels/MindPanel.tsx` (+subtab badge state), `src/ui/modals/TutorialHints.tsx` (+HINT_TARGET map + publish effect), `src/ui/hud/DischargeButton.tsx` (+callout class), `src/ui/panels/NeuronsPanel.tsx` (+callout class), `src/config/strings/en.ts` (+7 unlock_toast keys), `styles/accessibility.css` (+2 keyframe sets), `tests/meta/dimensionMCensus.test.ts` (+2 budget locks)
+
+**Verification:** `npm test` 2252+ passing (1 skipped) / `npm run typecheck` clean / `npm run lint` clean / `npm run check-invention` 6/6 gates green.
+
+**Dimension M score progression:**
+- Pre-audit (2026-04-27): **3/10** — 57 P0 elements, silent reveals, no callouts, hidden Cosmetics
+- After Phase 1 (Day 4): ~**6.5/10** — 32 P0 elements (-44%), structural gating, but reveals still silent
+- After Phase 2 + 3 (Day 5): estimated **7-8/10** — same element count, plus celebrated reveals + tutorial glows + cosmetics toast. NGU-Idle-zone density + meaningful unlock moments.
+
+**Pending Tier 2 items** (~30 hrs, awaiting next session): A-1/A-2 Cascade+Insight visual cues (visual portion only — SFX requires Nico assets), G-1 colorblindMode coverage extension (neurons + mood + mental states), D-1 push permission soft-prompt, C-1 reusable ActivationFlash component, D-2 Starter Pack push reminder, D-3 Spark cap countdown, A-3 anti-spam visible feedback, C-2 tutorial skip affordance, J-5 top-level ErrorBoundary.
+
+**Carry-over Nico tasks (unchanged from Day 4):** push 28 commits to origin/main; Privacy Policy hosting; iOS Info.plist + AndroidManifest.xml deep-link config; RevenueCat 19 IAP products; Firebase Console Remote Config mirror; SFX assets for Cascade+Insight; native Crashlytics bridge; Mi A3 perf verification; 50-100 more achievements; Spanish i18n.
 
 ### Pre-launch audit Day 4 (2026-04-27 — full audit + 13 fixes shipped)
 
