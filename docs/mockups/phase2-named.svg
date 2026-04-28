@@ -1,0 +1,22 @@
+<svg width="360" height="720" viewBox="0 0 360 720" xmlns="http://www.w3.org/2000/svg">
+  <!-- Tutorial Phase 2: The mind names itself -->
+  <defs>
+    <radialGradient id="ng2" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#40D0D0" stop-opacity="0.55"/>
+      <stop offset="60%" stop-color="#40D0D0" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#40D0D0" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="360" height="720" fill="#05070d"/>
+  <rect x="0" y="0" width="360" height="24" fill="#000"/>
+  <text x="12" y="16" font-family="-apple-system, sans-serif" font-size="11" fill="#888">9:42</text>
+  <text x="348" y="16" font-family="-apple-system, sans-serif" font-size="11" fill="#888" text-anchor="end">100%</text>
+  <!-- Counter + label -->
+  <text x="20" y="58" font-family="JetBrains Mono, monospace" font-size="28" font-weight="900" fill="#F0A030" font-variant-numeric="tabular-nums">5</text>
+  <text x="20" y="76" font-family="-apple-system, sans-serif" font-size="11" fill="#7070a0">thoughts</text>
+  <!-- Neuron -->
+  <circle cx="180" cy="360" r="42" fill="url(#ng2)"/>
+  <circle cx="180" cy="360" r="14" fill="#40D0D0" fill-opacity="0.5" stroke="#40D0D0" stroke-opacity="0.95" stroke-width="1.5"/>
+  <text x="180" y="540" font-family="Georgia, serif" font-size="13" font-style="italic" fill="#7070a0" text-anchor="middle" opacity="0.75">...I can think...</text>
+  <text x="180" y="700" font-family="-apple-system, sans-serif" font-size="9" fill="#383860" text-anchor="middle" letter-spacing="0.1em">PHASE 2 — THE MIND NAMES ITSELF</text>
+</svg>

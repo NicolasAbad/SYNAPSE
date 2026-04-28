@@ -1,0 +1,77 @@
+<svg width="360" height="720" viewBox="0 0 360 720" xmlns="http://www.w3.org/2000/svg">
+  <!-- Regions tab redesign: brain map overview (replaces vertical card list) -->
+  <defs>
+    <radialGradient id="regionGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#8B7FE8" stop-opacity="0.45"/>
+      <stop offset="100%" stop-color="#8B7FE8" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="regionGlowGreen" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#22B07A" stop-opacity="0.45"/>
+      <stop offset="100%" stop-color="#22B07A" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="regionGlowPink" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#E06090" stop-opacity="0.45"/>
+      <stop offset="100%" stop-color="#E06090" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="360" height="720" fill="#05070d"/>
+  <rect x="0" y="0" width="360" height="24" fill="#000"/>
+  <text x="12" y="16" font-family="-apple-system, sans-serif" font-size="11" fill="#888">10:25</text>
+  <text x="348" y="16" font-family="-apple-system, sans-serif" font-size="11" fill="#888" text-anchor="end">88%</text>
+  <!-- Top sliver -->
+  <text x="20" y="60" font-family="JetBrains Mono, monospace" font-size="22" font-weight="900" fill="#F0A030" font-variant-numeric="tabular-nums">23.1K</text>
+  <text x="340" y="60" font-family="JetBrains Mono, monospace" font-size="14" font-weight="700" fill="#22B07A" text-anchor="end">+30.9/s</text>
+  <!-- Panel surface -->
+  <rect x="0" y="80" width="360" height="580" fill="#0a0d1a" stroke="#1a1d2a" stroke-width="1"/>
+  <text x="16" y="110" font-family="-apple-system, sans-serif" font-size="14" font-weight="700" fill="#e8e6f8" letter-spacing="0.08em">REGIONS</text>
+  <text x="344" y="110" font-family="-apple-system, sans-serif" font-size="12" fill="#7070a0" text-anchor="end">3 of 5 unlocked</text>
+  <line x1="16" y1="124" x2="344" y2="124" stroke="#1a1d2a" stroke-width="1"/>
+  <!-- Stylized brain map silhouette -->
+  <path d="M 80 220 Q 60 280 80 360 Q 100 420 180 460 Q 260 420 280 360 Q 300 280 280 220 Q 240 180 180 180 Q 120 180 80 220 Z" fill="#0f1224" stroke="#1a1d2a" stroke-width="1.5"/>
+  <!-- Unlocked region nodes (illuminated) -->
+  <g transform="translate(140, 250)">
+    <circle r="32" fill="url(#regionGlowGreen)"/>
+    <circle r="14" fill="#22B07A40" stroke="#22B07A" stroke-width="2"/>
+    <text y="40" font-family="-apple-system, sans-serif" font-size="11" font-weight="600" fill="#22B07A" text-anchor="middle">Hipocampo</text>
+  </g>
+  <g transform="translate(220, 250)">
+    <circle r="32" fill="url(#regionGlow)"/>
+    <circle r="14" fill="#8B7FE840" stroke="#8B7FE8" stroke-width="2"/>
+    <text y="40" font-family="-apple-system, sans-serif" font-size="11" font-weight="600" fill="#8B7FE8" text-anchor="middle">Prefrontal</text>
+  </g>
+  <g transform="translate(180, 360)">
+    <circle r="32" fill="url(#regionGlowPink)"/>
+    <circle r="14" fill="#E0609040" stroke="#E06090" stroke-width="2"/>
+    <text y="40" font-family="-apple-system, sans-serif" font-size="11" font-weight="600" fill="#E06090" text-anchor="middle">Limbico</text>
+  </g>
+  <!-- Locked region nodes (dim) -->
+  <g transform="translate(110, 380)" opacity="0.4">
+    <circle r="14" fill="none" stroke="#7070a0" stroke-width="1.5" stroke-dasharray="3 2"/>
+    <text y="32" font-family="-apple-system, sans-serif" font-size="10" fill="#7070a0" text-anchor="middle">Visual ?</text>
+    <text y="46" font-family="-apple-system, sans-serif" font-size="9" fill="#383860" text-anchor="middle">P5</text>
+  </g>
+  <g transform="translate(250, 400)" opacity="0.3">
+    <circle r="14" fill="none" stroke="#7070a0" stroke-width="1.5" stroke-dasharray="3 2"/>
+    <text y="32" font-family="-apple-system, sans-serif" font-size="10" fill="#7070a0" text-anchor="middle">Broca ?</text>
+    <text y="46" font-family="-apple-system, sans-serif" font-size="9" fill="#383860" text-anchor="middle">P14</text>
+  </g>
+  <!-- Connection lines between unlocked nodes -->
+  <line x1="154" y1="250" x2="206" y2="250" stroke="#22B07A" stroke-opacity="0.35" stroke-width="1"/>
+  <line x1="180" y1="280" x2="180" y2="346" stroke="#8B7FE8" stroke-opacity="0.35" stroke-width="1"/>
+  <line x1="156" y1="270" x2="174" y2="346" stroke="#22B07A" stroke-opacity="0.25" stroke-width="1"/>
+  <!-- Hint -->
+  <text x="180" y="540" font-family="-apple-system, sans-serif" font-size="11" fill="#7070a0" text-anchor="middle" font-style="italic">Tap a region to manage</text>
+  <!-- Cross-region meta upgrade card -->
+  <rect x="20" y="568" width="320" height="60" rx="8" fill="#1a1d2a" stroke="#8B7FE830" stroke-width="1"/>
+  <text x="32" y="590" font-family="-apple-system, sans-serif" font-size="12" font-weight="600" fill="#e8e6f8">Amplitud de Banda</text>
+  <text x="32" y="608" font-family="-apple-system, sans-serif" font-size="10" fill="#7070a0">Cross-region synergy unlock — 3+ regions active</text>
+  <rect x="248" y="582" width="80" height="28" rx="6" fill="#8B7FE822" stroke="#8B7FE8" stroke-width="1.2"/>
+  <text x="288" y="600" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#8B7FE8" text-anchor="middle">15K th</text>
+  <!-- Bottom tab bar -->
+  <rect x="0" y="660" width="360" height="60" fill="#0a0d1a" stroke="#1a1d2a" stroke-width="1"/>
+  <text x="45" y="688" font-family="-apple-system, sans-serif" font-size="11" font-weight="500" fill="#7070a0" text-anchor="middle">Mind</text>
+  <text x="135" y="688" font-family="-apple-system, sans-serif" font-size="11" font-weight="500" fill="#7070a0" text-anchor="middle">Neurons</text>
+  <text x="225" y="688" font-family="-apple-system, sans-serif" font-size="11" font-weight="500" fill="#7070a0" text-anchor="middle">Upgrades</text>
+  <text x="315" y="688" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#8B7FE8" text-anchor="middle">Regions</text>
+  <rect x="285" y="704" width="60" height="2" rx="1" fill="#8B7FE8"/>
+</svg>

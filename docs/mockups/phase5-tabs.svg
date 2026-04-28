@@ -1,0 +1,41 @@
+<svg width="360" height="720" viewBox="0 0 360 720" xmlns="http://www.w3.org/2000/svg">
+  <!-- Tutorial Phase 5: Tab interface emerges (one tab pulses) -->
+  <defs>
+    <radialGradient id="ng5" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#40D0D0" stop-opacity="0.55"/>
+      <stop offset="60%" stop-color="#40D0D0" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#40D0D0" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="tabPulse" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#8B7FE8" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#8B7FE8" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="360" height="720" fill="#05070d"/>
+  <rect x="0" y="0" width="360" height="24" fill="#000"/>
+  <text x="12" y="16" font-family="-apple-system, sans-serif" font-size="11" fill="#888">9:48</text>
+  <text x="348" y="16" font-family="-apple-system, sans-serif" font-size="11" fill="#888" text-anchor="end">100%</text>
+  <!-- Hero pair -->
+  <text x="20" y="58" font-family="JetBrains Mono, monospace" font-size="28" font-weight="900" fill="#F0A030" font-variant-numeric="tabular-nums">50</text>
+  <text x="20" y="76" font-family="-apple-system, sans-serif" font-size="11" fill="#7070a0">thoughts</text>
+  <text x="340" y="58" font-family="JetBrains Mono, monospace" font-size="18" font-weight="700" fill="#22B07A" text-anchor="end">+1.0/s</text>
+  <!-- Several neurons -->
+  <g transform="translate(180, 360)">
+    <circle cx="-30" cy="-20" r="38" fill="url(#ng5)"/>
+    <circle cx="30" cy="-20" r="38" fill="url(#ng5)"/>
+    <circle cx="-50" cy="20" r="38" fill="url(#ng5)"/>
+    <circle cx="0" cy="0" r="38" fill="url(#ng5)"/>
+    <circle cx="-30" cy="-20" r="11" fill="#40D0D0" fill-opacity="0.4" stroke="#40D0D0" stroke-width="1.4"/>
+    <circle cx="30" cy="-20" r="11" fill="#40D0D0" fill-opacity="0.4" stroke="#40D0D0" stroke-width="1.4"/>
+    <circle cx="-50" cy="20" r="11" fill="#40D0D0" fill-opacity="0.4" stroke="#40D0D0" stroke-width="1.4"/>
+    <circle cx="0" cy="0" r="11" fill="#40D0D0" fill-opacity="0.4" stroke="#40D0D0" stroke-width="1.4"/>
+  </g>
+  <!-- Narrative -->
+  <text x="180" y="540" font-family="Georgia, serif" font-size="13" font-style="italic" fill="#7070a0" text-anchor="middle" opacity="0.75">...I can choose...</text>
+  <!-- ONE tab in the bar — Neurons, pulsing -->
+  <rect x="0" y="660" width="360" height="60" fill="#0a0d1a" stroke="#1a1d2a" stroke-width="1"/>
+  <circle cx="180" cy="690" r="40" fill="url(#tabPulse)"/>
+  <text x="180" y="690" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="#8B7FE8" text-anchor="middle">Neurons</text>
+  <rect x="160" y="704" width="40" height="2" rx="1" fill="#8B7FE8"/>
+  <text x="180" y="715" font-family="-apple-system, sans-serif" font-size="9" fill="#383860" text-anchor="middle" letter-spacing="0.1em">PHASE 5 — TABS EMERGE</text>
+</svg>

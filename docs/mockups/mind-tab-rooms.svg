@@ -1,0 +1,63 @@
+<svg width="360" height="720" viewBox="0 0 360 720" xmlns="http://www.w3.org/2000/svg">
+  <!-- Mind tab redesign: rooms list pattern (replaces subtab pills) -->
+  <rect width="360" height="720" fill="#05070d"/>
+  <rect x="0" y="0" width="360" height="24" fill="#000"/>
+  <text x="12" y="16" font-family="-apple-system, sans-serif" font-size="11" fill="#888">10:24</text>
+  <text x="348" y="16" font-family="-apple-system, sans-serif" font-size="11" fill="#888" text-anchor="end">88%</text>
+  <!-- Top sliver -->
+  <text x="20" y="60" font-family="JetBrains Mono, monospace" font-size="22" font-weight="900" fill="#F0A030" font-variant-numeric="tabular-nums">23.1K</text>
+  <text x="340" y="60" font-family="JetBrains Mono, monospace" font-size="14" font-weight="700" fill="#22B07A" text-anchor="end">+30.9/s</text>
+  <!-- Panel surface -->
+  <rect x="0" y="80" width="360" height="580" fill="#0a0d1a" stroke="#1a1d2a" stroke-width="1"/>
+  <text x="16" y="110" font-family="-apple-system, sans-serif" font-size="14" font-weight="700" fill="#e8e6f8" letter-spacing="0.08em">MIND</text>
+  <line x1="16" y1="124" x2="344" y2="124" stroke="#1a1d2a" stroke-width="1"/>
+  <!-- Room: Achievements -->
+  <g transform="translate(0, 144)">
+    <rect x="16" y="0" width="328" height="56" rx="8" fill="none"/>
+    <text x="32" y="22" font-family="-apple-system, sans-serif" font-size="14" font-weight="600" fill="#e8e6f8">✓ Achievements</text>
+    <text x="32" y="40" font-family="-apple-system, sans-serif" font-size="11" fill="#7070a0">3 of 35 unlocked</text>
+    <text x="328" y="32" font-family="-apple-system, sans-serif" font-size="18" fill="#7070a0" text-anchor="end">›</text>
+  </g>
+  <line x1="16" y1="208" x2="344" y2="208" stroke="#1a1d2a" stroke-width="1"/>
+  <!-- Room: Patterns -->
+  <g transform="translate(0, 224)">
+    <text x="32" y="22" font-family="-apple-system, sans-serif" font-size="14" font-weight="600" fill="#e8e6f8">◐ Patterns</text>
+    <text x="32" y="40" font-family="-apple-system, sans-serif" font-size="11" fill="#7070a0">2 nodes placed · next decision in 5 patterns</text>
+    <text x="328" y="32" font-family="-apple-system, sans-serif" font-size="18" fill="#7070a0" text-anchor="end">›</text>
+  </g>
+  <line x1="16" y1="288" x2="344" y2="288" stroke="#1a1d2a" stroke-width="1"/>
+  <!-- Room: Diary -->
+  <g transform="translate(0, 304)">
+    <text x="32" y="22" font-family="-apple-system, sans-serif" font-size="14" font-weight="600" fill="#e8e6f8">📖 Neural Diary</text>
+    <text x="32" y="40" font-family="-apple-system, sans-serif" font-size="11" fill="#7070a0">12 entries · last entry: cycle 8</text>
+    <text x="328" y="32" font-family="-apple-system, sans-serif" font-size="18" fill="#7070a0" text-anchor="end">›</text>
+  </g>
+  <line x1="16" y1="368" x2="344" y2="368" stroke="#1a1d2a" stroke-width="1"/>
+  <!-- Room: Mastery -->
+  <g transform="translate(0, 384)">
+    <text x="32" y="22" font-family="-apple-system, sans-serif" font-size="14" font-weight="600" fill="#e8e6f8">🎯 Mastery</text>
+    <text x="32" y="40" font-family="-apple-system, sans-serif" font-size="11" fill="#7070a0">5 systems mastered (+5% cap each)</text>
+    <text x="328" y="32" font-family="-apple-system, sans-serif" font-size="18" fill="#7070a0" text-anchor="end">›</text>
+  </g>
+  <line x1="16" y1="448" x2="344" y2="448" stroke="#1a1d2a" stroke-width="1"/>
+  <!-- Room: Archetypes -->
+  <g transform="translate(0, 464)">
+    <text x="32" y="22" font-family="-apple-system, sans-serif" font-size="14" font-weight="600" fill="#e8e6f8">🦋 Archetypes</text>
+    <text x="32" y="40" font-family="-apple-system, sans-serif" font-size="11" fill="#7070a0">Active: Analítica · 2 of 3 used</text>
+    <text x="328" y="32" font-family="-apple-system, sans-serif" font-size="18" fill="#7070a0" text-anchor="end">›</text>
+  </g>
+  <line x1="16" y1="528" x2="344" y2="528" stroke="#1a1d2a" stroke-width="1"/>
+  <!-- Locked group -->
+  <text x="16" y="560" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" fill="#7070a0" letter-spacing="0.08em">LOCKED</text>
+  <g transform="translate(0, 580)" opacity="0.45">
+    <text x="32" y="22" font-family="-apple-system, sans-serif" font-size="14" font-weight="600" fill="#e8e6f8">◇ Resonance</text>
+    <text x="32" y="40" font-family="-apple-system, sans-serif" font-size="11" fill="#7070a0">Unlocks at P13 (currently P3)</text>
+  </g>
+  <!-- Bottom tab bar -->
+  <rect x="0" y="660" width="360" height="60" fill="#0a0d1a" stroke="#1a1d2a" stroke-width="1"/>
+  <text x="45" y="688" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#8B7FE8" text-anchor="middle">Mind</text>
+  <text x="135" y="688" font-family="-apple-system, sans-serif" font-size="11" font-weight="500" fill="#7070a0" text-anchor="middle">Neurons</text>
+  <text x="225" y="688" font-family="-apple-system, sans-serif" font-size="11" font-weight="500" fill="#7070a0" text-anchor="middle">Upgrades</text>
+  <text x="315" y="688" font-family="-apple-system, sans-serif" font-size="11" font-weight="500" fill="#7070a0" text-anchor="middle">Regions</text>
+  <rect x="20" y="704" width="50" height="2" rx="1" fill="#8B7FE8"/>
+</svg>

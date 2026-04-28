@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SYNAPSE — UI Redesign Mockups</title>
+  <title>SYNAPSE — UI Redesign V2 Mockups</title>
   <style>
     * { box-sizing: border-box; }
     body {
@@ -15,8 +15,11 @@
     }
     h1 {
       margin: 0 0 8px;
-      font-weight: 600;
+      font-weight: 700;
       letter-spacing: 0.04em;
+      background: linear-gradient(135deg, #8B7FE8, #40D0D0);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
     .subtitle {
       color: #8B7FE8;
@@ -26,7 +29,7 @@
     .section-title {
       font-size: 20px;
       font-weight: 700;
-      margin: 32px 0 12px;
+      margin: 32px 0 8px;
       letter-spacing: 0.02em;
       color: #F0A030;
       border-bottom: 1px solid #383860;
@@ -59,6 +62,17 @@
       letter-spacing: 0.04em;
       color: #e8e6f8;
     }
+    .card .badge {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 3px;
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+    .badge.new { background: #22B07A; color: #0a0d1a; }
+    .badge.kept { background: #4090E0; color: #0a0d1a; }
     .card p {
       margin: 0 0 12px;
       font-size: 12px;
@@ -85,67 +99,62 @@
   </style>
 </head>
 <body>
-  <h1>SYNAPSE — UI Redesign Mockups</h1>
-  <p class="subtitle">Mi A3 narrow-screen target (720×1520, mockups shown at 360×720 half-resolution)</p>
+  <h1>SYNAPSE — UI Redesign V2 Mockups</h1>
+  <p class="subtitle">17 screens · Mi A3 narrow target (720×1520, mockups at 360×720)</p>
 
-  <div class="section-title">Tutorial flow — "The Mind Awakens"</div>
+  <div class="section-title">Tutorial flow — "The Mind Awakens" (8 phases)</div>
   <p class="section-desc">
-    Three pivotal phases of the proposed 8-phase tutorial. Each UI element appears as the player's mind "remembers"
-    what it can do — driven by the player's own actions, never by timed prompts.
+    Each UI element appears as a "memory the mind recovers", driven by the player's own actions.
+    Player paces themselves; no timed prompts.
   </p>
   <div class="gallery">
-    <div class="card">
-      <h3>Phase 0 — Pre-thought</h3>
-      <p>Cold start. Pure black canvas + one faint cyan neuron + italic narrative line. No HUD chrome at all. Time budget: 3-8s before first tap.</p>
-      <object data="01-phase0-blank.svg" type="image/svg+xml">Phase 0 mockup</object>
-    </div>
-    <div class="card">
-      <h3>Phase 3 — Buy first neuron</h3>
-      <p>Pivotal moment. Player has 10 thoughts (counter shown small top-left, "thoughts" label appeared in Phase 2). Big +1 neuron button overlay invites the first purchase. Single-tap goal.</p>
-      <object data="02-phase3-buy-first.svg" type="image/svg+xml">Phase 3 mockup</object>
-    </div>
-    <div class="card">
-      <h3>Phase 7 — First Discharge</h3>
-      <p>Climax. Focus bar at 100%, "Discharge ready" chip pulses, big DISCHARGE button with the SUPERCHARGED ×3 tutorial badge. Bottom tabs visible (Neurons + Upgrades earned in earlier phases).</p>
-      <object data="03-phase7-discharge-ready.svg" type="image/svg+xml">Phase 7 mockup</object>
-    </div>
+    <div class="card"><h3>Phase 0 — Pre-thought</h3><p>Pure black. One faint cyan neuron. Italic "...something stirs..."</p><object data="01-phase0-blank.svg" type="image/svg+xml"></object></div>
+    <div class="card"><h3>Phase 1 — First thought<span class="badge new">NEW</span></h3><p>Tap → tiny "1" counter top-left. "+1" floater. "...a thought..."</p><object data="phase1-first-thought.svg" type="image/svg+xml"></object></div>
+    <div class="card"><h3>Phase 2 — The mind names itself<span class="badge new">NEW</span></h3><p>thoughts ≥ 5 → "thoughts" label fades in. "...I can think..."</p><object data="phase2-named.svg" type="image/svg+xml"></object></div>
+    <div class="card"><h3>Phase 3 — Buy first neuron</h3><p>thoughts ≥ 10 → big "+1 neuron" button overlay. "...connections form..."</p><object data="02-phase3-buy-first.svg" type="image/svg+xml"></object></div>
+    <div class="card"><h3>Phase 4 — Production begins<span class="badge new">NEW</span></h3><p>First buy → "+0.5/s" rate counter top-right. "...thoughts flow..."</p><object data="phase4-rate.svg" type="image/svg+xml"></object></div>
+    <div class="card"><h3>Phase 5 — Tab interface emerges<span class="badge new">NEW</span></h3><p>thoughts ≥ 50 → bottom tab bar with ONE tab (Neurons), pulsing. "...I can choose..."</p><object data="phase5-tabs.svg" type="image/svg+xml"></object></div>
+    <div class="card"><h3>Phase 6 — Focus emerges<span class="badge new">NEW</span></h3><p>Focus 50% → cyan focus bar visible + Upgrades tab. "...focus..."</p><object data="phase6-focus.svg" type="image/svg+xml"></object></div>
+    <div class="card"><h3>Phase 7 — First Discharge</h3><p>Focus 100% → big DISCHARGE button + SUPERCHARGED ×3 badge. "...release..."</p><object data="03-phase7-discharge-ready.svg" type="image/svg+xml"></object></div>
+    <div class="card"><h3>Phase 8 — Awakening near<span class="badge new">NEW</span></h3><p>80% to Awakening → progress bar appears + Mind tab. "...beyond this self..."</p><object data="phase8-awakening.svg" type="image/svg+xml"></object></div>
   </div>
 
   <div class="section-title">Final UI — post-tutorial launch state</div>
   <p class="section-desc">
-    What the player sees from the first Awakening onward. Hero pair (thoughts + rate) on top, thin amber awakening
-    progress bar, status row of 3 chips, focus bar, discharge chip, canvas with auto-scaled spiral, discharge button
-    only when ready, 4-tab bottom bar.
+    What the player sees from the first Awakening onward. Hero pair, thin progress bar, status row chips,
+    focus bar, discharge chip, canvas with auto-scaled spiral, action button only when ready, 4 tabs.
   </p>
   <div class="gallery">
-    <div class="card">
-      <h3>Final Main HUD</h3>
-      <p>The polished launch HUD. All elements respect narrow-screen layout (no overlap), one-handed reach (action button bottom-center), settings top-right (mobile convention).</p>
-      <object data="04-final-hud.svg" type="image/svg+xml">Final HUD mockup</object>
-    </div>
+    <div class="card"><h3>Final Main HUD</h3><p>The polished launch HUD. All elements respect narrow-screen layout. Settings top-right (mobile convention). Discharge bottom-center.</p><object data="04-final-hud.svg" type="image/svg+xml"></object></div>
   </div>
 
-  <div class="section-title">Tab content redesigns</div>
+  <div class="section-title">Tab content redesigns (4 tabs)</div>
   <p class="section-desc">
-    Mockups for the two most-touched tabs. Mind tab restructure (rooms-list pattern) and Regions brain-map are
-    described in the proposal but not yet drawn — generate on request.
+    Each tab opens at top:18% covering ~75-82% of viewport. Content patterns adapted from the original
+    UI mockups + 2026 idle-game best practices (compact rows, scan-friendly grouping, color-coded affordability).
   </p>
   <div class="gallery">
-    <div class="card">
-      <h3>Neurons tab — compact + best-buy</h3>
-      <p>Mode selector at top (×1 / ×10 / MAX). Each row 3 lines instead of 5. ★ badge marks best DPS-per-thought now. Locked neurons dim with explicit unlock requirement. Sticky effective-rate footer.</p>
-      <object data="05-neurons-tab.svg" type="image/svg+xml">Neurons tab mockup</object>
-    </div>
-    <div class="card">
-      <h3>Upgrades tab — affordable count + sections</h3>
-      <p>Affordable count badge in header (3 affordable). Affordable section first, scannable in one look. "Coming next" teaser section dimmer. Locked-section hint at bottom.</p>
-      <object data="06-upgrades-tab.svg" type="image/svg+xml">Upgrades tab mockup</object>
-    </div>
+    <div class="card"><h3>Neurons tab — compact + best-buy</h3><p>Mode selector at top (×1/×10/MAX). Compact rows. ★ best-DPS-per-thought badge. Locked rows dim with explicit unlock hint.</p><object data="05-neurons-tab.svg" type="image/svg+xml"></object></div>
+    <div class="card"><h3>Upgrades tab — affordable count</h3><p>Affordable count badge in header. Affordable section first. "Coming next" teaser dimmer. Locked hint at bottom.</p><object data="06-upgrades-tab.svg" type="image/svg+xml"></object></div>
+    <div class="card"><h3>Mind tab — rooms list<span class="badge new">NEW</span></h3><p>Replaces horizontal subtab pills with a vertical rooms list. Each room → drill into full sub-page. Locked rooms grouped at bottom. NGU Idle pattern.</p><object data="mind-tab-rooms.svg" type="image/svg+xml"></object></div>
+    <div class="card"><h3>Regions tab — brain map<span class="badge new">NEW</span></h3><p>Brain-map canvas overview replaces vertical card list. Owned regions illuminated. Tap a node → drill into region detail page. Cross-region meta upgrade card below.</p><object data="regions-brain-map.svg" type="image/svg+xml"></object></div>
+  </div>
+
+  <div class="section-title">Critical screens (cycle / prestige / sleep)</div>
+  <p class="section-desc">
+    Pivotal moments. Incorporates patterns from the original docs/UI_MOCKUPS.html that Nico still likes:
+    "SAME AS BEFORE" big CTA, sectioned Awakening, Lucid Dream offline-return.
+  </p>
+  <div class="gallery">
+    <div class="card"><h3>CycleSetup V2<span class="badge kept">FROM ORIGINAL</span></h3><p>3 slot columns + BIG green "SAME AS BEFORE — START" CTA (1-tap repeat for veterans). Secondary "Start with changes" outline button. Collapsible What-if. Momentum chip.</p><object data="cycle-setup-v2.svg" type="image/svg+xml"></object></div>
+    <div class="card"><h3>Awakening V2<span class="badge kept">FROM ORIGINAL</span></h3><p>Sectioned: Green=Gains · Red=Resets · Blue=Estimate · Amber=Record · Gold dashed=Resonant Pattern (conditional). Big violet AWAKEN button.</p><object data="awakening-v2.svg" type="image/svg+xml"></object></div>
+    <div class="card"><h3>Sleep V2<span class="badge kept">FROM ORIGINAL</span></h3><p>"Your mind dreamed". Big amber thoughts gain card. Lucid Dream panel (P10+, 33%): 2 choice cards. Optional ad row (subtle). Continue.</p><object data="sleep-v2.svg" type="image/svg+xml"></object></div>
   </div>
 
   <footer>
-    Generated as part of the SYNAPSE pre-launch UI redesign proposal.
-    Open <code>docs/UI_REDESIGN_PROPOSAL.md</code> for the full proposal text including the other 5 tutorial phases (1, 2, 4, 5, 6, 8) and modal redesigns.
+    Generated as part of the SYNAPSE pre-launch UI redesign V2 proposal.<br>
+    See <code>docs/UI_REDESIGN_V2.md</code> for the full proposal text and code-impact audit.<br>
+    Mockups synthesize: original <code>docs/UI_MOCKUPS.html</code> + 2026 idle-game research + Mi A3 playtest learnings.
   </footer>
 </body>
 </html>
