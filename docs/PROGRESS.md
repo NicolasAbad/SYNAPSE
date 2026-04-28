@@ -17,8 +17,43 @@
 **Earlier this session — Sprint 10 Phase 10.4 CLOSED (2026-04-25).** Daily Login Bonus + push notifications complete. Engine: `evaluateDailyLogin` pure helper (CODE-9) returns one of 4 outcomes (no_action / normal_claim / streak_save_eligible / streak_reset) per the 7-day reward cycle [5,5,10,10,15,20,50] with miss-1-day save window. Store: `claimDailyLoginReward`, `resolveStreakSave` (subscriber/ad/reset paths), `recordNotificationPermissionAsked` (gate cadence 1/3). UI: `DailyLoginModal` with two states (reward card + streak-save eligible offering ad-watch via existing `streak_save` AdMob placement #7). Push scheduler: `src/platform/pushScheduler.ts` adapter (Capacitor LocalNotifications, ^6.1.3 for Capacitor-6 peer) exposing ensurePermission + scheduleDailyReminder + scheduleOfflineCapReached + scheduleStreakAboutToBreak + cancelAll, all inert on web/test, all wrapped CODE-8 (never throws). `src/platform/usePushRuntime.ts` React glue mounted in App.tsx wires the four caller responsibilities: (1) cancelAll on Settings toggle off, schedule daily reminder on toggle on; (2) ensurePermission cadence after P1 prestige (gate 1) + after P3 (gate 3) when notificationsEnabled; (3) scheduleOfflineCapReached on visibilitychange→hidden using currentOfflineCapHours from now; (4) scheduleStreakAboutToBreak on hidden when dailyLoginStreak > 0. **1972 tests pass** (+10 net, push hook coverage) / **4/4 gates PASS (ratio 0.81)** / typecheck + lint clean. Sprint 10.1 + 10.2 + 10.3 + 10.4 CLOSED. Sprint 8c-tuning deadlock + Sprint 9b CLOSED preserved.
 
 **Earlier this session — Sprint 10 Phase 10.3 GREEN (2026-04-24).** AnalyticsEvent union extended from 14 → 49 events (48 GDD §27 + 1 Sprint 10.1 extension `reset_game`). New `firstEventsFired: string[]` GameState field (132 → 133, PRESERVE on prestige + Transcendence) tracks lifetime fire-once funnel events. New `logEventOnce(name, params, consent, firedBefore)` helper threads the array through actions. Wired at call sites: 9 funnel (app_first_open in initSessionTimestamps, tutorial_first_tap/buy/discharge in onTap/buyNeuron/buyUpgrade/discharge during isTutorialCycle, first_prestige + reached_p5/10 in prestige action, first_transcendence in applyTranscendence, first_purchase across all 4 IAP success paths), 5 feature (achievement_unlocked + diary_entry_added in processAchievementUnlocks helper, mental_state_changed + micro_challenge_completed/failed in tickScheduler), 18 core (first_tap, first_neuron, upgrade_purchased, discharge_used, insight_activated, prestige_completed, polarity_chosen, mutation_chosen, pathway_chosen, pattern_decision, resonant_pattern_discovered, spontaneous_event, personal_best, transcendence, ending_seen, offline_return, ad_watched, pattern_decisions_reset). Weekly Challenge events (3) defined in union but NOT wired — WC mechanics aren't implemented; events fire when consumer ships in a future sprint. SPRINTS.md ↔ GDD §27 gap documented: SPRINTS.md mandates `reset_game` but GDD §27 doesn't list it (carried as Sprint 10.1 extension; 49 total, pending Nico reconciliation). **GameState 132 → 133**. **1932 tests pass** (+4 net from prior 1928) / **4/4 gates PASS (ratio 0.80)** / typecheck + lint clean. Sprint 10.1 + 10.2 CLOSED; Sprint 8c-tuning deadlock + Sprint 9b CLOSED preserved.
-**Last updated:** 2026-04-27 — Pre-launch audit Day 5 + Tier 2 sweep COMPLETE (4 additional commits: activation flash, G-1+A-3, C-2, D-1+D-2).
-**Active sprint:** Pre-launch audit launch bundle — Day 5 of N. **Dimension M score 7-8/10** (up from 3/10 pre-audit). **Tier 2 audit items COMPLETE** — 6 implemented (C-1+A-1+A-2 activation flash, G-1 colorblind, A-3 anti-spam, C-2 tutorial skip, D-1 push soft-prompt, D-2 starter pack push), 2 refuted (D-3 + J-5 already shipped earlier). Next session resumes with Sprint 9b-post-propagation (RevenueCat dashboard work) OR Sprint 11b device matrix.
+**Last updated:** 2026-04-27 (session-Day-5 close) — Mi A3 device session + UI Redesign V2 proposal + 17 mockups committed. Project pivoted: full UI/UX redesign is now a launch gate.
+**Active sprint:** **PROJECT PIVOT** — Mi A3 playtest exposed launch-blocking UX problems beyond what the Tier 2 audit caught. After patching the immediate bugs (5 OfferOrchestrator pointer-events softlocks, CycleSetupScreen polarity-selection softlock, Crashlytics Gradle plugin native crash, HUD layout overlaps, neurons off-canvas, settings gear bottom-left, tab panels half-screen, Discharge button always-visible distraction), Nico decided **the entire UI gets a comprehensive redesign before public launch — no time constraint**. Next session: plan-mode review of `docs/UI_REDESIGN_V2.md` + audit gaps + mockups for ALL tabs/sub-tabs/buttons/modals + tutorial visual storytelling pass + Play-Store marketing assets. See session-Day-5 entry below + new memories `project_full_ui_redesign_before_launch.md` + `feedback_plan_mode_for_design.md`.
+
+### Pre-launch audit Day 5 close (2026-04-27 — Mi A3 device session + UI Redesign V2 proposal)
+
+This session became the most consequential design pivot of the project. Three phases:
+
+**Phase 1 — Tier 2 audit sweep (morning):** A+B+C-equivalent of original audit Tier 2 work. Activation flash (Cascade+Insight), colorblind tier numerals, anti-spam badge, tutorial-skip toggle, push soft-prompt modal, starter pack T-24h reminder. 4 commits (`9ee4b3b` `aa5a7bb` `e600e32` `02205a1`). All Tier 2 audit items now COMPLETE or REFUTED.
+
+**Phase 2 — Mi A3 device install + playtest (afternoon):** First real-device session. Discovered:
+- Crashlytics Gradle plugin missing → app crashed at startup (fixed `ee64185`)
+- Discharge button always-visible distraction → hide-when-no-charge (`ff6c0c2`)
+- 5 OfferOrchestrator modals (StarterPack/GeniusPass/LimitedTime/PiggyBank/SparkPack) had `pointerEvents:'none'` inherited from HUD wrapper → all softlocked the player → fixed via overlay `pointerEvents:'auto'`
+- CycleSetupScreen had the SAME bug → polarity selection was dead → softlocked first prestige → fixed (`132d233`)
+- HUD overlap on narrow Mi A3 screens (thoughts/discharge countdown/rate counter/memories/mood/connection chip all colliding) → repositioned + introduced `AwakeningProgressBar` thin bar replacing the inline subtitle, status row layout (`3156689` + `f5be810`)
+- Neurons off-canvas at high counts → renderer auto-scales the spiral so all 80 neurons fit any canvas (`3156689`)
+- Settings gear bottom-left → moved to top-right per mobile convention (`3156689`)
+- Tab panels opening at top:45% → tightened to top:18%/25% so panels cover ~75-82% of viewport (`3156689`)
+
+**Phase 3 — UI Redesign proposals (afternoon → evening):** Wrote `docs/UI_REDESIGN_PROPOSAL.md` (V1 — 8-phase tutorial "The Mind Awakens" + final HUD + tab redesigns). Generated 6 SVG+PNG mockups + HTML gallery. Then Nico requested an enhanced V2 incorporating original `docs/UI_MOCKUPS.html` patterns (SAME-AS-BEFORE big CTA, Awakening sectioning, Lucid Dream pattern) + 2026 idle-game web research + codebase impact audit. Wrote `docs/UI_REDESIGN_V2.md` + 11 new mockups (phase 1/2/4/5/6/8 + Mind rooms list + Regions brain map + CycleSetup V2 + Awakening V2 + Sleep V2). Total: 17 mockups in `docs/mockups/` covering every screen v1.0 ships.
+
+**Day 5 commits (chronological):** `9ee4b3b` (Tier 2 C-1+A-1+A-2 activation flash) → `aa5a7bb` (Tier 2 G-1+A-3 colorblind+anti-spam) → `e600e32` (Tier 2 C-2 tutorial skip) → `02205a1` (Tier 2 D-1+D-2 push soft-prompt+starter pack reminder) → `ee64185` (fix Crashlytics Gradle) → `ff6c0c2` (Discharge UX hide-when-no-charge) → `948233b` (gitignore screenshot) → `3156689` (Mi A3 playtest UX bundle 5 fixes) → `f5be810` (Option C HUD redesign) → `132d233` (CycleSetupScreen pointerEvents) → V1 mockups commit → V2 doc + 11 new mockups commit.
+
+**Verification at session close:** 2288 tests passing (1 skipped), 6/6 anti-invention gates green, typecheck + lint clean. ~16 commits unpushed since prior origin/main state — Nico needs to push.
+
+**Pending for next session (per Nico's explicit ask):**
+1. Audit `docs/UI_REDESIGN_V2.md` proposal + review code-impact analysis
+2. Review every existing screen + propose UI/UX improvements
+3. Mockups for ALL tabs AND ALL sub-tabs (more granular than the 4 currently mocked — Mind has 7 sub-rooms, each needs its own mockup; same for Regions detail pages, Settings sections, etc.)
+4. Full tutorial review — find gaps, ensure visual storytelling + narrative flow are great
+5. Mockups for ALL buttons + ALL modals appearing in the game
+6. "Background marketing assets" — Play Store screenshots, key art, feature graphic
+7. Synthesize into V3 (the complete redesign-before-launch plan)
+
+Workflow: plan mode (per `feedback_plan_mode_for_design.md`). No time constraint (per `project_full_ui_redesign_before_launch.md`).
+
+
 
 ### Pre-launch audit Day 5 — Tier 2 sweep (additional 4 commits, audit-cycle close)
 
