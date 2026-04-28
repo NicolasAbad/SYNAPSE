@@ -23,8 +23,14 @@ export const ConnectionChip = memo(function ConnectionChip() {
       data-testid="hud-connection-chip"
       style={{
         position: 'absolute',
-        top: 'calc(var(--spacing-5) + var(--text-lg) + 4px)', // CONST-OK: CSS layout offset below RateCounter
-        right: 'var(--spacing-5)',
+        // Mi A3 playtest UX redesign Option C: aligned to the StatusRow
+        // (memories left, connection center, mood right) — same vertical
+        // as MemoriesCounter and MoodIndicator. Prevously sat alone below
+        // RateCounter on the right.
+        top: 'calc(var(--spacing-16) + var(--spacing-6))', // CONST-OK CSS — matches MemoriesCounter / MoodIndicator
+        left: '50%', // CONST-OK CSS centering idiom
+        transform: 'translateX(-50%)', // CONST-OK CSS centering idiom
+        textAlign: 'center',
         color: 'var(--color-connection-chip, var(--color-rate-counter))',
         fontFamily: 'var(--font-mono)',
         fontSize: 'var(--text-sm)',
@@ -46,8 +52,8 @@ export const ConnectionChip = memo(function ConnectionChip() {
           fontWeight: 'var(--font-weight-regular)',
           color: 'var(--color-text-secondary)',
           marginTop: 2, // CONST-OK: tight spacing
-          textAlign: 'right',
-          maxWidth: 180, // CONST-OK: keep caption narrow so it stays right-aligned
+          textAlign: 'center', // centered chip => centered caption
+          maxWidth: 180, // CONST-OK: keep caption narrow so it stays inside the row
         }}
       >
         {t('hud_explain.connection_chip')}

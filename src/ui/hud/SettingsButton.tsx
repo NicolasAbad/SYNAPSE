@@ -24,12 +24,11 @@ export const SettingsButton = memo(function SettingsButton({ onOpen }: SettingsB
       onPointerDown={onClick}
       style={{
         position: 'absolute',
-        // Top-right slot — below the right-column stack (RateCounter +
-        // ConnectionChip + MoodIndicator). MoodIndicator sits at
-        // top: spacing-16 + spacing-6 (≈ 88px); we position the gear below
-        // that with a spacing-6 gap. Mi A3 playtest 2026-04-27: this gives
-        // each right-column element its own row, no overlap.
-        top: 'calc(var(--spacing-16) + var(--spacing-6) + var(--text-sm) + var(--spacing-6))', // CONST-OK layout
+        // Top-right slot — below the StatusRow (memories/connection/mood at
+        // top: spacing-16+spacing-6 ≈ 88px; ConnectionChip caption adds
+        // ~14px below that, plus our spacing-3 gap → ≈ 116px). Sits at the
+        // right edge so it doesn't crowd the central HUD elements.
+        top: 'calc(var(--spacing-16) + var(--spacing-6) + var(--text-sm) + var(--spacing-3))', // CONST-OK layout
         right: 'var(--spacing-3)', // CONST-OK CSS spacing token (slightly tucked)
         width: '44px', // CONST-OK CSS touch-target min (HUD.touchTargetMin idiom)
         height: '44px', // CONST-OK CSS touch-target min

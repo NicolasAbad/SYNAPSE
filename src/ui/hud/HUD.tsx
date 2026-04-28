@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import { ThoughtsCounter } from './ThoughtsCounter';
+import { AwakeningProgressBar } from './AwakeningProgressBar';
 import { RateCounter } from './RateCounter';
 import { MemoriesCounter } from './MemoriesCounter';
 import { MoodIndicator } from './MoodIndicator';
@@ -61,6 +62,7 @@ export const HUD = memo(function HUD({ onOpenSettings }: HUDProps = {}) {
       }}
     >
       <ThoughtsCounter />
+      <AwakeningProgressBar />
       <MemoriesCounter />
       <MoodIndicator />
       <RateCounter />
