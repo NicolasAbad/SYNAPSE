@@ -200,6 +200,10 @@ export const CANVAS = {
   scatterGoldenAngle: 2.399, // ≈ 137.5° in radians — natural spiral
   scatterBaseRadius: 40, // distance from canvas center for first scattered neuron
   scatterRadiusStep: 12, // additional distance per index
+  // Mi A3 playtest 2026-04-27 — extra clearance from the canvas edge when
+  // auto-scaling the spiral. The largest neuron has radius `integradora`
+  // (16px); we add this padding so its outer pulse doesn't touch the edge.
+  scatterPaddingPx: 8,
   // Pre-launch audit Tier 2 (G-1) — colorblind tier-numeral overlay on
   // neurons. Glyph font size = baseRadius × this multiplier; chosen so
   // the numeral remains legible across all 5 base radii (8-16px) without

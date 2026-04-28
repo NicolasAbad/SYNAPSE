@@ -25,6 +25,11 @@ const overlayStyle = { // CONST-OK CSS style object
   justifyContent: 'center',
   zIndex: 948, // CONST-OK HUD layer band
   padding: 'var(--spacing-5)', // CONST-OK CSS spacing token
+  // Mi A3 playtest fix: this modal mounts via OfferOrchestrator which lives
+  // inside HUD (whose wrapper sets pointerEvents: 'none'). Without this
+  // explicit override the Accept / Not now buttons are dead and the player
+  // is softlocked.
+  pointerEvents: 'auto' as const,
 };
 
 const cardStyle = { // CONST-OK CSS style object

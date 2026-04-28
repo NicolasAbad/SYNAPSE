@@ -144,6 +144,16 @@ export function getNeuronPosition(index: number, dims: DrawDims): { x: number; y
   const cy = dims.height / 2; // CONST-OK: canvas center = height / 2 (geometric intrinsic)
   if (index === 0) return { x: cx, y: cy };
   const angle = index * CANVAS.scatterGoldenAngle;
-  const r = CANVAS.scatterBaseRadius + index * CANVAS.scatterRadiusStep;
+  const baseR = CANVAS.scatterBaseRadius + index * CANVAS.scatterRadiusStep;
+  // Mi A3 playtest 2026-04-27: the unscaled spiral pushes neurons off-screen
+  // around index ~27 on a 720x800 canvas (baseR=40+27*12=364 > min(360,400)).
+  // Auto-scale the spiral so the maximum-index neuron always fits within the
+  // canvas (with `largestNeuronRadius` padding so the circle fully renders).
+  // No-op when the spiral already fits naturally (scale === 1).
+  const maxNeuronRadius = CANVAS.neuronRadii.integradora; // CONST-OK: largest tier radius
+  const maxR = Math.min(cx, cy) - maxNeuronRadius - CANVAS.scatterPaddingPx;
+  const requiredR = CANVAS.scatterBaseRadius + (SYNAPSE_CONSTANTS.maxVisibleNodes - 1) * CANVAS.scatterRadiusStep;
+  const scale = requiredR > maxR ? maxR / requiredR : 1;
+  const r = baseR * scale;
   return { x: cx + Math.cos(angle) * r, y: cy + Math.sin(angle) * r };
 }

@@ -50,7 +50,13 @@ export const TabPanelContainer = memo(function TabPanelContainer() {
       className="tab-fade"
       style={{
         position: 'absolute',
-        top: '45%', // CONST-OK: bottom-sheet idiom — leaves upper 45% for canvas tap area
+        // Mi A3 playtest 2026-04-27: panel opening at 45% left half of canvas
+        // visible behind which read as broken/unfocused. Tightened to top:18%
+        // (just below the HUD top-bar). Now panel covers ~75% of the viewport
+        // — gives panels real reading room without needing modal-style
+        // dismissal, and the upper sliver still anchors the player to the
+        // game state above.
+        top: '18%', // CONST-OK: bottom-sheet idiom (Mi A3 narrow-screen tuned)
         bottom: 'calc(var(--spacing-16) * 2)', // CONST-OK: above Discharge button + TabBar
         left: 0, // CONST-OK: CSS full-bleed
         right: 0, // CONST-OK: CSS full-bleed

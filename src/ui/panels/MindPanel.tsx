@@ -133,7 +133,10 @@ function MindSubtabBody({ subtab }: { subtab: MindSubtabId }) {
       data-testid={`mind-subtab-body-${subtab}`}
       style={{
         position: 'absolute',
-        top: '30%', // CONST-OK: bottom-sheet idiom — leaves upper 30% for canvas + subtab bar
+        // Mi A3 playtest 2026-04-27: was top:30%, panel opened too low and
+        // canvas above looked stranded. Tightened to top:25% (subtab bar
+        // sits at ~16-18% so the panel starts just below it).
+        top: '25%', // CONST-OK: bottom-sheet idiom (Mi A3 narrow-screen tuned)
         bottom: 'calc(var(--spacing-16) * 2)', // CONST-OK: above Discharge + TabBar
         left: 0, // CONST-OK: CSS full-bleed
         right: 0, // CONST-OK: CSS full-bleed

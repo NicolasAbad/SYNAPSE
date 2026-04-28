@@ -69,7 +69,12 @@ export const DischargeCharges = memo(function DischargeCharges() {
       aria-label={`Discharge charges: ${charges} of ${maxCharges}`}
       style={{
         position: 'absolute',
-        top: 'var(--spacing-5)', // CONST-OK: CSS custom property ref (CODE-1 exception)
+        // Mi A3 playtest 2026-04-27: was top: spacing-5 (top-center) which
+        // collided horizontally with the ThoughtsCounter (left) and
+        // RateCounter (right) on narrow 720px screens. Moved to BELOW the
+        // FocusBar so the top row only carries thoughts + rate, the focus
+        // bar separates, then this row carries discharge pips + countdown.
+        top: 'calc(var(--spacing-5) + var(--text-3xl) + var(--spacing-3))', // CONST-OK: CSS layout offset (below FocusBar)
         left: '50%', // CONST-OK: CSS centering idiom (CODE-1 exception)
         transform: 'translateX(-50%)', // CONST-OK: CSS centering idiom (CODE-1 exception)
         display: 'flex',

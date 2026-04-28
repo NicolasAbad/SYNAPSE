@@ -21,6 +21,7 @@ const overlayStyle = { // CONST-OK CSS style object
   justifyContent: 'center',
   zIndex: 947, // CONST-OK HUD layer band
   padding: 'var(--spacing-5)', // CONST-OK CSS spacing token
+  pointerEvents: 'auto' as const, // playtest fix — modal mounts under HUD wrapper which sets none
 };
 
 const cardStyle = { // CONST-OK CSS style object
