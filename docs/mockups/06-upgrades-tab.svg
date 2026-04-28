@@ -1,0 +1,78 @@
+<svg width="360" height="720" viewBox="0 0 360 720" xmlns="http://www.w3.org/2000/svg">
+  <!-- SYNAPSE UI Mockup — Upgrades tab redesign (affordable count badge, sectioned scan-friendly) -->
+  <!-- Background -->
+  <rect width="360" height="720" fill="#05070d"/>
+  <!-- Status bar -->
+  <rect x="0" y="0" width="360" height="24" fill="#000000"/>
+  <text x="12" y="16" font-family="-apple-system, sans-serif" font-size="11" fill="#888">10:25</text>
+  <text x="348" y="16" font-family="-apple-system, sans-serif" font-size="11" fill="#888" text-anchor="end">88%</text>
+  <!-- Top sliver of HUD (anchor) -->
+  <text x="20" y="60" font-family="JetBrains Mono, monospace" font-size="22" font-weight="900" fill="#F0A030" font-variant-numeric="tabular-nums">23.1K</text>
+  <text x="340" y="60" font-family="JetBrains Mono, monospace" font-size="14" font-weight="700" fill="#22B07A" text-anchor="end">+30.9/s</text>
+  <!-- Panel surface -->
+  <rect x="0" y="80" width="360" height="580" fill="#0a0d1a" stroke="#1a1d2a" stroke-width="1"/>
+  <!-- Panel header: title + affordable badge -->
+  <text x="16" y="110" font-family="-apple-system, sans-serif" font-size="14" font-weight="700" fill="#e8e6f8" letter-spacing="0.08em">UPGRADES</text>
+  <g transform="translate(344, 100)">
+    <rect x="-90" y="-2" width="90" height="22" rx="11" fill="#22B07A22" stroke="#22B07A" stroke-width="1"/>
+    <text x="-45" y="13" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#22B07A" text-anchor="middle">3 affordable</text>
+  </g>
+  <line x1="16" y1="124" x2="344" y2="124" stroke="#1a1d2a" stroke-width="1"/>
+  <!-- Affordable section -->
+  <text x="16" y="148" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" fill="#22B07A" letter-spacing="0.08em">AFFORDABLE</text>
+  <!-- Affordable upgrade row 1: Mielina -->
+  <g transform="translate(0, 168)">
+    <text x="20" y="13" font-family="-apple-system, sans-serif" font-size="14" font-weight="600" fill="#e8e6f8">⚡ Mielina</text>
+    <text x="20" y="28" font-family="-apple-system, sans-serif" font-size="11" fill="#7070a0">+50% tap power</text>
+    <rect x="240" y="2" width="100" height="28" rx="6" fill="#8B7FE822" stroke="#8B7FE8" stroke-width="1.2"/>
+    <text x="290" y="20" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#8B7FE8" text-anchor="middle">Buy 5✦</text>
+  </g>
+  <line x1="16" y1="216" x2="344" y2="216" stroke="#1a1d2a" stroke-width="1"/>
+  <!-- Affordable upgrade row 2: Potencial Sináptico -->
+  <g transform="translate(0, 232)">
+    <text x="20" y="13" font-family="-apple-system, sans-serif" font-size="14" font-weight="600" fill="#e8e6f8">✦ Potencial Sináptico</text>
+    <text x="20" y="28" font-family="-apple-system, sans-serif" font-size="11" fill="#7070a0">+25% production</text>
+    <rect x="240" y="2" width="100" height="28" rx="6" fill="#8B7FE822" stroke="#8B7FE8" stroke-width="1.2"/>
+    <text x="290" y="20" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#8B7FE8" text-anchor="middle">Buy 8✦</text>
+  </g>
+  <line x1="16" y1="280" x2="344" y2="280" stroke="#1a1d2a" stroke-width="1"/>
+  <!-- Affordable upgrade row 3: Convergencia -->
+  <g transform="translate(0, 296)">
+    <text x="20" y="13" font-family="-apple-system, sans-serif" font-size="14" font-weight="600" fill="#e8e6f8">◯ Convergencia</text>
+    <text x="20" y="28" font-family="-apple-system, sans-serif" font-size="11" fill="#7070a0">+1 max charge</text>
+    <rect x="240" y="2" width="100" height="28" rx="6" fill="#8B7FE822" stroke="#8B7FE8" stroke-width="1.2"/>
+    <text x="290" y="20" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#8B7FE8" text-anchor="middle">Buy 12✦</text>
+  </g>
+  <!-- Coming next section -->
+  <line x1="16" y1="360" x2="344" y2="360" stroke="#1a1d2a" stroke-width="1"/>
+  <text x="16" y="384" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" fill="#7070a0" letter-spacing="0.08em">COMING NEXT</text>
+  <!-- Teaser row 1 (dim) -->
+  <g transform="translate(0, 404)" opacity="0.55">
+    <text x="20" y="13" font-family="-apple-system, sans-serif" font-size="14" font-weight="600" fill="#e8e6f8">◐ Mente Despierta</text>
+    <text x="20" y="28" font-family="-apple-system, sans-serif" font-size="11" fill="#7070a0">+offline cap 4h → 6h</text>
+    <text x="332" y="20" font-family="-apple-system, sans-serif" font-size="11" fill="#7070a0" text-anchor="end">need 18✦</text>
+  </g>
+  <line x1="16" y1="452" x2="344" y2="452" stroke="#1a1d2a" stroke-width="1"/>
+  <!-- Teaser row 2 (dim) -->
+  <g transform="translate(0, 468)" opacity="0.55">
+    <text x="20" y="13" font-family="-apple-system, sans-serif" font-size="14" font-weight="600" fill="#e8e6f8">◐ Cascada Eterna</text>
+    <text x="20" y="28" font-family="-apple-system, sans-serif" font-size="11" fill="#7070a0">+1 cascade per cycle</text>
+    <text x="332" y="20" font-family="-apple-system, sans-serif" font-size="11" fill="#7070a0" text-anchor="end">need 25✦</text>
+  </g>
+  <line x1="16" y1="516" x2="344" y2="516" stroke="#1a1d2a" stroke-width="1"/>
+  <!-- Teaser row 3 (dim) -->
+  <g transform="translate(0, 532)" opacity="0.55">
+    <text x="20" y="13" font-family="-apple-system, sans-serif" font-size="14" font-weight="600" fill="#e8e6f8">◐ Red Neuronal Densa</text>
+    <text x="20" y="28" font-family="-apple-system, sans-serif" font-size="11" fill="#7070a0">+15% connection bonus</text>
+    <text x="332" y="20" font-family="-apple-system, sans-serif" font-size="11" fill="#7070a0" text-anchor="end">need 30✦</text>
+  </g>
+  <!-- Locked note (since prestige < P5) -->
+  <text x="180" y="624" font-family="-apple-system, sans-serif" font-size="10" fill="#383860" text-anchor="middle" font-style="italic">More upgrades unlock at P5 prestige</text>
+  <!-- Bottom tab bar -->
+  <rect x="0" y="660" width="360" height="60" fill="#0a0d1a" stroke="#1a1d2a" stroke-width="1"/>
+  <text x="45" y="688" font-family="-apple-system, sans-serif" font-size="11" font-weight="500" fill="#7070a0" text-anchor="middle">Mind</text>
+  <text x="135" y="688" font-family="-apple-system, sans-serif" font-size="11" font-weight="500" fill="#7070a0" text-anchor="middle">Neurons</text>
+  <text x="225" y="688" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#8B7FE8" text-anchor="middle">Upgrades</text>
+  <text x="315" y="688" font-family="-apple-system, sans-serif" font-size="11" font-weight="500" fill="#7070a0" text-anchor="middle">Regions</text>
+  <rect x="195" y="704" width="60" height="2" rx="1" fill="#8B7FE8"/>
+</svg>

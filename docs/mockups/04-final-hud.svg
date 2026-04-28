@@ -1,0 +1,81 @@
+<svg width="360" height="720" viewBox="0 0 360 720" xmlns="http://www.w3.org/2000/svg">
+  <!-- SYNAPSE UI Mockup — Final main HUD (post-tutorial, the launch UI) -->
+  <defs>
+    <radialGradient id="neuronGlowF" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#40D0D0" stop-opacity="0.55"/>
+      <stop offset="60%" stop-color="#40D0D0" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#40D0D0" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="dischargeBtnF" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#F0A030" stop-opacity="0.45"/>
+      <stop offset="100%" stop-color="#F0A030" stop-opacity="0.22"/>
+    </linearGradient>
+  </defs>
+  <!-- Background -->
+  <rect width="360" height="720" fill="#05070d"/>
+  <!-- System status bar -->
+  <rect x="0" y="0" width="360" height="24" fill="#000000"/>
+  <text x="12" y="16" font-family="-apple-system, sans-serif" font-size="11" fill="#888">10:22</text>
+  <text x="348" y="16" font-family="-apple-system, sans-serif" font-size="11" fill="#888" text-anchor="end">88%</text>
+  <!-- ROW 1: hero pair — thoughts left + rate right -->
+  <text x="20" y="62" font-family="JetBrains Mono, monospace" font-size="32" font-weight="900" fill="#F0A030" font-variant-numeric="tabular-nums">23.1K</text>
+  <text x="20" y="80" font-family="-apple-system, sans-serif" font-size="11" fill="#7070a0">thoughts</text>
+  <text x="340" y="60" font-family="JetBrains Mono, monospace" font-size="20" font-weight="700" fill="#22B07A" text-anchor="end">+30.9/s</text>
+  <!-- ROW 2: thin Awakening progress bar -->
+  <rect x="20" y="92" width="320" height="3" rx="1.5" fill="#1a1d2a"/>
+  <rect x="20" y="92" width="64" height="3" rx="1.5" fill="#F0A030"/>
+  <!-- ROW 3: status chips — memories | connection (centered) | mood; settings gear far-right -->
+  <text x="20" y="124" font-family="JetBrains Mono, monospace" font-size="14" font-weight="600" fill="#e8e6f8">13</text>
+  <text x="40" y="124" font-family="-apple-system, sans-serif" font-size="11" fill="#7070a0">memories</text>
+  <text x="180" y="124" font-family="JetBrains Mono, monospace" font-size="13" font-weight="600" fill="#22B07A" text-anchor="middle">×1.05 conns</text>
+  <text x="296" y="124" font-family="JetBrains Mono, monospace" font-size="14" font-weight="600" fill="#F0A030" text-anchor="end">68 ◐</text>
+  <!-- Settings gear — top-right area, slightly below the chip row -->
+  <g transform="translate(330, 156)">
+    <rect x="-16" y="-16" width="32" height="32" rx="6" fill="none" stroke="#7070a0" stroke-width="0.8" opacity="0.7"/>
+    <text x="0" y="6" font-family="-apple-system, sans-serif" font-size="16" fill="#7070a0" text-anchor="middle" opacity="0.7">⚙</text>
+  </g>
+  <!-- ROW 4: focus bar — full width, near 60% -->
+  <rect x="20" y="174" width="320" height="4" rx="2" fill="#1a1d2a"/>
+  <rect x="20" y="174" width="190" height="4" rx="2" fill="#40D0D0"/>
+  <!-- ROW 5: discharge pips + countdown — compact, centered -->
+  <g transform="translate(180, 196)">
+    <circle cx="-22" cy="0" r="5" fill="#F0A030"/>
+    <circle cx="-8" cy="0" r="5" fill="none" stroke="#F0A030" stroke-width="1.5" opacity="0.5"/>
+    <text x="14" y="3" font-family="-apple-system, sans-serif" font-size="11" fill="#7070a0">⚡ 4:37</text>
+  </g>
+  <!-- Canvas — auto-scaled spiral of neurons (showing many) -->
+  <g transform="translate(180, 380)">
+    <!-- Center neuron + spiral around it -->
+    <circle cx="0" cy="0" r="34" fill="url(#neuronGlowF)"/>
+    <circle cx="40" cy="-28" r="34" fill="url(#neuronGlowF)"/>
+    <circle cx="-46" cy="-14" r="34" fill="url(#neuronGlowF)"/>
+    <circle cx="48" cy="22" r="34" fill="url(#neuronGlowF)"/>
+    <circle cx="-22" cy="40" r="34" fill="url(#neuronGlowF)"/>
+    <circle cx="22" cy="56" r="34" fill="url(#neuronGlowF)"/>
+    <circle cx="-58" cy="38" r="34" fill="url(#neuronGlowF)"/>
+    <circle cx="62" cy="-8" r="34" fill="url(#neuronGlowF)"/>
+    <circle cx="-32" cy="-44" r="34" fill="url(#neuronGlowF)"/>
+    <circle cx="0" cy="0" r="11" fill="#40D0D0" fill-opacity="0.4" stroke="#40D0D0" stroke-width="1.4"/>
+    <circle cx="40" cy="-28" r="9" fill="#40D0D0" fill-opacity="0.4" stroke="#40D0D0" stroke-width="1.2"/>
+    <circle cx="-46" cy="-14" r="9" fill="#40D0D0" fill-opacity="0.4" stroke="#40D0D0" stroke-width="1.2"/>
+    <circle cx="48" cy="22" r="11" fill="#22B07A" fill-opacity="0.4" stroke="#22B07A" stroke-width="1.4"/>
+    <circle cx="-22" cy="40" r="9" fill="#40D0D0" fill-opacity="0.4" stroke="#40D0D0" stroke-width="1.2"/>
+    <circle cx="22" cy="56" r="13" fill="#E06090" fill-opacity="0.4" stroke="#E06090" stroke-width="1.4"/>
+    <circle cx="-58" cy="38" r="9" fill="#40D0D0" fill-opacity="0.4" stroke="#40D0D0" stroke-width="1.2"/>
+    <circle cx="62" cy="-8" r="11" fill="#22B07A" fill-opacity="0.4" stroke="#22B07A" stroke-width="1.4"/>
+    <circle cx="-32" cy="-44" r="9" fill="#40D0D0" fill-opacity="0.4" stroke="#40D0D0" stroke-width="1.2"/>
+  </g>
+  <!-- Discharge button — centered, only visible when ready (here shown ready) -->
+  <g transform="translate(180, 588)">
+    <rect x="-95" y="-22" width="190" height="44" rx="22" fill="url(#dischargeBtnF)" stroke="#F0A030" stroke-width="1.5"/>
+    <text x="0" y="6" font-family="-apple-system, sans-serif" font-size="15" font-weight="800" fill="#F0A030" text-anchor="middle" letter-spacing="0.04em">DISCHARGE ⚡</text>
+  </g>
+  <!-- Bottom tab bar with 4 tabs -->
+  <rect x="0" y="660" width="360" height="60" fill="#0a0d1a" stroke="#1a1d2a" stroke-width="1"/>
+  <text x="45" y="688" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#8B7FE8" text-anchor="middle">Mind</text>
+  <text x="135" y="688" font-family="-apple-system, sans-serif" font-size="11" font-weight="500" fill="#7070a0" text-anchor="middle">Neurons</text>
+  <text x="225" y="688" font-family="-apple-system, sans-serif" font-size="11" font-weight="500" fill="#7070a0" text-anchor="middle">Upgrades</text>
+  <text x="315" y="688" font-family="-apple-system, sans-serif" font-size="11" font-weight="500" fill="#7070a0" text-anchor="middle">Regions</text>
+  <!-- Active tab indicator (Mind, leftmost) -->
+  <rect x="20" y="704" width="50" height="2" rx="1" fill="#8B7FE8"/>
+</svg>

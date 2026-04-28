@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SYNAPSE — UI Redesign Mockups</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 24px;
+      font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+      background: #1a1d2a;
+      color: #e8e6f8;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+    }
+    .subtitle {
+      color: #8B7FE8;
+      margin-bottom: 32px;
+      font-size: 14px;
+    }
+    .section-title {
+      font-size: 20px;
+      font-weight: 700;
+      margin: 32px 0 12px;
+      letter-spacing: 0.02em;
+      color: #F0A030;
+      border-bottom: 1px solid #383860;
+      padding-bottom: 8px;
+    }
+    .section-desc {
+      color: #7070a0;
+      margin: 0 0 20px;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: 24px;
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+    .card {
+      background: #0a0d1a;
+      border: 1px solid #383860;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    }
+    .card h3 {
+      margin: 0 0 6px;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      color: #e8e6f8;
+    }
+    .card p {
+      margin: 0 0 12px;
+      font-size: 12px;
+      color: #7070a0;
+      line-height: 1.4;
+    }
+    .card object {
+      display: block;
+      width: 100%;
+      max-width: 360px;
+      height: 720px;
+      margin: 0 auto;
+      background: #000;
+      border-radius: 6px;
+    }
+    footer {
+      margin-top: 48px;
+      padding-top: 16px;
+      border-top: 1px solid #383860;
+      color: #7070a0;
+      font-size: 12px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <h1>SYNAPSE — UI Redesign Mockups</h1>
+  <p class="subtitle">Mi A3 narrow-screen target (720×1520, mockups shown at 360×720 half-resolution)</p>
+
+  <div class="section-title">Tutorial flow — "The Mind Awakens"</div>
+  <p class="section-desc">
+    Three pivotal phases of the proposed 8-phase tutorial. Each UI element appears as the player's mind "remembers"
+    what it can do — driven by the player's own actions, never by timed prompts.
+  </p>
+  <div class="gallery">
+    <div class="card">
+      <h3>Phase 0 — Pre-thought</h3>
+      <p>Cold start. Pure black canvas + one faint cyan neuron + italic narrative line. No HUD chrome at all. Time budget: 3-8s before first tap.</p>
+      <object data="01-phase0-blank.svg" type="image/svg+xml">Phase 0 mockup</object>
+    </div>
+    <div class="card">
+      <h3>Phase 3 — Buy first neuron</h3>
+      <p>Pivotal moment. Player has 10 thoughts (counter shown small top-left, "thoughts" label appeared in Phase 2). Big +1 neuron button overlay invites the first purchase. Single-tap goal.</p>
+      <object data="02-phase3-buy-first.svg" type="image/svg+xml">Phase 3 mockup</object>
+    </div>
+    <div class="card">
+      <h3>Phase 7 — First Discharge</h3>
+      <p>Climax. Focus bar at 100%, "Discharge ready" chip pulses, big DISCHARGE button with the SUPERCHARGED ×3 tutorial badge. Bottom tabs visible (Neurons + Upgrades earned in earlier phases).</p>
+      <object data="03-phase7-discharge-ready.svg" type="image/svg+xml">Phase 7 mockup</object>
+    </div>
+  </div>
+
+  <div class="section-title">Final UI — post-tutorial launch state</div>
+  <p class="section-desc">
+    What the player sees from the first Awakening onward. Hero pair (thoughts + rate) on top, thin amber awakening
+    progress bar, status row of 3 chips, focus bar, discharge chip, canvas with auto-scaled spiral, discharge button
+    only when ready, 4-tab bottom bar.
+  </p>
+  <div class="gallery">
+    <div class="card">
+      <h3>Final Main HUD</h3>
+      <p>The polished launch HUD. All elements respect narrow-screen layout (no overlap), one-handed reach (action button bottom-center), settings top-right (mobile convention).</p>
+      <object data="04-final-hud.svg" type="image/svg+xml">Final HUD mockup</object>
+    </div>
+  </div>
+
+  <div class="section-title">Tab content redesigns</div>
+  <p class="section-desc">
+    Mockups for the two most-touched tabs. Mind tab restructure (rooms-list pattern) and Regions brain-map are
+    described in the proposal but not yet drawn — generate on request.
+  </p>
+  <div class="gallery">
+    <div class="card">
+      <h3>Neurons tab — compact + best-buy</h3>
+      <p>Mode selector at top (×1 / ×10 / MAX). Each row 3 lines instead of 5. ★ badge marks best DPS-per-thought now. Locked neurons dim with explicit unlock requirement. Sticky effective-rate footer.</p>
+      <object data="05-neurons-tab.svg" type="image/svg+xml">Neurons tab mockup</object>
+    </div>
+    <div class="card">
+      <h3>Upgrades tab — affordable count + sections</h3>
+      <p>Affordable count badge in header (3 affordable). Affordable section first, scannable in one look. "Coming next" teaser section dimmer. Locked-section hint at bottom.</p>
+      <object data="06-upgrades-tab.svg" type="image/svg+xml">Upgrades tab mockup</object>
+    </div>
+  </div>
+
+  <footer>
+    Generated as part of the SYNAPSE pre-launch UI redesign proposal.
+    Open <code>docs/UI_REDESIGN_PROPOSAL.md</code> for the full proposal text including the other 5 tutorial phases (1, 2, 4, 5, 6, 8) and modal redesigns.
+  </footer>
+</body>
+</html>

@@ -1,0 +1,67 @@
+<svg width="360" height="720" viewBox="0 0 360 720" xmlns="http://www.w3.org/2000/svg">
+  <!-- SYNAPSE UI Mockup — Tutorial Phase 7: Discharge ready (the climax) -->
+  <defs>
+    <radialGradient id="neuronGlowP7" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#40D0D0" stop-opacity="0.55"/>
+      <stop offset="60%" stop-color="#40D0D0" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#40D0D0" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="dischargeBtnP7" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#F0A030" stop-opacity="0.45"/>
+      <stop offset="100%" stop-color="#F0A030" stop-opacity="0.22"/>
+    </linearGradient>
+    <radialGradient id="dischargePulseP7" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#F0A030" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#F0A030" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <!-- Background -->
+  <rect width="360" height="720" fill="#05070d"/>
+  <!-- System status bar -->
+  <rect x="0" y="0" width="360" height="24" fill="#000000"/>
+  <text x="12" y="16" font-family="-apple-system, sans-serif" font-size="11" fill="#888">9:48</text>
+  <text x="348" y="16" font-family="-apple-system, sans-serif" font-size="11" fill="#888" text-anchor="end">100%</text>
+  <!-- Hero pair — thoughts (left) + rate (right) -->
+  <text x="20" y="60" font-family="JetBrains Mono, monospace" font-size="30" font-weight="900" fill="#F0A030" font-variant-numeric="tabular-nums">2.5K</text>
+  <text x="20" y="78" font-family="-apple-system, sans-serif" font-size="11" fill="#7070a0">thoughts</text>
+  <text x="340" y="60" font-family="JetBrains Mono, monospace" font-size="18" font-weight="700" fill="#22B07A" text-anchor="end">+18/s</text>
+  <!-- Focus bar — full width, near 100% with cyan fill -->
+  <rect x="20" y="98" width="320" height="4" rx="2" fill="#1a1d2a"/>
+  <rect x="20" y="98" width="306" height="4" rx="2" fill="#40D0D0"/>
+  <!-- "Discharge ready" chip below focus bar -->
+  <text x="180" y="124" font-family="-apple-system, sans-serif" font-size="12" font-weight="600" fill="#F0A030" text-anchor="middle">⚡ Discharge ready</text>
+  <!-- Canvas — small cluster of neurons, brighter -->
+  <g transform="translate(180, 320)">
+    <circle cx="-30" cy="-20" r="38" fill="url(#neuronGlowP7)"/>
+    <circle cx="30" cy="-20" r="38" fill="url(#neuronGlowP7)"/>
+    <circle cx="-50" cy="20" r="38" fill="url(#neuronGlowP7)"/>
+    <circle cx="0" cy="0" r="38" fill="url(#neuronGlowP7)"/>
+    <circle cx="50" cy="20" r="38" fill="url(#neuronGlowP7)"/>
+    <circle cx="-30" cy="-20" r="11" fill="#40D0D0" fill-opacity="0.4" stroke="#40D0D0" stroke-width="1.4"/>
+    <circle cx="30" cy="-20" r="11" fill="#40D0D0" fill-opacity="0.4" stroke="#40D0D0" stroke-width="1.4"/>
+    <circle cx="-50" cy="20" r="11" fill="#40D0D0" fill-opacity="0.4" stroke="#40D0D0" stroke-width="1.4"/>
+    <circle cx="0" cy="0" r="11" fill="#40D0D0" fill-opacity="0.4" stroke="#40D0D0" stroke-width="1.4"/>
+    <circle cx="50" cy="20" r="11" fill="#40D0D0" fill-opacity="0.4" stroke="#40D0D0" stroke-width="1.4"/>
+  </g>
+  <!-- Narrative beat -->
+  <text x="180" y="450" font-family="Georgia, serif" font-size="13" font-style="italic" fill="#7070a0" text-anchor="middle" opacity="0.75">...release...</text>
+  <!-- Discharge button — BIG, centered, pulsing -->
+  <g transform="translate(180, 540)">
+    <circle cx="0" cy="0" r="80" fill="url(#dischargePulseP7)"/>
+    <rect x="-110" y="-30" width="220" height="60" rx="30" fill="url(#dischargeBtnP7)" stroke="#F0A030" stroke-width="2"/>
+    <text x="0" y="6" font-family="-apple-system, sans-serif" font-size="18" font-weight="800" fill="#F0A030" text-anchor="middle" letter-spacing="0.04em">DISCHARGE ⚡</text>
+    <!-- Tutorial supercharge badge -->
+    <g transform="translate(0, -50)">
+      <rect x="-58" y="-10" width="116" height="18" rx="3" fill="#F0A030"/>
+      <text x="0" y="3" font-family="-apple-system, sans-serif" font-size="10" font-weight="800" fill="#0a0e1a" text-anchor="middle" letter-spacing="0.04em">SUPERCHARGED ×3</text>
+    </g>
+  </g>
+  <!-- Bottom tab bar -->
+  <rect x="0" y="660" width="360" height="60" fill="#0a0d1a" stroke="#1a1d2a" stroke-width="1"/>
+  <text x="80" y="690" font-family="-apple-system, sans-serif" font-size="12" font-weight="600" fill="#7070a0" text-anchor="middle">Neurons</text>
+  <text x="200" y="690" font-family="-apple-system, sans-serif" font-size="12" font-weight="600" fill="#7070a0" text-anchor="middle">Upgrades</text>
+  <text x="80" y="700" font-family="-apple-system, sans-serif" font-size="8" fill="#383860" text-anchor="middle">tab</text>
+  <text x="200" y="700" font-family="-apple-system, sans-serif" font-size="8" fill="#383860" text-anchor="middle">tab</text>
+  <!-- Footer label -->
+  <text x="180" y="715" font-family="-apple-system, sans-serif" font-size="9" fill="#383860" text-anchor="middle" letter-spacing="0.1em">PHASE 7 — FIRST DISCHARGE</text>
+</svg>

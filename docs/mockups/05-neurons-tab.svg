@@ -1,0 +1,82 @@
+<svg width="360" height="720" viewBox="0 0 360 720" xmlns="http://www.w3.org/2000/svg">
+  <!-- SYNAPSE UI Mockup — Neurons tab redesign (compact rows, mode selector at top, "best buy" star) -->
+  <!-- Background -->
+  <rect width="360" height="720" fill="#05070d"/>
+  <!-- System status bar -->
+  <rect x="0" y="0" width="360" height="24" fill="#000000"/>
+  <text x="12" y="16" font-family="-apple-system, sans-serif" font-size="11" fill="#888">10:24</text>
+  <text x="348" y="16" font-family="-apple-system, sans-serif" font-size="11" fill="#888" text-anchor="end">88%</text>
+  <!-- Tab is OPEN — top sliver shows hero pair (still anchors player to game state) -->
+  <text x="20" y="60" font-family="JetBrains Mono, monospace" font-size="22" font-weight="900" fill="#F0A030" font-variant-numeric="tabular-nums">23.1K</text>
+  <text x="340" y="60" font-family="JetBrains Mono, monospace" font-size="14" font-weight="700" fill="#22B07A" text-anchor="end">+30.9/s</text>
+  <!-- Panel surface starts here -->
+  <rect x="0" y="80" width="360" height="580" fill="#0a0d1a" stroke="#1a1d2a" stroke-width="1"/>
+  <!-- Panel header: title + mode selector -->
+  <text x="16" y="110" font-family="-apple-system, sans-serif" font-size="14" font-weight="700" fill="#e8e6f8" letter-spacing="0.08em">NEURONS</text>
+  <g transform="translate(344, 100)">
+    <!-- ×1 active, ×10, MAX buttons -->
+    <rect x="-100" y="-2" width="100" height="22" rx="11" fill="none" stroke="#1a1d2a" stroke-width="1"/>
+    <rect x="-100" y="-2" width="34" height="22" rx="11" fill="#8B7FE8"/>
+    <text x="-83" y="13" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" fill="#0a0e1a" text-anchor="middle">×1</text>
+    <text x="-49" y="13" font-family="-apple-system, sans-serif" font-size="10" font-weight="500" fill="#7070a0" text-anchor="middle">×10</text>
+    <text x="-15" y="13" font-family="-apple-system, sans-serif" font-size="10" font-weight="500" fill="#7070a0" text-anchor="middle">MAX</text>
+  </g>
+  <!-- Divider -->
+  <line x1="16" y1="124" x2="344" y2="124" stroke="#1a1d2a" stroke-width="1"/>
+  <!-- Neuron row 1: Basic -->
+  <g transform="translate(0, 144)">
+    <circle cx="32" cy="14" r="8" fill="#40D0D040" stroke="#40D0D0" stroke-width="1.2"/>
+    <text x="56" y="11" font-family="-apple-system, sans-serif" font-size="14" font-weight="600" fill="#e8e6f8">Basic</text>
+    <text x="332" y="11" font-family="JetBrains Mono, monospace" font-size="14" font-weight="700" fill="#e8e6f8" text-anchor="end">×42</text>
+    <text x="56" y="26" font-family="-apple-system, sans-serif" font-size="11" fill="#7070a0">0.5/s each → 21/s</text>
+    <rect x="220" y="34" width="120" height="28" rx="6" fill="#F0A03022" stroke="#F0A030" stroke-width="1"/>
+    <text x="280" y="52" font-family="-apple-system, sans-serif" font-size="12" font-weight="600" fill="#F0A030" text-anchor="middle">12 thoughts</text>
+  </g>
+  <line x1="16" y1="220" x2="344" y2="220" stroke="#1a1d2a" stroke-width="1"/>
+  <!-- Neuron row 2: Sensory (with star = best DPS-per-thought now) -->
+  <g transform="translate(0, 240)">
+    <circle cx="32" cy="14" r="9" fill="#22B07A40" stroke="#22B07A" stroke-width="1.2"/>
+    <text x="56" y="11" font-family="-apple-system, sans-serif" font-size="14" font-weight="600" fill="#e8e6f8">Sensory</text>
+    <!-- Best-buy star -->
+    <text x="118" y="13" font-family="-apple-system, sans-serif" font-size="13" fill="#F0A030">★</text>
+    <text x="332" y="11" font-family="JetBrains Mono, monospace" font-size="14" font-weight="700" fill="#e8e6f8" text-anchor="end">×8</text>
+    <text x="56" y="26" font-family="-apple-system, sans-serif" font-size="11" fill="#7070a0">2/s each → 16/s</text>
+    <rect x="220" y="34" width="120" height="28" rx="6" fill="#F0A03022" stroke="#F0A030" stroke-width="1"/>
+    <text x="280" y="52" font-family="-apple-system, sans-serif" font-size="12" font-weight="600" fill="#F0A030" text-anchor="middle">48 thoughts</text>
+  </g>
+  <line x1="16" y1="316" x2="344" y2="316" stroke="#1a1d2a" stroke-width="1"/>
+  <!-- Neuron row 3: Pyramidal -->
+  <g transform="translate(0, 336)">
+    <circle cx="32" cy="14" r="10" fill="#E0609040" stroke="#E06090" stroke-width="1.2"/>
+    <text x="56" y="11" font-family="-apple-system, sans-serif" font-size="14" font-weight="600" fill="#e8e6f8">Pyramidal</text>
+    <text x="332" y="11" font-family="JetBrains Mono, monospace" font-size="14" font-weight="700" fill="#e8e6f8" text-anchor="end">×3</text>
+    <text x="56" y="26" font-family="-apple-system, sans-serif" font-size="11" fill="#7070a0">8/s each → 24/s</text>
+    <rect x="220" y="34" width="120" height="28" rx="6" fill="#F0A03022" stroke="#F0A030" stroke-width="1"/>
+    <text x="280" y="52" font-family="-apple-system, sans-serif" font-size="12" font-weight="600" fill="#F0A030" text-anchor="middle">2.4K thoughts</text>
+  </g>
+  <line x1="16" y1="412" x2="344" y2="412" stroke="#1a1d2a" stroke-width="1"/>
+  <!-- Neuron row 4: Mirror — locked / dim -->
+  <g transform="translate(0, 432)" opacity="0.4">
+    <circle cx="32" cy="14" r="10" fill="none" stroke="#7070a0" stroke-width="1" stroke-dasharray="3 2"/>
+    <text x="56" y="11" font-family="-apple-system, sans-serif" font-size="14" font-weight="600" fill="#7070a0">Mirror</text>
+    <text x="56" y="26" font-family="-apple-system, sans-serif" font-size="11" fill="#7070a0">Unlock at 5 Pyramidal</text>
+  </g>
+  <line x1="16" y1="486" x2="344" y2="486" stroke="#1a1d2a" stroke-width="1"/>
+  <!-- Neuron row 5: Interneuron — locked / dim -->
+  <g transform="translate(0, 506)" opacity="0.4">
+    <circle cx="32" cy="14" r="11" fill="none" stroke="#7070a0" stroke-width="1" stroke-dasharray="3 2"/>
+    <text x="56" y="11" font-family="-apple-system, sans-serif" font-size="14" font-weight="600" fill="#7070a0">Interneuron</text>
+    <text x="56" y="26" font-family="-apple-system, sans-serif" font-size="11" fill="#7070a0">Unlock at 1 Mirror</text>
+  </g>
+  <!-- Sticky footer: effective rate -->
+  <rect x="0" y="616" width="360" height="44" fill="#0a0d1a" stroke="#1a1d2a" stroke-width="1"/>
+  <text x="180" y="638" font-family="-apple-system, sans-serif" font-size="12" fill="#7070a0" text-anchor="middle">Effective rate</text>
+  <text x="180" y="654" font-family="JetBrains Mono, monospace" font-size="14" font-weight="700" fill="#22B07A" text-anchor="middle">+30.9/s</text>
+  <!-- Bottom tab bar -->
+  <rect x="0" y="660" width="360" height="60" fill="#0a0d1a" stroke="#1a1d2a" stroke-width="1"/>
+  <text x="45" y="688" font-family="-apple-system, sans-serif" font-size="11" font-weight="500" fill="#7070a0" text-anchor="middle">Mind</text>
+  <text x="135" y="688" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#8B7FE8" text-anchor="middle">Neurons</text>
+  <text x="225" y="688" font-family="-apple-system, sans-serif" font-size="11" font-weight="500" fill="#7070a0" text-anchor="middle">Upgrades</text>
+  <text x="315" y="688" font-family="-apple-system, sans-serif" font-size="11" font-weight="500" fill="#7070a0" text-anchor="middle">Regions</text>
+  <rect x="113" y="704" width="44" height="2" rx="1" fill="#8B7FE8"/>
+</svg>
