@@ -195,6 +195,12 @@ export const CycleSetupScreen = memo(function CycleSetupScreen({
         display: 'flex', flexDirection: 'column', gap: 'var(--spacing-6)' /* CONST-OK */,
         color: 'var(--color-text-primary)', fontFamily: 'var(--font-body)',
         zIndex: 940, // CONST-OK: shares modal-overlay tier with AwakeningScreen (post-4c.6.7 fix)
+        // Mi A3 playtest fix: AwakeningFlow mounts inside HUD whose wrapper
+        // sets pointerEvents:'none'. Without this override, every interactive
+        // element inside CycleSetupScreen (PolaritySlot, MutationSlot, the
+        // Continue button, etc.) is dead — taps fall through. Same root
+        // cause that hit the 5 OfferOrchestrator modals earlier.
+        pointerEvents: 'auto',
       }}
     >
       {isTablet ? columnsLayout : stepperLayout}
